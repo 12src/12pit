@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "minVersion": "0.7.11",
+  "package": "${basePackage}.mixin",
+  "refmap": "mixins.${modId}.refmap.json",
+  "target": "@env(DEFAULT)",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [],
+  "client": [
+    "FMLModContainerAccessor",
+    "FMLHandshakeClientStateMixin"
+  ]
+}

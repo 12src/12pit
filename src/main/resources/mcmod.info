@@ -1,0 +1,12 @@
+[
+  {
+    "modid": "${modId}",
+    "name": "${modName}",
+    "description": "A lightweight, free and open-source Pit mod.",
+    "version": "${version}",
+    "mcversion": "${mcversion}",
+    "authorList": ["12"],
+    "credits": "",
+    "url": "https://github.com/12src/12pit"
+  }
+]

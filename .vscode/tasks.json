@@ -1,0 +1,109 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "assemble",
+      "type": "process",
+      "command": "${workspaceFolder}/gradlew.bat",
+      "windows": {
+        "command": "${workspaceFolder}\\gradlew.bat"
+      },
+      "linux": {
+        "command": "${workspaceFolder}/gradlew"
+      },
+      "osx": {
+        "command": "${workspaceFolder}/gradlew"
+      },
+      "args": ["assemble", "--console=plain"],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "build",
+      "type": "process",
+      "command": "${workspaceFolder}/gradlew.bat",
+      "windows": {
+        "command": "${workspaceFolder}\\gradlew.bat"
+      },
+      "linux": {
+        "command": "${workspaceFolder}/gradlew"
+      },
+      "osx": {
+        "command": "${workspaceFolder}/gradlew"
+      },
+      "args": ["build", "--console=plain"],
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "check",
+      "type": "process",
+      "command": "${workspaceFolder}/gradlew.bat",
+      "windows": {
+        "command": "${workspaceFolder}\\gradlew.bat"
+      },
+      "linux": {
+        "command": "${workspaceFolder}/gradlew"
+      },
+      "osx": {
+        "command": "${workspaceFolder}/gradlew"
+      },
+      "args": ["check", "--console=plain"],
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "spotlessApply",
+      "type": "process",
+      "command": "${workspaceFolder}/gradlew.bat",
+      "windows": {
+        "command": "${workspaceFolder}\\gradlew.bat"
+      },
+      "linux": {
+        "command": "${workspaceFolder}/gradlew"
+      },
+      "osx": {
+        "command": "${workspaceFolder}/gradlew"
+      },
+      "args": ["spotlessApply", "--console=plain"],
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "spotlessCheck",
+      "type": "process",
+      "command": "${workspaceFolder}/gradlew.bat",
+      "windows": {
+        "command": "${workspaceFolder}\\gradlew.bat"
+      },
+      "linux": {
+        "command": "${workspaceFolder}/gradlew"
+      },
+      "osx": {
+        "command": "${workspaceFolder}/gradlew"
+      },
+      "args": ["spotlessCheck", "--console=plain"],
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "runClient",
+      "type": "process",
+      "command": "${workspaceFolder}/gradlew.bat",
+      "windows": {
+        "command": "${workspaceFolder}\\gradlew.bat"
+      },
+      "linux": {
+        "command": "${workspaceFolder}/gradlew"
+      },
+      "osx": {
+        "command": "${workspaceFolder}/gradlew"
+      },
+      "args": ["runClient", "--console=plain"],
+      "problemMatcher": []
+    }
+  ]
+}
