@@ -16,21 +16,15 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12;
+package pit12.feature;
 
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.event.FMLInitializationEvent;
-import pit12.bootstrap.ClientBootstrap;
+public interface Feature {
+    /** Starts this feature. Calling it again while already started must not acquire resources twice. */
+    void start();
 
-@Mod(modid = Pit12.MOD_ID, useMetadata = true, acceptedMinecraftVersions = "[1.8.9]",
-        clientSideOnly = true)
-public final class Pit12 {
-    public static final String MOD_ID = "pit12";
-    private ClientBootstrap bootstrap;
-
-    @Mod.EventHandler
-    public void onInit(FMLInitializationEvent event) {
-        bootstrap = new ClientBootstrap();
-        bootstrap.start();
-    }
+    /**
+     * Stops this feature and releases everything acquired by {@link #start()}. It is safe to call after a partial start or
+     * an earlier stop.
+     */
+    void stop();
 }
