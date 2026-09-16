@@ -1,4 +1,4 @@
-package pit12.mixin;
+package pit12.platform.mixin.accessor;
 
 import java.util.Map;
 import net.minecraftforge.fml.common.FMLModContainer;
