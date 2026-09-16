@@ -25,6 +25,7 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(value = FMLModContainer.class, remap = false)
 public interface FMLModContainerAccessor {
+    /** Provides descriptor access for FMLHandshakeClientStateMixin. */
     @Accessor(value = "descriptor", remap = false)
     Map<String, Object> pit12$getDescriptor();
 }
