@@ -69,7 +69,6 @@
         "command": "${workspaceFolder}/gradlew"
       },
       "args": ["spotlessApply", "--console=plain"],
-      "group": "build",
       "problemMatcher": []
     },
     {
@@ -86,7 +85,6 @@
         "command": "${workspaceFolder}/gradlew"
       },
       "args": ["spotlessCheck", "--console=plain"],
-      "group": "build",
       "problemMatcher": []
     },
     {
