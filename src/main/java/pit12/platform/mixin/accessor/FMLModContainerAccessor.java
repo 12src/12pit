@@ -1,7 +1,7 @@
 /*
  * This file is part of 12pit.
  *
- * Copyright (C) 2026 12dev <https://github.com/12dev>
+ * Copyright (C) 2026 12dev <https://github.com/12src>
  *
  * 12pit is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
