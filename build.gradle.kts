@@ -79,22 +79,23 @@ tasks.withType<JavaCompile> {
 }
 
 spotless {
-    isEnforceCheck = false
-
     java {
+        target("src/main/java/**/*.java")
         eclipse().configFile("eclipse-formatter.xml")
         importOrder("\\#", "")
         removeUnusedImports()
         forbidWildcardImports()
+        licenseHeaderFile("license-header.txt").updateYearWithLatest(false)
     }
 
     kotlin {
-        target("src/**/*.kt")
+        target("src/main/kotlin/**/*.kt")
         ktfmt("0.62").kotlinlangStyle().configure {
             it.setMaxWidth(120)
             it.setBlockIndent(4)
             it.setContinuationIndent(4)
         }
+        licenseHeaderFile("license-header.txt").updateYearWithLatest(false)
     }
 
     kotlinGradle {
