@@ -31,6 +31,7 @@ import pit12.platform.mixin.accessor.FMLModContainerAccessor;
 @Mixin(targets = "net.minecraftforge.fml.common.network.handshake.FMLHandshakeClientState$2",
         remap = false)
 public abstract class FMLHandshakeClientStateMixin {
+    // If the server ignores client-only mods anyway, there is no reason to send them in the handshake.
     @ModifyArg(
             method = "accept(Lio/netty/channel/ChannelHandlerContext;Lnet/minecraftforge/fml/common/network/handshake/FMLHandshakeMessage;)Lnet/minecraftforge/fml/common/network/handshake/FMLHandshakeClientState;",
             remap = false,
