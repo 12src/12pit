@@ -18,6 +18,9 @@ val mappingsVersion: String by project
 val mixinRuntimeVersion: String by project
 val mixinProcessorVersion: String by project
 val devAuthVersion: String by project
+val ktfmtVersion: String by project
+val licenseHeaderPath: String by project
+val eclipseFormatterConfigPath: String by project
 
 group = modGroup
 
@@ -81,26 +84,26 @@ tasks.withType<JavaCompile> {
 spotless {
     java {
         target("src/main/java/**/*.java")
-        eclipse().configFile("eclipse-formatter.xml")
+        eclipse().configFile(eclipseFormatterConfigPath)
         importOrder("\\#", "")
         removeUnusedImports()
         forbidWildcardImports()
-        licenseHeaderFile("license-header.txt").updateYearWithLatest(false)
+        licenseHeaderFile(licenseHeaderPath).updateYearWithLatest(false)
     }
 
     kotlin {
         target("src/main/kotlin/**/*.kt")
-        ktfmt("0.62").kotlinlangStyle().configure {
+        ktfmt(ktfmtVersion).kotlinlangStyle().configure {
             it.setMaxWidth(120)
             it.setBlockIndent(4)
             it.setContinuationIndent(4)
         }
-        licenseHeaderFile("license-header.txt").updateYearWithLatest(false)
+        licenseHeaderFile(licenseHeaderPath).updateYearWithLatest(false)
     }
 
     kotlinGradle {
         target("*.gradle.kts")
-        ktfmt("0.62").kotlinlangStyle().configure {
+        ktfmt(ktfmtVersion).kotlinlangStyle().configure {
             it.setMaxWidth(120)
             it.setBlockIndent(4)
             it.setContinuationIndent(4)
