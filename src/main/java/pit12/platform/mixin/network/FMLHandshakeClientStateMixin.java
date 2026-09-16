@@ -1,4 +1,4 @@
-package pit12.mixin;
+package pit12.platform.mixin.network;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,6 +8,7 @@ import net.minecraftforge.fml.common.ModContainer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
+import pit12.platform.mixin.accessor.FMLModContainerAccessor;
 
 @Mixin(targets = "net.minecraftforge.fml.common.network.handshake.FMLHandshakeClientState$2",
         remap = false)
