@@ -42,7 +42,7 @@ public final class ClientBootstrap {
         }
         try {
             for (Feature feature : features) {
-                // Track the feature first so rollback can clean up a partial start.
+                // A failed start may still acquire resources that rollback must release.
                 startedFeatures.add(feature);
                 feature.start();
             }
@@ -63,11 +63,13 @@ public final class ClientBootstrap {
     }
 
     private void stopStartedFeatures() {
+        // Dependencies must remain available until their consumers have stopped.
         for (int index = startedFeatures.size() - 1; index >= 0; index--) {
             Feature feature = startedFeatures.get(index);
             try {
                 feature.stop();
             } catch (RuntimeException failure) {
+                // One failed cleanup must not prevent the remaining features from releasing resources.
                 LOGGER.log(Level.WARNING, "Failed to stop feature " + feature.getClass().getName(),
                         failure);
             }
