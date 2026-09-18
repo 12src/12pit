@@ -18,19 +18,35 @@
  */
 package pit12.bootstrap;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import net.minecraft.client.Minecraft;
 import pit12.feature.Feature;
+import pit12.feature.clickgui.ClickGuiConfig;
+import pit12.feature.clickgui.ClickGuiFeature;
+import pit12.feature.profile.ProfilesFeature;
+import pit12.runtime.config.ConfigCatalog;
 
 public final class ClientBootstrap {
     private static final Logger LOGGER = Logger.getLogger(ClientBootstrap.class.getName());
     private final List<Feature> features = new ArrayList<Feature>();
     private final List<Feature> startedFeatures = new ArrayList<Feature>();
+    private final ConfigCatalog configs;
     private boolean started;
 
-    public ClientBootstrap() {}
+    public ClientBootstrap() {
+        configs = new ConfigCatalog();
+        ClickGuiConfig clickGuiConfig = new ClickGuiConfig();
+        configs.register(clickGuiConfig);
+        configs.freeze();
+        File profileDirectory = new File(Minecraft.getMinecraft().mcDataDir, "12pit/config");
+        ProfilesFeature profiles = new ProfilesFeature(configs, profileDirectory.toPath());
+        features.add(profiles);
+        features.add(new ClickGuiFeature(configs, profiles, clickGuiConfig));
+    }
 
     /**
      * Starts all configured features in order. Calling it again after a successful start has no effect. If a feature throws

@@ -1,0 +1,72 @@
+/*
+ * This file is part of 12pit.
+ *
+ * Copyright (C) 2026 12dev <https://github.com/12src>
+ *
+ * 12pit is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * 12pit is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
+ */
+package pit12.feature.profile.storage;
+
+import com.google.gson.JsonObject;
+import java.util.UUID;
+import pit12.runtime.config.ConfigSnapshot;
+
+public final class StoredProfile {
+    private final UUID id;
+    private final String name;
+    private final int order;
+    private final long updatedAt;
+    private final long revision;
+    private final ConfigSnapshot config;
+    private final JsonObject preservedRoot;
+
+    public StoredProfile(UUID id, String name, int order, long updatedAt, long revision,
+            ConfigSnapshot config, JsonObject preservedRoot) {
+        this.id = id;
+        this.name = name;
+        this.order = order;
+        this.updatedAt = updatedAt;
+        this.revision = revision;
+        this.config = config;
+        this.preservedRoot = preservedRoot;
+    }
+
+    public UUID id() {
+        return id;
+    }
+
+    public String name() {
+        return name;
+    }
+
+    public int order() {
+        return order;
+    }
+
+    public long updatedAt() {
+        return updatedAt;
+    }
+
+    public long revision() {
+        return revision;
+    }
+
+    public ConfigSnapshot config() {
+        return config;
+    }
+
+    public JsonObject preservedRoot() {
+        return preservedRoot;
+    }
+}

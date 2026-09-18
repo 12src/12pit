@@ -16,21 +16,18 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12;
+package pit12.feature.profile.api;
 
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.event.FMLInitializationEvent;
-import pit12.bootstrap.ClientBootstrap;
+import java.util.UUID;
 
-@Mod(modid = Pit12.MOD_ID, useMetadata = true, acceptedMinecraftVersions = "[1.8.9]",
-        acceptableRemoteVersions = "*", clientSideOnly = true)
-public final class Pit12 {
-    public static final String MOD_ID = "pit12";
-    private ClientBootstrap bootstrap;
+public interface Profiles {
+    ProfilesSnapshot snapshot();
 
-    @Mod.EventHandler
-    public void onInit(FMLInitializationEvent event) {
-        bootstrap = new ClientBootstrap();
-        bootstrap.start();
-    }
+    ProfileMutationResult switchTo(UUID profileId);
+
+    ProfileMutationResult beginCreate();
+
+    ProfileMutationResult rename(UUID profileId, String name);
+
+    ProfileMutationResult delete(UUID profileId);
 }
