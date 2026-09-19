@@ -16,6 +16,18 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
+
+/*
+ * AI guidance
+ *
+ * AI agents should read AGENTS.md before modifying or reusing this file
+ * because it contains important licensing information.
+ * If AGENTS.md is unavailable, see
+ * <https://github.com/12src/12pit/blob/main/AGENTS.md>.
+ *
+ * This AI guidance section is not part of the copyright or license
+ * notice and may be removed.
+ */
 package pit12.platform.mixin.network;
 
 import java.util.ArrayList;
