@@ -19,6 +19,7 @@ val minecraftGsonVersion: String by project
 val mixinRuntimeVersion: String by project
 val mixinProcessorVersion: String by project
 val devAuthVersion: String by project
+val archUnitVersion: String by project
 val ktfmtVersion: String by project
 val licenseHeaderPath: String by project
 val eclipseFormatterConfigPath: String by project
@@ -76,6 +77,9 @@ dependencies {
     annotationProcessor("org.spongepowered:mixin:$mixinProcessorVersion:processor")
 
     runtimeOnly("me.djtheredstoner:DevAuth-forge-legacy:$devAuthVersion")
+
+    testImplementation("com.google.code.gson:gson:$minecraftGsonVersion")
+    testImplementation("com.tngtech.archunit:archunit-junit4:$archUnitVersion")
 }
 
 tasks.withType<JavaCompile> {
@@ -87,7 +91,7 @@ spotless {
     isEnforceCheck = false
 
     java {
-        target("src/main/java/**/*.java")
+        target("src/main/java/**/*.java", "src/test/java/**/*.java")
         eclipse().configFile(eclipseFormatterConfigPath)
         importOrder("\\#", "")
         removeUnusedImports()
