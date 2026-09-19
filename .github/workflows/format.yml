@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   format-check:
-    name: Format check
+    name: Check formatting
     runs-on: ubuntu-latest
 
     steps:

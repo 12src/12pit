@@ -84,8 +84,6 @@ tasks.withType<JavaCompile> {
 }
 
 spotless {
-    isEnforceCheck = false
-
     java {
         target("src/main/java/**/*.java")
         eclipse().configFile(eclipseFormatterConfigPath)
