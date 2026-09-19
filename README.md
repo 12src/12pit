@@ -40,4 +40,9 @@ As long as the PR is relevant and you're still interested in contributing, we're
 
 ## Third-Party Notices
 
-12pit bundles [SpongePowered Mixin](https://github.com/SpongePowered/Mixin), which is licensed under the MIT License. The complete license text is included at [`META-INF/third-party-licenses/MIXIN-LICENSE.txt`](src/main/resources/META-INF/third-party-licenses/MIXIN-LICENSE.txt).
+12pit bundles the following third-party components:
+
+- [SpongePowered Mixin](https://github.com/SpongePowered/Mixin): MIT License. License text: [`META-INF/third-party-licenses/MIXIN-LICENSE.txt`](src/main/resources/META-INF/third-party-licenses/MIXIN-LICENSE.txt).
+- [Font Awesome Free](https://fontawesome.com/) PNG icons: CC BY 4.0. Assets: [`assets/pit12/textures/gui/clickgui/`](src/main/resources/assets/pit12/textures/gui/clickgui/). License text: [`META-INF/third-party-licenses/FONT-AWESOME-FREE-LICENSE.txt`](src/main/resources/META-INF/third-party-licenses/FONT-AWESOME-FREE-LICENSE.txt).
+- [Noto Sans SC](https://fonts.google.com/noto/specimen/Noto+Sans+SC): SIL Open Font License 1.1. Font: [`assets/pit12/fonts/noto-sans-sc.otf`](src/main/resources/assets/pit12/fonts/noto-sans-sc.otf) (modified and compressed GB 2312 subset). License text: [`META-INF/third-party-licenses/NOTO-SANS-SC-OFL.txt`](src/main/resources/META-INF/third-party-licenses/NOTO-SANS-SC-OFL.txt).
+- [Montserrat](https://github.com/JulietaUla/Montserrat): SIL Open Font License 1.1. Font: [`assets/pit12/fonts/montserrat-regular.ttf`](src/main/resources/assets/pit12/fonts/montserrat-regular.ttf). License text: [`META-INF/third-party-licenses/MONTSERRAT-OFL.txt`](src/main/resources/META-INF/third-party-licenses/MONTSERRAT-OFL.txt).

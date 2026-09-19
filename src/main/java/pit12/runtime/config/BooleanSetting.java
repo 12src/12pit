@@ -16,21 +16,18 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12;
+package pit12.runtime.config;
 
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.event.FMLInitializationEvent;
-import pit12.bootstrap.ClientBootstrap;
+public final class BooleanSetting extends Setting<Boolean> {
+    BooleanSetting(String id, String displayName, String description, boolean defaultValue) {
+        super(id, displayName, description, Boolean.valueOf(defaultValue));
+    }
 
-@Mod(modid = Pit12.MOD_ID, useMetadata = true, acceptedMinecraftVersions = "[1.8.9]",
-        acceptableRemoteVersions = "*", clientSideOnly = true)
-public final class Pit12 {
-    public static final String MOD_ID = "pit12";
-    private ClientBootstrap bootstrap;
-
-    @Mod.EventHandler
-    public void onInit(FMLInitializationEvent event) {
-        bootstrap = new ClientBootstrap();
-        bootstrap.start();
+    @Override
+    protected Boolean requireValue(Object candidate) {
+        if (!(candidate instanceof Boolean)) {
+            throw new IllegalArgumentException("Setting " + id() + " requires a boolean value");
+        }
+        return (Boolean) candidate;
     }
 }

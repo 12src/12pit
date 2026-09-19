@@ -15,6 +15,7 @@ val modGroup: String by project
 val minecraftVersion: String by project
 val forgeVersion: String by project
 val mappingsVersion: String by project
+val minecraftGsonVersion: String by project
 val mixinRuntimeVersion: String by project
 val mixinProcessorVersion: String by project
 val devAuthVersion: String by project
@@ -70,6 +71,7 @@ dependencies {
     mappings("de.oceanlabs.mcp:mcp_stable:$mappingsVersion")
     forge("net.minecraftforge:forge:$minecraftVersion-$forgeVersion")
 
+    compileOnly("com.google.code.gson:gson:$minecraftGsonVersion")
     shaded("org.spongepowered:mixin:$mixinRuntimeVersion") { isTransitive = false }
     annotationProcessor("org.spongepowered:mixin:$mixinProcessorVersion:processor")
 
