@@ -75,12 +75,12 @@ public final class TextInputComponent extends GuiComponent {
         String displayed = text.isEmpty() && !focused ? placeholder : text;
         int color = text.isEmpty() && !focused ? ClickGuiTheme.MUTED_TEXT : ClickGuiTheme.TEXT;
         int inset = chromeVisible ? 4 : 3;
-        renderer.verticallyCenteredText(renderer.ellipsize(displayed, width - inset * 2), x + inset,
-                y, height, color);
+        renderer.verticallyCenteredText(renderer.ellipsize(displayed, width - inset * 2, 8.0F),
+                x + inset, y, height, 8.0F, color);
         if (focused && (System.currentTimeMillis() / 500L & 1L) == 0L) {
             String prefix = text.substring(0, cursor);
-            int cursorX = Math.min(x + width - inset, x + inset + renderer.textWidth(prefix));
-            int cursorHeight = Math.max(5, renderer.fontHeight() - 2);
+            int cursorX = Math.min(x + width - inset, x + inset + renderer.textWidth(prefix, 8.0F));
+            int cursorHeight = Math.max(5, renderer.fontHeight(8.0F) - 2);
             int cursorY = y + Math.round((height - cursorHeight) / 2.0F);
             renderer.rect(cursorX, cursorY, 1, cursorHeight, ClickGuiTheme.TEXT);
         }

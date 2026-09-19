@@ -39,8 +39,8 @@ public final class KeybindRowComponent extends GuiComponent {
     public void render(ClickGuiRenderer renderer, int mouseX, int mouseY, float partialTicks) {
         int bindWidth = keybind.preferredWidth(renderer);
         renderer.verticallyCenteredText(
-                renderer.ellipsize(label, Math.max(1, width - bindWidth - 5)), x, y, height,
-                ClickGuiTheme.TEXT);
+                renderer.ellipsize(label, Math.max(1, width - bindWidth - 5), 8.0F), x, y, height,
+                8.0F, ClickGuiTheme.TEXT);
         int bindHeight = keybind.preferredHeight();
         keybind.setBounds(x + width - bindWidth, y + (height - bindHeight) / 2, bindWidth,
                 bindHeight);

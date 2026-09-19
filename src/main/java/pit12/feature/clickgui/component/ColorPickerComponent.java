@@ -56,8 +56,8 @@ public final class ColorPickerComponent extends GuiComponent {
     @Override
     public void render(ClickGuiRenderer renderer, int mouseX, int mouseY, float partialTicks) {
         int rgb = value.getAsInt() & 0xFFFFFF;
-        renderer.verticallyCenteredText(label, x + 5, y, 14, ClickGuiTheme.MUTED_TEXT);
-        expandControlX = x + 10 + renderer.textWidth(label);
+        renderer.verticallyCenteredText(label, x + 5, y, 14, 8.0F, ClickGuiTheme.MUTED_TEXT);
+        expandControlX = x + 10 + renderer.textWidth(label, 8.0F);
         renderer.centeredTexture(expanded ? TextureIcon.COLLAPSE : TextureIcon.EXPAND,
                 expandControlX, y, 14, 6, 6, ClickGuiTheme.MUTED_TEXT);
         renderPalette(renderer, rgb);
@@ -103,7 +103,7 @@ public final class ColorPickerComponent extends GuiComponent {
         int trackX = x + 5;
         int trackY = rowY + 17;
         int trackWidth = Math.max(1, width - 10);
-        renderer.verticallyCenteredText(name, trackX, rowY, 14, ClickGuiTheme.MUTED_TEXT);
+        renderer.verticallyCenteredText(name, trackX, rowY, 14, 8.0F, ClickGuiTheme.MUTED_TEXT);
         if (channel == 0) {
             int segmentWidth = Math.max(1, trackWidth / 6);
             for (int index = 0; index < 6; index++) {

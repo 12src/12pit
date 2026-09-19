@@ -30,18 +30,35 @@ public abstract class FeatureConfig {
     private final String displayName;
     private final ConfigCategory category;
     private final String description;
+    private final BooleanSetting enabled;
     private final List<Setting<?>> settings = new ArrayList<Setting<?>>();
     private final List<Setting<?>> options = new ArrayList<Setting<?>>();
+    private final List<HudConfig> huds = new ArrayList<HudConfig>();
     private final List<Setting<?>> settingsView = Collections.unmodifiableList(settings);
     private final List<Setting<?>> optionsView = Collections.unmodifiableList(options);
+    private final List<HudConfig> hudsView = Collections.unmodifiableList(huds);
     private final Map<String, Setting<?>> settingsById = new LinkedHashMap<String, Setting<?>>();
+    private final Map<String, HudConfig> hudsById = new LinkedHashMap<String, HudConfig>();
 
     protected FeatureConfig(String id, String displayName, ConfigCategory category,
             String description) {
+        this(id, displayName, category, description, true);
+    }
+
+    protected FeatureConfig(String id, String displayName, ConfigCategory category,
+            String description, boolean toggleable) {
         this.id = ConfigNames.requireStableId(id, "feature id");
         this.displayName = ConfigNames.requireText(displayName, "feature display name");
         this.category = Objects.requireNonNull(category, "category");
         this.description = ConfigNames.requireDescription(description);
+        enabled =
+                toggleable
+                        ? new BooleanSetting("enabled", "Enabled",
+                                "Enables " + this.displayName + ".", true)
+                        : null;
+        if (enabled != null) {
+            register(enabled, false);
+        }
     }
 
     protected final BooleanSetting booleanSetting(String id, String displayName, String description,
@@ -63,6 +80,37 @@ public abstract class FeatureConfig {
         ColorSetting setting = new ColorSetting(id, displayName, description, defaultValue);
         register(setting, true);
         return setting;
+    }
+
+    protected final HudConfig hudConfig(String id, String displayName, HudAnchor defaultAnchor,
+            int defaultOffsetX, int defaultOffsetY, boolean defaultTextShadow) {
+        String hudId = ConfigNames.requireStableId(id, "HUD id");
+        String hudDisplayName = ConfigNames.requireText(displayName, "HUD display name");
+        Objects.requireNonNull(defaultAnchor, "defaultAnchor");
+        if (hudsById.containsKey(hudId)) {
+            throw new IllegalArgumentException(
+                    "Duplicate HUD id " + hudId + " in feature " + this.id);
+        }
+        String prefix = hudId + ".";
+        BooleanSetting textShadow = new BooleanSetting(prefix + "text_shadow", "Text shadow",
+                "Draws a shadow behind text in the " + hudDisplayName + ".", defaultTextShadow);
+        IntegerSetting anchor = new IntegerSetting(prefix + "anchor", "Anchor", "",
+                defaultAnchor.id(), HudAnchor.TOP_LEFT.id(), HudAnchor.BOTTOM_RIGHT.id());
+        IntegerSetting offsetX = new IntegerSetting(prefix + "offset_x", "Horizontal offset", "",
+                defaultOffsetX, -32768, 32767);
+        IntegerSetting offsetY = new IntegerSetting(prefix + "offset_y", "Vertical offset", "",
+                defaultOffsetY, -32768, 32767);
+        IntegerSetting scale = new IntegerSetting(prefix + "scale", "Scale", "", 100, 25, 300);
+        register(textShadow, true);
+        register(anchor, false);
+        register(offsetX, false);
+        register(offsetY, false);
+        register(scale, false);
+        HudConfig hud =
+                new HudConfig(hudId, hudDisplayName, textShadow, anchor, offsetX, offsetY, scale);
+        huds.add(hud);
+        hudsById.put(hudId, hud);
+        return hud;
     }
 
     private void register(Setting<?> setting, boolean option) {
@@ -93,12 +141,35 @@ public abstract class FeatureConfig {
         return description;
     }
 
+    public final boolean toggleable() {
+        return enabled != null;
+    }
+
+    public final boolean enabled() {
+        return enabled == null || enabled.get().booleanValue();
+    }
+
+    public final void setEnabled(boolean enabled) {
+        if (this.enabled == null) {
+            throw new IllegalStateException("Feature cannot be disabled: " + id);
+        }
+        this.enabled.set(Boolean.valueOf(enabled));
+    }
+
     public final List<Setting<?>> settings() {
         return settingsView;
     }
 
     public final List<Setting<?>> options() {
         return optionsView;
+    }
+
+    public final List<HudConfig> huds() {
+        return hudsView;
+    }
+
+    public final HudConfig hud(String hudId) {
+        return hudsById.get(hudId);
     }
 
     public final Setting<?> setting(String settingId) {

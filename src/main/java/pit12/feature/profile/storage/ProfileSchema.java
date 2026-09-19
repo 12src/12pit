@@ -25,6 +25,7 @@ import pit12.runtime.config.BooleanSetting;
 import pit12.runtime.config.ColorSetting;
 import pit12.runtime.config.ConfigCatalog;
 import pit12.runtime.config.FeatureConfig;
+import pit12.runtime.config.IntegerSetting;
 import pit12.runtime.config.KeybindSetting;
 import pit12.runtime.config.Setting;
 
@@ -45,10 +46,15 @@ public final class ProfileSchema {
         for (FeatureConfig feature : catalog.features()) {
             LinkedHashMap<String, ValueType> settings = new LinkedHashMap<String, ValueType>();
             for (Setting<?> setting : feature.settings()) {
-                ValueType type = setting instanceof BooleanSetting ? ValueType.BOOLEAN
-                        : setting instanceof KeybindSetting || setting instanceof ColorSetting
-                                ? ValueType.INTEGER
-                                : ValueType.UNSUPPORTED;
+                ValueType type;
+                if (setting instanceof BooleanSetting) {
+                    type = ValueType.BOOLEAN;
+                } else if (setting instanceof IntegerSetting || setting instanceof KeybindSetting
+                        || setting instanceof ColorSetting) {
+                    type = ValueType.INTEGER;
+                } else {
+                    type = ValueType.UNSUPPORTED;
+                }
                 settings.put(setting.id(), type);
             }
             features.put(feature.id(), Collections.unmodifiableMap(settings));

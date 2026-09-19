@@ -34,12 +34,12 @@ import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.util.ResourceLocation;
 import org.lwjgl.opengl.GL11;
 
-final class HudTextureCache {
-    private static final Logger LOGGER = Logger.getLogger(HudTextureCache.class.getName());
+final class ClickGuiTextureCache {
+    private static final Logger LOGGER = Logger.getLogger(ClickGuiTextureCache.class.getName());
     private final Minecraft minecraft;
     private final Map<TextureKey, TextureEntry> textures = new HashMap<TextureKey, TextureEntry>();
 
-    HudTextureCache(Minecraft minecraft) {
+    ClickGuiTextureCache(Minecraft minecraft) {
         this.minecraft = minecraft;
     }
 
@@ -56,14 +56,14 @@ final class HudTextureCache {
             DynamicTexture dynamicTexture = new DynamicTexture(scaled);
             scaled.flush();
             ResourceLocation location = minecraft.getTextureManager()
-                    .getDynamicTextureLocation("pit12-hud-icon", dynamicTexture);
+                    .getDynamicTextureLocation("pit12-clickgui-icon", dynamicTexture);
             minecraft.getTextureManager().bindTexture(location);
             GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
             GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
             textures.put(key, new TextureEntry(location, true));
             return location;
         } catch (IOException failure) {
-            LOGGER.log(Level.WARNING, "Unable to prepare HUD texture " + source, failure);
+            LOGGER.log(Level.WARNING, "Unable to prepare ClickGUI texture " + source, failure);
             textures.put(key, new TextureEntry(source, false));
             return source;
         }

@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.clickgui.render;
+package pit12.shared.rendering;
 
 import java.awt.AlphaComposite;
 import java.awt.Color;
@@ -36,7 +36,7 @@ import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.util.ResourceLocation;
 import org.lwjgl.opengl.GL11;
 
-final class HudFont {
+final class UiFont {
     private static final int ATLAS_SIZE = 512;
     private static final int FIRST_CHARACTER = 32;
     private static final int LAST_CHARACTER = 255;
@@ -54,7 +54,7 @@ final class HudFont {
     private final ResourceLocation texture;
     private final int height;
 
-    HudFont(Minecraft minecraft, ResourceLocation fontLocation, float logicalFontSize,
+    UiFont(Minecraft minecraft, ResourceLocation fontLocation, float logicalFontSize,
             float pixelScale) {
         this.minecraft = minecraft;
         float fontSize = Math.max(1.0F, Math.round(logicalFontSize * pixelScale));
@@ -212,7 +212,7 @@ final class HudFont {
                 minecraft.getResourceManager().getResource(fontLocation).getInputStream()) {
             return Font.createFont(Font.TRUETYPE_FONT, input).deriveFont(Font.PLAIN, fontSize);
         } catch (FontFormatException | IOException failure) {
-            throw new IllegalStateException("Unable to load HUD font", failure);
+            throw new IllegalStateException("Unable to load UI font", failure);
         }
     }
 

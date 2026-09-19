@@ -31,7 +31,9 @@ import pit12.feature.clickgui.frame.DraggableFrame;
 import pit12.feature.clickgui.frame.ProfilesFrame;
 import pit12.feature.clickgui.frame.RootTreeFrame;
 import pit12.feature.clickgui.render.ClickGuiRenderer;
+import pit12.feature.clickgui.render.ClickGuiRenderer.TextureIcon;
 import pit12.feature.clickgui.render.ClickGuiTheme;
+import pit12.feature.hudeditor.api.HudEditor;
 import pit12.feature.profile.api.Profiles;
 import pit12.runtime.config.ConfigCatalog;
 import pit12.runtime.config.ConfigCategory;
@@ -41,6 +43,7 @@ public final class ClickGuiController {
     private final ClickGuiState state = new ClickGuiState();
     private final ClickGuiRenderer renderer;
     private final ClickGuiConfig config;
+    private final HudEditor hudEditor;
     private final RootTreeFrame rootFrame;
     private final ClickGuiSettingsFrame settingsFrame;
     private final List<DraggableFrame> orderedFrames = new ArrayList<DraggableFrame>();
@@ -53,8 +56,10 @@ public final class ClickGuiController {
     private int tooltipX;
     private int tooltipY;
 
-    public ClickGuiController(ConfigCatalog catalog, Profiles profiles, ClickGuiConfig config) {
+    public ClickGuiController(ConfigCatalog catalog, Profiles profiles, ClickGuiConfig config,
+            HudEditor hudEditor) {
         this.config = config;
+        this.hudEditor = hudEditor;
         renderer = new ClickGuiRenderer(Minecraft.getMinecraft(), config);
         rootFrame = new RootTreeFrame(this, state);
         orderedFrames.add(rootFrame);
@@ -116,6 +121,7 @@ public final class ClickGuiController {
                     frame.render(renderer, mouseX, mouseY, partialTicks);
                 }
             }
+            renderHudEditorButton(mouseX, mouseY);
             if (!modalStack.isEmpty()) {
                 tooltip = null;
                 modalStack.get(modalStack.size() - 1).render(renderer, mouseX, mouseY,
@@ -135,6 +141,12 @@ public final class ClickGuiController {
         }
         if (!modalStack.isEmpty()) {
             modalStack.get(modalStack.size() - 1).mousePressed(this, mouseX, mouseY, button);
+            return;
+        }
+        if (hudEditorButtonContains(mouseX, mouseY)) {
+            if (button == 0) {
+                hudEditor.open();
+            }
             return;
         }
         for (int index = orderedFrames.size() - 1; index >= 0; index--) {
@@ -285,6 +297,19 @@ public final class ClickGuiController {
     public void dispose() {
         close();
         renderer.close();
+    }
+
+    private void renderHudEditorButton(int mouseX, int mouseY) {
+        int x = screenWidth - 26;
+        int y = screenHeight - 26;
+        boolean hovered = hudEditorButtonContains(mouseX, mouseY);
+        renderer.centeredTexture(TextureIcon.HUD_EDITOR, x, y, 20, 20, 20,
+                hovered ? ClickGuiTheme.TEXT : ClickGuiTheme.MUTED_TEXT);
+    }
+
+    private boolean hudEditorButtonContains(int mouseX, int mouseY) {
+        return mouseX >= screenWidth - 26 && mouseX < screenWidth - 6 && mouseY >= screenHeight - 26
+                && mouseY < screenHeight - 6;
     }
 
     private void bringToFront(DraggableFrame frame) {
