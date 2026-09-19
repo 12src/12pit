@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.clickgui.render;
+package pit12.shared.rendering;
 
 import java.awt.AlphaComposite;
 import java.awt.Color;
@@ -38,7 +38,7 @@ import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.util.ResourceLocation;
 import org.lwjgl.opengl.GL11;
 
-final class HudTextCache {
+final class UiTextCache {
     private static final int MAX_ENTRIES = 128;
     private final Minecraft minecraft;
     private final float pixelScale;
@@ -47,18 +47,18 @@ final class HudTextCache {
     private final Map<String, TextureEntry> entries =
             new LinkedHashMap<String, TextureEntry>(MAX_ENTRIES, 0.75F, true);
 
-    HudTextCache(Minecraft minecraft, ResourceLocation fontLocation, float logicalFontSize,
+    UiTextCache(Minecraft minecraft, ResourceLocation fontLocation, float logicalFontSize,
             float pixelScale) {
         this(minecraft, loadFont(minecraft, fontLocation,
                 Math.max(1.0F, Math.round(logicalFontSize * pixelScale))), pixelScale);
     }
 
-    HudTextCache(Minecraft minecraft, float logicalFontSize, float pixelScale) {
+    UiTextCache(Minecraft minecraft, float logicalFontSize, float pixelScale) {
         this(minecraft, new Font(Font.SANS_SERIF, Font.PLAIN,
                 Math.max(1, Math.round(logicalFontSize * pixelScale))), pixelScale);
     }
 
-    private HudTextCache(Minecraft minecraft, Font font, float pixelScale) {
+    private UiTextCache(Minecraft minecraft, Font font, float pixelScale) {
         this.minecraft = minecraft;
         this.pixelScale = pixelScale;
         this.font = font;
@@ -183,7 +183,7 @@ final class HudTextCache {
                 minecraft.getResourceManager().getResource(fontLocation).getInputStream()) {
             return Font.createFont(Font.TRUETYPE_FONT, input).deriveFont(Font.PLAIN, fontSize);
         } catch (FontFormatException | IOException failure) {
-            throw new IllegalStateException("Unable to load fallback HUD font", failure);
+            throw new IllegalStateException("Unable to load fallback UI font", failure);
         }
     }
 

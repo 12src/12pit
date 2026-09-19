@@ -21,6 +21,7 @@ package pit12.runtime.config;
 public final class KeybindSetting extends Setting<Integer> {
     KeybindSetting(String id, String displayName, String description, int defaultValue) {
         super(id, displayName, description, Integer.valueOf(defaultValue));
+        requireValue(Integer.valueOf(defaultValue));
     }
 
     @Override

@@ -16,19 +16,8 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.runtime.config;
+package pit12.feature.hudeditor.api;
 
-public final class BooleanSetting extends Setting<Boolean> {
-    BooleanSetting(String id, String displayName, String description, boolean defaultValue) {
-        super(id, displayName, description, Boolean.valueOf(defaultValue));
-        requireValue(Boolean.valueOf(defaultValue));
-    }
-
-    @Override
-    protected Boolean requireValue(Object candidate) {
-        if (!(candidate instanceof Boolean)) {
-            throw new IllegalArgumentException("Setting " + id() + " requires a boolean value");
-        }
-        return (Boolean) candidate;
-    }
+public interface HudEditor {
+    void open();
 }

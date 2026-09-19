@@ -44,7 +44,7 @@ public final class KeybindComponent extends GuiComponent {
         if (keyCode.getAsInt() == Keyboard.KEY_NONE) {
             return MINIMUM_WIDTH;
         }
-        return Math.min(38, Math.max(MINIMUM_WIDTH, renderer.smallTextWidth(keyName()) + 6));
+        return Math.min(38, Math.max(MINIMUM_WIDTH, renderer.textWidth(keyName(), 6.0F) + 6));
     }
 
     public int preferredHeight() {
@@ -83,8 +83,8 @@ public final class KeybindComponent extends GuiComponent {
             renderer.centeredTexture(TextureIcon.EDIT, x + (width - 5) / 2.0F, y, height, 5, 5,
                     foreground);
         } else {
-            renderer.centeredSmallText(renderer.ellipsizeSmall(keyName(), width - 4), x, y, width,
-                    height, foreground);
+            renderer.centeredText(renderer.ellipsize(keyName(), width - 4, 6.0F), x, y, width,
+                    height, 6.0F, foreground);
         }
     }
 

@@ -99,8 +99,9 @@ public abstract class DraggableFrame extends GuiComponent {
         renderer.roundedRect(x, y, width, HEADER_HEIGHT, FRAME_RADIUS, ClickGuiTheme.PANEL);
         renderer.rect(x, y + HEADER_HEIGHT - 2, width, 2, ClickGuiTheme.PANEL);
         if (showHeaderIdentity()) {
-            renderer.verticallyCenteredText(renderer.ellipsize(title, Math.max(1, width - 26)),
-                    x + 6, y, HEADER_HEIGHT, ClickGuiTheme.TEXT);
+            renderer.verticallyCenteredText(
+                    renderer.ellipsize(title, Math.max(1, width - 26), 8.0F), x + 6, y,
+                    HEADER_HEIGHT, 8.0F, ClickGuiTheme.TEXT);
         }
         renderHeaderAction(renderer, mouseX, mouseY);
         if (showCollapseControl()) {

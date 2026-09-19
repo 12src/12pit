@@ -68,14 +68,15 @@ public class ButtonComponent extends GuiComponent {
         int resolvedTextColor = isEnabled() ? accentColors ? ClickGuiTheme.ACCENT_TEXT : textColor
                 : ClickGuiTheme.DISABLED_TEXT;
         if (textureIcon == null) {
-            renderer.centeredText(label, x, y, width, height, resolvedTextColor);
+            renderer.centeredText(label, x, y, width, height, 8.0F, resolvedTextColor);
         } else {
-            int contentWidth = 8 + renderer.textWidth(label) + 3;
+            int contentWidth = 8 + renderer.textWidth(label, 8.0F) + 3;
             int contentX = x + (width - contentWidth) / 2;
             float iconX = label.isEmpty() ? x + (width - 7) / 2.0F : contentX;
             renderer.centeredTexture(textureIcon, iconX, y, height, 7, 7, resolvedTextColor);
             if (!label.isEmpty()) {
-                renderer.verticallyCenteredText(label, contentX + 11, y, height, resolvedTextColor);
+                renderer.verticallyCenteredText(label, contentX + 11, y, height, 8.0F,
+                        resolvedTextColor);
             }
         }
     }

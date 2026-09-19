@@ -157,7 +157,7 @@ public final class RootTreeFrame extends DraggableFrame {
                 selected || hovered ? ClickGuiTheme.ROW_HOVER : ClickGuiTheme.ROW);
         int foreground = selected ? ClickGuiTheme.ACCENT_DARK
                 : hovered ? ClickGuiTheme.TEXT : ClickGuiTheme.MUTED_TEXT;
-        renderer.verticallyCenteredText(name, frameX() + 7, rowY, ROW_HEIGHT, foreground);
+        renderer.verticallyCenteredText(name, frameX() + 7, rowY, ROW_HEIGHT, 8.0F, foreground);
         renderer.centeredTexture(TextureIcon.RIGHT, frameX() + frameWidth() - 11, rowY, ROW_HEIGHT,
                 5, 5, selected ? ClickGuiTheme.ACCENT_DARK : ClickGuiTheme.MUTED_TEXT);
     }
@@ -174,9 +174,12 @@ public final class RootTreeFrame extends DraggableFrame {
                 return false;
             }
             SearchResult result = searchResults.get(index);
-            if (!result.feature.options().isEmpty()) {
+            int settingsX = frameX() + frameWidth() - 15;
+            if (mouseX >= settingsX && !result.feature.options().isEmpty()) {
                 result.category.revealFeature(result.feature.id());
                 controller.showFrame(result.category);
+            } else if (result.feature.toggleable()) {
+                result.feature.setEnabled(!result.feature.enabled());
             }
             return true;
         }
@@ -211,7 +214,7 @@ public final class RootTreeFrame extends DraggableFrame {
     private void renderSearchResults(ClickGuiRenderer renderer, int mouseX, int mouseY) {
         int rowY = frameY() + HEADER_HEIGHT - searchScroll;
         if (searchResults.isEmpty()) {
-            renderer.centeredText("No modules", frameX(), rowY, frameWidth(), ROW_HEIGHT,
+            renderer.centeredText("No modules", frameX(), rowY, frameWidth(), ROW_HEIGHT, 8.0F,
                     ClickGuiTheme.MUTED_TEXT);
             return;
         }
@@ -222,10 +225,11 @@ public final class RootTreeFrame extends DraggableFrame {
                 renderer.rect(frameX(), rowY, frameWidth(), ROW_HEIGHT,
                         hovered ? ClickGuiTheme.ROW_HOVER : ClickGuiTheme.ROW);
                 renderer.verticallyCenteredText(
-                        renderer.ellipsize(result.feature.displayName(), frameWidth() - 29),
-                        frameX() + 6, rowY, ROW_HEIGHT, ClickGuiTheme.MUTED_TEXT);
+                        renderer.ellipsize(result.feature.displayName(), frameWidth() - 29, 8.0F),
+                        frameX() + 6, rowY, ROW_HEIGHT, 8.0F,
+                        result.feature.enabled() ? ClickGuiTheme.ACCENT : ClickGuiTheme.MUTED_TEXT);
                 if (!result.feature.options().isEmpty()) {
-                    renderer.centeredTexture(TextureIcon.SETTINGS, frameX() + frameWidth() - 12,
+                    renderer.centeredTexture(TextureIcon.SETTINGS, frameX() + frameWidth() - 10,
                             rowY, ROW_HEIGHT, 6, 6, ClickGuiTheme.MUTED_TEXT);
                 }
             }

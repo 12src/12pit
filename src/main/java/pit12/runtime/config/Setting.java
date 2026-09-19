@@ -32,11 +32,12 @@ public abstract class Setting<T> {
     private T value;
     private ChangeSink changeSink;
 
+    /** Subclasses validate their default after initializing any state used by {@link #requireValue(Object)}. */
     protected Setting(String id, String displayName, String description, T defaultValue) {
         this.id = ConfigNames.requireStableId(id, "setting id");
         this.displayName = ConfigNames.requireText(displayName, "setting display name");
         this.description = ConfigNames.requireDescription(description);
-        this.defaultValue = requireValue(defaultValue);
+        this.defaultValue = Objects.requireNonNull(defaultValue, "defaultValue");
         value = this.defaultValue;
     }
 

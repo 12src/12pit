@@ -76,7 +76,8 @@ public final class ProfileCreateOverlay extends ContainerComponent {
         renderer.roundedRect(panelX, panelY, panelWidth, panelHeight, 4, ClickGuiTheme.PANEL);
         renderer.roundedOutline(panelX - 0.5F, panelY - 0.5F, panelWidth + 1.0F, panelHeight + 1.0F,
                 4.1F, 1.0F, ClickGuiTheme.BORDER);
-        renderer.verticallyCenteredText("New profile", panelX + 8, panelY, 20, ClickGuiTheme.TEXT);
+        renderer.verticallyCenteredText("New profile", panelX + 8, panelY, 20, 8.0F,
+                ClickGuiTheme.TEXT);
         renderer.rect(panelX + 8, panelY + 19, panelWidth - 16, 1, ClickGuiTheme.DIVIDER);
         nameInput.setBounds(panelX + 8, panelY + 24, panelWidth - 16, 20);
         int buttonY = panelY + panelHeight - 27;

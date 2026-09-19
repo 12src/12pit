@@ -35,7 +35,7 @@ public final class ClickGuiConfig extends FeatureConfig {
 
     public ClickGuiConfig() {
         super("clickgui", "ClickGUI", new ConfigCategory("clickgui", "ClickGUI", Integer.MAX_VALUE),
-                "Frames interface and input preferences.");
+                "Frames interface and input preferences.", false);
         dimBackground = booleanSetting("dim_background", "Dim background",
                 "Darkens the game behind the ClickGUI.", true);
         showTooltips = booleanSetting("show_tooltips", "Show tooltips",

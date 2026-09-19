@@ -68,7 +68,7 @@ public final class ProfilesFrame extends DraggableFrame {
         int rowY = contentTop - scroll;
         if (snapshot.loadState() == LoadState.LOADING) {
             renderer.centeredText("Loading profiles...", frameX(), contentTop, frameWidth(), 32,
-                    ClickGuiTheme.MUTED_TEXT);
+                    8.0F, ClickGuiTheme.MUTED_TEXT);
             return;
         }
         boolean createHovered = inContentRow(mouseX, mouseY, rowY, CREATE_HEIGHT);
@@ -76,7 +76,7 @@ public final class ProfilesFrame extends DraggableFrame {
                 createHovered ? ClickGuiTheme.ROW_HOVER : ClickGuiTheme.ROW);
         renderer.centeredTexture(TextureIcon.ADD, frameX() + 7, rowY, CREATE_HEIGHT, 7, 7,
                 ClickGuiTheme.ACCENT);
-        renderer.verticallyCenteredText("Create new", frameX() + 21, rowY, CREATE_HEIGHT,
+        renderer.verticallyCenteredText("Create new", frameX() + 21, rowY, CREATE_HEIGHT, 8.0F,
                 ClickGuiTheme.TEXT);
         rowY += CREATE_HEIGHT;
         renderer.rect(frameX() + 6, rowY, frameWidth() - 12, 1, ClickGuiTheme.DIVIDER);
@@ -89,7 +89,7 @@ public final class ProfilesFrame extends DraggableFrame {
             renderRow(renderer, snapshot, rows.get(index), renderY, mouseX, mouseY, partialTicks);
         }
         if (rows.isEmpty()) {
-            renderer.centeredText("No profiles", frameX(), rowY + 8, frameWidth(), 24,
+            renderer.centeredText("No profiles", frameX(), rowY + 8, frameWidth(), 24, 8.0F,
                     ClickGuiTheme.MUTED_TEXT);
         }
         int viewport = contentViewportHeight();
@@ -111,9 +111,9 @@ public final class ProfilesFrame extends DraggableFrame {
             renameInput.render(renderer, mouseX, mouseY, partialTicks);
         } else {
             if (row.clippedName == null) {
-                row.clippedName = renderer.ellipsize(profile.name(), frameWidth() - 48);
+                row.clippedName = renderer.ellipsize(profile.name(), frameWidth() - 48, 8.0F);
             }
-            renderer.verticallyCenteredText(row.clippedName, frameX() + 8, rowY, ROW_HEIGHT,
+            renderer.verticallyCenteredText(row.clippedName, frameX() + 8, rowY, ROW_HEIGHT, 8.0F,
                     active ? ClickGuiTheme.ACCENT_TEXT : ClickGuiTheme.MUTED_TEXT);
         }
         if (!hovered && !renaming) {

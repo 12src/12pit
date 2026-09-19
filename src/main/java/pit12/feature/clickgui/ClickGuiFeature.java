@@ -22,6 +22,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraftforge.common.MinecraftForge;
 import pit12.feature.Feature;
 import pit12.feature.clickgui.input.ClickGuiKeyListener;
+import pit12.feature.hudeditor.api.HudEditor;
 import pit12.feature.profile.api.Profiles;
 import pit12.runtime.config.ConfigCatalog;
 
@@ -31,9 +32,10 @@ public final class ClickGuiFeature implements Feature {
     private final ClickGuiKeyListener keyListener;
     private boolean started;
 
-    public ClickGuiFeature(ConfigCatalog catalog, Profiles profiles, ClickGuiConfig config) {
+    public ClickGuiFeature(ConfigCatalog catalog, Profiles profiles, ClickGuiConfig config,
+            HudEditor hudEditor) {
         minecraft = Minecraft.getMinecraft();
-        controller = new ClickGuiController(catalog, profiles, config);
+        controller = new ClickGuiController(catalog, profiles, config, hudEditor);
         keyListener = new ClickGuiKeyListener(minecraft, controller, config);
     }
 

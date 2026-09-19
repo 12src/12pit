@@ -18,22 +18,39 @@
  */
 package pit12.runtime.config;
 
-public final class ColorSetting extends Setting<Integer> {
-    ColorSetting(String id, String displayName, String description, int defaultValue) {
+public final class IntegerSetting extends Setting<Integer> {
+    private final int minimum;
+    private final int maximum;
+
+    IntegerSetting(String id, String displayName, String description, int defaultValue, int minimum,
+            int maximum) {
         super(id, displayName, description, Integer.valueOf(defaultValue));
+        if (minimum > maximum) {
+            throw new IllegalArgumentException("minimum must not exceed maximum");
+        }
+        this.minimum = minimum;
+        this.maximum = maximum;
         requireValue(Integer.valueOf(defaultValue));
+    }
+
+    public int minimum() {
+        return minimum;
+    }
+
+    public int maximum() {
+        return maximum;
     }
 
     @Override
     protected Integer requireValue(Object candidate) {
         if (!(candidate instanceof Number)) {
-            throw new IllegalArgumentException("Setting " + id() + " requires an RGB color");
+            throw new IllegalArgumentException("Setting " + id() + " requires an integer");
         }
-        long color = ((Number) candidate).longValue();
-        if (color < 0 || color > 0xFFFFFF) {
+        long value = ((Number) candidate).longValue();
+        if (value < minimum || value > maximum) {
             throw new IllegalArgumentException(
-                    "Setting " + id() + " requires an RGB color from 0x000000 to 0xFFFFFF");
+                    "Setting " + id() + " requires an integer from " + minimum + " to " + maximum);
         }
-        return Integer.valueOf((int) color);
+        return Integer.valueOf((int) value);
     }
 }

@@ -45,8 +45,8 @@ public final class ToggleComponent extends GuiComponent {
         int toggleX = x + width - toggleWidth;
         int toggleY = y + (height - toggleHeight) / 2;
         renderer.verticallyCenteredText(
-                renderer.ellipsize(label, Math.max(1, width - toggleWidth - 5)), x, y, height,
-                ClickGuiTheme.TEXT);
+                renderer.ellipsize(label, Math.max(1, width - toggleWidth - 5), 8.0F), x, y, height,
+                8.0F, ClickGuiTheme.TEXT);
         boolean enabled = value.getAsBoolean();
         float progress = stateAnimation.update(enabled, renderer.animationsEnabled());
         renderer.roundedRect(toggleX, toggleY, toggleWidth, toggleHeight, 3,

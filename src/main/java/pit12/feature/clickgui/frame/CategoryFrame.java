@@ -42,6 +42,8 @@ public final class CategoryFrame extends DraggableFrame {
     private final List<FeatureConfig> features;
     private final Map<BooleanSetting, UiAnimation> settingAnimations =
             new LinkedHashMap<BooleanSetting, UiAnimation>();
+    private final Map<FeatureConfig, UiAnimation> featureAnimations =
+            new LinkedHashMap<FeatureConfig, UiAnimation>();
     private String expandedFeatureId;
     private int scroll;
 
@@ -54,6 +56,7 @@ public final class CategoryFrame extends DraggableFrame {
         this.category = category;
         this.features = new ArrayList<FeatureConfig>(features);
         for (FeatureConfig feature : this.features) {
+            featureAnimations.put(feature, new UiAnimation());
             for (Setting<?> setting : feature.options()) {
                 if (setting instanceof BooleanSetting) {
                     settingAnimations.put((BooleanSetting) setting, new UiAnimation());
@@ -113,6 +116,9 @@ public final class CategoryFrame extends DraggableFrame {
     private void renderFeature(ClickGuiRenderer renderer, FeatureConfig feature, int rowY,
             int mouseX, int mouseY, boolean expanded) {
         boolean hovered = inRow(mouseX, mouseY, rowY, FEATURE_HEIGHT);
+        boolean enabled = feature.enabled();
+        float progress =
+                featureAnimations.get(feature).update(enabled, renderer.animationsEnabled());
         int background = expanded ? ClickGuiTheme.ROW_PRESSED
                 : hovered ? ClickGuiTheme.ROW_HOVER : ClickGuiTheme.ROW;
         renderer.rect(frameX(), rowY, frameWidth(), FEATURE_HEIGHT, background);
@@ -123,9 +129,10 @@ public final class CategoryFrame extends DraggableFrame {
                 iconColor);
         int textRight = settingsX - 2;
         renderer.verticallyCenteredText(
-                renderer.ellipsize(feature.displayName(), Math.max(1, textRight - frameX() - 7)),
-                frameX() + 6, rowY, FEATURE_HEIGHT,
-                expanded ? ClickGuiTheme.TEXT : ClickGuiTheme.MUTED_TEXT);
+                renderer.ellipsize(feature.displayName(), Math.max(1, textRight - frameX() - 7),
+                        8.0F),
+                frameX() + 6, rowY, FEATURE_HEIGHT, 8.0F,
+                renderer.mix(ClickGuiTheme.MUTED_TEXT, ClickGuiTheme.ACCENT, progress));
         if (hovered && mouseX >= settingsX) {
             controller.tooltip(
                     feature.options().isEmpty() ? "No additional settings" : "Open settings",
@@ -141,8 +148,8 @@ public final class CategoryFrame extends DraggableFrame {
         renderer.rect(frameX(), rowY, frameWidth(), SETTING_HEIGHT,
                 hovered ? ClickGuiTheme.ROW_HOVER : ClickGuiTheme.PANEL);
         renderer.verticallyCenteredText(
-                renderer.ellipsize(setting.displayName(), frameWidth() - 37), frameX() + 10, rowY,
-                SETTING_HEIGHT, ClickGuiTheme.MUTED_TEXT);
+                renderer.ellipsize(setting.displayName(), frameWidth() - 37, 8.0F), frameX() + 10,
+                rowY, SETTING_HEIGHT, 8.0F, ClickGuiTheme.MUTED_TEXT);
         if (setting instanceof BooleanSetting) {
             BooleanSetting booleanSetting = (BooleanSetting) setting;
             boolean enabled = booleanSetting.get().booleanValue();
@@ -157,7 +164,7 @@ public final class CategoryFrame extends DraggableFrame {
                     renderer.mix(ClickGuiTheme.TEXT, ClickGuiTheme.ACCENT_TEXT, progress));
         } else {
             renderer.verticallyCenteredText("?", frameX() + frameWidth() - 14, rowY, SETTING_HEIGHT,
-                    ClickGuiTheme.WARNING);
+                    8.0F, ClickGuiTheme.WARNING);
         }
         if (hovered && !setting.description().isEmpty()) {
             controller.tooltip(setting.description(), mouseX, mouseY);
@@ -174,9 +181,12 @@ public final class CategoryFrame extends DraggableFrame {
         for (FeatureConfig feature : features) {
             if (inRow(mouseX, mouseY, rowY, FEATURE_HEIGHT)) {
                 controller.focus(null);
-                if (!feature.options().isEmpty()) {
+                int settingsX = frameX() + frameWidth() - 15;
+                if ((button == 1 || mouseX >= settingsX) && !feature.options().isEmpty()) {
                     expandedFeatureId =
                             feature.id().equals(expandedFeatureId) ? null : feature.id();
+                } else if (button == 0 && feature.toggleable()) {
+                    feature.setEnabled(!feature.enabled());
                 }
                 resizeToContent();
                 clampScroll();

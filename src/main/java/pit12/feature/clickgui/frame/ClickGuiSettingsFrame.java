@@ -113,7 +113,7 @@ public final class ClickGuiSettingsFrame extends DraggableFrame {
         boolean bindHovered = inRow(mouseX, mouseY, rowY, BIND_ROW_HEIGHT);
         int bindBackground = bindHovered ? ClickGuiTheme.ROW_HOVER : ClickGuiTheme.ROW;
         renderer.rect(frameX(), rowY, frameWidth(), BIND_ROW_HEIGHT, bindBackground);
-        renderer.verticallyCenteredText("Rebind GUI", frameX() + 7, rowY, BIND_ROW_HEIGHT,
+        renderer.verticallyCenteredText("Rebind GUI", frameX() + 7, rowY, BIND_ROW_HEIGHT, 8.0F,
                 ClickGuiTheme.MUTED_TEXT);
         int bindWidth = keybind.preferredWidth(renderer);
         int bindHeight = keybind.preferredHeight();
@@ -127,8 +127,8 @@ public final class ClickGuiSettingsFrame extends DraggableFrame {
         }
         String version = "12pit";
         renderer.verticallyCenteredText(version,
-                frameX() + frameWidth() - renderer.textWidth(version) - 4,
-                frameY() + frameHeight() - 15, 12, ClickGuiTheme.DISABLED_TEXT);
+                frameX() + frameWidth() - renderer.textWidth(version, 8.0F) - 4,
+                frameY() + frameHeight() - 15, 12, 8.0F, ClickGuiTheme.DISABLED_TEXT);
     }
 
     @Override

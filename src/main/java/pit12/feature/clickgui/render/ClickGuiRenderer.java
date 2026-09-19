@@ -18,17 +18,17 @@
  */
 package pit12.feature.clickgui.render;
 
-import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Gui;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.util.ResourceLocation;
-import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL14;
 import pit12.Pit12;
 import pit12.feature.clickgui.ClickGuiConfig;
+import pit12.shared.rendering.UiRenderState;
+import pit12.shared.rendering.UiRenderer;
 
 public final class ClickGuiRenderer {
     public enum TextureIcon {
@@ -36,6 +36,7 @@ public final class ClickGuiRenderer {
         GEAR("gear"),
         BIND("bind"),
         EDIT("edit"),
+        HUD_EDITOR("hud-editor"),
         CLOSE("close"),
         COLLAPSE("collapse"),
         EXPAND("expand"),
@@ -51,8 +52,6 @@ public final class ClickGuiRenderer {
         }
     }
 
-    // LWJGL 2 validates vector glGet buffers against OpenGL's 16-value maximum, even for four-value queries.
-    private static final int GL_QUERY_BUFFER_CAPACITY = 16;
     private static final int CORNER_SEGMENTS = 12;
     private static final int ROUNDED_POINT_COUNT = 4 * (CORNER_SEGMENTS + 1);
     private static final float EDGE_FEATHER = 1.0F;
@@ -60,6 +59,8 @@ public final class ClickGuiRenderer {
     private static final float[] ROUNDED_SIN = new float[ROUNDED_POINT_COUNT];
     private static final ResourceLocation FONT_LOCATION =
             new ResourceLocation(Pit12.MOD_ID, "fonts/montserrat-regular.ttf");
+    private static final ResourceLocation FALLBACK_FONT_LOCATION =
+            new ResourceLocation(Pit12.MOD_ID, "fonts/noto-sans-sc.otf");
     static {
         for (int corner = 0; corner < 4; corner++) {
             double start = Math.PI + corner * Math.PI / 2.0;
@@ -74,32 +75,22 @@ public final class ClickGuiRenderer {
             }
         }
     }
-    private final HudRenderer hud;
+    private final Minecraft minecraft;
+    private final UiRenderer ui;
+    private final ClickGuiTextureCache textures;
+    private final UiRenderState renderState = new UiRenderState();
     private final ScissorStack scissors;
     private final ClickGuiConfig config;
-    private final FloatBuffer currentColor =
-            BufferUtils.createFloatBuffer(GL_QUERY_BUFFER_CAPACITY);
     private boolean drawing;
-    private boolean blendEnabled;
-    private boolean textureEnabled;
-    private boolean alphaEnabled;
-    private boolean lightingEnabled;
-    private boolean cullEnabled;
-    private int blendSourceRgb;
-    private int blendDestinationRgb;
-    private int blendSourceAlpha;
-    private int blendDestinationAlpha;
-    private int boundTexture;
-    private int shadeModel;
-    private int alphaFunction;
-    private float alphaReference;
-    private final float[] color = new float[4];
+    private float pixelScale = Float.NaN;
     private int viewportWidth = 1;
     private int viewportHeight = 1;
 
     public ClickGuiRenderer(Minecraft minecraft, ClickGuiConfig config) {
+        this.minecraft = minecraft;
         this.config = config;
-        hud = new HudRenderer(minecraft, FONT_LOCATION, 8.0F);
+        ui = new UiRenderer(minecraft, FONT_LOCATION, FALLBACK_FONT_LOCATION);
+        textures = new ClickGuiTextureCache(minecraft);
         scissors = new ScissorStack(minecraft);
     }
 
@@ -108,42 +99,28 @@ public final class ClickGuiRenderer {
         this.viewportWidth = Math.max(1, viewportWidth);
         this.viewportHeight = Math.max(1, viewportHeight);
         scissors.setInterfaceScale(interfaceScale);
-        hud.resize(pixelScale);
+        float normalizedScale = Math.max(0.01F, pixelScale);
+        if (Float.compare(this.pixelScale, normalizedScale) != 0) {
+            textures.close();
+            this.pixelScale = normalizedScale;
+        }
+        ui.resize(normalizedScale);
     }
 
     public void begin() {
         if (drawing) {
             throw new IllegalStateException("Renderer is already active");
         }
-        drawing = true;
         int accent = config.guiColor().get().intValue();
         ClickGuiTheme.configureAccent(accent);
-        blendEnabled = GL11.glIsEnabled(GL11.GL_BLEND);
-        textureEnabled = GL11.glIsEnabled(GL11.GL_TEXTURE_2D);
-        alphaEnabled = GL11.glIsEnabled(GL11.GL_ALPHA_TEST);
-        lightingEnabled = GL11.glIsEnabled(GL11.GL_LIGHTING);
-        cullEnabled = GL11.glIsEnabled(GL11.GL_CULL_FACE);
-        blendSourceRgb = GL11.glGetInteger(GL14.GL_BLEND_SRC_RGB);
-        blendDestinationRgb = GL11.glGetInteger(GL14.GL_BLEND_DST_RGB);
-        blendSourceAlpha = GL11.glGetInteger(GL14.GL_BLEND_SRC_ALPHA);
-        blendDestinationAlpha = GL11.glGetInteger(GL14.GL_BLEND_DST_ALPHA);
-        boundTexture = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
-        shadeModel = GL11.glGetInteger(GL11.GL_SHADE_MODEL);
-        alphaFunction = GL11.glGetInteger(GL11.GL_ALPHA_TEST_FUNC);
-        alphaReference = GL11.glGetFloat(GL11.GL_ALPHA_TEST_REF);
-        currentColor.clear();
-        GL11.glGetFloat(GL11.GL_CURRENT_COLOR, currentColor);
-        for (int index = 0; index < color.length; index++) {
-            color[index] = currentColor.get(index);
+        renderState.begin();
+        try {
+            scissors.begin();
+            drawing = true;
+        } catch (RuntimeException failure) {
+            renderState.end();
+            throw failure;
         }
-        GlStateManager.pushMatrix();
-        GlStateManager.enableBlend();
-        GlStateManager.enableAlpha();
-        GlStateManager.disableLighting();
-        GlStateManager.disableCull();
-        GL11.glShadeModel(GL11.GL_SMOOTH);
-        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-        scissors.begin();
     }
 
     public void end() {
@@ -152,25 +129,14 @@ public final class ClickGuiRenderer {
         }
         try {
             scissors.restore();
-            restoreEnableState(blendEnabled, State.BLEND);
-            restoreEnableState(textureEnabled, State.TEXTURE);
-            restoreEnableState(alphaEnabled, State.ALPHA);
-            restoreEnableState(lightingEnabled, State.LIGHTING);
-            restoreEnableState(cullEnabled, State.CULL);
-            GlStateManager.tryBlendFuncSeparate(blendSourceRgb, blendDestinationRgb,
-                    blendSourceAlpha, blendDestinationAlpha);
-            GlStateManager.bindTexture(boundTexture);
-            GL11.glShadeModel(shadeModel);
-            GlStateManager.alphaFunc(alphaFunction, alphaReference);
-            GlStateManager.color(color[0], color[1], color[2], color[3]);
         } finally {
-            GlStateManager.popMatrix();
+            renderState.end();
             drawing = false;
         }
     }
 
     public void rect(int x, int y, int width, int height, int color) {
-        hud.rect(x, y, width, height, color);
+        ui.rect(x, y, width, height, color);
     }
 
     public void roundedRect(int x, int y, int width, int height, int radius, int color) {
@@ -247,16 +213,18 @@ public final class ClickGuiRenderer {
         return alpha << 24 | red << 16 | green << 8 | blue;
     }
 
-    // prepareTexture is a map lookup per draw call; the rasterized icon is built once per
-    // (icon, size) and reused until HudRenderer.resize drops the cache on a pixelScale change.
+    // Rasterized icons are reused until the framebuffer scale changes.
     public void texture(TextureIcon icon, int x, int y, int width, int height, int color) {
-        hud.texture(hud.prepareTexture(icon.location, width, height), x, y, width, height, color);
+        texture(textures.prepare(icon.location, Math.max(1, Math.round(width * pixelScale)),
+                Math.max(1, Math.round(height * pixelScale))), x, y, width, height, color);
     }
 
     public void centeredTexture(TextureIcon icon, float x, int y, int containerHeight, int width,
             int height, int color) {
-        hud.texture(hud.prepareTexture(icon.location, width, height), x,
-                y + (containerHeight - height) / 2.0F, width, height, color);
+        ResourceLocation texture =
+                textures.prepare(icon.location, Math.max(1, Math.round(width * pixelScale)),
+                        Math.max(1, Math.round(height * pixelScale)));
+        texture(texture, x, y + (containerHeight - height) / 2.0F, width, height, color);
     }
 
     public boolean animationsEnabled() {
@@ -277,71 +245,46 @@ public final class ClickGuiRenderer {
         rect(x - 1, thumbY, 2, thumbHeight, ClickGuiTheme.MUTED_TEXT);
     }
 
-    public void text(String text, int x, int y, int color) {
-        hud.text(text, x, y, color);
+    public void text(String text, int x, int y, float fontSize, int color) {
+        ui.text(text, x, y, fontSize, color);
     }
 
-    public void verticallyCenteredText(String text, int x, int y, int height, int color) {
-        text(text, x, y + Math.round((height - fontHeight()) / 2.0F), color);
+    public void verticallyCenteredText(String text, int x, int y, int height, float fontSize,
+            int color) {
+        text(text, x, y + Math.round((height - fontHeight(fontSize)) / 2.0F), fontSize, color);
     }
 
-    public void centeredSmallText(String text, int x, int y, int width, int height, int color) {
-        hud.smallText(text, x + (width - smallTextWidth(text)) / 2.0F,
-                y + (height - smallFontHeight()) / 2.0F, color);
+    public void centeredText(String text, int x, int y, int width, int height, float fontSize,
+            int color) {
+        text(text, x + (width - textWidth(text, fontSize)) / 2,
+                y + Math.round((height - fontHeight(fontSize)) / 2.0F), fontSize, color);
     }
 
-    public void centeredText(String text, int x, int y, int width, int height, int color) {
-        text(text, x + (width - textWidth(text)) / 2,
-                y + Math.round((height - fontHeight()) / 2.0F), color);
+    public int textWidth(String text, float fontSize) {
+        return ui.textWidth(text, fontSize);
     }
 
-    public int textWidth(String text) {
-        return hud.textWidth(text);
-    }
-
-    public int smallTextWidth(String text) {
-        return hud.smallTextWidth(text);
-    }
-
-    public int fontHeight() {
-        return hud.fontHeight();
-    }
-
-    public int smallFontHeight() {
-        return hud.smallFontHeight();
+    public int fontHeight(float fontSize) {
+        return ui.fontHeight(fontSize);
     }
 
     public void close() {
-        hud.close();
+        textures.close();
+        ui.close();
+        pixelScale = Float.NaN;
     }
 
-    public String ellipsize(String text, int maximumWidth) {
-        if (textWidth(text) <= maximumWidth) {
+    public String ellipsize(String text, int maximumWidth, float fontSize) {
+        if (textWidth(text, fontSize) <= maximumWidth) {
             return text;
         }
         String suffix = "...";
-        int available = maximumWidth - textWidth(suffix);
+        int available = maximumWidth - textWidth(suffix, fontSize);
         if (available <= 0) {
             return suffix;
         }
         int length = text.length();
-        while (length > 0 && textWidth(text.substring(0, length)) > available) {
-            length--;
-        }
-        return text.substring(0, length) + suffix;
-    }
-
-    public String ellipsizeSmall(String text, int maximumWidth) {
-        if (smallTextWidth(text) <= maximumWidth) {
-            return text;
-        }
-        String suffix = "...";
-        int available = maximumWidth - smallTextWidth(suffix);
-        if (available <= 0) {
-            return suffix;
-        }
-        int length = text.length();
-        while (length > 0 && smallTextWidth(text.substring(0, length)) > available) {
+        while (length > 0 && textWidth(text.substring(0, length), fontSize) > available) {
             length--;
         }
         return text.substring(0, length) + suffix;
@@ -367,16 +310,17 @@ public final class ClickGuiRenderer {
         }
         int width = 0;
         for (String line : lines) {
-            width = Math.max(width, textWidth(line));
+            width = Math.max(width, textWidth(line, 8.0F));
         }
-        int height = lines.size() * (fontHeight() + 2) + 6;
+        int height = lines.size() * (fontHeight(8.0F) + 2) + 6;
         int x = Math.max(2, Math.min(mouseX + 8, viewportWidth - width - 10));
         int y = Math.max(2, Math.min(mouseY + 8, viewportHeight - height - 2));
         roundedRect(x, y, width + 8, height, 4, ClickGuiTheme.PANEL_INSET);
         roundedOutline(x - 0.5F, y - 0.5F, width + 9.0F, height + 1.0F, 4.1F, 1.0F,
                 ClickGuiTheme.BORDER);
         for (int index = 0; index < lines.size(); index++) {
-            text(lines.get(index), x + 4, y + 4 + index * (fontHeight() + 2), ClickGuiTheme.TEXT);
+            text(lines.get(index), x + 4, y + 4 + index * (fontHeight(8.0F) + 2), 8.0F,
+                    ClickGuiTheme.TEXT);
         }
     }
 
@@ -385,7 +329,7 @@ public final class ClickGuiRenderer {
         StringBuilder line = new StringBuilder();
         for (String word : text.split(" ")) {
             String candidate = line.length() == 0 ? word : line + " " + word;
-            if (line.length() > 0 && textWidth(candidate) > maximumWidth) {
+            if (line.length() > 0 && textWidth(candidate, 8.0F) > maximumWidth) {
                 lines.add(line.toString());
                 line.setLength(0);
             }
@@ -398,6 +342,36 @@ public final class ClickGuiRenderer {
             lines.add(line.toString());
         }
         return lines;
+    }
+
+    private void texture(ResourceLocation texture, float x, float y, int width, int height,
+            int color) {
+        if (width <= 0 || height <= 0 || Float.isNaN(pixelScale)) {
+            return;
+        }
+        int pixelX = Math.round(x * pixelScale);
+        int pixelY = Math.round(y * pixelScale);
+        int pixelWidth = Math.max(1, Math.round(width * pixelScale));
+        int pixelHeight = Math.max(1, Math.round(height * pixelScale));
+        float alpha = (color >>> 24 & 0xFF) / 255.0F;
+        float red = (color >>> 16 & 0xFF) / 255.0F;
+        float green = (color >>> 8 & 0xFF) / 255.0F;
+        float blue = (color & 0xFF) / 255.0F;
+        GlStateManager.pushMatrix();
+        GlStateManager.scale(1.0F / pixelScale, 1.0F / pixelScale, 1.0F);
+        try {
+            GlStateManager.enableTexture2D();
+            GlStateManager.enableBlend();
+            GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1,
+                    0);
+            minecraft.getTextureManager().bindTexture(texture);
+            GlStateManager.color(red, green, blue, alpha);
+            Gui.drawModalRectWithCustomSizedTexture(pixelX, pixelY, 0.0F, 0.0F, pixelWidth,
+                    pixelHeight, pixelWidth, pixelHeight);
+        } finally {
+            GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+            GlStateManager.popMatrix();
+        }
     }
 
     private static int mixChannel(int from, int to, float progress) {
@@ -496,41 +470,5 @@ public final class ClickGuiRenderer {
     private static void glColor(int color) {
         GlStateManager.color((color >>> 16 & 0xFF) / 255.0F, (color >>> 8 & 0xFF) / 255.0F,
                 (color & 0xFF) / 255.0F, (color >>> 24 & 0xFF) / 255.0F);
-    }
-
-    private static void restoreEnableState(boolean enabled, State state) {
-        if (state == State.BLEND) {
-            if (enabled) {
-                GlStateManager.enableBlend();
-            } else {
-                GlStateManager.disableBlend();
-            }
-        } else if (state == State.TEXTURE) {
-            if (enabled) {
-                GlStateManager.enableTexture2D();
-            } else {
-                GlStateManager.disableTexture2D();
-            }
-        } else if (state == State.ALPHA) {
-            if (enabled) {
-                GlStateManager.enableAlpha();
-            } else {
-                GlStateManager.disableAlpha();
-            }
-        } else if (state == State.LIGHTING) {
-            if (enabled) {
-                GlStateManager.enableLighting();
-            } else {
-                GlStateManager.disableLighting();
-            }
-        } else if (enabled) {
-            GlStateManager.enableCull();
-        } else {
-            GlStateManager.disableCull();
-        }
-    }
-
-    private enum State {
-        BLEND, TEXTURE, ALPHA, LIGHTING, CULL
     }
 }
