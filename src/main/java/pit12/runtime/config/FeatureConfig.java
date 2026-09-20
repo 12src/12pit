@@ -32,10 +32,10 @@ public abstract class FeatureConfig {
     private final String description;
     private final BooleanSetting enabled;
     private final List<Setting<?>> settings = new ArrayList<Setting<?>>();
-    private final List<Setting<?>> options = new ArrayList<Setting<?>>();
+    private final List<ConfigOption<?>> options = new ArrayList<ConfigOption<?>>();
     private final List<HudConfig> huds = new ArrayList<HudConfig>();
     private final List<Setting<?>> settingsView = Collections.unmodifiableList(settings);
-    private final List<Setting<?>> optionsView = Collections.unmodifiableList(options);
+    private final List<ConfigOption<?>> optionsView = Collections.unmodifiableList(options);
     private final List<HudConfig> hudsView = Collections.unmodifiableList(huds);
     private final Map<String, Setting<?>> settingsById = new LinkedHashMap<String, Setting<?>>();
     private final Map<String, HudConfig> hudsById = new LinkedHashMap<String, HudConfig>();
@@ -57,28 +57,46 @@ public abstract class FeatureConfig {
                                 "Enables " + this.displayName + ".", true)
                         : null;
         if (enabled != null) {
-            register(enabled, false);
+            register(enabled, null);
         }
     }
 
     protected final BooleanSetting booleanSetting(String id, String displayName, String description,
             boolean defaultValue) {
         BooleanSetting setting = new BooleanSetting(id, displayName, description, defaultValue);
-        register(setting, true);
+        register(setting, ConfigOption.Kind.BOOLEAN);
         return setting;
     }
 
-    protected final KeybindSetting keybindSetting(String id, String displayName, String description,
+    protected final IntegerSetting keybindSetting(String id, String displayName, String description,
             int defaultValue) {
-        KeybindSetting setting = new KeybindSetting(id, displayName, description, defaultValue);
-        register(setting, true);
+        IntegerSetting setting =
+                new IntegerSetting(id, displayName, description, defaultValue, 0, 255);
+        register(setting, ConfigOption.Kind.KEYBIND);
         return setting;
     }
 
-    protected final ColorSetting colorSetting(String id, String displayName, String description,
+    protected final IntegerSetting colorSetting(String id, String displayName, String description,
             int defaultValue) {
-        ColorSetting setting = new ColorSetting(id, displayName, description, defaultValue);
-        register(setting, true);
+        IntegerSetting setting =
+                new IntegerSetting(id, displayName, description, defaultValue, 0, 0xFFFFFF);
+        register(setting, ConfigOption.Kind.COLOR);
+        return setting;
+    }
+
+    protected final IntegerSetting integerSliderSetting(String id, String displayName,
+            String description, int defaultValue, int minimum, int maximum, int step) {
+        IntegerSetting setting = new IntegerSetting(id, displayName, description, defaultValue,
+                minimum, maximum, step);
+        register(setting, ConfigOption.Kind.NUMBER);
+        return setting;
+    }
+
+    protected final DoubleSetting doubleSliderSetting(String id, String displayName,
+            String description, double defaultValue, double minimum, double maximum, double step) {
+        DoubleSetting setting = new DoubleSetting(id, displayName, description, defaultValue,
+                minimum, maximum, step);
+        register(setting, ConfigOption.Kind.NUMBER);
         return setting;
     }
 
@@ -101,11 +119,11 @@ public abstract class FeatureConfig {
         IntegerSetting offsetY = new IntegerSetting(prefix + "offset_y", "Vertical offset", "",
                 defaultOffsetY, -32768, 32767);
         IntegerSetting scale = new IntegerSetting(prefix + "scale", "Scale", "", 100, 25, 300);
-        register(textShadow, true);
-        register(anchor, false);
-        register(offsetX, false);
-        register(offsetY, false);
-        register(scale, false);
+        register(textShadow, ConfigOption.Kind.BOOLEAN);
+        register(anchor, null);
+        register(offsetX, null);
+        register(offsetY, null);
+        register(scale, null);
         HudConfig hud =
                 new HudConfig(hudId, hudDisplayName, textShadow, anchor, offsetX, offsetY, scale);
         huds.add(hud);
@@ -113,14 +131,14 @@ public abstract class FeatureConfig {
         return hud;
     }
 
-    private void register(Setting<?> setting, boolean option) {
+    private <T> void register(Setting<T> setting, ConfigOption.Kind optionKind) {
         if (settingsById.containsKey(setting.id())) {
             throw new IllegalArgumentException(
                     "Duplicate setting id " + setting.id() + " in feature " + id);
         }
         settings.add(setting);
-        if (option) {
-            options.add(setting);
+        if (optionKind != null) {
+            options.add(new ConfigOption<T>(setting, optionKind));
         }
         settingsById.put(setting.id(), setting);
     }
@@ -160,7 +178,7 @@ public abstract class FeatureConfig {
         return settingsView;
     }
 
-    public final List<Setting<?>> options() {
+    public final List<ConfigOption<?>> options() {
         return optionsView;
     }
 

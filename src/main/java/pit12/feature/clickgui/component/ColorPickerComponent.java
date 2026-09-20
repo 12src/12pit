@@ -49,8 +49,14 @@ public final class ColorPickerComponent extends GuiComponent {
         this.setter = setter;
     }
 
+    @Override
     public int preferredHeight() {
         return expanded ? COLLAPSED_HEIGHT + CHANNEL_HEIGHT * 3 : COLLAPSED_HEIGHT;
+    }
+
+    @Override
+    public int maximumHeight() {
+        return COLLAPSED_HEIGHT + CHANNEL_HEIGHT * 3;
     }
 
     @Override

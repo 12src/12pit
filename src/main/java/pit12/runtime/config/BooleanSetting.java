@@ -20,7 +20,7 @@ package pit12.runtime.config;
 
 public final class BooleanSetting extends Setting<Boolean> {
     BooleanSetting(String id, String displayName, String description, boolean defaultValue) {
-        super(id, displayName, description, Boolean.valueOf(defaultValue));
+        super(id, displayName, description, Boolean.valueOf(defaultValue), StorageType.BOOLEAN);
         requireValue(Boolean.valueOf(defaultValue));
     }
 

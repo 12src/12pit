@@ -21,6 +21,9 @@ package pit12.runtime.config;
 import java.util.Objects;
 
 public abstract class Setting<T> {
+    public enum StorageType {
+        BOOLEAN, INTEGER, DECIMAL
+    }
     interface ChangeSink {
         void changed(Setting<?> setting, Object previousValue, Object currentValue);
     }
@@ -29,15 +32,20 @@ public abstract class Setting<T> {
     private final String displayName;
     private final String description;
     private final T defaultValue;
+    private final StorageType storageType;
     private T value;
     private ChangeSink changeSink;
 
-    /** Subclasses validate their default after initializing any state used by {@link #requireValue(Object)}. */
-    protected Setting(String id, String displayName, String description, T defaultValue) {
+    /**
+     * Subclasses validate their default after initializing any state used by {@link #requireValue(Object)}.
+     */
+    protected Setting(String id, String displayName, String description, T defaultValue,
+            StorageType storageType) {
         this.id = ConfigNames.requireStableId(id, "setting id");
         this.displayName = ConfigNames.requireText(displayName, "setting display name");
         this.description = ConfigNames.requireDescription(description);
         this.defaultValue = Objects.requireNonNull(defaultValue, "defaultValue");
+        this.storageType = Objects.requireNonNull(storageType, "storageType");
         value = this.defaultValue;
     }
 
@@ -55,6 +63,10 @@ public abstract class Setting<T> {
 
     public final T defaultValue() {
         return defaultValue;
+    }
+
+    public final StorageType storageType() {
+        return storageType;
     }
 
     public final T get() {

@@ -47,6 +47,7 @@ public final class KeybindComponent extends GuiComponent {
         return Math.min(38, Math.max(MINIMUM_WIDTH, renderer.textWidth(keyName(), 6.0F) + 6));
     }
 
+    @Override
     public int preferredHeight() {
         return PREFERRED_HEIGHT;
     }

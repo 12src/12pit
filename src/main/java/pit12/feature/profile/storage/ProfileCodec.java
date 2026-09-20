@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import pit12.runtime.config.ConfigSnapshot;
+import pit12.runtime.config.Setting;
 
 public final class ProfileCodec {
     public static final int SCHEMA_VERSION = 1;
@@ -107,8 +108,8 @@ public final class ProfileCodec {
         if (featuresElement != null && !featuresElement.isJsonObject()) {
             warnings.add("$.features must be an object; known settings use defaults");
         }
-        for (Map.Entry<String, Map<String, ProfileSchema.ValueType>> featureEntry : schema
-                .features().entrySet()) {
+        for (Map.Entry<String, Map<String, Setting.StorageType>> featureEntry : schema.features()
+                .entrySet()) {
             LinkedHashMap<String, Object> settingValues = new LinkedHashMap<String, Object>();
             JsonElement featureElement = features.get(featureEntry.getKey());
             JsonObject featureObject = featureElement != null && featureElement.isJsonObject()
@@ -118,17 +119,17 @@ public final class ProfileCodec {
                 warnings.add("$.features." + featureEntry.getKey() + " must be an object");
             }
             if (featureObject != null) {
-                for (Map.Entry<String, ProfileSchema.ValueType> settingEntry : featureEntry
-                        .getValue().entrySet()) {
+                for (Map.Entry<String, Setting.StorageType> settingEntry : featureEntry.getValue()
+                        .entrySet()) {
                     JsonElement value = featureObject.get(settingEntry.getKey());
                     if (value == null || value.isJsonNull()) {
                         continue;
                     }
-                    if (settingEntry.getValue() == ProfileSchema.ValueType.BOOLEAN
+                    if (settingEntry.getValue() == Setting.StorageType.BOOLEAN
                             && value.isJsonPrimitive() && value.getAsJsonPrimitive().isBoolean()) {
                         settingValues.put(settingEntry.getKey(),
                                 Boolean.valueOf(value.getAsBoolean()));
-                    } else if (settingEntry.getValue() == ProfileSchema.ValueType.INTEGER
+                    } else if (settingEntry.getValue() == Setting.StorageType.INTEGER
                             && value.isJsonPrimitive() && value.getAsJsonPrimitive().isNumber()) {
                         try {
                             settingValues.put(settingEntry.getKey(),
@@ -138,7 +139,20 @@ public final class ProfileCodec {
                                     + settingEntry.getKey()
                                     + " must be an integer; the default is used");
                         }
-                    } else if (settingEntry.getValue() != ProfileSchema.ValueType.UNSUPPORTED) {
+                    } else if (settingEntry.getValue() == Setting.StorageType.DECIMAL
+                            && value.isJsonPrimitive() && value.getAsJsonPrimitive().isNumber()) {
+                        try {
+                            double decimalValue = Double.parseDouble(value.getAsString());
+                            if (!Double.isFinite(decimalValue)) {
+                                throw new NumberFormatException("non-finite decimal");
+                            }
+                            settingValues.put(settingEntry.getKey(), Double.valueOf(decimalValue));
+                        } catch (NumberFormatException failure) {
+                            warnings.add("$.features." + featureEntry.getKey() + "."
+                                    + settingEntry.getKey()
+                                    + " must be a finite decimal; the default is used");
+                        }
+                    } else {
                         warnings.add(
                                 "$.features." + featureEntry.getKey() + "." + settingEntry.getKey()
                                         + " has the wrong value type; the default is used");
@@ -167,22 +181,23 @@ public final class ProfileCodec {
         JsonObject features =
                 oldFeatures != null && oldFeatures.isJsonObject() ? oldFeatures.getAsJsonObject()
                         : new JsonObject();
-        for (Map.Entry<String, Map<String, ProfileSchema.ValueType>> featureEntry : schema
-                .features().entrySet()) {
+        for (Map.Entry<String, Map<String, Setting.StorageType>> featureEntry : schema.features()
+                .entrySet()) {
             JsonElement oldFeature = features.get(featureEntry.getKey());
             JsonObject featureObject =
                     oldFeature != null && oldFeature.isJsonObject() ? oldFeature.getAsJsonObject()
                             : new JsonObject();
             Map<String, Object> values = profile.config().feature(featureEntry.getKey());
             if (values != null) {
-                for (Map.Entry<String, ProfileSchema.ValueType> settingEntry : featureEntry
-                        .getValue().entrySet()) {
-                    if (settingEntry.getValue() == ProfileSchema.ValueType.BOOLEAN) {
+                for (Map.Entry<String, Setting.StorageType> settingEntry : featureEntry.getValue()
+                        .entrySet()) {
+                    if (settingEntry.getValue() == Setting.StorageType.BOOLEAN) {
                         Object value = values.get(settingEntry.getKey());
                         if (value instanceof Boolean) {
                             featureObject.addProperty(settingEntry.getKey(), (Boolean) value);
                         }
-                    } else if (settingEntry.getValue() == ProfileSchema.ValueType.INTEGER) {
+                    } else if (settingEntry.getValue() == Setting.StorageType.INTEGER
+                            || settingEntry.getValue() == Setting.StorageType.DECIMAL) {
                         Object value = values.get(settingEntry.getKey());
                         if (value instanceof Number) {
                             featureObject.addProperty(settingEntry.getKey(), (Number) value);
