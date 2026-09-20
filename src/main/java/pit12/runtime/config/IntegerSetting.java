@@ -18,39 +18,34 @@
  */
 package pit12.runtime.config;
 
-public final class IntegerSetting extends Setting<Integer> {
-    private final int minimum;
-    private final int maximum;
-
+public final class IntegerSetting extends NumberSetting<Integer> {
     IntegerSetting(String id, String displayName, String description, int defaultValue, int minimum,
             int maximum) {
-        super(id, displayName, description, Integer.valueOf(defaultValue));
-        if (minimum > maximum) {
-            throw new IllegalArgumentException("minimum must not exceed maximum");
-        }
-        this.minimum = minimum;
-        this.maximum = maximum;
-        requireValue(Integer.valueOf(defaultValue));
+        this(id, displayName, description, defaultValue, minimum, maximum, 1);
+    }
+
+    IntegerSetting(String id, String displayName, String description, int defaultValue, int minimum,
+            int maximum, int step) {
+        super(id, displayName, description,
+                Integer.valueOf(
+                        (int) Math.round(normalizedDefault(defaultValue, minimum, maximum, step))),
+                StorageType.INTEGER, minimum, maximum, step, 0);
     }
 
     public int minimum() {
-        return minimum;
+        return (int) minimumValue();
     }
 
     public int maximum() {
-        return maximum;
+        return (int) maximumValue();
+    }
+
+    public int step() {
+        return (int) stepValue();
     }
 
     @Override
-    protected Integer requireValue(Object candidate) {
-        if (!(candidate instanceof Number)) {
-            throw new IllegalArgumentException("Setting " + id() + " requires an integer");
-        }
-        long value = ((Number) candidate).longValue();
-        if (value < minimum || value > maximum) {
-            throw new IllegalArgumentException(
-                    "Setting " + id() + " requires an integer from " + minimum + " to " + maximum);
-        }
-        return Integer.valueOf((int) value);
+    protected Integer valueFromDouble(double value) {
+        return Integer.valueOf((int) Math.round(value));
     }
 }

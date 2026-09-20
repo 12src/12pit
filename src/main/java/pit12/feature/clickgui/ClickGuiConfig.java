@@ -20,18 +20,17 @@ package pit12.feature.clickgui;
 
 import org.lwjgl.input.Keyboard;
 import pit12.runtime.config.BooleanSetting;
-import pit12.runtime.config.ColorSetting;
 import pit12.runtime.config.ConfigCategory;
 import pit12.runtime.config.FeatureConfig;
-import pit12.runtime.config.KeybindSetting;
+import pit12.runtime.config.IntegerSetting;
 
 public final class ClickGuiConfig extends FeatureConfig {
     private final BooleanSetting dimBackground;
     private final BooleanSetting showTooltips;
     private final BooleanSetting animations;
     private final BooleanSetting scrollbars;
-    private final ColorSetting guiColor;
-    private final KeybindSetting openKeybind;
+    private final IntegerSetting guiColor;
+    private final IntegerSetting openKeybind;
 
     public ClickGuiConfig() {
         super("clickgui", "ClickGUI", new ConfigCategory("clickgui", "ClickGUI", Integer.MAX_VALUE),
@@ -66,11 +65,11 @@ public final class ClickGuiConfig extends FeatureConfig {
         return scrollbars;
     }
 
-    public ColorSetting guiColor() {
+    public IntegerSetting guiColor() {
         return guiColor;
     }
 
-    public KeybindSetting openKeybind() {
+    public IntegerSetting openKeybind() {
         return openKeybind;
     }
 }

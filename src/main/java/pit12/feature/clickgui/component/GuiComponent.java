@@ -60,6 +60,14 @@ public abstract class GuiComponent {
         this.enabled = enabled;
     }
 
+    public int preferredHeight() {
+        return height;
+    }
+
+    public int maximumHeight() {
+        return preferredHeight();
+    }
+
     public abstract void render(ClickGuiRenderer renderer, int mouseX, int mouseY,
             float partialTicks);
 

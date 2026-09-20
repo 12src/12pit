@@ -23,39 +23,29 @@ import java.util.List;
 import pit12.feature.clickgui.ClickGuiConfig;
 import pit12.feature.clickgui.ClickGuiController;
 import pit12.feature.clickgui.ClickGuiState;
-import pit12.feature.clickgui.component.ColorPickerComponent;
-import pit12.feature.clickgui.component.KeybindComponent;
-import pit12.feature.clickgui.component.ToggleComponent;
+import pit12.feature.clickgui.component.OptionComponent;
 import pit12.feature.clickgui.render.ClickGuiRenderer;
 import pit12.feature.clickgui.render.ClickGuiRenderer.TextureIcon;
 import pit12.feature.clickgui.render.ClickGuiTheme;
-import pit12.runtime.config.BooleanSetting;
+import pit12.runtime.config.ConfigOption;
 
 public final class ClickGuiSettingsFrame extends DraggableFrame {
-    private static final int ROW_HEIGHT = 18;
-    private static final int BIND_ROW_HEIGHT = 22;
+    private static final int FOOTER_HEIGHT = 22;
     private final ClickGuiController controller;
-    private final KeybindComponent keybind;
-    private final ColorPickerComponent colorPicker;
-    private final List<OptionRow> options = new ArrayList<OptionRow>();
+    private final List<OptionComponent> options = new ArrayList<OptionComponent>();
 
     public ClickGuiSettingsFrame(ClickGuiController controller, ClickGuiState state,
             ClickGuiConfig config) {
         super("clickgui.settings", "Settings", state, 32, 32, 110, 238);
         this.controller = controller;
-        keybind = new KeybindComponent(() -> config.openKeybind().get().intValue(),
-                keyCode -> config.openKeybind().set(Integer.valueOf(keyCode)));
-        colorPicker = new ColorPickerComponent(config.guiColor().displayName(),
-                () -> config.guiColor().get().intValue(),
-                color -> config.guiColor().set(Integer.valueOf(color)));
-        for (pit12.runtime.config.Setting<?> setting : config.options()) {
-            if (setting instanceof BooleanSetting) {
-                BooleanSetting booleanSetting = (BooleanSetting) setting;
-                options.add(new OptionRow(booleanSetting,
-                        new ToggleComponent(0, 0, 0, ROW_HEIGHT, setting.displayName(),
-                                () -> booleanSetting.get().booleanValue(), booleanSetting::set)));
-            }
+        for (ConfigOption<?> option : config.options()) {
+            options.add(new OptionComponent(option));
         }
+        int optionsHeight = 0;
+        for (OptionComponent option : options) {
+            optionsHeight += option.maximumHeight();
+        }
+        setFrameHeight(HEADER_HEIGHT + 2 + optionsHeight + FOOTER_HEIGHT);
         setVisible(false);
     }
 
@@ -97,33 +87,17 @@ public final class ClickGuiSettingsFrame extends DraggableFrame {
     protected void renderContent(ClickGuiRenderer renderer, int mouseX, int mouseY,
             float partialTicks) {
         int rowY = frameY() + HEADER_HEIGHT + 2;
-        for (OptionRow option : options) {
-            option.component.setBounds(frameX() + 7, rowY, frameWidth() - 14, ROW_HEIGHT);
-            option.component.render(renderer, mouseX, mouseY, partialTicks);
-            if (option.component.contains(mouseX, mouseY)
-                    && !option.setting.description().isEmpty()) {
-                controller.tooltip(option.setting.description(), mouseX, mouseY);
+        for (OptionComponent option : options) {
+            int optionHeight = option.preferredHeight();
+            boolean hovered = inRow(mouseX, mouseY, rowY, optionHeight);
+            renderer.rect(frameX(), rowY, frameWidth(), optionHeight,
+                    hovered ? ClickGuiTheme.ROW_HOVER : ClickGuiTheme.PANEL);
+            option.setBounds(frameX() + 7, rowY, frameWidth() - 14);
+            option.render(renderer, mouseX, mouseY, partialTicks);
+            if (hovered && !option.setting().description().isEmpty()) {
+                controller.tooltip(option.setting().description(), mouseX, mouseY);
             }
-            rowY += ROW_HEIGHT;
-        }
-        renderer.rect(frameX() + 6, rowY, frameWidth() - 12, 1, ClickGuiTheme.DIVIDER);
-        colorPicker.setBounds(frameX(), rowY + 1, frameWidth(), colorPicker.preferredHeight());
-        colorPicker.render(renderer, mouseX, mouseY, partialTicks);
-        rowY += colorPicker.preferredHeight() + 1;
-        boolean bindHovered = inRow(mouseX, mouseY, rowY, BIND_ROW_HEIGHT);
-        int bindBackground = bindHovered ? ClickGuiTheme.ROW_HOVER : ClickGuiTheme.ROW;
-        renderer.rect(frameX(), rowY, frameWidth(), BIND_ROW_HEIGHT, bindBackground);
-        renderer.verticallyCenteredText("Rebind GUI", frameX() + 7, rowY, BIND_ROW_HEIGHT, 8.0F,
-                ClickGuiTheme.MUTED_TEXT);
-        int bindWidth = keybind.preferredWidth(renderer);
-        int bindHeight = keybind.preferredHeight();
-        keybind.setBounds(frameX() + frameWidth() - bindWidth - 7,
-                rowY + (BIND_ROW_HEIGHT - bindHeight) / 2, bindWidth, bindHeight);
-        keybind.setSurfaceColor(bindBackground);
-        keybind.render(renderer, mouseX, mouseY, partialTicks);
-        if (keybind.contains(mouseX, mouseY)) {
-            controller.tooltip(keybind.isCapturing() ? "Remove GUI keybind" : "Change GUI keybind",
-                    mouseX, mouseY);
+            rowY += optionHeight;
         }
         String version = "12pit";
         renderer.verticallyCenteredText(version,
@@ -137,17 +111,10 @@ public final class ClickGuiSettingsFrame extends DraggableFrame {
         if (button != 0) {
             return false;
         }
-        if (colorPicker.contains(mouseX, mouseY)) {
-            controller.focus(null);
-            return colorPicker.mousePressed(controller, mouseX, mouseY, button);
-        }
-        if (keybind.contains(mouseX, mouseY)) {
-            return keybind.mousePressed(controller, mouseX, mouseY, button);
-        }
-        controller.focus(null);
-        for (OptionRow option : options) {
-            if (option.component.contains(mouseX, mouseY)) {
-                return option.component.mousePressed(controller, mouseX, mouseY, button);
+        for (OptionComponent option : options) {
+            if (option.contains(mouseX, mouseY)) {
+                option.mousePressed(controller, mouseX, mouseY, button);
+                return true;
             }
         }
         return true;
@@ -156,15 +123,5 @@ public final class ClickGuiSettingsFrame extends DraggableFrame {
     private boolean inRow(int mouseX, int mouseY, int rowY, int rowHeight) {
         return mouseX >= frameX() && mouseX < frameX() + frameWidth() && mouseY >= rowY
                 && mouseY < rowY + rowHeight;
-    }
-
-    private static final class OptionRow {
-        private final BooleanSetting setting;
-        private final ToggleComponent component;
-
-        private OptionRow(BooleanSetting setting, ToggleComponent component) {
-            this.setting = setting;
-            this.component = component;
-        }
     }
 }

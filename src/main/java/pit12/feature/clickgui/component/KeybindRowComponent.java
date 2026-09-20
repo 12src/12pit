@@ -44,6 +44,8 @@ public final class KeybindRowComponent extends GuiComponent {
         int bindHeight = keybind.preferredHeight();
         keybind.setBounds(x + width - bindWidth, y + (height - bindHeight) / 2, bindWidth,
                 bindHeight);
+        keybind.setSurfaceColor(
+                contains(mouseX, mouseY) ? ClickGuiTheme.ROW_HOVER : ClickGuiTheme.PANEL);
         keybind.render(renderer, mouseX, mouseY, partialTicks);
     }
 

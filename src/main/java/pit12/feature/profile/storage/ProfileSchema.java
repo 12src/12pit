@@ -21,48 +21,32 @@ package pit12.feature.profile.storage;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import pit12.runtime.config.BooleanSetting;
-import pit12.runtime.config.ColorSetting;
 import pit12.runtime.config.ConfigCatalog;
 import pit12.runtime.config.FeatureConfig;
-import pit12.runtime.config.IntegerSetting;
-import pit12.runtime.config.KeybindSetting;
 import pit12.runtime.config.Setting;
 
 public final class ProfileSchema {
-    public enum ValueType {
-        BOOLEAN, INTEGER, UNSUPPORTED
-    }
+    private final Map<String, Map<String, Setting.StorageType>> features;
 
-    private final Map<String, Map<String, ValueType>> features;
-
-    private ProfileSchema(Map<String, Map<String, ValueType>> features) {
+    private ProfileSchema(Map<String, Map<String, Setting.StorageType>> features) {
         this.features = features;
     }
 
     public static ProfileSchema capture(ConfigCatalog catalog) {
-        LinkedHashMap<String, Map<String, ValueType>> features =
-                new LinkedHashMap<String, Map<String, ValueType>>();
+        LinkedHashMap<String, Map<String, Setting.StorageType>> features =
+                new LinkedHashMap<String, Map<String, Setting.StorageType>>();
         for (FeatureConfig feature : catalog.features()) {
-            LinkedHashMap<String, ValueType> settings = new LinkedHashMap<String, ValueType>();
+            LinkedHashMap<String, Setting.StorageType> settings =
+                    new LinkedHashMap<String, Setting.StorageType>();
             for (Setting<?> setting : feature.settings()) {
-                ValueType type;
-                if (setting instanceof BooleanSetting) {
-                    type = ValueType.BOOLEAN;
-                } else if (setting instanceof IntegerSetting || setting instanceof KeybindSetting
-                        || setting instanceof ColorSetting) {
-                    type = ValueType.INTEGER;
-                } else {
-                    type = ValueType.UNSUPPORTED;
-                }
-                settings.put(setting.id(), type);
+                settings.put(setting.id(), setting.storageType());
             }
             features.put(feature.id(), Collections.unmodifiableMap(settings));
         }
         return new ProfileSchema(Collections.unmodifiableMap(features));
     }
 
-    public Map<String, Map<String, ValueType>> features() {
+    public Map<String, Map<String, Setting.StorageType>> features() {
         return features;
     }
 }
