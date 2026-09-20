@@ -22,10 +22,12 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import pit12.bootstrap.ClientBootstrap;
 
-@Mod(modid = Pit12.MOD_ID, useMetadata = true, acceptedMinecraftVersions = "[1.8.9]",
-        acceptableRemoteVersions = "*", clientSideOnly = true)
+@Mod(modid = Pit12.MOD_ID, version = Pit12.VERSION, useMetadata = true,
+        acceptedMinecraftVersions = "[1.8.9]", acceptableRemoteVersions = "*",
+        clientSideOnly = true)
 public final class Pit12 {
     public static final String MOD_ID = "pit12";
+    public static final String VERSION = "0.0";
     private ClientBootstrap bootstrap;
 
     @Mod.EventHandler
