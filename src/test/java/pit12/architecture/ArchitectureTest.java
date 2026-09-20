@@ -143,8 +143,56 @@ public final class ArchitectureTest {
     @ArchTest
     public static final ArchRule MIXINS_MUST_RESIDE_IN_MIXIN_PACKAGES = classes().that()
             .areAnnotatedWith("org.spongepowered.asm.mixin.Mixin").should()
-            .resideInAnyPackage("pit12.platform.mixin..", "pit12.feature.*.mixin..").because(
-                    "bytecode hooks must remain visible at their platform or feature ownership boundary");
+            .resideInAPackage("pit12.platform.mixin..")
+            .because("bytecode hooks belong to the dedicated platform transformation boundary");
+    @ArchTest
+    public static final ArchRule MIXIN_PACKAGES_MUST_ONLY_CONTAIN_MIXINS = classes().that()
+            .resideInAPackage("pit12.platform.mixin..").should()
+            .beAnnotatedWith("org.spongepowered.asm.mixin.Mixin")
+            .because("ordinary classes in the configured Mixin tree cannot be loaded directly");
+
+    @ArchTest
+    public static void FEATURE_MIXINS_MUST_MIRROR_FEATURE_PACKAGES(JavaClasses classes) {
+        Set<String> featureNames = new TreeSet<String>();
+        for (JavaClass javaClass : classes) {
+            String featureName = featureNameOf(javaClass);
+            if (featureName != null) {
+                featureNames.add(featureName);
+            }
+        }
+        Set<String> violations = new TreeSet<String>();
+        for (JavaClass javaClass : classes) {
+            if (!javaClass.isAnnotatedWith("org.spongepowered.asm.mixin.Mixin")) {
+                continue;
+            }
+            String declaredFeature = mixinFeatureNameOf(javaClass);
+            Set<String> dependencies = new TreeSet<String>();
+            for (Dependency dependency : javaClass.getDirectDependenciesFromSelf()) {
+                String dependencyFeature = featureNameOf(dependency.getTargetClass());
+                if (dependencyFeature != null) {
+                    dependencies.add(dependencyFeature);
+                }
+            }
+            if (declaredFeature == null) {
+                if (!dependencies.isEmpty()) {
+                    violations.add(javaClass.getName() + " depends on feature(s) " + dependencies
+                            + " outside platform.mixin.feature");
+                }
+                continue;
+            }
+            if (!featureNames.contains(declaredFeature)) {
+                violations.add(javaClass.getName() + " mirrors missing feature " + declaredFeature);
+            }
+            dependencies.remove(declaredFeature);
+            if (!dependencies.isEmpty()) {
+                violations
+                        .add(javaClass.getName() + " depends on other feature(s) " + dependencies);
+            }
+        }
+        if (!violations.isEmpty()) {
+            throw new AssertionError("Feature Mixin ownership mismatch: " + violations);
+        }
+    }
 
     @ArchTest
     public static void MIXINS_MUST_BE_REGISTERED(JavaClasses classes) {
@@ -191,6 +239,17 @@ public final class ArchitectureTest {
 
     private static String featureNameOf(JavaClass javaClass) {
         String prefix = "pit12.feature.";
+        String packageName = javaClass.getPackageName();
+        if (!packageName.startsWith(prefix)) {
+            return null;
+        }
+        int separator = packageName.indexOf('.', prefix.length());
+        return separator < 0 ? packageName.substring(prefix.length())
+                : packageName.substring(prefix.length(), separator);
+    }
+
+    private static String mixinFeatureNameOf(JavaClass javaClass) {
+        String prefix = "pit12.platform.mixin.feature.";
         String packageName = javaClass.getPackageName();
         if (!packageName.startsWith(prefix)) {
             return null;

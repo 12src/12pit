@@ -29,6 +29,8 @@ import pit12.feature.clickgui.ClickGuiConfig;
 import pit12.feature.clickgui.ClickGuiFeature;
 import pit12.feature.hudeditor.HudEditorFeature;
 import pit12.feature.profile.ProfilesFeature;
+import pit12.feature.tooltip.TooltipConfig;
+import pit12.feature.tooltip.TooltipFeature;
 import pit12.runtime.config.ConfigCatalog;
 import pit12.runtime.hud.HudRegistry;
 
@@ -42,13 +44,16 @@ public final class ClientBootstrap {
     public ClientBootstrap() {
         configs = new ConfigCatalog();
         ClickGuiConfig clickGuiConfig = new ClickGuiConfig();
+        TooltipConfig tooltipConfig = new TooltipConfig();
         configs.register(clickGuiConfig);
+        configs.register(tooltipConfig);
         configs.freeze();
         File profileDirectory = new File(Minecraft.getMinecraft().mcDataDir, "12pit/config");
         ProfilesFeature profiles = new ProfilesFeature(configs, profileDirectory.toPath());
         HudRegistry hudRegistry = new HudRegistry();
         HudEditorFeature hudEditor = new HudEditorFeature(hudRegistry);
         features.add(profiles);
+        features.add(new TooltipFeature(tooltipConfig));
         features.add(hudEditor);
         features.add(new ClickGuiFeature(configs, profiles, clickGuiConfig, hudEditor));
     }

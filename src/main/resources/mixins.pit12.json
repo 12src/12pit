@@ -8,6 +8,7 @@
   "mixins": [],
   "client": [
     "accessor.FMLModContainerAccessor",
-    "network.FMLHandshakeClientStateMixin"
+    "network.FMLHandshakeClientStateMixin",
+    "feature.tooltip.HeldItemTooltipMixin"
   ]
 }
