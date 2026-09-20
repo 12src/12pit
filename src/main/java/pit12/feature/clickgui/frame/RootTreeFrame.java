@@ -19,11 +19,14 @@
 package pit12.feature.clickgui.frame;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import pit12.feature.clickgui.ClickGuiController;
 import pit12.feature.clickgui.ClickGuiState;
 import pit12.feature.clickgui.component.TextInputComponent;
+import pit12.feature.clickgui.component.UiAnimation;
 import pit12.feature.clickgui.render.ClickGuiRenderer;
 import pit12.feature.clickgui.render.ClickGuiRenderer.TextureIcon;
 import pit12.feature.clickgui.render.ClickGuiTheme;
@@ -34,6 +37,8 @@ public final class RootTreeFrame extends DraggableFrame {
     private static final int PROFILE_SEPARATOR_HEIGHT = 7;
     private final ClickGuiController controller;
     private final List<CategoryFrame> categories = new ArrayList<CategoryFrame>();
+    private final Map<DraggableFrame, UiAnimation> navigationAnimations =
+            new LinkedHashMap<DraggableFrame, UiAnimation>();
     private final List<SearchResult> searchResults = new ArrayList<SearchResult>();
     private final TextInputComponent searchInput;
     private ProfilesFrame profilesFrame;
@@ -52,12 +57,14 @@ public final class RootTreeFrame extends DraggableFrame {
 
     public void addCategory(CategoryFrame frame) {
         categories.add(frame);
+        navigationAnimations.put(frame, new UiAnimation());
         setFrameHeight(HEADER_HEIGHT + categories.size() * ROW_HEIGHT + PROFILE_SEPARATOR_HEIGHT
                 + ROW_HEIGHT);
     }
 
     public void setProfilesFrame(ProfilesFrame profilesFrame) {
         this.profilesFrame = profilesFrame;
+        navigationAnimations.put(profilesFrame, new UiAnimation());
     }
 
     @Override
@@ -75,14 +82,13 @@ public final class RootTreeFrame extends DraggableFrame {
         }
         int rowY = frameY() + HEADER_HEIGHT;
         for (CategoryFrame categoryFrame : categories) {
-            renderNavigationRow(renderer, categoryFrame.category().displayName(),
-                    categoryFrame.isVisible(), rowY, mouseX, mouseY);
+            renderNavigationRow(renderer, categoryFrame.category().displayName(), categoryFrame,
+                    rowY, mouseX, mouseY);
             rowY += ROW_HEIGHT;
         }
         renderer.rect(frameX() + 6, rowY + 3, frameWidth() - 12, 1, ClickGuiTheme.DIVIDER);
         rowY += PROFILE_SEPARATOR_HEIGHT;
-        renderNavigationRow(renderer, "Profiles",
-                profilesFrame != null && profilesFrame.isVisible(), rowY, mouseX, mouseY);
+        renderNavigationRow(renderer, "Profiles", profilesFrame, rowY, mouseX, mouseY);
     }
 
     @Override
@@ -99,8 +105,9 @@ public final class RootTreeFrame extends DraggableFrame {
                                 && mouseX < frameX() + frameWidth() - 18 ? ClickGuiTheme.TEXT
                                         : ClickGuiTheme.MUTED_TEXT);
         renderer.settingsIcon(frameX() + frameWidth() - 13, headerIconY,
-                headerHovered && mouseX >= frameX() + frameWidth() - 18 ? ClickGuiTheme.TEXT
-                        : ClickGuiTheme.MUTED_TEXT);
+                headerHovered && mouseX >= frameX() + frameWidth() - 18
+                        && mouseX < frameX() + frameWidth() ? ClickGuiTheme.TEXT
+                                : ClickGuiTheme.MUTED_TEXT);
     }
 
     @Override
@@ -149,8 +156,9 @@ public final class RootTreeFrame extends DraggableFrame {
         return searchInput.mousePressed(controller, mouseX, mouseY, button);
     }
 
-    private void renderNavigationRow(ClickGuiRenderer renderer, String name, boolean selected,
+    private void renderNavigationRow(ClickGuiRenderer renderer, String name, DraggableFrame frame,
             int rowY, int mouseX, int mouseY) {
+        boolean selected = frame != null && frame.isVisible();
         boolean hovered = mouseX >= frameX() && mouseX < frameX() + frameWidth() && mouseY >= rowY
                 && mouseY < rowY + ROW_HEIGHT;
         renderer.rect(frameX(), rowY, frameWidth(), ROW_HEIGHT,
@@ -158,8 +166,11 @@ public final class RootTreeFrame extends DraggableFrame {
         int foreground = selected ? ClickGuiTheme.ACCENT_DARK
                 : hovered ? ClickGuiTheme.TEXT : ClickGuiTheme.MUTED_TEXT;
         renderer.verticallyCenteredText(name, frameX() + 7, rowY, ROW_HEIGHT, 8.0F, foreground);
-        renderer.centeredTexture(TextureIcon.RIGHT, frameX() + frameWidth() - 11, rowY, ROW_HEIGHT,
-                5, 5, selected ? ClickGuiTheme.ACCENT_DARK : ClickGuiTheme.MUTED_TEXT);
+        float progress =
+                navigationAnimations.get(frame).update(selected, renderer.animationsEnabled());
+        renderer.centeredTexture(TextureIcon.RIGHT, frameX() + frameWidth() - 11 + 2.0F * progress,
+                rowY, ROW_HEIGHT, 5, 5,
+                renderer.mix(ClickGuiTheme.MUTED_TEXT, ClickGuiTheme.ACCENT_DARK, progress));
     }
 
     @Override

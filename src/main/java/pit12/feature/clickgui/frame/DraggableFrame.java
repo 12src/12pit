@@ -37,6 +37,9 @@ public abstract class DraggableFrame extends GuiComponent {
     private int expandedHeight;
     private int dragOffsetX;
     private int dragOffsetY;
+    private int dragOriginX;
+    private int dragOriginY;
+    private boolean dragMoved;
 
     protected DraggableFrame(String frameId, String title, ClickGuiState state, int defaultX,
             int defaultY, int width, int height) {
@@ -151,12 +154,10 @@ public abstract class DraggableFrame extends GuiComponent {
         if (!contains(mouseX, mouseY)) {
             return false;
         }
-        if (canCollapse() && mouseY < y + HEADER_HEIGHT
-                && (button == 1 || showCollapseControl() && collapseControlContains(mouseX))) {
-            if (button == 0 || button == 1) {
-                setCollapsed(!collapsed);
-                return true;
-            }
+        if (canCollapse() && mouseY < y + HEADER_HEIGHT && (button == 1
+                || button == 0 && showCollapseControl() && collapseControlContains(mouseX))) {
+            setCollapsed(!collapsed);
+            return true;
         }
         if (headerLeadingActionContains(mouseX, mouseY)
                 && headerLeadingActionPressed(controller, mouseX, mouseY, button)) {
@@ -166,6 +167,9 @@ public abstract class DraggableFrame extends GuiComponent {
             dragging = true;
             dragOffsetX = mouseX - x;
             dragOffsetY = mouseY - y;
+            dragOriginX = mouseX;
+            dragOriginY = mouseY;
+            dragMoved = false;
             controller.capture(this);
             return true;
         }
@@ -207,6 +211,11 @@ public abstract class DraggableFrame extends GuiComponent {
     public final void mouseDragged(ClickGuiController controller, int mouseX, int mouseY,
             int button) {
         if (dragging) {
+            if (!dragMoved && Math.abs(mouseX - dragOriginX) < 3
+                    && Math.abs(mouseY - dragOriginY) < 3) {
+                return;
+            }
+            dragMoved = true;
             x = mouseX - dragOffsetX;
             y = mouseY - dragOffsetY;
         } else {
@@ -222,8 +231,11 @@ public abstract class DraggableFrame extends GuiComponent {
             int button) {
         if (dragging) {
             dragging = false;
-            clamp(controller.screenWidth(), controller.screenHeight());
-            state.move(frameId, x, y);
+            if (!dragMoved && button == 0 && canCollapse()) {
+                setCollapsed(!collapsed);
+            } else {
+                clamp(controller.screenWidth(), controller.screenHeight());
+            }
             controller.releaseCapture(this);
         }
         contentMouseReleased(controller, mouseX, mouseY, button);
