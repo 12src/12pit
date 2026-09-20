@@ -21,6 +21,7 @@ package pit12.runtime.item;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import net.minecraft.util.EnumChatFormatting;
 
 public final class PitEnchantments implements Iterable<PitEnchantments.Entry> {
     private static final PitEnchantments EMPTY = new PitEnchantments(new Entry[0]);
@@ -54,6 +55,16 @@ public final class PitEnchantments implements Iterable<PitEnchantments.Entry> {
         return entries[index];
     }
 
+    /** Returns null when this result contains no known enchantments. */
+    public String formatDisplayNames() {
+        return formatDisplayNames(false);
+    }
+
+    /** Returns null when this result contains no known enchantments. */
+    public String formatBoldDisplayNames() {
+        return formatDisplayNames(true);
+    }
+
     // Enchanted items normally have at most three entries, so linear scans remain cheap.
     public boolean contains(PitEnchantment enchantment) {
         return levelOf(enchantment) > 0;
@@ -85,6 +96,43 @@ public final class PitEnchantments implements Iterable<PitEnchantments.Entry> {
             }
         }
         return 0;
+    }
+
+    private String formatDisplayNames(boolean bold) {
+        StringBuilder text = null;
+        for (Entry entry : entries) {
+            PitEnchantment enchantment = entry.enchantment;
+            if (enchantment == null) {
+                continue;
+            }
+            if (text == null) {
+                text = new StringBuilder(48);
+                text.append(EnumChatFormatting.RESET);
+            } else {
+                text.append(EnumChatFormatting.GRAY).append(" / ").append(EnumChatFormatting.RESET);
+            }
+            appendDisplayName(text, enchantment.getDisplayName(), bold);
+            text.append(' ').append(EnumChatFormatting.RESET);
+            if (bold) {
+                text.append(EnumChatFormatting.BOLD);
+            }
+            text.append(entry.level);
+        }
+        return text == null ? null : text.toString();
+    }
+
+    private static void appendDisplayName(StringBuilder text, String displayName, boolean bold) {
+        if (!bold) {
+            text.append(displayName);
+            return;
+        }
+        // A color code resets styles, so bold must follow the leading color instead of preceding it.
+        if (displayName.length() >= 2 && displayName.charAt(0) == '\u00A7') {
+            text.append(displayName, 0, 2).append(EnumChatFormatting.BOLD).append(displayName, 2,
+                    displayName.length());
+        } else {
+            text.append(EnumChatFormatting.BOLD).append(displayName);
+        }
     }
 
     @Override
