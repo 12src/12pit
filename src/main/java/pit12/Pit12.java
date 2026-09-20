@@ -27,7 +27,7 @@ import pit12.bootstrap.ClientBootstrap;
         clientSideOnly = true)
 public final class Pit12 {
     public static final String MOD_ID = "pit12";
-    public static final String VERSION = "0.0";
+    public static final String VERSION = "0.1";
     private ClientBootstrap bootstrap;
 
     @Mod.EventHandler
