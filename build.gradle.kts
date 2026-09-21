@@ -147,7 +147,7 @@ tasks.processResources {
 val remapJar by
     tasks.named<net.fabricmc.loom.task.RemapJarTask>("remapJar") {
         dependsOn(tasks.shadowJar)
-        archiveBaseName.set(modId)
+        archiveBaseName.set(modName)
         archiveVersion.set("")
         archiveClassifier.set("")
         inputFile.set(tasks.shadowJar.get().archiveFile)
