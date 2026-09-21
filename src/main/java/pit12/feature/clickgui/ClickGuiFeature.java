@@ -25,6 +25,7 @@ import pit12.feature.clickgui.input.ClickGuiKeyListener;
 import pit12.feature.hudeditor.api.HudEditor;
 import pit12.feature.profile.api.Profiles;
 import pit12.runtime.config.ConfigCatalog;
+import pit12.shared.build.BuildInfo;
 
 public final class ClickGuiFeature implements Feature {
     private final Minecraft minecraft;
@@ -33,9 +34,9 @@ public final class ClickGuiFeature implements Feature {
     private boolean started;
 
     public ClickGuiFeature(ConfigCatalog catalog, Profiles profiles, ClickGuiConfig config,
-            HudEditor hudEditor) {
+            HudEditor hudEditor, BuildInfo buildInfo) {
         minecraft = Minecraft.getMinecraft();
-        controller = new ClickGuiController(catalog, profiles, config, hudEditor);
+        controller = new ClickGuiController(catalog, profiles, config, hudEditor, buildInfo);
         keyListener = new ClickGuiKeyListener(minecraft, controller, config);
     }
 

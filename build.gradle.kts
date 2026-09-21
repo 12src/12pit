@@ -54,7 +54,34 @@ loom {
 
 tasks.named<JavaExec>("runClient") { javaLauncher.set(legacyJavaLauncher) }
 
-sourceSets.main { output.setResourcesDir(sourceSets.main.flatMap { it.java.classesDirectory }) }
+val buildConfigProperties =
+    mapOf(
+        "modId" to modId,
+        "modName" to modName,
+        "modVersion" to modVersion,
+        "gitCommit" to providers.environmentVariable("GITHUB_SHA").getOrElse(""),
+        "releaseBuild" to providers.gradleProperty("releaseBuild").getOrElse("false").toBoolean(),
+    )
+val generatedBuildConfigDirectory = layout.buildDirectory.dir("generated/sources/buildConfig/java/main")
+val generateBuildConfig by
+    tasks.registering(Copy::class) {
+        inputs.properties(buildConfigProperties)
+        filteringCharset = "UTF-8"
+
+        from("src/main/templates") {
+            include("**/*.java.template")
+            expand(buildConfigProperties)
+            rename { it.removeSuffix(".template") }
+        }
+        into(generatedBuildConfigDirectory)
+    }
+
+sourceSets.main {
+    java.srcDir(generatedBuildConfigDirectory)
+    output.setResourcesDir(sourceSets.main.flatMap { it.java.classesDirectory })
+}
+
+tasks.compileJava { dependsOn(generateBuildConfig) }
 
 repositories {
     mavenCentral()

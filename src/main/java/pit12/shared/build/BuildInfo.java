@@ -16,24 +16,34 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12;
+package pit12.shared.build;
 
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.event.FMLInitializationEvent;
-import pit12.bootstrap.BuildConfig;
-import pit12.bootstrap.ClientBootstrap;
+public final class BuildInfo {
+    private final String modName;
+    private final String version;
+    private final String gitCommit;
+    private final boolean release;
 
-@Mod(modid = Pit12.MOD_ID, version = Pit12.VERSION, useMetadata = true,
-        acceptedMinecraftVersions = "[1.8.9]", acceptableRemoteVersions = "*",
-        clientSideOnly = true)
-public final class Pit12 {
-    public static final String MOD_ID = BuildConfig.MOD_ID;
-    public static final String VERSION = BuildConfig.VERSION;
-    private ClientBootstrap bootstrap;
+    public BuildInfo(String modName, String version, String gitCommit, boolean release) {
+        this.modName = modName;
+        this.version = version;
+        this.gitCommit = gitCommit;
+        this.release = release;
+    }
 
-    @Mod.EventHandler
-    public void onInit(FMLInitializationEvent event) {
-        bootstrap = new ClientBootstrap();
-        bootstrap.start();
+    public String modName() {
+        return modName;
+    }
+
+    public String version() {
+        return version;
+    }
+
+    public String gitCommit() {
+        return gitCommit;
+    }
+
+    public boolean isRelease() {
+        return release;
     }
 }
