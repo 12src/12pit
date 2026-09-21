@@ -12,15 +12,9 @@ Run Gradle with JDK 21. The project targets Java 8 via the Gradle toolchain, whi
 
 ## Developing with VS Code
 
-Install the [Extension Pack for Java](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-pack) and [Gradle for Java](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-gradle) extensions.
-Press `Ctrl+Shift+P` (`Cmd+Shift+P` on macOS), select `Tasks: Run Task`, and choose one of the pre-configured tasks:
+Install the workspace's recommended extensions when VS Code prompts. The Java extension pack includes Java language support, debugging, testing, and Gradle integration; EditorConfig keeps basic whitespace settings consistent across file types.
 
-- `assemble` builds the distributable JAR.
-- `build` runs verification and builds the project.
-- `check` runs verification without assembling the JAR.
-- `spotlessApply` formats Java sources.
-- `spotlessCheck` checks Java formatting.
-- `runClient` starts the development client.
+Use `Ctrl+Shift+B` (`Cmd+Shift+B` on macOS) to run the default `assemble` task. Run `Tasks: Run Test Task` for `check`, or open `Tasks: Run Task` for the other pre-configured tasks.
 
 ## Developing with IntelliJ IDEA
 

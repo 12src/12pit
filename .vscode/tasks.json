@@ -1,107 +1,60 @@
 {
   "version": "2.0.0",
+  "type": "shell",
+  "command": "${workspaceFolder}/gradlew",
+  "windows": {
+    "command": "${workspaceFolder}\\gradlew.bat"
+  },
+  "presentation": {
+    "clear": true,
+    "panel": "dedicated",
+    "showReuseMessage": false
+  },
   "tasks": [
     {
       "label": "assemble",
-      "type": "process",
-      "command": "${workspaceFolder}/gradlew.bat",
-      "windows": {
-        "command": "${workspaceFolder}\\gradlew.bat"
-      },
-      "linux": {
-        "command": "${workspaceFolder}/gradlew"
-      },
-      "osx": {
-        "command": "${workspaceFolder}/gradlew"
-      },
+      "detail": "Build the distributable mod JAR without running the full verification lifecycle.",
       "args": ["assemble", "--console=plain"],
       "group": {
         "kind": "build",
         "isDefault": true
       },
-      "problemMatcher": []
+      "problemMatcher": ["$gradle"]
     },
     {
       "label": "build",
-      "type": "process",
-      "command": "${workspaceFolder}/gradlew.bat",
-      "windows": {
-        "command": "${workspaceFolder}\\gradlew.bat"
-      },
-      "linux": {
-        "command": "${workspaceFolder}/gradlew"
-      },
-      "osx": {
-        "command": "${workspaceFolder}/gradlew"
-      },
+      "detail": "Run verification and build the distributable mod JAR.",
       "args": ["build", "--console=plain"],
       "group": "build",
-      "problemMatcher": []
+      "problemMatcher": ["$gradle"]
     },
     {
       "label": "check",
-      "type": "process",
-      "command": "${workspaceFolder}/gradlew.bat",
-      "windows": {
-        "command": "${workspaceFolder}\\gradlew.bat"
-      },
-      "linux": {
-        "command": "${workspaceFolder}/gradlew"
-      },
-      "osx": {
-        "command": "${workspaceFolder}/gradlew"
-      },
+      "detail": "Run tests and all verification checks without assembling the JAR.",
       "args": ["check", "--console=plain"],
-      "group": "build",
-      "problemMatcher": []
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "problemMatcher": ["$gradle"]
     },
     {
       "label": "spotlessApply",
-      "type": "process",
-      "command": "${workspaceFolder}/gradlew.bat",
-      "windows": {
-        "command": "${workspaceFolder}\\gradlew.bat"
-      },
-      "linux": {
-        "command": "${workspaceFolder}/gradlew"
-      },
-      "osx": {
-        "command": "${workspaceFolder}/gradlew"
-      },
+      "detail": "Apply the project's Java and Gradle formatting rules.",
       "args": ["spotlessApply", "--console=plain"],
-      "problemMatcher": []
+      "problemMatcher": ["$gradle"]
     },
     {
       "label": "spotlessCheck",
-      "type": "process",
-      "command": "${workspaceFolder}/gradlew.bat",
-      "windows": {
-        "command": "${workspaceFolder}\\gradlew.bat"
-      },
-      "linux": {
-        "command": "${workspaceFolder}/gradlew"
-      },
-      "osx": {
-        "command": "${workspaceFolder}/gradlew"
-      },
+      "detail": "Check formatting without changing files.",
       "args": ["spotlessCheck", "--console=plain"],
-      "problemMatcher": []
+      "problemMatcher": ["$gradle"]
     },
     {
       "label": "runClient",
-      "type": "process",
-      "command": "${workspaceFolder}/gradlew.bat",
-      "windows": {
-        "command": "${workspaceFolder}\\gradlew.bat"
-      },
-      "linux": {
-        "command": "${workspaceFolder}/gradlew"
-      },
-      "osx": {
-        "command": "${workspaceFolder}/gradlew"
-      },
+      "detail": "Start the Minecraft development client.",
       "args": ["runClient", "--console=plain"],
-      "problemMatcher": []
+      "problemMatcher": ["$gradle"]
     }
   ]
 }
