@@ -28,16 +28,19 @@ import pit12.feature.clickgui.render.ClickGuiRenderer;
 import pit12.feature.clickgui.render.ClickGuiRenderer.TextureIcon;
 import pit12.feature.clickgui.render.ClickGuiTheme;
 import pit12.runtime.config.ConfigOption;
+import pit12.shared.build.BuildInfo;
 
 public final class ClickGuiSettingsFrame extends DraggableFrame {
     private static final int FOOTER_HEIGHT = 22;
     private final ClickGuiController controller;
     private final List<OptionComponent> options = new ArrayList<OptionComponent>();
+    private final String buildLabel;
 
     public ClickGuiSettingsFrame(ClickGuiController controller, ClickGuiState state,
-            ClickGuiConfig config) {
+            ClickGuiConfig config, BuildInfo buildInfo) {
         super("clickgui.settings", "Settings", state, 32, 32, 110, 238);
         this.controller = controller;
+        buildLabel = createBuildLabel(buildInfo);
         for (ConfigOption<?> option : config.options()) {
             options.add(new OptionComponent(option));
         }
@@ -99,9 +102,8 @@ public final class ClickGuiSettingsFrame extends DraggableFrame {
             }
             rowY += optionHeight;
         }
-        String version = "12pit";
-        renderer.verticallyCenteredText(version,
-                frameX() + frameWidth() - renderer.textWidth(version, 8.0F) - 4,
+        renderer.verticallyCenteredText(buildLabel,
+                frameX() + frameWidth() - renderer.textWidth(buildLabel, 8.0F) - 4,
                 frameY() + frameHeight() - 15, 12, 8.0F, ClickGuiTheme.DISABLED_TEXT);
     }
 
@@ -123,5 +125,16 @@ public final class ClickGuiSettingsFrame extends DraggableFrame {
     private boolean inRow(int mouseX, int mouseY, int rowY, int rowHeight) {
         return mouseX >= frameX() && mouseX < frameX() + frameWidth() && mouseY >= rowY
                 && mouseY < rowY + rowHeight;
+    }
+
+    private static String createBuildLabel(BuildInfo buildInfo) {
+        if (buildInfo.isRelease()) {
+            return buildInfo.modName() + " " + buildInfo.version();
+        }
+        if (!buildInfo.gitCommit().isEmpty()) {
+            return buildInfo.modName() + " " + buildInfo.gitCommit().substring(0,
+                    Math.min(7, buildInfo.gitCommit().length()));
+        }
+        return buildInfo.modName() + " dev";
     }
 }

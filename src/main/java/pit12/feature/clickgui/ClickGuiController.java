@@ -38,6 +38,7 @@ import pit12.feature.profile.api.Profiles;
 import pit12.runtime.config.ConfigCatalog;
 import pit12.runtime.config.ConfigCategory;
 import pit12.runtime.config.FeatureConfig;
+import pit12.shared.build.BuildInfo;
 
 public final class ClickGuiController {
     private final ClickGuiState state = new ClickGuiState();
@@ -57,7 +58,7 @@ public final class ClickGuiController {
     private int tooltipY;
 
     public ClickGuiController(ConfigCatalog catalog, Profiles profiles, ClickGuiConfig config,
-            HudEditor hudEditor) {
+            HudEditor hudEditor, BuildInfo buildInfo) {
         this.config = config;
         this.hudEditor = hudEditor;
         renderer = new ClickGuiRenderer(Minecraft.getMinecraft(), config);
@@ -88,7 +89,7 @@ public final class ClickGuiController {
         ProfilesFrame profilesFrame = new ProfilesFrame(this, state, profiles);
         rootFrame.setProfilesFrame(profilesFrame);
         orderedFrames.add(profilesFrame);
-        settingsFrame = new ClickGuiSettingsFrame(this, state, config);
+        settingsFrame = new ClickGuiSettingsFrame(this, state, config, buildInfo);
         orderedFrames.add(settingsFrame);
     }
 

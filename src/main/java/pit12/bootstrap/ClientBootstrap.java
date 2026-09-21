@@ -33,6 +33,7 @@ import pit12.feature.tooltip.TooltipConfig;
 import pit12.feature.tooltip.TooltipFeature;
 import pit12.runtime.config.ConfigCatalog;
 import pit12.runtime.hud.HudRegistry;
+import pit12.shared.build.BuildInfo;
 
 public final class ClientBootstrap {
     private static final Logger LOGGER = Logger.getLogger(ClientBootstrap.class.getName());
@@ -52,10 +53,12 @@ public final class ClientBootstrap {
         ProfilesFeature profiles = new ProfilesFeature(configs, profileDirectory.toPath());
         HudRegistry hudRegistry = new HudRegistry();
         HudEditorFeature hudEditor = new HudEditorFeature(hudRegistry);
+        BuildInfo buildInfo = new BuildInfo(BuildConfig.MOD_NAME, BuildConfig.VERSION,
+                BuildConfig.GIT_COMMIT, BuildConfig.RELEASE_BUILD);
         features.add(profiles);
         features.add(new TooltipFeature(tooltipConfig));
         features.add(hudEditor);
-        features.add(new ClickGuiFeature(configs, profiles, clickGuiConfig, hudEditor));
+        features.add(new ClickGuiFeature(configs, profiles, clickGuiConfig, hudEditor, buildInfo));
     }
 
     /**
