@@ -1,0 +1,5 @@
+[files]
+extend-exclude = [
+    "src/main/java/pit12/platform/mixin/**",
+    "src/main/java/pit12/runtime/item/PitEnchantment.java",
+]
