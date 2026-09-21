@@ -3,11 +3,17 @@
   "files.eol": "\n",
   "files.insertFinalNewline": true,
   "files.trimTrailingWhitespace": true,
+  "editor.rulers": [120],
   "java.autobuild.enabled": false,
+  "java.configuration.updateBuildConfiguration": "automatic",
+  "java.format.settings.url": "eclipse-formatter.xml",
   "java.import.gradle.enabled": true,
   "java.import.gradle.wrapper.enabled": true,
+  "java.gradle.buildServer.openBuildOutput": "openOnBuildFailure",
   "editor.formatOnSave": false,
   "[java]": {
+    "editor.defaultFormatter": "redhat.java",
+    "editor.formatOnSave": true,
     "editor.insertSpaces": true,
     "editor.tabSize": 4
   },
