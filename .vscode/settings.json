@@ -4,7 +4,6 @@
   "files.insertFinalNewline": true,
   "files.trimTrailingWhitespace": true,
   "editor.rulers": [120],
-  "java.autobuild.enabled": false,
   "java.configuration.updateBuildConfiguration": "automatic",
   "java.format.settings.url": "eclipse-formatter.xml",
   "java.import.gradle.enabled": true,
