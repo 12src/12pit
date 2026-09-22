@@ -65,7 +65,7 @@ public enum PitMap {
         if (this == UNKNOWN) {
             return SpawnState.UNKNOWN;
         }
-        return y > spawnY && Math.abs(x) <= spawnRadius && Math.abs(z) <= spawnRadius
+        return y + 1 >= spawnY && Math.abs(x) <= spawnRadius && Math.abs(z) <= spawnRadius
                 ? SpawnState.IN_SPAWN
                 : SpawnState.OUTSIDE_SPAWN;
     }

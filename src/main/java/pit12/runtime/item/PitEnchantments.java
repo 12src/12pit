@@ -62,7 +62,17 @@ public final class PitEnchantments implements Iterable<PitEnchantments.Entry> {
 
     /** Returns null when this result contains no known enchantments. */
     public String formatBoldDisplayNames() {
-        return formatDisplayNames(true);
+        return formatDisplayNames(true, true, false);
+    }
+
+    /** Returns null when this result contains no known enchantments. */
+    public String formatBoldDisplayNamesWithoutLevelThree() {
+        return formatDisplayNames(true, true, true);
+    }
+
+    /** Returns null when this result contains no known enchantments. */
+    public String formatBoldDisplayNamesWithoutLevels() {
+        return formatDisplayNames(true, false, false);
     }
 
     // Enchanted items normally have at most three entries, so linear scans remain cheap.
@@ -99,6 +109,10 @@ public final class PitEnchantments implements Iterable<PitEnchantments.Entry> {
     }
 
     private String formatDisplayNames(boolean bold) {
+        return formatDisplayNames(bold, true, false);
+    }
+
+    private String formatDisplayNames(boolean bold, boolean showLevels, boolean hideLevelThree) {
         StringBuilder text = null;
         for (Entry entry : entries) {
             PitEnchantment enchantment = entry.enchantment;
@@ -112,11 +126,13 @@ public final class PitEnchantments implements Iterable<PitEnchantments.Entry> {
                 text.append(EnumChatFormatting.GRAY).append(" / ").append(EnumChatFormatting.RESET);
             }
             appendDisplayName(text, enchantment.getDisplayName(), bold);
-            text.append(' ').append(EnumChatFormatting.RESET);
-            if (bold) {
-                text.append(EnumChatFormatting.BOLD);
+            if (showLevels && (!hideLevelThree || entry.level != 3)) {
+                text.append(' ').append(EnumChatFormatting.WHITE);
+                if (bold) {
+                    text.append(EnumChatFormatting.BOLD);
+                }
+                text.append(entry.level);
             }
-            text.append(entry.level);
         }
         return text == null ? null : text.toString();
     }

@@ -24,6 +24,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.Gui;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.util.ResourceLocation;
 import org.lwjgl.opengl.GL11;
@@ -92,9 +93,38 @@ public final class UiRenderer {
 
     public void text(String text, int x, int y, float fontSize, int color, boolean shadow) {
         if (shadow) {
-            drawText(text, x + 1, y + 1, fontSize, shadowColor(color));
+            drawText(text, x + 1, y + 1, fontSize, shadowColor(color), true);
         }
-        drawText(text, x, y, fontSize, color);
+        drawText(text, x, y, fontSize, color, false);
+    }
+
+    public void texture(ResourceLocation texture, int x, int y, int width, int height, int color,
+            float rotationDegrees) {
+        if (width <= 0 || height <= 0 || Float.isNaN(pixelScale)) {
+            return;
+        }
+        int pixelX = Math.round(x * pixelScale);
+        int pixelY = Math.round(y * pixelScale);
+        int pixelWidth = Math.max(1, Math.round(width * pixelScale));
+        int pixelHeight = Math.max(1, Math.round(height * pixelScale));
+        float inverseScale = 1.0F / pixelScale;
+        GlStateManager.pushMatrix();
+        GlStateManager.scale(inverseScale, inverseScale, 1.0F);
+        GlStateManager.translate(pixelX + pixelWidth / 2.0F, pixelY + pixelHeight / 2.0F, 0.0F);
+        GlStateManager.rotate(rotationDegrees, 0.0F, 0.0F, 1.0F);
+        try {
+            GlStateManager.enableTexture2D();
+            GlStateManager.enableBlend();
+            GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1,
+                    0);
+            minecraft.getTextureManager().bindTexture(texture);
+            color(color);
+            Gui.drawModalRectWithCustomSizedTexture(-pixelWidth / 2, -pixelHeight / 2, 0.0F, 0.0F,
+                    pixelWidth, pixelHeight, pixelWidth, pixelHeight);
+        } finally {
+            color(0xFFFFFFFF);
+            GlStateManager.popMatrix();
+        }
     }
 
     public int textWidth(String text, float fontSize) {
@@ -120,17 +150,17 @@ public final class UiRenderer {
         pixelScale = Float.NaN;
     }
 
-    private void drawText(String text, int x, int y, float fontSize, int color) {
+    private void drawText(String text, int x, int y, float fontSize, int color, boolean shadow) {
         FontResources resources = fontResources(fontSize);
         if (resources != null && resources.font != null && resources.font.canRender(text)) {
-            draw(resources.font, text, x, y, color);
-        } else if (resources == null
-                || !drawFallback(resources.cjkText, resources.systemText, text, x, y, color)) {
+            draw(resources.font, text, x, y, color, shadow);
+        } else if (resources == null || !drawFallback(resources.cjkText, resources.systemText, text,
+                x, y, color, shadow)) {
             fallbackFont.drawString(text, x, y, color, false);
         }
     }
 
-    private void draw(UiFont font, String text, float x, float y, int color) {
+    private void draw(UiFont font, String text, float x, float y, int color, boolean shadow) {
         float inverseScale = 1.0F / pixelScale;
         int pixelX = Math.round(x * pixelScale);
         int pixelY = Math.round(y * pixelScale);
@@ -138,7 +168,7 @@ public final class UiRenderer {
         GlStateManager.pushMatrix();
         GlStateManager.scale(inverseScale, inverseScale, 1.0F);
         try {
-            font.draw(text, pixelX, pixelY, color);
+            font.draw(text, pixelX, pixelY, color, shadow);
         } finally {
             GlStateManager.popMatrix();
         }
@@ -202,9 +232,9 @@ public final class UiRenderer {
     }
 
     private static boolean drawFallback(UiTextCache primary, UiTextCache secondary, String text,
-            float x, float y, int color) {
-        return primary != null && primary.draw(text, x, y, color)
-                || secondary != null && secondary.draw(text, x, y, color);
+            float x, float y, int color, boolean shadow) {
+        return primary != null && primary.draw(text, x, y, color, shadow)
+                || secondary != null && secondary.draw(text, x, y, color, shadow);
     }
 
     private static int fallbackWidth(UiTextCache primary, UiTextCache secondary, String text) {
@@ -223,7 +253,7 @@ public final class UiRenderer {
     }
 
     private static int shadowColor(int color) {
-        return color & 0xFF000000 | (color & 0x00FCFCFC) >> 2;
+        return McFormatting.shadowColor(color);
     }
 
     private final class FontResources {

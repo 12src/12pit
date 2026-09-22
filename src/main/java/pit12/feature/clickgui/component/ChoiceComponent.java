@@ -52,12 +52,12 @@ public final class ChoiceComponent extends GuiComponent {
     @Override
     public void render(ClickGuiRenderer renderer, int mouseX, int mouseY, float partialTicks) {
         renderer.verticallyCenteredText(
-                renderer.ellipsize(setting.displayName(), Math.max(1, width), 8.0F), x, y,
-                FIELD_Y, 8.0F, ClickGuiTheme.MUTED_TEXT);
+                renderer.ellipsize(setting.displayName(), Math.max(1, width), 8.0F), x, y, FIELD_Y,
+                8.0F, ClickGuiTheme.MUTED_TEXT);
         int fieldY = y + FIELD_Y;
         renderer.roundedRect(x, fieldY, width, FIELD_HEIGHT, 3, ClickGuiTheme.PANEL_INSET);
-        renderer.roundedOutline(x - 0.5F, fieldY - 0.5F, width + 1.0F, FIELD_HEIGHT + 1.0F,
-                3.1F, 1.0F, ClickGuiTheme.BORDER);
+        renderer.roundedOutline(x - 0.5F, fieldY - 0.5F, width + 1.0F, FIELD_HEIGHT + 1.0F, 3.1F,
+                1.0F, ClickGuiTheme.BORDER);
         String selected = setting.selectedChoice().displayName();
         renderer.verticallyCenteredText(renderer.ellipsize(selected, Math.max(1, width - 19), 8.0F),
                 x + 5, fieldY, FIELD_HEIGHT, 8.0F, ClickGuiTheme.TEXT);

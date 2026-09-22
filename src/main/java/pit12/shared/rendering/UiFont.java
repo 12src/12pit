@@ -107,17 +107,23 @@ final class UiFont {
         }
         int width = 0;
         boolean formatting = false;
+        boolean bold = false;
         for (int index = 0; index < text.length(); index++) {
             char character = text.charAt(index);
             if (formatting) {
                 formatting = false;
+                if (McFormatting.isBold(character)) {
+                    bold = true;
+                } else if (McFormatting.resetsStyle(character)) {
+                    bold = false;
+                }
                 continue;
             }
             if (character == '\u00A7') {
                 formatting = true;
                 continue;
             }
-            width += glyph(character).advance;
+            width += glyph(character).advance + (bold ? 1 : 0);
         }
         widthCache.put(text, Integer.valueOf(width));
         return width;
@@ -146,16 +152,14 @@ final class UiFont {
         return height;
     }
 
-    void draw(String text, int x, int y, int color) {
-        float alpha = (color >>> 24 & 0xFF) / 255.0F;
-        float red = (color >>> 16 & 0xFF) / 255.0F;
-        float green = (color >>> 8 & 0xFF) / 255.0F;
-        float blue = (color & 0xFF) / 255.0F;
+    void draw(String text, int x, int y, int color, boolean shadow) {
         GlStateManager.enableTexture2D();
         GlStateManager.enableBlend();
         GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0);
         minecraft.getTextureManager().bindTexture(texture);
-        GlStateManager.color(red, green, blue, alpha);
+        int currentColor = color;
+        boolean bold = false;
+        setColor(currentColor);
         GL11.glBegin(GL11.GL_QUADS);
         try {
             int cursorX = x;
@@ -164,6 +168,17 @@ final class UiFont {
                 char character = text.charAt(index);
                 if (formatting) {
                     formatting = false;
+                    int formattedColor =
+                            McFormatting.color(text.charAt(index), color, currentColor, shadow);
+                    if (formattedColor != currentColor) {
+                        currentColor = formattedColor;
+                        setColor(currentColor);
+                    }
+                    if (McFormatting.isBold(text.charAt(index))) {
+                        bold = true;
+                    } else if (McFormatting.resetsStyle(text.charAt(index))) {
+                        bold = false;
+                    }
                     continue;
                 }
                 if (character == '\u00A7') {
@@ -183,7 +198,17 @@ final class UiFont {
                 GL11.glVertex2i(cursorX + glyph.width, y + glyph.height);
                 GL11.glTexCoord2f(right, top);
                 GL11.glVertex2i(cursorX + glyph.width, y);
-                cursorX += glyph.advance;
+                if (bold) {
+                    GL11.glTexCoord2f(left, top);
+                    GL11.glVertex2i(cursorX + 1, y);
+                    GL11.glTexCoord2f(left, bottom);
+                    GL11.glVertex2i(cursorX + 1, y + glyph.height);
+                    GL11.glTexCoord2f(right, bottom);
+                    GL11.glVertex2i(cursorX + glyph.width + 1, y + glyph.height);
+                    GL11.glTexCoord2f(right, top);
+                    GL11.glVertex2i(cursorX + glyph.width + 1, y);
+                }
+                cursorX += glyph.advance + (bold ? 1 : 0);
             }
         } finally {
             try {
@@ -192,6 +217,11 @@ final class UiFont {
                 GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
             }
         }
+    }
+
+    private static void setColor(int color) {
+        GlStateManager.color((color >>> 16 & 0xFF) / 255.0F, (color >>> 8 & 0xFF) / 255.0F,
+                (color & 0xFF) / 255.0F, (color >>> 24 & 0xFF) / 255.0F);
     }
 
     void close() {

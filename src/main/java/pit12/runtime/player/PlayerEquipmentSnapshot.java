@@ -19,6 +19,7 @@
 package pit12.runtime.player;
 
 import java.util.UUID;
+import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import pit12.runtime.item.PitEnchantments;
 
@@ -41,6 +42,10 @@ public final class PlayerEquipmentSnapshot {
         this.leggingsEnchantments = leggingsEnchantments;
         this.knownSlots = knownSlots;
         this.revision = revision;
+    }
+
+    public boolean hasGoldenLeggings() {
+        return leggings != null && leggings.getItem() == Items.golden_leggings;
     }
 
     public UUID playerId() {
