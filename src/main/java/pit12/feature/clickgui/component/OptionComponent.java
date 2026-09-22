@@ -21,6 +21,7 @@ package pit12.feature.clickgui.component;
 import pit12.feature.clickgui.ClickGuiController;
 import pit12.feature.clickgui.render.ClickGuiRenderer;
 import pit12.runtime.config.BooleanSetting;
+import pit12.runtime.config.ChoiceSetting;
 import pit12.runtime.config.ConfigOption;
 import pit12.runtime.config.IntegerSetting;
 import pit12.runtime.config.NumberSetting;
@@ -43,6 +44,9 @@ public final class OptionComponent {
                 break;
             case NUMBER:
                 component = new SliderComponent((NumberSetting<?>) setting);
+                break;
+            case CHOICE:
+                component = new ChoiceComponent((ChoiceSetting) setting);
                 break;
             case COLOR:
                 IntegerSetting colorSetting = (IntegerSetting) setting;

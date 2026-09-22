@@ -116,6 +116,11 @@ public final class RootTreeFrame extends DraggableFrame {
     }
 
     @Override
+    protected boolean canCollapse() {
+        return false;
+    }
+
+    @Override
     protected boolean headerActionContains(int mouseX, int mouseY) {
         return mouseX >= frameX() + frameWidth() - 34 && mouseX < frameX() + frameWidth()
                 && mouseY >= frameY() && mouseY < frameY() + HEADER_HEIGHT;

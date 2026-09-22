@@ -41,6 +41,7 @@ public final class ClickGuiRenderer {
         COLLAPSE("collapse"),
         EXPAND("expand"),
         RIGHT("right"),
+        SELECTOR("selector"),
         ADD("add"),
         DELETE("delete"),
         SEARCH("search");
