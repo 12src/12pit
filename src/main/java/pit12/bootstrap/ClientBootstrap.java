@@ -29,6 +29,7 @@ import pit12.feature.clickgui.ClickGuiConfig;
 import pit12.feature.clickgui.ClickGuiFeature;
 import pit12.feature.hudeditor.HudEditorFeature;
 import pit12.feature.profile.ProfilesFeature;
+import pit12.feature.player.PlayerEquipmentFeature;
 import pit12.feature.tooltip.TooltipConfig;
 import pit12.feature.tooltip.TooltipFeature;
 import pit12.runtime.config.ConfigCatalog;
@@ -51,11 +52,13 @@ public final class ClientBootstrap {
         configs.freeze();
         File profileDirectory = new File(Minecraft.getMinecraft().mcDataDir, "12pit/config");
         ProfilesFeature profiles = new ProfilesFeature(configs, profileDirectory.toPath());
+        PlayerEquipmentFeature playerEquipment = new PlayerEquipmentFeature();
         HudRegistry hudRegistry = new HudRegistry();
         HudEditorFeature hudEditor = new HudEditorFeature(hudRegistry);
         BuildInfo buildInfo = new BuildInfo(BuildConfig.MOD_NAME, BuildConfig.VERSION,
                 BuildConfig.GIT_COMMIT, BuildConfig.RELEASE_BUILD);
         features.add(profiles);
+        features.add(playerEquipment);
         features.add(new TooltipFeature(tooltipConfig));
         features.add(hudEditor);
         features.add(new ClickGuiFeature(configs, profiles, clickGuiConfig, hudEditor, buildInfo));

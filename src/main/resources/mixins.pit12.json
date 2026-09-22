@@ -9,6 +9,8 @@
   "client": [
     "accessor.FMLModContainerAccessor",
     "network.FMLHandshakeClientStateMixin",
+    "player.NetHandlerPlayClientEquipmentMixin",
+    "player.WorldClientEquipmentMixin",
     "feature.tooltip.HeldItemTooltipMixin"
   ]
 }
