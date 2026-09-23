@@ -73,7 +73,28 @@ final class UiTextCache {
         }
     }
 
-    boolean draw(String text, float x, float y, int color) {
+    boolean draw(String text, float x, float y, int color, boolean shadow) {
+        int runStart = 0;
+        int cursor = 0;
+        int currentColor = color;
+        for (int index = 0; index < text.length(); index++) {
+            if (text.charAt(index) != '\u00A7' || index + 1 >= text.length()) {
+                continue;
+            }
+            String run = text.substring(runStart, index);
+            if (!run.isEmpty() && !drawPlain(run, x + cursor, y, currentColor)) {
+                return false;
+            }
+            cursor += width(run);
+            currentColor = McFormatting.color(text.charAt(index + 1), color, currentColor, shadow);
+            index++;
+            runStart = index + 1;
+        }
+        String run = text.substring(runStart);
+        return run.isEmpty() || drawPlain(run, x + cursor, y, currentColor);
+    }
+
+    private boolean drawPlain(String text, float x, float y, int color) {
         TextureEntry entry = entry(text);
         if (entry == null) {
             return false;

@@ -100,6 +100,14 @@ public abstract class FeatureConfig {
         return setting;
     }
 
+    protected final ChoiceSetting choiceSetting(String id, String displayName, String description,
+            int defaultValue, ChoiceSetting.Choice... choices) {
+        ChoiceSetting setting =
+                new ChoiceSetting(id, displayName, description, defaultValue, choices);
+        register(setting, ConfigOption.Kind.CHOICE);
+        return setting;
+    }
+
     protected final HudConfig hudConfig(String id, String displayName, HudAnchor defaultAnchor,
             int defaultOffsetX, int defaultOffsetY, boolean defaultTextShadow) {
         String hudId = ConfigNames.requireStableId(id, "HUD id");

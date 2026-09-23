@@ -22,7 +22,7 @@ import java.util.Objects;
 
 public final class ConfigOption<T> {
     public enum Kind {
-        BOOLEAN, NUMBER, COLOR, KEYBIND
+        BOOLEAN, NUMBER, CHOICE, COLOR, KEYBIND
     }
 
     private final Setting<T> setting;
@@ -52,6 +52,8 @@ public final class ConfigOption<T> {
             case NUMBER:
                 return setting instanceof NumberSetting<?> && ((NumberSetting<?>) setting)
                         .minimumValue() < ((NumberSetting<?>) setting).maximumValue();
+            case CHOICE:
+                return setting instanceof ChoiceSetting;
             case COLOR:
             case KEYBIND:
                 return setting instanceof IntegerSetting;

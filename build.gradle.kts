@@ -49,7 +49,11 @@ loom {
         mixinConfig("mixins.$modId.json")
     }
 
-    mixin { defaultRefmapName.set("mixins.$modId.refmap.json") }
+    mixin {
+        defaultRefmapName.set("mixins.$modId.refmap.json")
+        // Forge 1.8.9 needs Loom's legacy AP path for MCP mappings to reach Mixin.
+        useLegacyMixinAp.set(true)
+    }
 }
 
 tasks.named<JavaExec>("runClient") { javaLauncher.set(legacyJavaLauncher) }
