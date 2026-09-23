@@ -1,9 +1,6 @@
 name: Spelling
 
 on:
-  push:
-    branches-ignore:
-      - gh-readonly-queue/**
   pull_request:
     types: [opened, synchronize, reopened, labeled, unlabeled]
   merge_group:
