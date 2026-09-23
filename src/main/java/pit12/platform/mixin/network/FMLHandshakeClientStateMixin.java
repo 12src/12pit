@@ -21,6 +21,7 @@ package pit12.platform.mixin.network;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.common.FMLModContainer;
 import net.minecraftforge.fml.common.ModContainer;
 import org.spongepowered.asm.mixin.Mixin;
@@ -40,6 +41,9 @@ public abstract class FMLHandshakeClientStateMixin {
                     remap = false, ordinal = 0),
             index = 0, require = 1)
     private List<ModContainer> pit12$filterClientOnlyMods(List<ModContainer> mods) {
+        if (Minecraft.getMinecraft().isSingleplayer()) {
+            return mods;
+        }
         List<ModContainer> filtered = new ArrayList<ModContainer>();
         for (ModContainer mod : mods) {
             if (!pit12$isClientSideOnly(mod)) {
