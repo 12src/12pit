@@ -16,22 +16,15 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.playerlist;
+package pit12.runtime.player;
 
-public enum PlayerListGroup {
-    FRIEND("§a§lFriend"),
-    ENEMY("§c§lEnemy"),
-    REGULARITY("§4§lREG"),
-    DARK("§d§lDARK"),
-    BOUNTY_HUNTER("§6§lBounty Hunter");
+import java.util.UUID;
 
-    private final String displayName;
+public interface TabPresenceListener {
+    /** The name can be null; joined is false for a repeated ADD packet. */
+    void onPlayerSeen(UUID playerId, String name, boolean joined);
 
-    PlayerListGroup(String displayName) {
-        this.displayName = displayName;
-    }
+    void onPlayerLeft(UUID playerId);
 
-    public String displayName() {
-        return displayName;
-    }
+    default void onTabDisplayChanged() {}
 }

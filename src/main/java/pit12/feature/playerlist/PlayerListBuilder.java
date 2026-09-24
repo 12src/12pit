@@ -26,6 +26,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.network.NetworkPlayerInfo;
 import net.minecraft.entity.player.EntityPlayer;
+import pit12.feature.relation.api.Relation;
+import pit12.feature.relation.api.RelationLookup;
 import pit12.runtime.item.PitEnchantment;
 import pit12.runtime.item.PitEnchantments;
 import pit12.runtime.pit.PitContext;
@@ -39,13 +41,15 @@ final class PlayerListBuilder {
     private final PlayerEquipmentAccess equipment;
     private final PitContext pitContext;
     private final PlayerListConfig config;
+    private final RelationLookup relations;
 
     PlayerListBuilder(Minecraft minecraft, PlayerEquipmentAccess equipment, PitContext pitContext,
-            PlayerListConfig config) {
+            PlayerListConfig config, RelationLookup relations) {
         this.minecraft = minecraft;
         this.equipment = equipment;
         this.pitContext = pitContext;
         this.config = config;
+        this.relations = relations;
     }
 
     PlayerListSnapshot build() {
@@ -76,7 +80,7 @@ final class PlayerListBuilder {
                 continue;
             }
             PlayerEquipmentSnapshot playerEquipment = equipment.loadedEquipment(playerId);
-            PlayerListGroup group = groupOf(playerEquipment);
+            PlayerListGroup group = groupOf(relations.relationOf(playerId), playerEquipment);
             if (group == null || !config.showGroup(group)) {
                 continue;
             }
@@ -90,12 +94,14 @@ final class PlayerListBuilder {
                     : 0.0F;
             boolean spawn = config.showSpawn() && player != null && pitSnapshot
                     .spawnStateAt(player.posX, player.posY, player.posZ) == SpawnState.IN_SPAWN;
-            String leggingsText = config.showLeggings() && playerEquipment.leggingsKnown()
-                    ? formatEnchantments(playerEquipment.leggingsEnchantments())
-                    : null;
-            String heldItemText = config.showHeldItem() && playerEquipment.heldItemKnown()
-                    ? formatEnchantments(playerEquipment.heldEnchantments())
-                    : null;
+            String leggingsText = config.showLeggings() && playerEquipment != null
+                    && playerEquipment.leggingsKnown()
+                            ? formatEnchantments(playerEquipment.leggingsEnchantments())
+                            : null;
+            String heldItemText = config.showHeldItem() && playerEquipment != null
+                    && playerEquipment.heldItemKnown()
+                            ? formatEnchantments(playerEquipment.heldEnchantments())
+                            : null;
             PlayerListEntry entry = new PlayerListEntry(playerId,
                     player == null ? 0 : player.getEntityId(), nameOf(info), group, leggingsText,
                     heldItemText, distance, direction, distanceKnown, directionKnown, spawn);
@@ -137,7 +143,13 @@ final class PlayerListBuilder {
         return signature;
     }
 
-    private static PlayerListGroup groupOf(PlayerEquipmentSnapshot equipment) {
+    private static PlayerListGroup groupOf(Relation relation, PlayerEquipmentSnapshot equipment) {
+        if (relation == Relation.FRIEND) {
+            return PlayerListGroup.FRIEND;
+        }
+        if (relation == Relation.ENEMY) {
+            return PlayerListGroup.ENEMY;
+        }
         if (equipment == null || !equipment.leggingsKnown()) {
             return null;
         }

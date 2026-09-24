@@ -16,22 +16,8 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.playerlist;
+package pit12.runtime.player;
 
-public enum PlayerListGroup {
-    FRIEND("§a§lFriend"),
-    ENEMY("§c§lEnemy"),
-    REGULARITY("§4§lREG"),
-    DARK("§d§lDARK"),
-    BOUNTY_HUNTER("§6§lBounty Hunter");
-
-    private final String displayName;
-
-    PlayerListGroup(String displayName) {
-        this.displayName = displayName;
-    }
-
-    public String displayName() {
-        return displayName;
-    }
+public interface TabPacketBinding {
+    void bindTabObserver(TabPacketObserver observer);
 }

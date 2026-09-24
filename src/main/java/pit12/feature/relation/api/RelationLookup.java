@@ -16,22 +16,20 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.playerlist;
+package pit12.feature.relation.api;
 
-public enum PlayerListGroup {
-    FRIEND("§a§lFriend"),
-    ENEMY("§c§lEnemy"),
-    REGULARITY("§4§lREG"),
-    DARK("§d§lDARK"),
-    BOUNTY_HUNTER("§6§lBounty Hunter");
+import java.util.List;
+import java.util.UUID;
 
-    private final String displayName;
+public interface RelationLookup {
+    Relation relationOf(UUID playerId);
 
-    PlayerListGroup(String displayName) {
-        this.displayName = displayName;
-    }
+    List<RelationEntry> entries(Relation relation);
 
-    public String displayName() {
-        return displayName;
-    }
+    List<RelationEntry> presentRelations();
+
+    /** Subscription does not replay state; use presentRelations after subscribing. */
+    void addListener(RelationListener listener);
+
+    void removeListener(RelationListener listener);
 }

@@ -37,6 +37,8 @@ public final class PlayerListConfig extends FeatureConfig {
     private final BooleanSetting showDirection;
     private final BooleanSetting showSpawn;
     private final BooleanSetting showGroupName;
+    private final BooleanSetting showFriend;
+    private final BooleanSetting showEnemy;
     private final BooleanSetting showRegularity;
     private final BooleanSetting showDark;
     private final BooleanSetting showBountyHunter;
@@ -70,7 +72,11 @@ public final class PlayerListConfig extends FeatureConfig {
         showSpawn = booleanSetting("show_spawn", "Spawn marker",
                 "Shows SPAWN instead of distance and direction for players in spawn.", true);
         showGroupName = booleanSetting("show_group_name", "Group names",
-                "Shows the name above each equipment group.", true);
+                "Shows the name above each player group.", true);
+        showFriend =
+                booleanSetting("show_friend", "Friend", "Shows friends in the player list.", true);
+        showEnemy =
+                booleanSetting("show_enemy", "Enemy", "Shows enemies in the player list.", true);
         showRegularity = booleanSetting("show_regularity", "Regularity",
                 "Shows the Regularity equipment group.", true);
         showDark = booleanSetting("show_dark", "Dark", "Shows the Dark equipment group.", true);
@@ -106,6 +112,14 @@ public final class PlayerListConfig extends FeatureConfig {
         return showGroupName.get().booleanValue();
     }
 
+    public boolean showFriend() {
+        return showFriend.get().booleanValue();
+    }
+
+    public boolean showEnemy() {
+        return showEnemy.get().booleanValue();
+    }
+
     public boolean showRegularity() {
         return showRegularity.get().booleanValue();
     }
@@ -128,6 +142,10 @@ public final class PlayerListConfig extends FeatureConfig {
 
     public boolean showGroup(PlayerListGroup group) {
         switch (group) {
+            case FRIEND:
+                return showFriend();
+            case ENEMY:
+                return showEnemy();
             case REGULARITY:
                 return showRegularity();
             case DARK:
