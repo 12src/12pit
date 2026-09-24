@@ -44,7 +44,7 @@ import java.util.logging.Logger;
 
 public final class JsonProfileStore {
     private static final Logger LOGGER = Logger.getLogger(JsonProfileStore.class.getName());
-    private static final String STATE_FILE = "profile-state.json";
+    private static final String STATE_FILE = "profiles.json";
     private final Path directory;
     private final ProfileCodec codec;
     private final Gson gson = new GsonBuilder().setPrettyPrinting().create();
