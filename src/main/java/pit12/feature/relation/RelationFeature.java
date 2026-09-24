@@ -22,9 +22,12 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -273,6 +276,61 @@ public final class RelationFeature implements Feature, Relations, TabPresenceLis
             save();
         }
         return messages;
+    }
+
+    @Override
+    public void replaceAll(List<RelationEntry> entries) {
+        String problem = readinessProblem();
+        if (problem != null) {
+            throw new IllegalArgumentException(problem);
+        }
+        Set<UUID> ids = new HashSet<UUID>();
+        Set<String> pending = new HashSet<String>();
+        for (RelationEntry entry : entries) {
+            if (entry.relation() == Relation.NONE
+                    || entry.playerId() == null
+                            && !pending.add(entry.name().toLowerCase(java.util.Locale.ROOT))
+                    || entry.playerId() != null && !ids.add(entry.playerId())) {
+                throw new IllegalArgumentException("Duplicate or invalid relation identity");
+            }
+        }
+        Map<UUID, Relation> previous = new HashMap<UUID, Relation>();
+        for (RelationEntry entry : book.entries()) {
+            if (entry.playerId() != null) {
+                previous.put(entry.playerId(), entry.relation());
+            }
+        }
+        book.replace(entries);
+        for (Map.Entry<UUID, String> player : presence.players().entrySet()) {
+            book.observe(player.getKey(), player.getValue());
+        }
+        Map<UUID, Relation> current = new HashMap<UUID, Relation>();
+        for (RelationEntry entry : book.entries()) {
+            if (entry.playerId() != null) {
+                current.put(entry.playerId(), entry.relation());
+            } else {
+                lookup(entry);
+            }
+        }
+        ids.addAll(previous.keySet());
+        ids.addAll(current.keySet());
+        for (UUID id : ids) {
+            Relation before = previous.containsKey(id) ? previous.get(id) : Relation.NONE;
+            Relation after = current.containsKey(id) ? current.get(id) : Relation.NONE;
+            if (before == after) {
+                continue;
+            }
+            notifyRelation(id, before, after);
+            if (presence.contains(id)) {
+                if (before != Relation.NONE) {
+                    notifyPresence(id, before, false);
+                }
+                if (after != Relation.NONE) {
+                    notifyPresence(id, after, true);
+                }
+            }
+        }
+        save();
     }
 
     private void apply(RelationBook.Change result, boolean persist) {

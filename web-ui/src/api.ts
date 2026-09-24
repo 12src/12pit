@@ -74,6 +74,21 @@ export interface State {
   }
 }
 
+export interface RelationConflict {
+  id: string
+  type: RelationType
+  kind: 'group' | 'identity' | 'name'
+  local: RelationEntry[]
+  incoming: RelationEntry
+}
+
+export interface TransferPreview {
+  profiles: { id: string; name: string }[]
+  relations: Partial<Record<RelationType, number>>
+  conflicts: RelationConflict[]
+  fingerprint: string
+}
+
 async function request<T = State>(path: string, body?: object): Promise<T> {
   const response = await fetch(path, {
     method: body ? 'POST' : 'GET',
@@ -103,4 +118,28 @@ export const changeRelations = (
     action,
     relation,
     entries,
+  })
+
+export const exportData = (profiles: string[], relations: RelationType[]) =>
+  request<Record<string, unknown>>('/api/transfer/export', {
+    profiles,
+    relations,
+  })
+export const previewData = (data: object) =>
+  request<TransferPreview>('/api/transfer/preview', { data })
+export const applyData = (
+  data: object,
+  profiles: string[],
+  relations: RelationType[],
+  mode: 'merge' | 'replace',
+  resolutions: Record<string, 'local' | 'imported'>,
+  fingerprint: string,
+) =>
+  request<State>('/api/transfer/apply', {
+    data,
+    profiles,
+    relations,
+    mode,
+    resolutions,
+    fingerprint,
   })

@@ -23,10 +23,12 @@ import {
   ArrowRight,
   Check,
   ChevronRight,
+  Download,
   Pencil,
   Plus,
   Search,
   Trash2,
+  Upload,
   X,
 } from '@lucide/vue'
 import {
@@ -43,6 +45,7 @@ import {
 import FormattedText from './FormattedText.vue'
 import RelationsPage from './RelationsPage.vue'
 import SettingRow from './SettingRow.vue'
+import TransferDialog from './TransferDialog.vue'
 
 const state = ref<State | null>(null)
 const ready = ref(false)
@@ -57,6 +60,7 @@ const editingName = ref('')
 const deletingId = ref<string | null>(null)
 const error = ref('')
 const pending = ref(false)
+const transferMode = ref<'export' | 'import' | null>(null)
 const capturing = ref<{ featureId: string; settingId: string } | null>(null)
 const navOrder = { features: 0, profiles: 1, relations: 2, settings: 3 }
 const navIndex = computed(() => navOrder[page.value])
@@ -389,6 +393,25 @@ function selectPage(next: typeof page.value) {
   editingId.value = null
   deletingId.value = null
   cancelCapture()
+}
+
+function imported(next: State) {
+  requestVersion++
+  displayState(next)
+  closeTransfer()
+  error.value = ''
+}
+
+function closeTransfer() {
+  const mode = transferMode.value
+  transferMode.value = null
+  void nextTick(() =>
+    document
+      .querySelector<HTMLButtonElement>(
+        `.settings-transfer-actions .${mode}-button`,
+      )
+      ?.focus(),
+  )
 }
 
 function openFeature(id: string) {
@@ -729,7 +752,27 @@ onUnmounted(() => {
               :update="updateRelations"
             />
             <template v-else-if="page === 'settings'">
-              <div class="heading"><h1>Settings</h1></div>
+              <div class="heading heading-settings">
+                <h1>Settings</h1>
+                <div class="settings-transfer-actions">
+                  <button
+                    type="button"
+                    class="secondary export-button"
+                    :disabled="pending || sendingSetting"
+                    @click="transferMode = 'export'"
+                  >
+                    <Download :size="15" />Export
+                  </button>
+                  <button
+                    type="button"
+                    class="secondary import-button"
+                    :disabled="pending || sendingSetting"
+                    @click="transferMode = 'import'"
+                  >
+                    <Upload :size="15" />Import
+                  </button>
+                </div>
+              </div>
               <section v-if="settings" class="settings-options">
                 <SettingRow
                   v-for="option in settings.sections.flatMap(
@@ -941,4 +984,11 @@ onUnmounted(() => {
     </main>
   </div>
   <div v-else class="disconnected" />
+  <TransferDialog
+    v-if="state && transferMode"
+    :mode="transferMode"
+    :state="state"
+    @close="closeTransfer"
+    @imported="imported"
+  />
 </template>

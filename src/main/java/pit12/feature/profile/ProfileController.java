@@ -71,6 +71,90 @@ final class ProfileController {
         return snapshot;
     }
 
+    List<StoredProfile> exportProfiles(List<UUID> ids) {
+        if (loadState == LoadState.LOADING) {
+            throw new IllegalArgumentException("Profiles are still loading");
+        }
+        ArrayList<StoredProfile> exported = new ArrayList<StoredProfile>();
+        for (UUID id : ids) {
+            ProfileRecord record = profilesById.get(id);
+            if (record == null) {
+                throw new IllegalArgumentException("Profile was not found: " + id);
+            }
+            exported.add(record.stored());
+        }
+        return exported;
+    }
+
+    void validateImported(List<StoredProfile> imported) {
+        if (loadState != LoadState.READY) {
+            throw new IllegalArgumentException("Profiles are not ready for import");
+        }
+        java.util.Set<UUID> ids = new java.util.HashSet<UUID>();
+        java.util.Set<String> names = new java.util.HashSet<String>();
+        for (StoredProfile profile : imported) {
+            if (!ids.add(profile.id()) || !names.add(profile.name().toLowerCase(Locale.ROOT))) {
+                throw new IllegalArgumentException("Duplicate profile in file");
+            }
+            ProfileRecord existing = profilesById.get(profile.id());
+            if (existing != null && !existing.name().equalsIgnoreCase(profile.name())) {
+                throw new IllegalArgumentException(
+                        "Profile UUID already belongs to " + existing.name());
+            }
+            catalog.normalize(profile.config());
+        }
+    }
+
+    void importProfiles(List<StoredProfile> imported) {
+        validateImported(imported);
+        ArrayList<UUID> removed = new ArrayList<UUID>();
+        ArrayList<ProfileRecord> added = new ArrayList<ProfileRecord>();
+        boolean activeReplaced = false;
+        for (StoredProfile profile : imported) {
+            ProfileRecord old = findByName(profile.name(), null);
+            int position = old == null ? profiles.size() : profiles.indexOf(old);
+            if (old != null) {
+                profiles.remove(old);
+                profilesById.remove(old.id());
+                removed.add(old.id());
+                if (old.id().equals(activeProfileId)) {
+                    activeProfileId = profile.id();
+                    activeReplaced = true;
+                }
+            }
+            ProfileRecord record = new ProfileRecord(profile, catalog.normalize(profile.config()));
+            record.touch();
+            profiles.add(position, record);
+            profilesById.put(record.id(), record);
+            added.add(record);
+        }
+        List<ProfileRecord> reordered = normalizeOrders();
+        if (activeReplaced) {
+            applyingProfile = true;
+            try {
+                catalog.apply(profilesById.get(activeProfileId).config());
+            } finally {
+                applyingProfile = false;
+            }
+            stateDirty = true;
+        }
+        publish();
+        for (UUID id : removed) {
+            persistence.profileDeleted(id);
+        }
+        for (ProfileRecord record : added) {
+            persistence.profileChanged(record.id());
+        }
+        for (ProfileRecord record : reordered) {
+            if (!added.contains(record)) {
+                persistence.profileChanged(record.id());
+            }
+        }
+        if (activeReplaced) {
+            persistence.activeProfileChanged();
+        }
+    }
+
     void beginLoading() {
         loadState = LoadState.LOADING;
         publish();

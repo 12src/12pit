@@ -82,6 +82,7 @@ final class WebUiServer {
     private final ConfigCatalog catalog;
     private final Profiles profiles;
     private final Relations relations;
+    private final SettingsTransfer transfer;
     private final Gson gson = new Gson();
     private final Set<BlockingQueue<Boolean>> streams = new HashSet<BlockingQueue<Boolean>>();
     private final ConfigChangeListener configListener = ignored -> notifyStreams();
@@ -96,6 +97,7 @@ final class WebUiServer {
         this.catalog = catalog;
         this.profiles = profiles;
         this.relations = relations;
+        transfer = new SettingsTransfer(profiles, relations);
     }
 
     void start() throws IOException {
@@ -185,7 +187,9 @@ final class WebUiServer {
             return;
         }
         if (!"POST".equals(exchange.getRequestMethod()) || !"/api/setting".equals(path)
-                && !"/api/profile".equals(path) && !"/api/relation".equals(path)) {
+                && !"/api/profile".equals(path) && !"/api/relation".equals(path)
+                && !"/api/transfer/export".equals(path) && !"/api/transfer/preview".equals(path)
+                && !"/api/transfer/apply".equals(path)) {
             sendJson(exchange, 404, object("error", "Unknown endpoint"));
             return;
         }
@@ -201,13 +205,25 @@ final class WebUiServer {
             return;
         }
         JsonElement parsed = new JsonParser().parse(new String(
-                readLimited(exchange.getRequestBody(), "/api/relation".equals(path) ? 32768 : 8192),
+                readLimited(exchange.getRequestBody(),
+                        path.startsWith("/api/transfer/") ? 4 * 1024 * 1024
+                                : "/api/relation".equals(path) ? 32768 : 8192),
                 StandardCharsets.UTF_8));
         if (!parsed.isJsonObject()) {
             throw new IllegalArgumentException("Expected a JSON object");
         }
         JsonObject request = parsed.getAsJsonObject();
         sendJson(exchange, 200, onClient(() -> {
+            if ("/api/transfer/export".equals(path)) {
+                return transfer.exportData(request);
+            }
+            if ("/api/transfer/preview".equals(path)) {
+                return transfer.preview(request);
+            }
+            if ("/api/transfer/apply".equals(path)) {
+                transfer.apply(request);
+                return state();
+            }
             if ("/api/relation".equals(path)) {
                 List<Object> results = changeRelations(request);
                 return object("state", state(), "results", results);

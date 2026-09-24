@@ -25,6 +25,8 @@ public interface Relations extends RelationLookup {
 
     List<String> changeMany(Relation relation, String action, List<RelationEntry> entries);
 
+    void replaceAll(List<RelationEntry> entries);
+
     void addChangeListener(Runnable listener);
 
     void removeChangeListener(Runnable listener);
