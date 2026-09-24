@@ -18,6 +18,7 @@
  */
 package pit12.feature.playerlist;
 
+import java.util.UUID;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GlStateManager;
@@ -28,6 +29,9 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import pit12.feature.Feature;
+import pit12.feature.relation.api.Relation;
+import pit12.feature.relation.api.RelationListener;
+import pit12.feature.relation.api.RelationLookup;
 import pit12.runtime.config.ConfigCatalog;
 import pit12.runtime.config.ConfigChangeListener;
 import pit12.runtime.config.ConfigChangeSet;
@@ -35,15 +39,19 @@ import pit12.runtime.hud.HudRegistry;
 import pit12.runtime.pit.PitContext;
 import pit12.runtime.player.PlayerEquipmentAccess;
 import pit12.runtime.player.PlayerEquipmentListener;
+import pit12.runtime.player.TabPresence;
+import pit12.runtime.player.TabPresenceListener;
 import pit12.shared.rendering.UiRenderState;
 
-public final class PlayerListFeature
-        implements Feature, PlayerEquipmentListener, ConfigChangeListener {
+public final class PlayerListFeature implements Feature, PlayerEquipmentListener,
+        ConfigChangeListener, RelationListener, TabPresenceListener {
     static final int UPDATE_INTERVAL_TICKS = 2;
     private final Minecraft minecraft = Minecraft.getMinecraft();
     private final ConfigCatalog configs;
     private final PlayerListConfig config;
     private final PlayerEquipmentAccess equipment;
+    private final RelationLookup relations;
+    private final TabPresence presence;
     private final PlayerListBuilder builder;
     private final PlayerListHud hud;
     private final HudRegistry hudRegistry;
@@ -55,12 +63,15 @@ public final class PlayerListFeature
     private boolean started;
 
     public PlayerListFeature(ConfigCatalog configs, PlayerListConfig config,
-            PlayerEquipmentAccess equipment, PitContext pitContext, HudRegistry hudRegistry) {
+            PlayerEquipmentAccess equipment, PitContext pitContext, HudRegistry hudRegistry,
+            RelationLookup relations, TabPresence presence) {
         this.configs = configs;
         this.config = config;
         this.equipment = equipment;
+        this.relations = relations;
+        this.presence = presence;
         this.hudRegistry = hudRegistry;
-        builder = new PlayerListBuilder(minecraft, equipment, pitContext, config);
+        builder = new PlayerListBuilder(minecraft, equipment, pitContext, config, relations);
         hud = new PlayerListHud(config);
     }
 
@@ -71,6 +82,8 @@ public final class PlayerListFeature
         }
         hudRegistry.register(hud);
         equipment.addListener(this);
+        relations.addListener(this);
+        presence.addListener(this);
         configs.addListener(this);
         MinecraftForge.EVENT_BUS.register(this);
         started = true;
@@ -84,6 +97,8 @@ public final class PlayerListFeature
         started = false;
         MinecraftForge.EVENT_BUS.unregister(this);
         configs.removeListener(this);
+        presence.removeListener(this);
+        relations.removeListener(this);
         equipment.removeListener(this);
         hudRegistry.unregister(hud);
         snapshot = PlayerListSnapshot.empty();
@@ -109,6 +124,31 @@ public final class PlayerListFeature
     }
 
     @Override
+    public void onRelationsLoaded() {
+        snapshotDirty = true;
+    }
+
+    @Override
+    public void onRelationChanged(UUID playerId, Relation previous, Relation current) {
+        snapshotDirty = true;
+    }
+
+    @Override
+    public void onPlayerSeen(UUID playerId, String name, boolean joined) {
+        snapshotDirty = true;
+    }
+
+    @Override
+    public void onPlayerLeft(UUID playerId) {
+        snapshotDirty = true;
+    }
+
+    @Override
+    public void onTabDisplayChanged() {
+        snapshotDirty = true;
+    }
+
+    @Override
     public void onConfigChanged(ConfigChangeSet changes) {
         if (changes.affects("playerlist", "enabled")
                 || changes.affects("playerlist", "show_held_item")
@@ -118,6 +158,8 @@ public final class PlayerListFeature
                 || changes.affects("playerlist", "show_direction")
                 || changes.affects("playerlist", "show_spawn")
                 || changes.affects("playerlist", "show_group_name")
+                || changes.affects("playerlist", "show_friend")
+                || changes.affects("playerlist", "show_enemy")
                 || changes.affects("playerlist", "show_regularity")
                 || changes.affects("playerlist", "show_dark")
                 || changes.affects("playerlist", "show_bounty_hunter")

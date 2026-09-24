@@ -10,6 +10,7 @@
     "accessor.FMLModContainerAccessor",
     "network.FMLHandshakeClientStateMixin",
     "player.NetHandlerPlayClientEquipmentMixin",
+    "player.NetHandlerPlayClientTabMixin",
     "player.WorldClientEquipmentMixin",
     "feature.tooltip.HeldItemTooltipMixin"
   ]
