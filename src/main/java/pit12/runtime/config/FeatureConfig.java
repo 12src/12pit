@@ -39,6 +39,7 @@ public abstract class FeatureConfig {
     private final List<HudConfig> hudsView = Collections.unmodifiableList(huds);
     private final Map<String, Setting<?>> settingsById = new LinkedHashMap<String, Setting<?>>();
     private final Map<String, HudConfig> hudsById = new LinkedHashMap<String, HudConfig>();
+    private ConfigSubcategory currentSubcategory;
 
     protected FeatureConfig(String id, String displayName, ConfigCategory category,
             String description) {
@@ -108,6 +109,10 @@ public abstract class FeatureConfig {
         return setting;
     }
 
+    protected final void subcategory(String id, String displayName) {
+        currentSubcategory = new ConfigSubcategory(id, displayName);
+    }
+
     protected final HudConfig hudConfig(String id, String displayName, HudAnchor defaultAnchor,
             int defaultOffsetX, int defaultOffsetY, boolean defaultTextShadow) {
         String hudId = ConfigNames.requireStableId(id, "HUD id");
@@ -146,7 +151,7 @@ public abstract class FeatureConfig {
         }
         settings.add(setting);
         if (optionKind != null) {
-            options.add(new ConfigOption<T>(setting, optionKind));
+            options.add(new ConfigOption<T>(setting, optionKind, currentSubcategory));
         }
         settingsById.put(setting.id(), setting);
     }

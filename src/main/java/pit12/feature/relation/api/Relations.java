@@ -16,22 +16,16 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.profile.api;
+package pit12.feature.relation.api;
 
-import java.util.UUID;
+import java.util.List;
 
-public interface Profiles {
-    ProfilesSnapshot snapshot();
+public interface Relations extends RelationLookup {
+    String readinessProblem();
 
-    void addListener(Runnable listener);
+    List<String> changeMany(Relation relation, String action, List<RelationEntry> entries);
 
-    void removeListener(Runnable listener);
+    void addChangeListener(Runnable listener);
 
-    ProfileMutationResult switchTo(UUID profileId);
-
-    ProfileMutationResult beginCreate();
-
-    ProfileMutationResult rename(UUID profileId, String name);
-
-    ProfileMutationResult delete(UUID profileId);
+    void removeChangeListener(Runnable listener);
 }

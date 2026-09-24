@@ -49,6 +49,7 @@ final class ProfileController {
 
     private final ConfigCatalog catalog;
     private final PersistenceSink persistence;
+    private final Runnable snapshotChanged;
     private final List<ProfileRecord> profiles = new ArrayList<ProfileRecord>();
     private final Map<UUID, ProfileRecord> profilesById = new LinkedHashMap<UUID, ProfileRecord>();
     private final List<String> problems = new ArrayList<String>();
@@ -59,9 +60,11 @@ final class ProfileController {
     private boolean applyingProfile;
     private boolean stateDirty;
 
-    ProfileController(ConfigCatalog catalog, PersistenceSink persistence) {
+    ProfileController(ConfigCatalog catalog, PersistenceSink persistence,
+            Runnable snapshotChanged) {
         this.catalog = catalog;
         this.persistence = persistence;
+        this.snapshotChanged = snapshotChanged;
     }
 
     ProfilesSnapshot snapshot() {
@@ -352,6 +355,7 @@ final class ProfileController {
         }
         snapshot = new ProfilesSnapshot(loadState, ++revision, activeProfileId, summaries, problems,
                 dirty);
+        snapshotChanged.run();
     }
 
     private ProfileMutationResult requireLoaded() {

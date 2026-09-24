@@ -243,8 +243,8 @@ final class PlayerListHud implements HudElement {
         double yawRadians = Math.toRadians(yaw);
         renderForwardX = -Math.sin(yawRadians);
         renderForwardZ = Math.cos(yawRadians);
-        renderRightX = Math.cos(yawRadians);
-        renderRightZ = Math.sin(yawRadians);
+        renderRightX = -Math.cos(yawRadians);
+        renderRightZ = -Math.sin(yawRadians);
         renderDirectionReady = true;
     }
 

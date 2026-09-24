@@ -66,8 +66,8 @@ final class PlayerListBuilder {
             double yaw = Math.toRadians(localPlayer.rotationYaw);
             forwardX = -Math.sin(yaw);
             forwardZ = Math.cos(yaw);
-            rightX = Math.cos(yaw);
-            rightZ = Math.sin(yaw);
+            rightX = -Math.cos(yaw);
+            rightZ = -Math.sin(yaw);
         }
         EnumMap<PlayerListGroup, List<PlayerListEntry>> groups =
                 new EnumMap<PlayerListGroup, List<PlayerListEntry>>(PlayerListGroup.class);

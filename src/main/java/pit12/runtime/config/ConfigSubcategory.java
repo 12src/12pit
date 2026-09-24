@@ -16,22 +16,22 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.profile.api;
+package pit12.runtime.config;
 
-import java.util.UUID;
+public final class ConfigSubcategory {
+    private final String id;
+    private final String displayName;
 
-public interface Profiles {
-    ProfilesSnapshot snapshot();
+    public ConfigSubcategory(String id, String displayName) {
+        this.id = ConfigNames.requireStableId(id, "subcategory id");
+        this.displayName = ConfigNames.requireText(displayName, "subcategory display name");
+    }
 
-    void addListener(Runnable listener);
+    public String id() {
+        return id;
+    }
 
-    void removeListener(Runnable listener);
-
-    ProfileMutationResult switchTo(UUID profileId);
-
-    ProfileMutationResult beginCreate();
-
-    ProfileMutationResult rename(UUID profileId, String name);
-
-    ProfileMutationResult delete(UUID profileId);
+    public String displayName() {
+        return displayName;
+    }
 }

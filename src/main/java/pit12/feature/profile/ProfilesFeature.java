@@ -20,6 +20,8 @@ package pit12.feature.profile;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -43,6 +45,7 @@ public final class ProfilesFeature implements Feature, Profiles, ProfileControll
     private final Path directory;
     private final ProfileController controller;
     private final ConfigChangeListener configListener;
+    private final List<Runnable> listeners = new ArrayList<Runnable>();
     private ProfileIoWorker worker;
     private boolean started;
     private long generation;
@@ -50,7 +53,7 @@ public final class ProfilesFeature implements Feature, Profiles, ProfileControll
     public ProfilesFeature(ConfigCatalog catalog, Path directory) {
         this.catalog = catalog;
         this.directory = directory;
-        controller = new ProfileController(catalog, this);
+        controller = new ProfileController(catalog, this, this::notifyListeners);
         configListener = controller::onConfigChanged;
     }
 
@@ -117,6 +120,28 @@ public final class ProfilesFeature implements Feature, Profiles, ProfileControll
     @Override
     public ProfilesSnapshot snapshot() {
         return controller.snapshot();
+    }
+
+    @Override
+    public void addListener(Runnable listener) {
+        if (!listeners.contains(listener)) {
+            listeners.add(listener);
+        }
+    }
+
+    @Override
+    public void removeListener(Runnable listener) {
+        listeners.remove(listener);
+    }
+
+    private void notifyListeners() {
+        for (Runnable listener : listeners.toArray(new Runnable[listeners.size()])) {
+            try {
+                listener.run();
+            } catch (RuntimeException failure) {
+                LOGGER.log(Level.SEVERE, "Profile listener failed", failure);
+            }
+        }
     }
 
     @Override

@@ -27,10 +27,12 @@ public final class ConfigOption<T> {
 
     private final Setting<T> setting;
     private final Kind kind;
+    private final ConfigSubcategory subcategory;
 
-    ConfigOption(Setting<T> setting, Kind kind) {
+    ConfigOption(Setting<T> setting, Kind kind, ConfigSubcategory subcategory) {
         this.setting = Objects.requireNonNull(setting, "setting");
         this.kind = Objects.requireNonNull(kind, "kind");
+        this.subcategory = subcategory;
         if (!isCompatible(setting, kind)) {
             throw new IllegalArgumentException(
                     "Setting " + setting.id() + " is incompatible with option kind " + kind);
@@ -43,6 +45,10 @@ public final class ConfigOption<T> {
 
     public Kind kind() {
         return kind;
+    }
+
+    public ConfigSubcategory subcategory() {
+        return subcategory;
     }
 
     private static boolean isCompatible(Setting<?> setting, Kind kind) {

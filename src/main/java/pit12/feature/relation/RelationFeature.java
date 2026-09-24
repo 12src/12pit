@@ -39,19 +39,20 @@ import pit12.feature.Feature;
 import pit12.feature.relation.api.Relation;
 import pit12.feature.relation.api.RelationEntry;
 import pit12.feature.relation.api.RelationListener;
-import pit12.feature.relation.api.RelationLookup;
+import pit12.feature.relation.api.Relations;
 import pit12.feature.relation.storage.RelationIoWorker;
 import pit12.feature.relation.storage.RelationStore;
 import pit12.runtime.player.TabPresence;
 import pit12.runtime.player.TabPresenceListener;
 
-public final class RelationFeature implements Feature, RelationLookup, TabPresenceListener {
+public final class RelationFeature implements Feature, Relations, TabPresenceListener {
     private static final Logger LOGGER = Logger.getLogger(RelationFeature.class.getName());
     private final Minecraft minecraft = Minecraft.getMinecraft();
     private final TabPresence presence;
     private final Path path;
     private final RelationBook book = new RelationBook();
     private final List<RelationListener> listeners = new ArrayList<RelationListener>();
+    private final List<Runnable> changeListeners = new ArrayList<Runnable>();
     private RelationIoWorker worker;
     private ExecutorService lookupWorker;
     private boolean started;
@@ -139,6 +140,7 @@ public final class RelationFeature implements Feature, RelationLookup, TabPresen
             }
         }
         listeners.clear();
+        changeListeners.clear();
         ready = false;
     }
 
@@ -180,6 +182,28 @@ public final class RelationFeature implements Feature, RelationLookup, TabPresen
     }
 
     @Override
+    public void addChangeListener(Runnable listener) {
+        if (!changeListeners.contains(Objects.requireNonNull(listener, "listener"))) {
+            changeListeners.add(listener);
+        }
+    }
+
+    @Override
+    public void removeChangeListener(Runnable listener) {
+        changeListeners.remove(listener);
+    }
+
+    private void notifyChanged() {
+        for (Runnable listener : new ArrayList<Runnable>(changeListeners)) {
+            try {
+                listener.run();
+            } catch (RuntimeException failure) {
+                LOGGER.log(Level.WARNING, "Relation listener failed", failure);
+            }
+        }
+    }
+
+    @Override
     public void onPlayerSeen(UUID playerId, String name, boolean joined) {
         if (!ready) {
             return;
@@ -204,26 +228,62 @@ public final class RelationFeature implements Feature, RelationLookup, TabPresen
         }
     }
 
-    String readinessProblem() {
+    @Override
+    public String readinessProblem() {
         return !started ? "Relations are unavailable"
                 : failed ? "Relations could not be loaded; the file is read-only"
                         : !ready ? "Relations are still loading" : null;
     }
 
-    String change(Relation target, String action, String name) {
+    public String change(Relation target, String action, String name) {
         String problem = readinessProblem();
         if (problem != null) {
             return problem;
         }
         RelationBook.Change result = book.change(target, action, name, presence.players());
-        if (result.changed) {
+        apply(result, true);
+        return result.message;
+    }
+
+    @Override
+    public List<String> changeMany(Relation target, String action, List<RelationEntry> entries) {
+        String problem = readinessProblem();
+        if (problem != null) {
+            throw new IllegalStateException(problem);
+        }
+        if (target == Relation.NONE || !"add".equals(action) && !"remove".equals(action)) {
+            throw new IllegalArgumentException("Invalid relation change");
+        }
+        for (RelationEntry entry : entries) {
+            if (entry.relation() != target || "add".equals(action) && entry.playerId() != null) {
+                throw new IllegalArgumentException("Invalid relation entry");
+            }
+        }
+        List<String> messages = new ArrayList<String>(entries.size());
+        boolean changed = false;
+        for (RelationEntry entry : entries) {
+            RelationBook.Change result = entry.playerId() == null
+                    ? book.change(target, action, entry.name(), presence.players())
+                    : book.remove(target, entry.playerId());
+            changed |= result.changed;
+            apply(result, false);
+            messages.add(result.message);
+        }
+        if (changed) {
+            save();
+        }
+        return messages;
+    }
+
+    private void apply(RelationBook.Change result, boolean persist) {
+        if (persist && result.changed) {
             save();
         }
         if (result.lookup != null) {
             lookup(result.lookup);
         }
         if (!result.changed || result.playerId == null) {
-            return result.message;
+            return;
         }
         if (result.previous != result.current) {
             notifyRelation(result.playerId, result.previous, result.current);
@@ -236,7 +296,6 @@ public final class RelationFeature implements Feature, RelationLookup, TabPresen
                 notifyPresence(result.playerId, result.current, true);
             }
         }
-        return result.message;
     }
 
     private void lookup(RelationEntry waiting) {
@@ -286,6 +345,7 @@ public final class RelationFeature implements Feature, RelationLookup, TabPresen
         if (worker != null) {
             worker.requestWrite(book.entries());
         }
+        notifyChanged();
     }
 
     private void notifyPresence(UUID id, Relation relation, boolean present) {
@@ -329,13 +389,17 @@ public final class RelationFeature implements Feature, RelationLookup, TabPresen
                 for (RelationListener listener : new ArrayList<RelationListener>(listeners)) {
                     listener.onRelationsLoaded();
                 }
+                notifyChanged();
             });
         }
 
         @Override
         public void loadFailed(Exception failure) {
             LOGGER.log(Level.WARNING, "Failed to load relations from " + path, failure);
-            dispatch(taskGeneration, () -> failed = true);
+            dispatch(taskGeneration, () -> {
+                failed = true;
+                notifyChanged();
+            });
         }
 
         @Override

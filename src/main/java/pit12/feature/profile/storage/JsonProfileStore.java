@@ -41,10 +41,13 @@ import java.util.List;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 public final class JsonProfileStore {
     private static final Logger LOGGER = Logger.getLogger(JsonProfileStore.class.getName());
     private static final String STATE_FILE = "profiles.json";
+    private static final Pattern PROFILE_FILE = Pattern.compile(
+            "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\\.json");
     private final Path directory;
     private final ProfileCodec codec;
     private final Gson gson = new GsonBuilder().setPrettyPrinting().create();
@@ -68,7 +71,8 @@ public final class JsonProfileStore {
         ArrayList<Path> files = new ArrayList<Path>();
         try (DirectoryStream<Path> entries = Files.newDirectoryStream(directory, "*.json")) {
             for (Path entry : entries) {
-                if (!STATE_FILE.equals(entry.getFileName().toString())) {
+                if (Files.isRegularFile(entry)
+                        && PROFILE_FILE.matcher(entry.getFileName().toString()).matches()) {
                     files.add(entry);
                 }
             }
@@ -83,14 +87,7 @@ public final class JsonProfileStore {
         for (Path file : files) {
             String filename = file.getFileName().toString();
             String idText = filename.substring(0, filename.length() - ".json".length());
-            UUID expectedId;
-            try {
-                expectedId = UUID.fromString(idText);
-            } catch (IllegalArgumentException failure) {
-                LOGGER.warning("Ignoring non-profile JSON file " + file);
-                problems.add(new ProfileLoadProblem(file, "Filename is not a profile UUID"));
-                continue;
-            }
+            UUID expectedId = UUID.fromString(idText);
             try (BufferedReader reader = Files.newBufferedReader(file, StandardCharsets.UTF_8)) {
                 ProfileCodec.DecodeResult result = codec.decode(expectedId, reader);
                 profiles.add(result.profile());

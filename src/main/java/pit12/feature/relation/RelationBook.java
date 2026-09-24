@@ -162,6 +162,17 @@ final class RelationBook {
                         + " list (UUID pending)");
     }
 
+    Change remove(Relation target, UUID id) {
+        RelationEntry entry = byId.get(id);
+        if (entry == null || entry.relation() != target) {
+            return Change.error(
+                    "Player is not on the " + target.name().toLowerCase(Locale.ROOT) + " list");
+        }
+        byId.remove(id);
+        return new Change(id, target, Relation.NONE, null, true, entry.name() + " removed from the "
+                + target.name().toLowerCase(Locale.ROOT) + " list");
+    }
+
     Observation observe(UUID id, String name) {
         RelationEntry known = byId.get(id);
         if (known != null) {

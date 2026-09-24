@@ -16,22 +16,8 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.profile.api;
-
-import java.util.UUID;
-
-public interface Profiles {
-    ProfilesSnapshot snapshot();
-
-    void addListener(Runnable listener);
-
-    void removeListener(Runnable listener);
-
-    ProfileMutationResult switchTo(UUID profileId);
-
-    ProfileMutationResult beginCreate();
-
-    ProfileMutationResult rename(UUID profileId, String name);
-
-    ProfileMutationResult delete(UUID profileId);
+declare module '*.vue' {
+  import type { DefineComponent } from 'vue'
+  const component: DefineComponent<object, object, unknown>
+  export default component
 }

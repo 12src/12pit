@@ -16,22 +16,27 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.profile.api;
+import { defineConfig } from 'vite'
+import vue from '@vitejs/plugin-vue'
 
-import java.util.UUID;
-
-public interface Profiles {
-    ProfilesSnapshot snapshot();
-
-    void addListener(Runnable listener);
-
-    void removeListener(Runnable listener);
-
-    ProfileMutationResult switchTo(UUID profileId);
-
-    ProfileMutationResult beginCreate();
-
-    ProfileMutationResult rename(UUID profileId, String name);
-
-    ProfileMutationResult delete(UUID profileId);
-}
+export default defineConfig(() => {
+  const target = process.env.WEB_UI_TARGET ?? 'http://127.0.0.1:60916'
+  return {
+    plugins: [vue()],
+    base: './',
+    server: {
+      host: '127.0.0.1',
+      proxy: {
+        '/api': {
+          target,
+          changeOrigin: true,
+          configure(proxy) {
+            proxy.on('proxyReq', (request) =>
+              request.setHeader('Origin', new URL(target).origin),
+            )
+          },
+        },
+      },
+    },
+  }
+})

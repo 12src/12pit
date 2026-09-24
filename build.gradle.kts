@@ -118,6 +118,11 @@ tasks.withType<JavaCompile> {
     options.compilerArgs.add("-Aquiet")
 }
 
+val licenseText = file(licenseHeaderPath).readLines().joinToString("\n")
+val blockLicenseHeader =
+    "/*\n" + licenseText.lines().joinToString("\n") { if (it.isEmpty()) " *" else " * $it" } + "\n */"
+val htmlLicenseHeader = "<!--\n$licenseText\n-->"
+
 spotless {
     java {
         target("src/main/java/**/*.java", "src/test/java/**/*.java")
@@ -125,7 +130,7 @@ spotless {
         importOrder("\\#", "")
         removeUnusedImports()
         forbidWildcardImports()
-        licenseHeaderFile(licenseHeaderPath).updateYearWithLatest(false)
+        licenseHeader(blockLicenseHeader).updateYearWithLatest(false)
     }
 
     kotlin {
@@ -135,7 +140,7 @@ spotless {
             it.setBlockIndent(4)
             it.setContinuationIndent(4)
         }
-        licenseHeaderFile(licenseHeaderPath).updateYearWithLatest(false)
+        licenseHeader(blockLicenseHeader).updateYearWithLatest(false)
     }
 
     kotlinGradle {
@@ -145,6 +150,16 @@ spotless {
             it.setBlockIndent(4)
             it.setContinuationIndent(4)
         }
+    }
+
+    format("webUiCode") {
+        target("web-ui/src/**/*.ts", "web-ui/src/**/*.css", "web-ui/vite.config.ts")
+        licenseHeader(blockLicenseHeader, "(?m)^(?!/\\*|//)\\S").updateYearWithLatest(false)
+    }
+
+    format("webUiMarkup") {
+        target("web-ui/src/**/*.vue", "web-ui/index.html")
+        licenseHeader(htmlLicenseHeader, "(?m)^<(?:!doctype|script|template|style)\\b").updateYearWithLatest(false)
     }
 }
 
@@ -159,7 +174,31 @@ tasks.withType<Jar> {
     }
 }
 
+val npm = if (SystemUtils.IS_OS_WINDOWS) "npm.cmd" else "npm"
+val installWebUi by
+    tasks.registering(Exec::class) {
+        inputs.files("web-ui/package.json", "web-ui/package-lock.json")
+        outputs.file("web-ui/node_modules/.package-lock.json")
+        commandLine(npm, "ci", "--prefix", "web-ui")
+    }
+val buildWebUi by
+    tasks.registering(Exec::class) {
+        dependsOn(installWebUi)
+        inputs.files(
+            fileTree("web-ui/src"),
+            "web-ui/index.html",
+            "web-ui/vite.config.ts",
+            "web-ui/tsconfig.json",
+            "web-ui/package.json",
+            "web-ui/package-lock.json",
+        )
+        outputs.dir("web-ui/dist")
+        commandLine(npm, "run", "build", "--prefix", "web-ui")
+    }
+
 tasks.processResources {
+    dependsOn(buildWebUi)
+    from("web-ui/dist") { into("assets/pit12/web") }
     val properties =
         mapOf(
             "version" to project.version,
