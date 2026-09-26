@@ -16,27 +16,32 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.relation.api;
+package pit12.feature.online.api;
 
-import java.util.List;
-import java.util.UUID;
-import java.util.function.Consumer;
+import java.io.IOException;
 
-public interface Relations extends RelationLookup {
-    String readinessProblem();
+public interface Online {
+    String PROVIDER_12PIT = "12pit";
+    String PROVIDER_SELF_HOSTED = "selfhosted";
+    String REGION_GLOBAL = "global";
 
-    List<String> changeMany(Relation relation, String action, List<RelationEntry> entries);
+    void load();
 
-    void replaceAll(List<RelationEntry> entries);
+    String provider();
 
-    void applyRemoteSnapshot(List<RelationEntry> entries);
+    String region();
 
-    void applyRemotePatch(String action, UUID playerId, String name, Relation relation);
+    String baseUrl();
 
-    void refreshIdentity(UUID playerId, String expectedName, boolean lookupByName,
-            Consumer<RelationEntry> callback);
+    String endpoint();
 
-    void addChangeListener(Runnable listener);
+    String nickname();
 
-    void removeChangeListener(Runnable listener);
+    void setProvider(String value) throws IOException;
+
+    void setRegion(String value) throws IOException;
+
+    void setSelfHostedUrl(String value) throws IOException;
+
+    void setNickname(String value) throws IOException;
 }

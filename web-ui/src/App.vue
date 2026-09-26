@@ -26,6 +26,7 @@ import {
   Download,
   Pencil,
   Plus,
+  RefreshCw,
   Search,
   Trash2,
   Upload,
@@ -33,8 +34,10 @@ import {
 } from '@lucide/vue'
 import {
   changeProfile,
+  changeOnline,
   changeRelations,
   changeSetting,
+  changeSync,
   loadState,
   type Feature,
   type RelationInput,
@@ -45,11 +48,14 @@ import {
 import FormattedText from './FormattedText.vue'
 import RelationsPage from './RelationsPage.vue'
 import SettingRow from './SettingRow.vue'
+import SyncPage from './SyncPage.vue'
 import TransferDialog from './TransferDialog.vue'
 
 const state = ref<State | null>(null)
 const ready = ref(false)
-const page = ref<'features' | 'relations' | 'profiles' | 'settings'>('features')
+const page = ref<'features' | 'relations' | 'profiles' | 'settings' | 'sync'>(
+  'features',
+)
 const selectedId = ref<string | null>(null)
 const search = ref('')
 const category = ref('all')
@@ -62,10 +68,26 @@ const error = ref('')
 const pending = ref(false)
 const transferMode = ref<'export' | 'import' | null>(null)
 const capturing = ref<{ featureId: string; settingId: string } | null>(null)
-const navOrder = { features: 0, profiles: 1, relations: 2, settings: 3 }
+const onlineBaseUrl = ref('')
+const onlineNickname = ref('')
+const keyConfirm = ref<'regenerate' | 'import' | null>(null)
+const remoteReplace = ref<string | null>(null)
+const dismissedSyncMessage = ref<string | null>(null)
+const importedPrivateKey = ref('')
+const navOrder = {
+  features: 0,
+  profiles: 1,
+  relations: 2,
+  sync: 3,
+  settings: 4,
+}
 const navIndex = computed(() => navOrder[page.value])
 const navIndicatorTop = computed(() =>
-  navIndex.value === 3 ? 'calc(100% - 62px)' : `${22 + navIndex.value * 44}px`,
+  navIndex.value === 4
+    ? 'calc(100% - 62px)'
+    : navIndex.value === 3
+      ? 'calc(100% - 106px)'
+      : `${22 + navIndex.value * 44}px`,
 )
 const pageKey = computed(() =>
   page.value === 'features' && selectedId.value
@@ -94,6 +116,75 @@ const settings = computed(() =>
 const current = computed(() =>
   features.value.find((feature) => feature.id === selectedId.value),
 )
+const canChangeKey = computed(() => {
+  const sync = state.value?.sync
+  if (
+    sync &&
+    ['joining', 'preparingKey', 'leaving', 'dissolving'].includes(sync.status)
+  )
+    return false
+  if (!sync?.channelId) return true
+  const self = sync.members.find((member) => member.id === sync.fingerprint)
+  return (
+    !!self &&
+    sync.status === 'connected' &&
+    (self?.role !== 'owner' ||
+      sync.members.filter((member) => member.role === 'owner').length > 1)
+  )
+})
+const remoteProfiles = computed(() => {
+  const sync = state.value?.sync
+  return (
+    sync?.remoteProfiles.filter(
+      (entry) => entry.ownerId !== sync.fingerprint,
+    ) ?? []
+  )
+})
+const syncNavStatus = computed(() => {
+  const sync = state.value?.sync
+  if (!sync) return 'Unavailable'
+  if (sync.status === 'joining') return 'Joining'
+  if (sync.status === 'error') return 'Error'
+  if (!sync.channelId) return 'Not joined'
+  const labels: Record<string, string> = {
+    connected: 'Connected',
+    connecting: 'Connecting',
+    leaving: 'Leaving',
+    dissolving: 'Dissolving',
+    preparingKey: 'Changing key',
+    error: 'Error',
+    unconfigured: 'Offline',
+  }
+  return labels[sync.status] ?? sync.status
+})
+const onlineStatusLabel = computed(() =>
+  state.value?.online.provider === '12pit' ? 'Global' : 'Self-hosted',
+)
+const onlineUrlInvalid = computed(() => {
+  const value = onlineBaseUrl.value.trim()
+  if (!value) return false
+  try {
+    const url = new URL(value)
+    return !['http:', 'https:'].includes(url.protocol) || !url.hostname
+  } catch {
+    return true
+  }
+})
+const keyUnavailableReason = computed(() => {
+  const sync = state.value?.sync
+  if (sync?.status === 'joining')
+    return 'Wait for channel setup to finish before changing this device key.'
+  if (!sync?.channelId || canChangeKey.value) return ''
+  const self = sync.members.find((member) => member.id === sync.fingerprint)
+  if (
+    self?.role === 'owner' &&
+    sync.members.filter((member) => member.role === 'owner').length === 1
+  ) {
+    return 'Assign another owner in Members before changing this device key.'
+  }
+  return 'Reconnect to the channel before changing this device key.'
+})
+const onlineCopied = ref(false)
 const categories = computed(() => [
   ...new Map(
     features.value.map((feature) => [feature.categoryId, feature.category]),
@@ -128,6 +219,50 @@ const showDetails = computed(() =>
       .flatMap((section) => section.options)
       .find((option) => option.id === 'show_details')?.value ?? true,
   ),
+)
+
+watch(
+  () => state.value?.online.baseUrl,
+  (value) => {
+    if (typeof value === 'string') onlineBaseUrl.value = value
+  },
+  { immediate: true },
+)
+
+watch(
+  () => state.value?.online.nickname,
+  (value) => {
+    if (typeof value === 'string') onlineNickname.value = value
+  },
+  { immediate: true },
+)
+
+watch(
+  () => state.value?.sync.status,
+  (value, previous) => {
+    if (
+      value === 'connected' &&
+      previous !== 'connected' &&
+      page.value === 'profiles' &&
+      state.value?.sync.syncProfiles
+    )
+      onlineAction('profiles')
+  },
+)
+
+watch(
+  () => state.value?.sync.fingerprint,
+  (current, previous) => {
+    if (current && previous && current !== previous)
+      importedPrivateKey.value = ''
+  },
+)
+
+watch(
+  () => state.value?.sync.message,
+  () => {
+    dismissedSyncMessage.value = null
+  },
 )
 
 watch(
@@ -198,15 +333,17 @@ function serverChanged() {
   else void refresh()
 }
 
-async function mutate(action: () => Promise<State>) {
-  if (pending.value) return
+async function mutate(action: () => Promise<State>): Promise<boolean> {
+  if (pending.value) return false
   pending.value = true
   requestVersion++
   try {
     displayState(await action())
     error.value = ''
+    return true
   } catch (cause) {
     error.value = message(cause)
+    return false
   } finally {
     pending.value = false
     if (refreshQueued && !sendingSetting) {
@@ -265,6 +402,94 @@ async function flushSettings() {
 
 async function profileAction(action: string, id?: string, name?: string) {
   await mutate(() => changeProfile(action, id, name))
+}
+
+function onlineAction(action: string, values: Record<string, unknown> = {}) {
+  void mutate(() => changeSync(action, values))
+}
+
+async function saveOnlineBaseUrl() {
+  if (onlineUrlInvalid.value) return
+  const value = onlineBaseUrl.value.trim()
+  if (
+    (await mutate(() => changeOnline('selfHostedUrl', value))) &&
+    state.value
+  ) {
+    onlineBaseUrl.value = state.value.online.baseUrl
+  }
+}
+
+function chooseOnlineProvider(event: Event) {
+  const select = event.target as HTMLSelectElement
+  const provider = select.value
+  select.value = state.value?.online.provider ?? 'selfhosted'
+  void mutate(() => changeOnline('provider', provider))
+}
+
+function chooseOnlineRegion(event: Event) {
+  const select = event.target as HTMLSelectElement
+  const region = select.value
+  select.value = state.value?.online.region ?? 'global'
+  void mutate(() => changeOnline('region', region))
+}
+
+async function saveOnlineNickname() {
+  if (
+    (await mutate(() =>
+      changeOnline('nickname', onlineNickname.value.trim()),
+    )) &&
+    state.value
+  ) {
+    onlineNickname.value = state.value.online.nickname
+  }
+}
+
+async function copyOnlineFingerprint() {
+  const fingerprint = state.value?.sync.fingerprint
+  if (!fingerprint) return
+  try {
+    await navigator.clipboard.writeText(fingerprint)
+    onlineCopied.value = true
+    window.setTimeout(() => {
+      onlineCopied.value = false
+    }, 1600)
+  } catch {
+    error.value = 'Unable to copy to clipboard'
+  }
+}
+
+async function confirmKeyChange() {
+  if (!canChangeKey.value) return
+  const action = keyConfirm.value
+  if (!action || (action === 'import' && !importedPrivateKey.value.trim()))
+    return
+  const succeeded = await mutate(() =>
+    changeSync(
+      action === 'regenerate' ? 'regenerateKey' : 'importKey',
+      action === 'import'
+        ? { privateKey: importedPrivateKey.value.trim() }
+        : {},
+    ),
+  )
+  if (succeeded) {
+    keyConfirm.value = null
+    importedPrivateKey.value = ''
+  }
+}
+
+function importRemoteProfile(ownerId: string, profileId: string, name: string) {
+  const key = `${ownerId}:${profileId}`
+  if (
+    state.value?.profiles.entries.some(
+      (entry) => entry.name.toLowerCase() === name.toLowerCase(),
+    ) &&
+    remoteReplace.value !== key
+  ) {
+    remoteReplace.value = key
+    return
+  }
+  remoteReplace.value = null
+  onlineAction('importProfile', { ownerId, profileId })
 }
 
 async function updateRelations(
@@ -393,6 +618,14 @@ function selectPage(next: typeof page.value) {
   editingId.value = null
   deletingId.value = null
   cancelCapture()
+  remoteReplace.value = null
+  if (
+    next === 'profiles' &&
+    state.value?.sync.status === 'connected' &&
+    state.value.sync.syncProfiles
+  ) {
+    onlineAction('profiles')
+  }
 }
 
 function imported(next: State) {
@@ -400,6 +633,17 @@ function imported(next: State) {
   displayState(next)
   closeTransfer()
   error.value = ''
+}
+
+function dismissNotice() {
+  error.value = ''
+  dismissedSyncMessage.value = state.value?.sync.message ?? ''
+}
+
+function syncUpdated(next: State) {
+  requestVersion++
+  displayState(next)
+  void refresh()
 }
 
 function closeTransfer() {
@@ -600,6 +844,22 @@ onUnmounted(() => {
         >
           Relations
         </button>
+        <span class="nav-divider" aria-hidden="true" />
+        <button
+          class="nav-sync"
+          :class="{ active: page === 'sync' }"
+          :aria-current="page === 'sync' ? 'page' : undefined"
+          :aria-label="`Sync: ${syncNavStatus}`"
+          @click="selectPage('sync')"
+        >
+          Sync
+          <span
+            class="sync-status-dot"
+            :data-state="state.sync.status"
+            :title="syncNavStatus"
+            aria-hidden="true"
+          />
+        </button>
         <button
           class="nav-settings"
           :class="{ active: page === 'settings' }"
@@ -610,15 +870,24 @@ onUnmounted(() => {
         </button>
       </nav>
     </aside>
-    <main>
-      <div v-if="error" class="error-notice" role="alert">
-        <span>{{ error }}</span>
+    <main :class="{ 'settings-main': page === 'settings' }">
+      <div
+        v-if="
+          error ||
+          (page === 'profiles' &&
+            state.sync.message &&
+            state.sync.message !== dismissedSyncMessage)
+        "
+        class="error-notice"
+        role="alert"
+      >
+        <span>{{ error || state.sync.message }}</span>
         <button
           class="notice-close"
           type="button"
           aria-label="Dismiss error"
           title="Dismiss error"
-          @click="error = ''"
+          @click="dismissNotice"
         >
           <X :size="15" />
         </button>
@@ -682,6 +951,7 @@ onUnmounted(() => {
                       v-if="feature.toggleable"
                       class="switch-button"
                       type="button"
+                      :disabled="pending"
                       role="switch"
                       :aria-label="`Enable ${feature.name}`"
                       :aria-checked="feature.enabled"
@@ -711,6 +981,7 @@ onUnmounted(() => {
                     <button
                       class="switch-button"
                       type="button"
+                      :disabled="pending"
                       role="switch"
                       :aria-label="`Enable ${current.name}`"
                       :aria-checked="current.enabled"
@@ -749,6 +1020,7 @@ onUnmounted(() => {
               v-else-if="page === 'relations'"
               :relations="state.relations"
               :busy="pending || sendingSetting"
+              :read-only="state.sync.relationsReadOnly"
               :update="updateRelations"
             />
             <template v-else-if="page === 'settings'">
@@ -791,7 +1063,208 @@ onUnmounted(() => {
                   @cancel="cancelCapture"
                 />
               </section>
+              <section class="online-settings" aria-labelledby="online-heading">
+                <div class="online-heading">
+                  <h2 id="online-heading">Online</h2>
+                </div>
+                <div class="online-group">
+                  <div class="online-setting-row">
+                    <strong>Provider</strong>
+                    <div class="online-provider-controls">
+                      <select
+                        :value="state.online.provider"
+                        :disabled="pending || !!state.sync.channelId"
+                        @change="chooseOnlineProvider"
+                      >
+                        <option value="selfhosted">Self-hosted</option>
+                        <option value="12pit">12pit</option>
+                      </select>
+                      <form
+                        v-if="state.online.provider === 'selfhosted'"
+                        class="online-url-control"
+                        @submit.prevent="saveOnlineBaseUrl"
+                      >
+                        <input
+                          id="online-server-url"
+                          v-model="onlineBaseUrl"
+                          type="url"
+                          placeholder="https://sync.example.com"
+                          :aria-invalid="onlineUrlInvalid"
+                          aria-label="Self-hosted server URL"
+                          :disabled="pending || !!state.sync.channelId"
+                        />
+                        <button
+                          class="secondary"
+                          type="submit"
+                          :disabled="
+                            pending ||
+                            !!state.sync.channelId ||
+                            onlineUrlInvalid ||
+                            onlineBaseUrl.trim() === state.online.baseUrl
+                          "
+                        >
+                          Save
+                        </button>
+                      </form>
+                      <label v-else class="online-region-control">
+                        <span>Region</span>
+                        <select
+                          :value="state.online.region"
+                          :disabled="pending || !!state.sync.channelId"
+                          @change="chooseOnlineRegion"
+                        >
+                          <option value="global">Global</option>
+                        </select>
+                      </label>
+                    </div>
+                  </div>
+                  <small
+                    v-if="onlineUrlInvalid"
+                    class="form-error online-setting-error"
+                    >Enter a valid server URL.</small
+                  >
+                  <p v-if="state.sync.channelId" class="online-note">
+                    Leave the channel before changing provider.
+                  </p>
+                  <form
+                    class="online-setting-row"
+                    @submit.prevent="saveOnlineNickname"
+                  >
+                    <label for="online-device-name"
+                      ><strong>Device name</strong></label
+                    >
+                    <div class="online-input-action">
+                      <input
+                        id="online-device-name"
+                        v-model="onlineNickname"
+                        type="text"
+                        maxlength="32"
+                        placeholder="Unnamed device"
+                        :disabled="pending"
+                      />
+                      <button
+                        class="secondary"
+                        type="submit"
+                        :disabled="
+                          pending ||
+                          onlineNickname.trim() === state.online.nickname
+                        "
+                      >
+                        Save
+                      </button>
+                    </div>
+                  </form>
+                  <dl class="online-identity">
+                    <div>
+                      <dt>Fingerprint</dt>
+                      <dd :title="state.sync.fingerprint">
+                        {{ state.sync.fingerprint || 'Not available' }}
+                      </dd>
+                      <button
+                        class="icon-button"
+                        type="button"
+                        :disabled="!state.sync.fingerprint"
+                        :title="onlineCopied ? 'Copied' : 'Copy fingerprint'"
+                        :aria-label="
+                          onlineCopied
+                            ? 'Fingerprint copied'
+                            : 'Copy fingerprint'
+                        "
+                        @click="copyOnlineFingerprint"
+                      >
+                        <Check v-if="onlineCopied" :size="15" /><Copy
+                          v-else
+                          :size="15"
+                        />
+                      </button>
+                    </div>
+                  </dl>
+                  <details class="online-advanced">
+                    <summary><strong>Device key</strong></summary>
+                    <div class="online-advanced-body">
+                      <p
+                        v-if="keyUnavailableReason"
+                        class="online-availability"
+                      >
+                        {{ keyUnavailableReason }}
+                      </p>
+                      <div class="online-key-row">
+                        <strong>Generate a new key</strong>
+                        <button
+                          class="secondary"
+                          type="button"
+                          :disabled="pending || !canChangeKey"
+                          @click="keyConfirm = 'regenerate'"
+                        >
+                          <RefreshCw :size="15" /> Regenerate
+                        </button>
+                      </div>
+                      <div class="online-key-row online-key-import">
+                        <label for="online-private-key"
+                          ><strong>Import a private key</strong></label
+                        >
+                        <textarea
+                          id="online-private-key"
+                          v-model="importedPrivateKey"
+                          rows="4"
+                          autocomplete="off"
+                          spellcheck="false"
+                          placeholder="-----BEGIN PGP PRIVATE KEY BLOCK-----"
+                          :disabled="pending || !canChangeKey"
+                        />
+                        <button
+                          class="secondary"
+                          type="button"
+                          :disabled="
+                            pending ||
+                            !canChangeKey ||
+                            !importedPrivateKey.trim()
+                          "
+                          @click="keyConfirm = 'import'"
+                        >
+                          <Upload :size="15" /> Import key
+                        </button>
+                      </div>
+                      <div
+                        v-if="keyConfirm"
+                        class="sync-confirm sync-confirm-warning"
+                      >
+                        <span>{{
+                          state.sync.channelId
+                            ? 'Change this key and remove this device and its shared data from the channel?'
+                            : 'Replace this device key?'
+                        }}</span>
+                        <div class="sync-confirm-actions">
+                          <button
+                            class="secondary"
+                            type="button"
+                            @click="keyConfirm = null"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            class="danger"
+                            type="button"
+                            :disabled="pending || !canChangeKey"
+                            @click="confirmKeyChange"
+                          >
+                            Change key
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </details>
+                </div>
+              </section>
             </template>
+            <SyncPage
+              v-else-if="page === 'sync' && state"
+              :state="state.sync"
+              :base-url="state.online.endpoint"
+              :online-label="onlineStatusLabel"
+              @updated="syncUpdated"
+              @open-settings="selectPage('settings')"
+            />
             <template v-else>
               <div class="heading heading-profiles">
                 <h1>Profiles</h1>
@@ -976,6 +1449,84 @@ onUnmounted(() => {
                 <p v-if="!state.profiles.entries.length" class="empty">
                   No profiles.
                 </p>
+                <section
+                  v-if="state.sync.channelId && state.sync.syncProfiles"
+                  class="remote-profiles"
+                >
+                  <div class="sync-section-heading">
+                    <h2>Channel profiles</h2>
+                    <button
+                      class="icon-button"
+                      type="button"
+                      title="Refresh channel profiles"
+                      aria-label="Refresh channel profiles"
+                      :disabled="pending || state.sync.status !== 'connected'"
+                      @click="onlineAction('profiles')"
+                    >
+                      <RefreshCw :size="15" />
+                    </button>
+                  </div>
+                  <p
+                    v-if="state.sync.status !== 'connected'"
+                    class="sync-notice"
+                  >
+                    Connect to view channel profiles.
+                  </p>
+                  <p v-else-if="!remoteProfiles.length" class="sync-notice">
+                    No shared profiles.
+                  </p>
+                  <div
+                    v-for="entry in remoteProfiles"
+                    :key="`${entry.ownerId}:${entry.id}`"
+                    class="remote-profile-row"
+                  >
+                    <div class="remote-profile-name">
+                      <strong>{{ entry.name }}</strong>
+                      <small
+                        >{{
+                          state.sync.members.find(
+                            (member) => member.id === entry.ownerId,
+                          )?.nickname || 'Unnamed device'
+                        }}
+                        ·
+                        <span :title="entry.ownerId">{{
+                          entry.ownerId
+                        }}</span></small
+                      >
+                    </div>
+                    <template
+                      v-if="remoteReplace === `${entry.ownerId}:${entry.id}`"
+                    >
+                      <span>Replace local profile?</span>
+                      <button
+                        class="secondary"
+                        type="button"
+                        @click="remoteReplace = null"
+                      >
+                        Cancel
+                      </button>
+                    </template>
+                    <button
+                      class="secondary"
+                      type="button"
+                      :disabled="
+                        pending ||
+                        state.sync.status !== 'connected' ||
+                        state.profiles.loadState !== 'READY'
+                      "
+                      @click="
+                        importRemoteProfile(entry.ownerId, entry.id, entry.name)
+                      "
+                    >
+                      <Download :size="15" />
+                      {{
+                        remoteReplace === `${entry.ownerId}:${entry.id}`
+                          ? 'Replace'
+                          : 'Import'
+                      }}
+                    </button>
+                  </div>
+                </section>
               </template>
             </template>
           </div>

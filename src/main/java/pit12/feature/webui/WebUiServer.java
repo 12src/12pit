@@ -62,6 +62,7 @@ import pit12.feature.profile.api.ProfilesSnapshot;
 import pit12.feature.relation.api.Relation;
 import pit12.feature.relation.api.RelationEntry;
 import pit12.feature.relation.api.Relations;
+import pit12.feature.sync.api.Sync;
 import pit12.runtime.config.ChoiceSetting;
 import pit12.runtime.config.ConfigCatalog;
 import pit12.runtime.config.ConfigChangeListener;
@@ -82,21 +83,24 @@ final class WebUiServer {
     private final ConfigCatalog catalog;
     private final Profiles profiles;
     private final Relations relations;
+    private final Sync sync;
     private final SettingsTransfer transfer;
     private final Gson gson = new Gson();
     private final Set<BlockingQueue<Boolean>> streams = new HashSet<BlockingQueue<Boolean>>();
     private final ConfigChangeListener configListener = ignored -> notifyStreams();
     private final Runnable profileListener = this::notifyStreams;
     private final Runnable relationListener = this::notifyStreams;
+    private final Runnable syncListener = this::notifyStreams;
     private HttpServer server;
     private ExecutorService executor;
 
-    WebUiServer(Minecraft minecraft, ConfigCatalog catalog, Profiles profiles,
-            Relations relations) {
+    WebUiServer(Minecraft minecraft, ConfigCatalog catalog, Profiles profiles, Relations relations,
+            Sync sync) {
         this.minecraft = minecraft;
         this.catalog = catalog;
         this.profiles = profiles;
         this.relations = relations;
+        this.sync = sync;
         transfer = new SettingsTransfer(profiles, relations);
     }
 
@@ -123,12 +127,14 @@ final class WebUiServer {
         catalog.addListener(configListener);
         profiles.addListener(profileListener);
         relations.addChangeListener(relationListener);
+        sync.addListener(syncListener);
     }
 
     void stop() {
         catalog.removeListener(configListener);
         profiles.removeListener(profileListener);
         relations.removeChangeListener(relationListener);
+        sync.removeListener(syncListener);
         if (server != null) {
             server.stop(0);
             server = null;
@@ -188,6 +194,7 @@ final class WebUiServer {
         }
         if (!"POST".equals(exchange.getRequestMethod()) || !"/api/setting".equals(path)
                 && !"/api/profile".equals(path) && !"/api/relation".equals(path)
+                && !"/api/sync".equals(path) && !"/api/online".equals(path)
                 && !"/api/transfer/export".equals(path) && !"/api/transfer/preview".equals(path)
                 && !"/api/transfer/apply".equals(path)) {
             sendJson(exchange, 404, object("error", "Unknown endpoint"));
@@ -207,7 +214,8 @@ final class WebUiServer {
         JsonElement parsed = new JsonParser().parse(new String(
                 readLimited(exchange.getRequestBody(),
                         path.startsWith("/api/transfer/") ? 4 * 1024 * 1024
-                                : "/api/relation".equals(path) ? 32768 : 8192),
+                                : "/api/sync".equals(path) ? 128 * 1024
+                                        : "/api/relation".equals(path) ? 32768 : 8192),
                 StandardCharsets.UTF_8));
         if (!parsed.isJsonObject()) {
             throw new IllegalArgumentException("Expected a JSON object");
@@ -227,6 +235,24 @@ final class WebUiServer {
             if ("/api/relation".equals(path)) {
                 List<Object> results = changeRelations(request);
                 return object("state", state(), "results", results);
+            }
+            if ("/api/sync".equals(path)) {
+                changeSync(request);
+                return state();
+            } else if ("/api/online".equals(path)) {
+                String action = requiredString(request, "action");
+                if ("provider".equals(action)) {
+                    sync.setProvider(requiredString(request, "provider"));
+                } else if ("region".equals(action)) {
+                    sync.setRegion(requiredString(request, "region"));
+                } else if ("selfHostedUrl".equals(action)) {
+                    sync.setSelfHostedUrl(requiredString(request, "selfHostedUrl"));
+                } else if ("nickname".equals(action)) {
+                    sync.setNickname(requiredString(request, "nickname"));
+                } else {
+                    throw new IllegalArgumentException("Unknown online action");
+                }
+                return state();
             }
             if ("/api/setting".equals(path)) {
                 changeSetting(request);
@@ -371,7 +397,55 @@ final class WebUiServer {
         }
     }
 
+    private void changeSync(JsonObject request) {
+        String action = requiredString(request, "action");
+        if ("regenerateKey".equals(action)) {
+            sync.regenerateKey();
+        } else if ("importKey".equals(action)) {
+            sync.importKey(requiredString(request, "privateKey"));
+        } else if ("create".equals(action)) {
+            sync.createChannel();
+        } else if ("join".equals(action)) {
+            sync.joinChannel(requiredString(request, "channelId"),
+                    optionalString(request, "inviteToken"), optionalString(request, "password"));
+        } else if ("invite".equals(action)) {
+            sync.requestInvite();
+        } else if ("revokeInvite".equals(action)) {
+            sync.revokeInvite(requiredString(request, "inviteId"));
+        } else if ("joinPolicy".equals(action)) {
+            sync.setJoinPolicy(requiredString(request, "mode"),
+                    optionalString(request, "password"));
+        } else if ("leave".equals(action)) {
+            sync.leaveChannel();
+        } else if ("dissolve".equals(action)) {
+            sync.dissolveChannel();
+        } else if ("profiles".equals(action)) {
+            sync.refreshProfiles();
+        } else if ("importProfile".equals(action)) {
+            sync.importProfile(requiredString(request, "ownerId"),
+                    requiredString(request, "profileId"));
+        } else if ("uploads".equals(action)) {
+            sync.setUploads(requiredString(request, "profiles"),
+                    optionalBoolean(request, "relations"));
+        } else if ("selection".equals(action)) {
+            sync.setSyncSelection(optionalBoolean(request, "profiles"),
+                    optionalBoolean(request, "relations"));
+        } else if ("access".equals(action)) {
+            sync.setAccess(requiredString(request, "memberId"), requiredString(request, "role"),
+                    optionalBoolean(request, "writeProfiles"),
+                    optionalBoolean(request, "writeRelations"));
+        } else if ("remove".equals(action)) {
+            sync.removeMember(requiredString(request, "memberId"));
+        } else {
+            throw new IllegalArgumentException("Unknown sync action");
+        }
+    }
+
     private List<Object> changeRelations(JsonObject request) {
+        if (sync.relationsReadOnly()) {
+            throw new IllegalArgumentException(
+                    "Relations are read-only while synced without write permission");
+        }
         String problem = relations.readinessProblem();
         if (problem != null) {
             throw new IllegalArgumentException(problem);
@@ -486,7 +560,7 @@ final class WebUiServer {
         }
         return object("version", BUILD_LABEL, "features", features, "relations",
                 object("problem", relations.readinessProblem(), "entries", relationEntries),
-                "profiles",
+                "online", sync.onlineState(), "sync", sync.state(), "profiles",
                 object("loadState", snapshot.loadState().name(), "activeId",
                         snapshot.activeProfileId() == null ? null
                                 : snapshot.activeProfileId().toString(),
@@ -584,6 +658,22 @@ final class WebUiServer {
     private static String requiredString(JsonObject object, String key) {
         JsonElement value = object.get(key);
         if (value == null || !value.isJsonPrimitive() || !value.getAsJsonPrimitive().isString()) {
+            throw new IllegalArgumentException("Expected " + key);
+        }
+        return value.getAsString();
+    }
+
+    private static boolean optionalBoolean(JsonObject object, String key) {
+        JsonElement value = object.get(key);
+        return value != null && value.isJsonPrimitive() && value.getAsJsonPrimitive().isBoolean()
+                && value.getAsBoolean();
+    }
+
+    private static String optionalString(JsonObject object, String key) {
+        JsonElement value = object.get(key);
+        if (value == null)
+            return "";
+        if (!value.isJsonPrimitive() || !value.getAsJsonPrimitive().isString()) {
             throw new IllegalArgumentException("Expected " + key);
         }
         return value.getAsString();

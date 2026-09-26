@@ -42,6 +42,28 @@ export interface Feature {
 
 export type RelationType = 'FRIEND' | 'ENEMY'
 
+export interface SyncState {
+  status: string
+  message: string | null
+  channelId: string
+  joinMode: 'invite' | 'password' | 'open'
+  fingerprint: string
+  syncProfiles: boolean
+  syncRelations: boolean
+  relationsReadOnly: boolean
+  profilesUpload: 'none' | 'current' | 'all'
+  relationsUpload: boolean
+  members: {
+    id: string
+    nickname: string
+    role: 'owner' | 'writer' | 'reader'
+    writeProfiles: boolean
+    writeRelations: boolean
+  }[]
+  remoteProfiles: { ownerId: string; id: string; name: string }[]
+  invites: { id: string; token?: string; expiresAt: number }[]
+}
+
 export interface RelationEntry {
   uuid: string | null
   name: string
@@ -60,6 +82,14 @@ export interface RelationResult {
 
 export interface State {
   version: string
+  online: {
+    provider: 'selfhosted' | '12pit'
+    region: 'global'
+    baseUrl: string
+    endpoint: string
+    nickname: string
+  }
+  sync: SyncState
   features: Feature[]
   profiles: {
     loadState: 'LOADING' | 'READY' | 'DEGRADED'
@@ -119,6 +149,16 @@ export const changeRelations = (
     relation,
     entries,
   })
+
+export const changeSync = (
+  action: string,
+  values: Record<string, unknown> = {},
+) => request<State>('/api/sync', { action, ...values })
+
+export const changeOnline = (
+  action: 'provider' | 'region' | 'selfHostedUrl' | 'nickname',
+  value: string,
+) => request<State>('/api/online', { action, [action]: value })
 
 export const exportData = (profiles: string[], relations: RelationType[]) =>
   request<Record<string, unknown>>('/api/transfer/export', {

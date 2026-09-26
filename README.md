@@ -50,6 +50,9 @@ As long as the PR is relevant and you're still interested in contributing, we're
 12pit bundles the following third-party components:
 
 - [SpongePowered Mixin](https://github.com/SpongePowered/Mixin): MIT License. License text: [`META-INF/third-party-licenses/MIXIN-MIT.txt`](src/main/resources/META-INF/third-party-licenses/MIXIN-MIT.txt).
+- [Bouncy Castle](https://github.com/bcgit/bc-java): MIT License. License text: [`META-INF/third-party-licenses/BOUNCY-CASTLE-MIT.md`](src/main/resources/META-INF/third-party-licenses/BOUNCY-CASTLE-MIT.md).
+- [Java-WebSocket](https://github.com/TooTallNate/Java-WebSocket): MIT License. License text: [`META-INF/third-party-licenses/JAVA-WEBSOCKET-MIT.txt`](src/main/resources/META-INF/third-party-licenses/JAVA-WEBSOCKET-MIT.txt).
+- [SLF4J](https://github.com/qos-ch/slf4j): MIT License. License text: [`META-INF/third-party-licenses/SLF4J-MIT.txt`](src/main/resources/META-INF/third-party-licenses/SLF4J-MIT.txt).
 - [Vue](https://vuejs.org/): MIT License; [Lucide](https://lucide.dev/): ISC License. Their license texts are packaged with the web interface in `META-INF/third-party-licenses/`.
 - [Noto Sans SC](https://fonts.google.com/noto/specimen/Noto+Sans+SC): SIL Open Font License 1.1. Font: [`assets/pit12/fonts/noto-sans-sc.otf`](src/main/resources/assets/pit12/fonts/noto-sans-sc.otf) (modified and compressed GB 2312 subset). License text: [`META-INF/third-party-licenses/NOTO-SANS-SC-OFL.txt`](src/main/resources/META-INF/third-party-licenses/NOTO-SANS-SC-OFL.txt).
 - [Montserrat](https://github.com/JulietaUla/Montserrat): SIL Open Font License 1.1. Font: [`assets/pit12/fonts/montserrat-regular.ttf`](src/main/resources/assets/pit12/fonts/montserrat-regular.ttf). License text: [`META-INF/third-party-licenses/MONTSERRAT-OFL.txt`](src/main/resources/META-INF/third-party-licenses/MONTSERRAT-OFL.txt).

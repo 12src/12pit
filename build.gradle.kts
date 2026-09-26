@@ -1,5 +1,15 @@
 import org.apache.commons.lang3.SystemUtils
 
+buildscript {
+    val proguardVersion = providers.gradleProperty("proguardVersion").get()
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath("com.guardsquare:proguard-gradle:$proguardVersion")
+    }
+}
+
 plugins {
     java
     id("com.diffplug.spotless")
@@ -20,6 +30,9 @@ val mixinRuntimeVersion: String by project
 val mixinProcessorVersion: String by project
 val devAuthVersion: String by project
 val archUnitVersion: String by project
+val javaWebSocketVersion: String by project
+val slf4jVersion: String by project
+val bouncyCastleVersion: String by project
 val ktfmtVersion: String by project
 val licenseHeaderPath: String by project
 val eclipseFormatterConfigPath: String by project
@@ -104,6 +117,11 @@ dependencies {
     forge("net.minecraftforge:forge:$minecraftVersion-$forgeVersion")
 
     compileOnly("com.google.code.gson:gson:$minecraftGsonVersion")
+    shaded("org.java-websocket:Java-WebSocket:$javaWebSocketVersion") { isTransitive = false }
+    shaded("org.slf4j:slf4j-api:$slf4jVersion") { isTransitive = false }
+    shaded("org.bouncycastle:bcprov-jdk18on:$bouncyCastleVersion") { isTransitive = false }
+    shaded("org.bouncycastle:bcutil-jdk18on:$bouncyCastleVersion") { isTransitive = false }
+    shaded("org.bouncycastle:bcpg-jdk18on:$bouncyCastleVersion") { isTransitive = false }
     shaded("org.spongepowered:mixin:$mixinRuntimeVersion") { isTransitive = false }
     annotationProcessor("org.spongepowered:mixin:$mixinProcessorVersion:processor")
 
@@ -214,15 +232,6 @@ tasks.processResources {
     filesMatching(listOf("mcmod.info", "mixins.$modId.json")) { expand(properties) }
 }
 
-val remapJar by
-    tasks.named<net.fabricmc.loom.task.RemapJarTask>("remapJar") {
-        dependsOn(tasks.shadowJar)
-        archiveBaseName.set(modName)
-        archiveVersion.set("")
-        archiveClassifier.set("")
-        inputFile.set(tasks.shadowJar.get().archiveFile)
-    }
-
 tasks.jar { enabled = false }
 
 tasks.shadowJar {
@@ -230,11 +239,55 @@ tasks.shadowJar {
     archiveClassifier.set("dev-shadow")
     configurations = listOf(shaded)
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    relocate("org.java_websocket", "pit12.internal.websocket")
+    relocate("org.slf4j", "pit12.internal.slf4j")
+    relocate("org.bouncycastle", "pit12.internal.bouncycastle")
 
     from(rootProject.file("LICENSE"))
 
     exclude("LICENSE.txt")
+    // Named dependency licenses are bundled from resources, not from the jars' generic paths.
+    exclude("META-INF/LICENSE.*")
+    exclude("META-INF/maven/**")
     exclude("META-INF/*.DSA", "META-INF/*.RSA", "META-INF/*.SF")
+    // This mod uses the platform JCA providers; shrinking removes BC's unused provider class.
+    exclude("META-INF/services/java.security.Provider")
+    // Annotation processors are build-time only; their service entries do not belong in the mod jar.
+    exclude("META-INF/services/javax.annotation.processing.Processor")
+    exclude("META-INF/services/org.spongepowered.tools.obfuscation.service.IObfuscationService")
+    exclude("org/spongepowered/tools/obfuscation/**")
+    // Forge 1.8.9's ASM 5 cannot parse the Java 9+ classes under META-INF/versions.
+    exclude("META-INF/versions/**")
+    exclude("module-info.class", "**/module-info.class")
+    // Mixin loads these adapters only for optional Fernflower debug output, which is not bundled.
+    exclude("org/spongepowered/asm/mixin/transformer/debug/RuntimeDecompiler*.class")
 }
+
+val proguardOutput = layout.buildDirectory.file("tmp/proguard/$modName-proguard.jar")
+val proguardJar by
+    tasks.registering(proguard.gradle.ProGuardTask::class) {
+        dependsOn(tasks.shadowJar)
+        injars(tasks.shadowJar.get().archiveFile.get().asFile)
+        outjars(proguardOutput.get().asFile)
+        configuration(file("proguard.pro"))
+        libraryjars(legacyJavaLauncher.get().metadata.installationPath.file("jre/lib/rt.jar").asFile)
+        libraryjars(legacyJavaLauncher.get().metadata.installationPath.file("jre/lib/jce.jar").asFile)
+        libraryjars(
+            files(
+                (sourceSets.main.get().compileClasspath - shaded).filterNot {
+                    it.name.startsWith("architectury-mixin-remapper-service-")
+                }
+            )
+        )
+    }
+
+val remapJar by
+    tasks.named<net.fabricmc.loom.task.RemapJarTask>("remapJar") {
+        dependsOn(proguardJar)
+        archiveBaseName.set(modName)
+        archiveVersion.set("")
+        archiveClassifier.set("")
+        inputFile.set(proguardOutput)
+    }
 
 tasks.assemble.get().dependsOn(tasks.remapJar)

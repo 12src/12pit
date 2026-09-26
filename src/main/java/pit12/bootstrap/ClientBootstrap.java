@@ -26,6 +26,7 @@ import java.util.logging.Logger;
 import net.minecraft.client.Minecraft;
 import pit12.feature.Feature;
 import pit12.feature.hudeditor.HudEditorFeature;
+import pit12.feature.online.OnlineSettings;
 import pit12.feature.pit.PitContextFeature;
 import pit12.feature.player.PlayerEquipmentFeature;
 import pit12.feature.player.PlayerPresenceFeature;
@@ -33,6 +34,7 @@ import pit12.feature.playerlist.PlayerListConfig;
 import pit12.feature.playerlist.PlayerListFeature;
 import pit12.feature.profile.ProfilesFeature;
 import pit12.feature.relation.RelationFeature;
+import pit12.feature.sync.SyncFeature;
 import pit12.feature.tooltip.TooltipConfig;
 import pit12.feature.tooltip.TooltipFeature;
 import pit12.feature.webui.WebUiConfig;
@@ -75,7 +77,12 @@ public final class ClientBootstrap {
         features.add(playerList);
         features.add(new TooltipFeature(tooltipConfig));
         features.add(hudEditor);
-        features.add(new WebUiFeature(configs, profiles, relations, webUiConfig));
+        File dataDirectory = new File(Minecraft.getMinecraft().mcDataDir, "12pit");
+        OnlineSettings online = new OnlineSettings(dataDirectory.toPath().resolve("settings.json"));
+        SyncFeature sync = new SyncFeature(profiles, relations, online, dataDirectory.toPath());
+        relations.setReadOnlySupplier(sync::relationsReadOnly);
+        features.add(sync);
+        features.add(new WebUiFeature(configs, profiles, relations, sync, webUiConfig));
     }
 
     /**

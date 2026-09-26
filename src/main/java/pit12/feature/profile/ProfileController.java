@@ -155,6 +155,60 @@ final class ProfileController {
         }
     }
 
+    void replaceAll(List<StoredProfile> imported) {
+        validateImported(imported);
+        if (imported.isEmpty()) {
+            throw new IllegalArgumentException("At least one profile is required");
+        }
+        ArrayList<StoredProfile> ordered = new ArrayList<StoredProfile>(imported);
+        Collections.sort(ordered,
+                Comparator.comparingInt(StoredProfile::order).thenComparing(StoredProfile::id));
+        ArrayList<UUID> removed = new ArrayList<UUID>();
+        for (ProfileRecord old : profiles) {
+            boolean retained = false;
+            for (StoredProfile incoming : ordered) {
+                if (old.id().equals(incoming.id())) {
+                    retained = true;
+                    break;
+                }
+            }
+            if (!retained) {
+                removed.add(old.id());
+            }
+        }
+        UUID previousActive = activeProfileId;
+        profiles.clear();
+        profilesById.clear();
+        for (int index = 0; index < ordered.size(); index++) {
+            StoredProfile stored = ordered.get(index);
+            ConfigSnapshot normalized = catalog.normalize(stored.config());
+            ProfileRecord record = new ProfileRecord(stored, normalized);
+            record.order(index);
+            profiles.add(record);
+            profilesById.put(record.id(), record);
+        }
+        activeProfileId =
+                profilesById.containsKey(previousActive) ? previousActive : profiles.get(0).id();
+        ProfileRecord active = profilesById.get(activeProfileId);
+        applyingProfile = true;
+        try {
+            catalog.apply(active.config());
+        } finally {
+            applyingProfile = false;
+        }
+        stateDirty = !activeProfileId.equals(previousActive);
+        publish();
+        for (UUID id : removed) {
+            persistence.profileDeleted(id);
+        }
+        for (ProfileRecord record : profiles) {
+            persistence.profileChanged(record.id());
+        }
+        if (stateDirty) {
+            persistence.activeProfileChanged();
+        }
+    }
+
     void beginLoading() {
         loadState = LoadState.LOADING;
         publish();
