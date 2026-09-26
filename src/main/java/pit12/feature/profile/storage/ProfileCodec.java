@@ -112,6 +112,10 @@ public final class ProfileCodec {
                 .entrySet()) {
             LinkedHashMap<String, Object> settingValues = new LinkedHashMap<String, Object>();
             JsonElement featureElement = features.get(featureEntry.getKey());
+            if (featureElement == null && "webui".equals(featureEntry.getKey())) {
+                // Older profiles stored the same theme and shortcut under the removed ClickGUI ID.
+                featureElement = features.get("clickgui");
+            }
             JsonObject featureObject = featureElement != null && featureElement.isJsonObject()
                     ? featureElement.getAsJsonObject()
                     : null;
@@ -181,6 +185,9 @@ public final class ProfileCodec {
         JsonObject features =
                 oldFeatures != null && oldFeatures.isJsonObject() ? oldFeatures.getAsJsonObject()
                         : new JsonObject();
+        if (schema.features().containsKey("webui")) {
+            features.remove("clickgui");
+        }
         for (Map.Entry<String, Map<String, Setting.StorageType>> featureEntry : schema.features()
                 .entrySet()) {
             JsonElement oldFeature = features.get(featureEntry.getKey());

@@ -48,13 +48,10 @@ public final class PlayerListConfig extends FeatureConfig {
     public PlayerListConfig() {
         super("playerlist", "Player List", new ConfigCategory("render", "Render", 100),
                 "Shows loaded player equipment and direction in a compact HUD.");
+        subcategory("display", "Display");
         hud = hudConfig("player_list", "Player List", HudAnchor.TOP_LEFT, 6, 6, true);
-        useVanillaFont = booleanSetting("use_vanilla_font", "Vanilla font",
+        useVanillaFont = booleanSetting("use_vanilla_font", "Use vanilla font",
                 "Uses Minecraft's font renderer for player list text.", true);
-        showHeldItem = booleanSetting("show_held_item", "Held item",
-                "Shows the held item's Pit enchantments.", false);
-        showLeggings = booleanSetting("show_leggings", "Leggings",
-                "Shows the leggings' Pit enchantments.", true);
         enchantmentFormat = choiceSetting("enchantment_format", "Enchantment format",
                 "Controls how enchantment names and levels are shown.",
                 ENCHANTMENT_FORMAT_BOLD_LEVELS,
@@ -65,23 +62,31 @@ public final class PlayerListConfig extends FeatureConfig {
                 new ChoiceSetting.Choice(ENCHANTMENT_FORMAT_HIDE_LEVEL_THREE,
                         "§4§lREG§7 / §6§lABS §f§l2"),
                 new ChoiceSetting.Choice(ENCHANTMENT_FORMAT_NAMES_ONLY, "§4§lREG§7 / §6§lABS"));
-        showDistance = booleanSetting("show_distance", "Distance",
-                "Shows the distance to each loaded player.", true);
-        showDirection = booleanSetting("show_direction", "Direction",
-                "Shows the continuous direction to each loaded player.", true);
-        showSpawn = booleanSetting("show_spawn", "Spawn marker",
-                "Shows SPAWN instead of distance and direction for players in spawn.", true);
-        showGroupName = booleanSetting("show_group_name", "Group names",
-                "Shows the name above each player group.", true);
-        showFriend =
-                booleanSetting("show_friend", "Friend", "Shows friends in the player list.", true);
-        showEnemy =
-                booleanSetting("show_enemy", "Enemy", "Shows enemies in the player list.", true);
-        showRegularity = booleanSetting("show_regularity", "Regularity",
+        subcategory("enchantments", "Enchantments");
+        showHeldItem = booleanSetting("show_held_item", "Show held item enchantments",
+                "Shows the held item's Pit enchantments.", false);
+        showLeggings = booleanSetting("show_leggings", "Show leggings enchantments",
+                "Shows the leggings' Pit enchantments.", true);
+        subcategory("groups", "Groups");
+        showGroupName = booleanSetting("show_group_name", "Show group names",
+                "Shows the name above each equipment group.", true);
+        showFriend = booleanSetting("show_friend", "Show Friend group",
+                "Shows friends in the player list.", true);
+        showEnemy = booleanSetting("show_enemy", "Show Enemy group",
+                "Shows enemies in the player list.", true);
+        showRegularity = booleanSetting("show_regularity", "Show Regularity group",
                 "Shows the Regularity equipment group.", true);
-        showDark = booleanSetting("show_dark", "Dark", "Shows the Dark equipment group.", true);
-        showBountyHunter = booleanSetting("show_bounty_hunter", "Bounty Hunter",
+        showDark = booleanSetting("show_dark", "Show Dark group", "Shows the Dark equipment group.",
+                true);
+        showBountyHunter = booleanSetting("show_bounty_hunter", "Show Bounty Hunter group",
                 "Shows the Bounty Hunter equipment group.", false);
+        subcategory("player_information", "Player information");
+        showDistance = booleanSetting("show_distance", "Show player distance",
+                "Shows the distance to each loaded player.", true);
+        showDirection = booleanSetting("show_direction", "Show player direction",
+                "Shows the continuous direction to each loaded player.", true);
+        showSpawn = booleanSetting("show_spawn", "Show spawn marker",
+                "Shows SPAWN instead of distance and direction for players in spawn.", true);
     }
 
     public boolean showHeldItem() {

@@ -22,13 +22,18 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BooleanSupplier;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.minecraft.client.Minecraft;
@@ -39,19 +44,21 @@ import pit12.feature.Feature;
 import pit12.feature.relation.api.Relation;
 import pit12.feature.relation.api.RelationEntry;
 import pit12.feature.relation.api.RelationListener;
-import pit12.feature.relation.api.RelationLookup;
+import pit12.feature.relation.api.Relations;
 import pit12.feature.relation.storage.RelationIoWorker;
 import pit12.feature.relation.storage.RelationStore;
 import pit12.runtime.player.TabPresence;
 import pit12.runtime.player.TabPresenceListener;
 
-public final class RelationFeature implements Feature, RelationLookup, TabPresenceListener {
+public final class RelationFeature implements Feature, Relations, TabPresenceListener {
     private static final Logger LOGGER = Logger.getLogger(RelationFeature.class.getName());
     private final Minecraft minecraft = Minecraft.getMinecraft();
     private final TabPresence presence;
     private final Path path;
     private final RelationBook book = new RelationBook();
     private final List<RelationListener> listeners = new ArrayList<RelationListener>();
+    private final List<Runnable> changeListeners = new ArrayList<Runnable>();
+    private BooleanSupplier readOnly = () -> false;
     private RelationIoWorker worker;
     private ExecutorService lookupWorker;
     private boolean started;
@@ -64,6 +71,10 @@ public final class RelationFeature implements Feature, RelationLookup, TabPresen
     public RelationFeature(TabPresence presence, Path path) {
         this.presence = presence;
         this.path = path;
+    }
+
+    public void setReadOnlySupplier(BooleanSupplier supplier) {
+        readOnly = Objects.requireNonNull(supplier, "supplier");
     }
 
     @Override
@@ -139,6 +150,7 @@ public final class RelationFeature implements Feature, RelationLookup, TabPresen
             }
         }
         listeners.clear();
+        changeListeners.clear();
         ready = false;
     }
 
@@ -180,6 +192,28 @@ public final class RelationFeature implements Feature, RelationLookup, TabPresen
     }
 
     @Override
+    public void addChangeListener(Runnable listener) {
+        if (!changeListeners.contains(Objects.requireNonNull(listener, "listener"))) {
+            changeListeners.add(listener);
+        }
+    }
+
+    @Override
+    public void removeChangeListener(Runnable listener) {
+        changeListeners.remove(listener);
+    }
+
+    private void notifyChanged() {
+        for (Runnable listener : new ArrayList<Runnable>(changeListeners)) {
+            try {
+                listener.run();
+            } catch (RuntimeException failure) {
+                LOGGER.log(Level.WARNING, "Relation listener failed", failure);
+            }
+        }
+    }
+
+    @Override
     public void onPlayerSeen(UUID playerId, String name, boolean joined) {
         if (!ready) {
             return;
@@ -204,26 +238,195 @@ public final class RelationFeature implements Feature, RelationLookup, TabPresen
         }
     }
 
-    String readinessProblem() {
+    @Override
+    public String readinessProblem() {
         return !started ? "Relations are unavailable"
                 : failed ? "Relations could not be loaded; the file is read-only"
                         : !ready ? "Relations are still loading" : null;
     }
 
-    String change(Relation target, String action, String name) {
+    public String change(Relation target, String action, String name) {
+        if (readOnly.getAsBoolean())
+            return "Relations are read-only while synced";
         String problem = readinessProblem();
         if (problem != null) {
             return problem;
         }
         RelationBook.Change result = book.change(target, action, name, presence.players());
-        if (result.changed) {
+        apply(result, true);
+        return result.message;
+    }
+
+    @Override
+    public List<String> changeMany(Relation target, String action, List<RelationEntry> entries) {
+        if (readOnly.getAsBoolean()) {
+            throw new IllegalArgumentException("Relations are read-only while synced");
+        }
+        String problem = readinessProblem();
+        if (problem != null) {
+            throw new IllegalStateException(problem);
+        }
+        if (target == Relation.NONE || !"add".equals(action) && !"remove".equals(action)) {
+            throw new IllegalArgumentException("Invalid relation change");
+        }
+        for (RelationEntry entry : entries) {
+            if (entry.relation() != target || "add".equals(action) && entry.playerId() != null) {
+                throw new IllegalArgumentException("Invalid relation entry");
+            }
+        }
+        List<String> messages = new ArrayList<String>(entries.size());
+        boolean changed = false;
+        for (RelationEntry entry : entries) {
+            RelationBook.Change result = entry.playerId() == null
+                    ? book.change(target, action, entry.name(), presence.players())
+                    : book.remove(target, entry.playerId());
+            changed |= result.changed;
+            apply(result, false);
+            messages.add(result.message);
+        }
+        if (changed) {
+            save();
+        }
+        return messages;
+    }
+
+    @Override
+    public void replaceAll(List<RelationEntry> entries) {
+        if (readOnly.getAsBoolean()) {
+            throw new IllegalArgumentException("Relations are read-only while synced");
+        }
+        applyRemoteSnapshot(entries);
+    }
+
+    @Override
+    public void applyRemoteSnapshot(List<RelationEntry> entries) {
+        String problem = readinessProblem();
+        if (problem != null) {
+            throw new IllegalArgumentException(problem);
+        }
+        Set<UUID> ids = new HashSet<UUID>();
+        Set<String> pending = new HashSet<String>();
+        for (RelationEntry entry : entries) {
+            if (entry.relation() == Relation.NONE
+                    || entry.playerId() == null
+                            && !pending.add(entry.name().toLowerCase(java.util.Locale.ROOT))
+                    || entry.playerId() != null && !ids.add(entry.playerId())) {
+                throw new IllegalArgumentException("Duplicate or invalid relation identity");
+            }
+        }
+        List<RelationEntry> previous = new ArrayList<RelationEntry>(book.entries());
+        book.replace(entries);
+        for (Map.Entry<UUID, String> player : presence.players().entrySet()) {
+            book.observe(player.getKey(), player.getValue());
+        }
+        for (RelationEntry entry : book.entries()) {
+            if (entry.playerId() == null) {
+                lookup(entry);
+            }
+        }
+        notifyRelationChanges(previous);
+        save();
+    }
+
+    @Override
+    public void applyRemotePatch(String action, UUID playerId, String name, Relation relation) {
+        String problem = readinessProblem();
+        if (problem != null) {
+            throw new IllegalStateException(problem);
+        }
+        if (!"set".equals(action) && !"remove".equals(action)) {
+            throw new IllegalArgumentException("Invalid remote relation action");
+        }
+        if (name == null || name.isEmpty() || name.length() > 48 || relation == Relation.NONE) {
+            throw new IllegalArgumentException("Invalid remote relation");
+        }
+        List<RelationEntry> previous = new ArrayList<RelationEntry>(book.entries());
+        book.applyRemotePatch(action, playerId, name, relation);
+        notifyRelationChanges(previous);
+        save();
+    }
+
+    @Override
+    public void refreshIdentity(UUID playerId, String expectedName, boolean lookupByName,
+            Consumer<RelationEntry> callback) {
+        if (!lookupByName && playerId == null || lookupWorker == null) {
+            if (callback != null) {
+                callback.accept(null);
+            }
+            return;
+        }
+        long requestGeneration = generation;
+        lookupWorker.execute(() -> {
+            MojangProfileLookup.Profile profile;
+            try {
+                profile = lookupByName ? new MojangProfileLookup().lookup(expectedName)
+                        : new MojangProfileLookup().lookup(playerId);
+            } catch (IOException failure) {
+                LOGGER.log(Level.FINE,
+                        "Mojang lookup failed for " + (lookupByName ? expectedName : playerId),
+                        failure);
+                dispatch(requestGeneration, () -> callback.accept(null));
+                return;
+            }
+            if (profile == null) {
+                dispatch(requestGeneration, () -> callback.accept(null));
+                return;
+            }
+            dispatch(requestGeneration, () -> {
+                RelationEntry refreshed =
+                        book.rebind(playerId, expectedName, profile.id, profile.name);
+                if (refreshed == null) {
+                    callback.accept(null);
+                    return;
+                }
+                save();
+                callback.accept(refreshed);
+            });
+        });
+    }
+
+    private void notifyRelationChanges(List<RelationEntry> previousEntries) {
+        Map<UUID, Relation> previous = new HashMap<UUID, Relation>();
+        for (RelationEntry entry : previousEntries) {
+            if (entry.playerId() != null) {
+                previous.put(entry.playerId(), entry.relation());
+            }
+        }
+        Map<UUID, Relation> current = new HashMap<UUID, Relation>();
+        for (RelationEntry entry : book.entries()) {
+            if (entry.playerId() != null) {
+                current.put(entry.playerId(), entry.relation());
+            }
+        }
+        Set<UUID> ids = new HashSet<UUID>(previous.keySet());
+        ids.addAll(current.keySet());
+        for (UUID id : ids) {
+            Relation before = previous.containsKey(id) ? previous.get(id) : Relation.NONE;
+            Relation after = current.containsKey(id) ? current.get(id) : Relation.NONE;
+            if (before == after) {
+                continue;
+            }
+            notifyRelation(id, before, after);
+            if (presence.contains(id)) {
+                if (before != Relation.NONE) {
+                    notifyPresence(id, before, false);
+                }
+                if (after != Relation.NONE) {
+                    notifyPresence(id, after, true);
+                }
+            }
+        }
+    }
+
+    private void apply(RelationBook.Change result, boolean persist) {
+        if (persist && result.changed) {
             save();
         }
         if (result.lookup != null) {
             lookup(result.lookup);
         }
         if (!result.changed || result.playerId == null) {
-            return result.message;
+            return;
         }
         if (result.previous != result.current) {
             notifyRelation(result.playerId, result.previous, result.current);
@@ -236,7 +439,6 @@ public final class RelationFeature implements Feature, RelationLookup, TabPresen
                 notifyPresence(result.playerId, result.current, true);
             }
         }
-        return result.message;
     }
 
     private void lookup(RelationEntry waiting) {
@@ -286,6 +488,7 @@ public final class RelationFeature implements Feature, RelationLookup, TabPresen
         if (worker != null) {
             worker.requestWrite(book.entries());
         }
+        notifyChanged();
     }
 
     private void notifyPresence(UUID id, Relation relation, boolean present) {
@@ -329,13 +532,17 @@ public final class RelationFeature implements Feature, RelationLookup, TabPresen
                 for (RelationListener listener : new ArrayList<RelationListener>(listeners)) {
                     listener.onRelationsLoaded();
                 }
+                notifyChanged();
             });
         }
 
         @Override
         public void loadFailed(Exception failure) {
             LOGGER.log(Level.WARNING, "Failed to load relations from " + path, failure);
-            dispatch(taskGeneration, () -> failed = true);
+            dispatch(taskGeneration, () -> {
+                failed = true;
+                notifyChanged();
+            });
         }
 
         @Override

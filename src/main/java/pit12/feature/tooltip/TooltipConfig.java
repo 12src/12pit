@@ -29,10 +29,11 @@ public final class TooltipConfig extends FeatureConfig {
 
     public TooltipConfig() {
         super("tooltip", "Held Item Tooltip", new ConfigCategory("render", "Render", 100),
-                "Customizes the held item tooltip.");
-        showEnchantments = booleanSetting("show_enchantments", "Enchantments",
-                "Replaces the held item name with known Pit enchantments.", true);
-        upwardOffset = integerSliderSetting("upward_offset", "Upward offset",
+                "Customizes the held item tooltip above the hotbar.");
+        showEnchantments =
+                booleanSetting("show_enchantments", "Show enchantments instead of item name",
+                        "Replaces the held item name with known Pit enchantments.", true);
+        upwardOffset = integerSliderSetting("upward_offset", "Move tooltip upward",
                 "Moves the held item tooltip upward by this many pixels.", 0, 0, 30, 1);
     }
 

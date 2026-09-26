@@ -199,7 +199,7 @@ public final class ProfileIoWorker implements AutoCloseable {
                 store.writeState(batch.activeProfileId());
                 listener.stateWritten(batch.activeProfileId());
             } catch (IOException failure) {
-                listener.failed("write state", directory.resolve("profile-state.json"), failure);
+                listener.failed("write state", directory.resolve("profiles.json"), failure);
             }
         }
     }
