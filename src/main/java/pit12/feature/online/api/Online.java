@@ -16,31 +16,36 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-import { defineConfig } from 'vite'
-import vue from '@vitejs/plugin-vue'
+package pit12.feature.online.api;
 
-export default defineConfig(() => {
-  const target = process.env.WEB_UI_TARGET ?? 'http://127.0.0.1:60916'
-  return {
-    plugins: [vue()],
-    base: './',
-    server: {
-      host: '127.0.0.1',
-      proxy: {
-        '/legal': {
-          target,
-          changeOrigin: true,
-        },
-        '/api': {
-          target,
-          changeOrigin: true,
-          configure(proxy) {
-            proxy.on('proxyReq', (request) =>
-              request.setHeader('Origin', new URL(target).origin),
-            )
-          },
-        },
-      },
-    },
-  }
-})
+import java.io.IOException;
+
+public interface Online {
+    String PROVIDER_12PIT = "12pit";
+    String PROVIDER_SELF_HOSTED = "selfhosted";
+    String REGION_GLOBAL = "global";
+
+    void load();
+
+    boolean enabled();
+
+    void setEnabled(boolean value) throws IOException;
+
+    String provider();
+
+    String region();
+
+    String baseUrl();
+
+    String endpoint();
+
+    String nickname();
+
+    void setProvider(String value) throws IOException;
+
+    void setRegion(String value) throws IOException;
+
+    void setSelfHostedUrl(String value) throws IOException;
+
+    void setNickname(String value) throws IOException;
+}

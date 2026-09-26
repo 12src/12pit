@@ -19,6 +19,7 @@
 package pit12.feature.hudeditor;
 
 import net.minecraft.client.Minecraft;
+import net.minecraftforge.client.ClientCommandHandler;
 import pit12.feature.Feature;
 import pit12.feature.hudeditor.api.HudEditor;
 import pit12.runtime.hud.HudRegistry;
@@ -27,6 +28,7 @@ public final class HudEditorFeature implements Feature, HudEditor {
     private final Minecraft minecraft = Minecraft.getMinecraft();
     private final HudEditorController controller;
     private boolean started;
+    private boolean registered;
 
     public HudEditorFeature(HudRegistry registry) {
         controller = new HudEditorController(registry);
@@ -35,6 +37,11 @@ public final class HudEditorFeature implements Feature, HudEditor {
     @Override
     public void start() {
         started = true;
+        if (!registered) {
+            // Forge's client command registry has no matching unregister operation.
+            ClientCommandHandler.instance.registerCommand(new HudEditorCommand(this));
+            registered = true;
+        }
     }
 
     @Override

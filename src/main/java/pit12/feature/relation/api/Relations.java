@@ -19,13 +19,25 @@
 package pit12.feature.relation.api;
 
 import java.util.List;
+import java.util.UUID;
+import java.util.function.BooleanSupplier;
+import java.util.function.Consumer;
 
 public interface Relations extends RelationLookup {
     String readinessProblem();
 
+    String writeProblem();
+
     List<String> changeMany(Relation relation, String action, List<RelationEntry> entries);
 
     void replaceAll(List<RelationEntry> entries);
+
+    void applyRemoteSnapshot(List<RelationEntry> entries);
+
+    void applyRemotePatch(String action, UUID playerId, String name, Relation relation);
+
+    void refreshIdentity(UUID playerId, String expectedName, boolean lookupByName,
+            BooleanSupplier active, Consumer<RelationEntry> callback);
 
     void addChangeListener(Runnable listener);
 
