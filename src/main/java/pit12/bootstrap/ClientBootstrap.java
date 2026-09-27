@@ -25,6 +25,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.minecraft.client.Minecraft;
 import pit12.feature.Feature;
+import pit12.feature.armorswap.AutoArmorSwapConfig;
+import pit12.feature.armorswap.AutoArmorSwapFeature;
 import pit12.feature.clickgui.ClickGuiConfig;
 import pit12.feature.clickgui.ClickGuiFeature;
 import pit12.feature.hudeditor.HudEditorFeature;
@@ -53,9 +55,11 @@ public final class ClientBootstrap {
         ClickGuiConfig clickGuiConfig = new ClickGuiConfig();
         TooltipConfig tooltipConfig = new TooltipConfig();
         PlayerListConfig playerListConfig = new PlayerListConfig();
+        AutoArmorSwapConfig autoArmorSwapConfig = new AutoArmorSwapConfig();
         configs.register(clickGuiConfig);
         configs.register(tooltipConfig);
         configs.register(playerListConfig);
+        configs.register(autoArmorSwapConfig);
         configs.freeze();
         File profileDirectory = new File(Minecraft.getMinecraft().mcDataDir, "12pit/config");
         ProfilesFeature profiles = new ProfilesFeature(configs, profileDirectory.toPath());
@@ -77,6 +81,7 @@ public final class ClientBootstrap {
         features.add(pitContext);
         features.add(playerList);
         features.add(new TooltipFeature(tooltipConfig));
+        features.add(new AutoArmorSwapFeature(autoArmorSwapConfig));
         features.add(hudEditor);
         features.add(new ClickGuiFeature(configs, profiles, clickGuiConfig, hudEditor, buildInfo));
     }
