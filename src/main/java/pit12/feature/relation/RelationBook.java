@@ -78,6 +78,56 @@ final class RelationBook {
         }
     }
 
+    RelationEntry rebind(UUID expectedId, String expectedName, UUID playerId, String name) {
+        RelationEntry current =
+                expectedId == null ? pending.get(key(expectedName)) : byId.get(expectedId);
+        if (current == null
+                || expectedName != null && !current.name().equalsIgnoreCase(expectedName)) {
+            return null;
+        }
+        if (current.playerId() == null) {
+            pending.remove(key(current.name()));
+        } else {
+            byId.remove(current.playerId());
+        }
+        pending.remove(key(name));
+        for (RelationEntry entry : new ArrayList<RelationEntry>(byId.values())) {
+            if (entry.playerId().equals(playerId) || entry.name().equalsIgnoreCase(name)) {
+                byId.remove(entry.playerId());
+            }
+        }
+        RelationEntry replacement = new RelationEntry(playerId, name, current.relation());
+        byId.put(playerId, replacement);
+        return replacement;
+    }
+
+    void applyRemotePatch(String action, UUID playerId, String name, Relation relation) {
+        String nameKey = key(name);
+        if ("remove".equals(action)) {
+            if (playerId != null && byId.remove(playerId) != null) {
+                return;
+            }
+            pending.remove(nameKey);
+            for (RelationEntry entry : new ArrayList<RelationEntry>(byId.values())) {
+                if (entry.name().equalsIgnoreCase(name)) {
+                    byId.remove(entry.playerId());
+                }
+            }
+            return;
+        }
+        pending.remove(nameKey);
+        for (RelationEntry entry : new ArrayList<RelationEntry>(byId.values())) {
+            if (!entry.playerId().equals(playerId) && entry.name().equalsIgnoreCase(name)) {
+                byId.remove(entry.playerId());
+            }
+        }
+        if (playerId == null) {
+            pending.put(nameKey, new RelationEntry(null, name, relation));
+        } else {
+            byId.put(playerId, new RelationEntry(playerId, name, relation));
+        }
+    }
+
     Relation relationOf(UUID id) {
         RelationEntry entry = byId.get(id);
         return entry == null ? Relation.NONE : entry.relation();
@@ -160,6 +210,30 @@ final class RelationBook {
         return new Change(null, saved == null ? Relation.NONE : saved.relation(), target, waiting,
                 true, waiting.name() + " added to the " + target.name().toLowerCase(Locale.ROOT)
                         + " list (UUID pending)");
+    }
+
+    Change remove(Relation target, UUID id) {
+        RelationEntry entry = byId.get(id);
+        if (entry == null || entry.relation() != target) {
+            return Change.error(
+                    "Player is not on the " + target.name().toLowerCase(Locale.ROOT) + " list");
+        }
+        byId.remove(id);
+        return new Change(id, target, Relation.NONE, null, true, entry.name() + " removed from the "
+                + target.name().toLowerCase(Locale.ROOT) + " list");
+    }
+
+    Change removeByName(String name) {
+        List<RelationEntry> matches = named(name);
+        if (matches.isEmpty()) {
+            return new Change(null, Relation.NONE, Relation.NONE, null, false, null);
+        }
+        if (matches.size() > 1) {
+            return Change.error("Multiple saved players have that name");
+        }
+        RelationEntry entry = matches.get(0);
+        remove(entry);
+        return new Change(entry.playerId(), entry.relation(), Relation.NONE, null, true, null);
     }
 
     Observation observe(UUID id, String name) {

@@ -18,10 +18,15 @@
  */
 package pit12.feature.profile.api;
 
+import java.util.List;
 import java.util.UUID;
 
 public interface Profiles {
     ProfilesSnapshot snapshot();
+
+    void addListener(Runnable listener);
+
+    void removeListener(Runnable listener);
 
     ProfileMutationResult switchTo(UUID profileId);
 
@@ -30,4 +35,12 @@ public interface Profiles {
     ProfileMutationResult rename(UUID profileId, String name);
 
     ProfileMutationResult delete(UUID profileId);
+
+    List<String> exportProfiles(List<UUID> ids);
+
+    void validateImportProfiles(List<String> profiles);
+
+    void importProfiles(List<String> profiles);
+
+    void replaceAllProfiles(List<String> profiles);
 }

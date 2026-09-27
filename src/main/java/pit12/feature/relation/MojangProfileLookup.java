@@ -87,4 +87,54 @@ final class MojangProfileLookup {
             connection.disconnect();
         }
     }
+
+    Profile lookup(UUID id) throws IOException {
+        if (id == null) {
+            return null;
+        }
+        HttpURLConnection connection = (HttpURLConnection) new URL(
+                "https://sessionserver.mojang.com/session/minecraft/profile/"
+                        + id.toString().replace("-", ""))
+                .openConnection();
+        connection.setConnectTimeout(3000);
+        connection.setReadTimeout(3000);
+        connection.setRequestProperty("Accept", "application/json");
+        try {
+            int status = connection.getResponseCode();
+            if (status == 404 || status == 204) {
+                return null;
+            }
+            if (status != 200) {
+                throw new IOException("Mojang profile lookup returned HTTP " + status);
+            }
+            try (InputStreamReader reader =
+                    new InputStreamReader(connection.getInputStream(), StandardCharsets.UTF_8)) {
+                JsonElement parsed = new JsonParser().parse(reader);
+                if (parsed == null || !parsed.isJsonObject()) {
+                    throw new IOException("Mojang profile lookup returned invalid JSON");
+                }
+                JsonObject object = parsed.getAsJsonObject();
+                JsonElement actualId = object.get("id");
+                JsonElement actualName = object.get("name");
+                if (actualId == null || !actualId.isJsonPrimitive()
+                        || !actualId.getAsJsonPrimitive().isString() || actualName == null
+                        || !actualName.isJsonPrimitive()
+                        || !actualName.getAsJsonPrimitive().isString()) {
+                    throw new IOException("Mojang profile lookup returned an invalid profile");
+                }
+                String compact = actualId.getAsString();
+                String resolvedName = actualName.getAsString();
+                if (!compact.matches("[0-9a-fA-F]{32}") || resolvedName.isEmpty()
+                        || resolvedName.length() > 48
+                        || !id.toString().replace("-", "").equalsIgnoreCase(compact)) {
+                    throw new IOException("Mojang profile lookup returned an unexpected identity");
+                }
+                return new Profile(id, resolvedName);
+            }
+        } catch (RuntimeException failure) {
+            throw new IOException("Mojang profile lookup could not be read", failure);
+        } finally {
+            connection.disconnect();
+        }
+    }
 }

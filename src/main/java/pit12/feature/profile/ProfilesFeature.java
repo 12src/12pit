@@ -18,8 +18,13 @@
  */
 package pit12.feature.profile;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import java.io.IOException;
+import java.io.StringReader;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -34,6 +39,7 @@ import pit12.feature.profile.storage.ProfileCodec;
 import pit12.feature.profile.storage.ProfileIoWorker;
 import pit12.feature.profile.storage.ProfileSchema;
 import pit12.feature.profile.storage.ProfileWriteBatch;
+import pit12.feature.profile.storage.StoredProfile;
 import pit12.runtime.config.ConfigCatalog;
 import pit12.runtime.config.ConfigChangeListener;
 
@@ -43,14 +49,16 @@ public final class ProfilesFeature implements Feature, Profiles, ProfileControll
     private final Path directory;
     private final ProfileController controller;
     private final ConfigChangeListener configListener;
+    private final List<Runnable> listeners = new ArrayList<Runnable>();
     private ProfileIoWorker worker;
+    private ProfileCodec codec;
     private boolean started;
     private long generation;
 
     public ProfilesFeature(ConfigCatalog catalog, Path directory) {
         this.catalog = catalog;
         this.directory = directory;
-        controller = new ProfileController(catalog, this);
+        controller = new ProfileController(catalog, this, this::notifyListeners);
         configListener = controller::onConfigChanged;
     }
 
@@ -68,7 +76,7 @@ public final class ProfilesFeature implements Feature, Profiles, ProfileControll
         started = true;
         long activeGeneration = ++generation;
         controller.beginLoading();
-        ProfileCodec codec = new ProfileCodec(ProfileSchema.capture(catalog));
+        codec = new ProfileCodec(ProfileSchema.capture(catalog));
         JsonProfileStore store = new JsonProfileStore(directory, codec);
         worker = new ProfileIoWorker(store, directory, new IoListener(activeGeneration));
         catalog.addListener(configListener);
@@ -120,6 +128,28 @@ public final class ProfilesFeature implements Feature, Profiles, ProfileControll
     }
 
     @Override
+    public void addListener(Runnable listener) {
+        if (!listeners.contains(listener)) {
+            listeners.add(listener);
+        }
+    }
+
+    @Override
+    public void removeListener(Runnable listener) {
+        listeners.remove(listener);
+    }
+
+    private void notifyListeners() {
+        for (Runnable listener : listeners.toArray(new Runnable[listeners.size()])) {
+            try {
+                listener.run();
+            } catch (RuntimeException failure) {
+                LOGGER.log(Level.SEVERE, "Profile listener failed", failure);
+            }
+        }
+    }
+
+    @Override
     public ProfileMutationResult switchTo(UUID profileId) {
         return controller.switchTo(profileId);
     }
@@ -137,6 +167,51 @@ public final class ProfilesFeature implements Feature, Profiles, ProfileControll
     @Override
     public ProfileMutationResult delete(UUID profileId) {
         return controller.delete(profileId);
+    }
+
+    @Override
+    public List<String> exportProfiles(List<UUID> ids) {
+        ArrayList<String> result = new ArrayList<String>();
+        for (StoredProfile profile : controller.exportProfiles(ids)) {
+            result.add(codec.encode(profile));
+        }
+        return result;
+    }
+
+    @Override
+    public void validateImportProfiles(List<String> profiles) {
+        controller.validateImported(decodeProfiles(profiles));
+    }
+
+    @Override
+    public void importProfiles(List<String> profiles) {
+        controller.importProfiles(decodeProfiles(profiles));
+    }
+
+    @Override
+    public void replaceAllProfiles(List<String> profiles) {
+        controller.replaceAll(decodeProfiles(profiles));
+    }
+
+    private List<StoredProfile> decodeProfiles(List<String> profiles) {
+        ArrayList<StoredProfile> decoded = new ArrayList<StoredProfile>();
+        for (String text : profiles) {
+            JsonElement parsed = new JsonParser().parse(text);
+            if (parsed == null || !parsed.isJsonObject()) {
+                throw new IllegalArgumentException("Profile must be an object");
+            }
+            JsonElement id = parsed.getAsJsonObject().get("id");
+            if (id == null || !id.isJsonPrimitive() || !id.getAsJsonPrimitive().isString()) {
+                throw new IllegalArgumentException("Profile ID is missing");
+            }
+            ProfileCodec.DecodeResult result =
+                    codec.decode(UUID.fromString(id.getAsString()), new StringReader(text));
+            if (!result.warnings().isEmpty()) {
+                throw new IllegalArgumentException("Invalid profile: " + result.warnings().get(0));
+            }
+            decoded.add(result.profile());
+        }
+        return decoded;
     }
 
     @Override
