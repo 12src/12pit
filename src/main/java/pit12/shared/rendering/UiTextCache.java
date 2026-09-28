@@ -21,13 +21,10 @@ package pit12.shared.rendering;
 import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Font;
-import java.awt.FontFormatException;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -46,12 +43,6 @@ final class UiTextCache {
     private final FontMetrics metrics;
     private final Map<String, TextureEntry> entries =
             new LinkedHashMap<String, TextureEntry>(MAX_ENTRIES, 0.75F, true);
-
-    UiTextCache(Minecraft minecraft, ResourceLocation fontLocation, float logicalFontSize,
-            float pixelScale) {
-        this(minecraft, loadFont(minecraft, fontLocation,
-                Math.max(1.0F, Math.round(logicalFontSize * pixelScale))), pixelScale);
-    }
 
     UiTextCache(Minecraft minecraft, float logicalFontSize, float pixelScale) {
         this(minecraft, new Font(Font.SANS_SERIF, Font.PLAIN,
@@ -166,7 +157,7 @@ final class UiTextCache {
         DynamicTexture dynamicTexture = new DynamicTexture(image);
         image.flush();
         ResourceLocation location = minecraft.getTextureManager()
-                .getDynamicTextureLocation("pit12-noto-text", dynamicTexture);
+                .getDynamicTextureLocation("pit12-ui-text", dynamicTexture);
         TextureEntry created = new TextureEntry(location, textWidth + 2, textHeight + 2);
         entries.put(plainText, created);
         trimOldest();
@@ -196,16 +187,6 @@ final class UiTextCache {
             }
         }
         return result.toString();
-    }
-
-    private static Font loadFont(Minecraft minecraft, ResourceLocation fontLocation,
-            float fontSize) {
-        try (InputStream input =
-                minecraft.getResourceManager().getResource(fontLocation).getInputStream()) {
-            return Font.createFont(Font.TRUETYPE_FONT, input).deriveFont(Font.PLAIN, fontSize);
-        } catch (FontFormatException | IOException failure) {
-            throw new IllegalStateException("Unable to load fallback UI font", failure);
-        }
     }
 
     private static final class TextureEntry {
