@@ -28,6 +28,8 @@ import pit12.feature.hudeditor.HudEditorFeature;
 import pit12.feature.playerlist.PlayerListConfig;
 import pit12.feature.playerlist.PlayerListFeature;
 import pit12.feature.profile.ProfilesFeature;
+import pit12.feature.quickmath.AutoQuickMathConfig;
+import pit12.feature.quickmath.AutoQuickMathFeature;
 import pit12.feature.relation.RelationFeature;
 import pit12.feature.sprint.AutoSprintConfig;
 import pit12.feature.sprint.AutoSprintFeature;
@@ -55,10 +57,12 @@ public final class ClientBootstrap {
         PlayerListConfig playerListConfig = new PlayerListConfig();
         TooltipConfig tooltipConfig = new TooltipConfig();
         AutoSprintConfig autoSprintConfig = new AutoSprintConfig();
+        AutoQuickMathConfig autoQuickMathConfig = new AutoQuickMathConfig();
         configs.register(webUiConfig);
         configs.register(playerListConfig);
         configs.register(tooltipConfig);
         configs.register(autoSprintConfig);
+        configs.register(autoQuickMathConfig);
         configs.freeze();
         File profileDirectory = new File(Minecraft.getMinecraft().mcDataDir, "12pit/config");
         ProfilesFeature profiles = new ProfilesFeature(configs, profileDirectory.toPath());
@@ -79,6 +83,7 @@ public final class ClientBootstrap {
         components.add(playerList);
         components.add(new TooltipFeature(configs, tooltipConfig));
         components.add(new AutoSprintFeature(autoSprintConfig));
+        components.add(new AutoQuickMathFeature(autoQuickMathConfig));
         components.add(hudEditor);
         components.add(new WebUiFeature(configs, profiles, relations, hudEditor, webUiConfig));
     }
