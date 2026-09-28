@@ -23,15 +23,20 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
-import pit12.feature.Feature;
+import pit12.runtime.config.ConfigCatalog;
+import pit12.runtime.config.ConfigChangeListener;
+import pit12.runtime.config.ConfigChangeSet;
+import pit12.shared.lifecycle.ClientLifecycle;
 
-public final class TooltipFeature implements Feature {
+public final class TooltipFeature implements ClientLifecycle, ConfigChangeListener {
+    private final ConfigCatalog configs;
     private final TooltipConfig config;
     private HeldItemTooltipBinding binding;
     private boolean listening;
     private boolean started;
 
-    public TooltipFeature(TooltipConfig config) {
+    public TooltipFeature(ConfigCatalog configs, TooltipConfig config) {
+        this.configs = configs;
         this.config = config;
     }
 
@@ -40,9 +45,11 @@ public final class TooltipFeature implements Feature {
         if (started) {
             return;
         }
-        MinecraftForge.EVENT_BUS.register(this);
-        listening = true;
         started = true;
+        configs.addListener(this);
+        if (config.enabled()) {
+            bindOrListen();
+        }
     }
 
     @Override
@@ -51,10 +58,21 @@ public final class TooltipFeature implements Feature {
             return;
         }
         started = false;
+        configs.removeListener(this);
         stopListening();
-        if (binding != null) {
-            binding.pit12$bindTooltipConfig(null);
-            binding = null;
+        unbind();
+    }
+
+    @Override
+    public void onConfigChanged(ConfigChangeSet changes) {
+        if (!started || !changes.affects("tooltip", "enabled")) {
+            return;
+        }
+        if (config.enabled()) {
+            bindOrListen();
+        } else {
+            stopListening();
+            unbind();
         }
     }
 
@@ -63,13 +81,28 @@ public final class TooltipFeature implements Feature {
         if (event.phase != Phase.START) {
             return;
         }
+        bindOrListen();
+    }
+
+    private void bindOrListen() {
         Object ingameGui = Minecraft.getMinecraft().ingameGUI;
         if (!(ingameGui instanceof HeldItemTooltipBinding)) {
+            if (!listening) {
+                MinecraftForge.EVENT_BUS.register(this);
+                listening = true;
+            }
             return;
         }
         binding = (HeldItemTooltipBinding) ingameGui;
         binding.pit12$bindTooltipConfig(config);
         stopListening();
+    }
+
+    private void unbind() {
+        if (binding != null) {
+            binding.pit12$bindTooltipConfig(null);
+            binding = null;
+        }
     }
 
     private void stopListening() {

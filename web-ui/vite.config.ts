@@ -27,10 +27,6 @@ export default defineConfig(() => {
     server: {
       host: '127.0.0.1',
       proxy: {
-        '/legal': {
-          target,
-          changeOrigin: true,
-        },
         '/api': {
           target,
           changeOrigin: true,

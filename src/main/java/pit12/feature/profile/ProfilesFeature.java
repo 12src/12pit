@@ -29,7 +29,6 @@ import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.minecraft.client.Minecraft;
-import pit12.feature.Feature;
 import pit12.feature.profile.api.ProfileMutationResult;
 import pit12.feature.profile.api.Profiles;
 import pit12.feature.profile.api.ProfilesSnapshot;
@@ -42,8 +41,10 @@ import pit12.feature.profile.storage.ProfileWriteBatch;
 import pit12.feature.profile.storage.StoredProfile;
 import pit12.runtime.config.ConfigCatalog;
 import pit12.runtime.config.ConfigChangeListener;
+import pit12.shared.lifecycle.ClientLifecycle;
 
-public final class ProfilesFeature implements Feature, Profiles, ProfileController.PersistenceSink {
+public final class ProfilesFeature
+        implements ClientLifecycle, Profiles, ProfileController.PersistenceSink {
     private static final Logger LOGGER = Logger.getLogger(ProfilesFeature.class.getName());
     private final ConfigCatalog catalog;
     private final Path directory;
@@ -186,11 +187,6 @@ public final class ProfilesFeature implements Feature, Profiles, ProfileControll
     @Override
     public void importProfiles(List<String> profiles) {
         controller.importProfiles(decodeProfiles(profiles));
-    }
-
-    @Override
-    public void replaceAllProfiles(List<String> profiles) {
-        controller.replaceAll(decodeProfiles(profiles));
     }
 
     private List<StoredProfile> decodeProfiles(List<String> profiles) {

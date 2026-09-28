@@ -109,29 +109,37 @@ public final class ArchitectureTest {
             slices().matching("pit12.shared.(*)..").should().beFreeOfCycles()
                     .because("shared implementation areas must remain independently reusable");
     @ArchTest
-    public static final ArchRule FEATURE_TYPES_MUST_OWN_THE_LIFECYCLE_CONTRACT = classes().that()
-            .haveSimpleNameEndingWith("Feature").should().beAssignableTo("pit12.feature.Feature")
-            .because("the Feature suffix promises ownership of start and stop lifecycle");
+    public static final ArchRule FEATURE_TYPES_MUST_OWN_THE_LIFECYCLE_CONTRACT =
+            classes().that().haveSimpleNameEndingWith("Feature").should()
+                    .beAssignableTo("pit12.shared.lifecycle.ClientLifecycle")
+                    .because("resource-owning features share the client lifecycle contract");
     @ArchTest
-    public static final ArchRule FEATURE_LIFECYCLES_MUST_BELONG_TO_FEATURES = classes().that()
-            .areAssignableTo("pit12.feature.Feature").should().resideInAPackage("pit12.feature..")
-            .because("resource lifecycles belong to the user capability that owns them");
+    public static final ArchRule FEATURE_TYPES_MUST_BELONG_TO_FEATURES = classes().that()
+            .haveSimpleNameEndingWith("Feature").should().resideInAPackage("pit12.feature..")
+            .because("user capabilities belong to feature packages");
     @ArchTest
-    public static final ArchRule FEATURE_CONTRACT_MUST_ONLY_DECLARE_START_AND_STOP = methods()
-            .that().areDeclaredIn("pit12.feature.Feature").should().haveNameMatching("start|stop")
-            .andShould().haveRawParameterTypes(new Class<?>[0]).andShould()
-            .haveRawReturnType(void.class).because(
-                    "the shared feature contract exposes lifecycle without becoming a service API");
+    public static final ArchRule CLIENT_LIFECYCLE_OWNERS =
+            classes().that().areAssignableTo("pit12.shared.lifecycle.ClientLifecycle").should()
+                    .resideInAnyPackage("pit12.runtime..", "pit12.feature..",
+                            "pit12.shared.lifecycle..")
+                    .because("shared components and user features own their own resources");
     @ArchTest
-    public static final ArchRule FEATURE_CONTRACT_MUST_DECLARE_START = methods().that()
-            .areDeclaredIn("pit12.feature.Feature").and().haveName("start").should()
+    public static final ArchRule CLIENT_LIFECYCLE_MUST_ONLY_DECLARE_START_AND_STOP = methods()
+            .that().areDeclaredIn("pit12.shared.lifecycle.ClientLifecycle").should()
+            .haveNameMatching("start|stop").andShould().haveRawParameterTypes(new Class<?>[0])
+            .andShould().haveRawReturnType(void.class)
+            .because("the shared lifecycle contract must not become a service API");
+    @ArchTest
+    public static final ArchRule CLIENT_LIFECYCLE_MUST_DECLARE_START =
+            methods().that().areDeclaredIn("pit12.shared.lifecycle.ClientLifecycle").and()
+                    .haveName("start").should().haveRawParameterTypes(new Class<?>[0]).andShould()
+                    .haveRawReturnType(void.class)
+                    .because("every resource-owning component needs one installation entry point");
+    @ArchTest
+    public static final ArchRule CLIENT_LIFECYCLE_MUST_DECLARE_STOP = methods().that()
+            .areDeclaredIn("pit12.shared.lifecycle.ClientLifecycle").and().haveName("stop").should()
             .haveRawParameterTypes(new Class<?>[0]).andShould().haveRawReturnType(void.class)
-            .because("every resource-owning feature needs one installation entry point");
-    @ArchTest
-    public static final ArchRule FEATURE_CONTRACT_MUST_DECLARE_STOP = methods().that()
-            .areDeclaredIn("pit12.feature.Feature").and().haveName("stop").should()
-            .haveRawParameterTypes(new Class<?>[0]).andShould().haveRawReturnType(void.class)
-            .because("every resource-owning feature needs one cleanup entry point");
+            .because("every resource-owning component needs one cleanup entry point");
     @ArchTest
     public static final ArchRule FEATURES_MUST_ONLY_USE_OTHER_FEATURE_APIS = classes().that()
             .resideInAPackage("pit12.feature..").should(onlyUseOtherFeatureApis()).because(

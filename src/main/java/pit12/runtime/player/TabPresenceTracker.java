@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.player;
+package pit12.runtime.player;
 
 import com.mojang.authlib.GameProfile;
 import java.util.ArrayList;
@@ -39,13 +39,9 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.common.network.FMLNetworkEvent.ClientDisconnectionFromServerEvent;
-import pit12.feature.Feature;
-import pit12.runtime.player.TabPacketBinding;
-import pit12.runtime.player.TabPacketObserver;
-import pit12.runtime.player.TabPresence;
-import pit12.runtime.player.TabPresenceListener;
+import pit12.shared.lifecycle.ClientLifecycle;
 
-public final class PlayerPresenceFeature implements Feature, TabPresence, TabPacketObserver {
+public final class TabPresenceTracker implements ClientLifecycle, TabPresence, TabPacketObserver {
     private final Minecraft minecraft = Minecraft.getMinecraft();
     private final Set<UUID> present = new LinkedHashSet<UUID>();
     private final List<TabPresenceListener> listeners = new ArrayList<TabPresenceListener>();

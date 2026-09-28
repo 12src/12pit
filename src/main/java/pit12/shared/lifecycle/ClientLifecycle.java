@@ -16,36 +16,11 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.online.api;
+package pit12.shared.lifecycle;
 
-import java.io.IOException;
+/** Stop must release resources after a partial start and remain safe on repeated calls. */
+public interface ClientLifecycle {
+    void start();
 
-public interface Online {
-    String PROVIDER_12PIT = "12pit";
-    String PROVIDER_SELF_HOSTED = "selfhosted";
-    String REGION_GLOBAL = "global";
-
-    void load();
-
-    boolean enabled();
-
-    void setEnabled(boolean value) throws IOException;
-
-    String provider();
-
-    String region();
-
-    String baseUrl();
-
-    String endpoint();
-
-    String nickname();
-
-    void setProvider(String value) throws IOException;
-
-    void setRegion(String value) throws IOException;
-
-    void setSelfHostedUrl(String value) throws IOException;
-
-    void setNickname(String value) throws IOException;
+    void stop();
 }

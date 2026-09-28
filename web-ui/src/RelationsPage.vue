@@ -30,7 +30,6 @@ import type {
 const props = defineProps<{
   relations: State['relations']
   busy: boolean
-  readOnly: boolean
   update: (
     action: 'add' | 'remove',
     relation: RelationType,
@@ -49,19 +48,6 @@ const selected = ref<string[]>([])
 const confirmingDelete = ref(false)
 const deletingKey = ref<string | null>(null)
 const issues = ref<RelationResult[]>([])
-const locked = computed(() => props.busy || props.readOnly)
-
-watch(
-  () => props.readOnly,
-  (value) => {
-    if (value) {
-      addOpen.value = false
-      selected.value = []
-      confirmingDelete.value = false
-      deletingKey.value = null
-    }
-  },
-)
 
 const entries = computed(() =>
   props.relations.entries
@@ -204,7 +190,7 @@ function clearConfirmation() {
 }
 
 async function add() {
-  if (locked.value || !parsed.value.names.length) return
+  if (props.busy || !parsed.value.names.length) return
   const remaining = invalid.value.map((item) => item.name)
   try {
     const results = await props.update(
@@ -227,7 +213,7 @@ async function add() {
 }
 
 async function removeSelected() {
-  if (locked.value || !selectedEntries.value.length) return
+  if (props.busy || !selectedEntries.value.length) return
   const removing = selectedEntries.value
   try {
     const results = await props.update(
@@ -248,7 +234,7 @@ async function removeSelected() {
 }
 
 async function removeEntry(entry: RelationEntry) {
-  if (locked.value) return
+  if (props.busy) return
   try {
     const results = await props.update('remove', relation.value, [
       { name: entry.name, uuid: entry.uuid },
@@ -269,9 +255,6 @@ async function removeEntry(entry: RelationEntry) {
 <template>
   <div class="heading heading-relations">
     <h1>Relations</h1>
-    <span v-if="readOnly" class="sync-notice"
-      >Read-only · synced from channel</span
-    >
   </div>
 
   <div class="relation-toolbar">
@@ -321,7 +304,7 @@ async function removeEntry(entry: RelationEntry) {
           :class="addOpen ? 'secondary' : 'primary'"
           type="button"
           :aria-expanded="addOpen"
-          :disabled="locked || !!relations.problem"
+          :disabled="busy || !!relations.problem"
           @click="toggleAdd"
         >
           <X v-if="addOpen" :size="15" /><Plus v-else :size="15" />{{
@@ -346,7 +329,7 @@ async function removeEntry(entry: RelationEntry) {
             <button
               class="icon-button delete-button"
               type="button"
-              :disabled="locked || selectedEntries.length > 100"
+              :disabled="busy || selectedEntries.length > 100"
               :aria-expanded="confirmingDelete"
               :aria-label="`Remove ${selectedEntries.length} selected players`"
               :title="
@@ -371,7 +354,7 @@ async function removeEntry(entry: RelationEntry) {
                 <button
                   class="danger"
                   type="button"
-                  :disabled="locked"
+                  :disabled="busy"
                   @click="removeSelected"
                 >
                   Remove
@@ -401,7 +384,7 @@ async function removeEntry(entry: RelationEntry) {
               v-model="input"
               placeholder="MC IDs, separated by commas or new lines"
               rows="5"
-              :disabled="locked"
+              :disabled="busy"
               @keydown.esc.prevent="addOpen = false"
             />
             <p v-if="invalid.length" class="relation-validation">
@@ -426,7 +409,7 @@ async function removeEntry(entry: RelationEntry) {
                 class="primary"
                 type="submit"
                 :disabled="
-                  locked || !parsed.names.length || parsed.names.length > 100
+                  busy || !parsed.names.length || parsed.names.length > 100
                 "
               >
                 <Plus :size="15" />{{
@@ -463,7 +446,7 @@ async function removeEntry(entry: RelationEntry) {
             type="checkbox"
             :checked="allVisibleSelected"
             :indeterminate="someVisibleSelected && !allVisibleSelected"
-            :disabled="!visible.length || locked"
+            :disabled="!visible.length || busy"
             :aria-label="
               allVisibleSelected
                 ? 'Deselect visible players'
@@ -484,7 +467,7 @@ async function removeEntry(entry: RelationEntry) {
             v-model="selected"
             type="checkbox"
             :value="entryKey(entry)"
-            :disabled="locked"
+            :disabled="busy"
             :aria-label="`Select ${entry.name}`"
             @change="clearConfirmation"
           />
@@ -495,7 +478,7 @@ async function removeEntry(entry: RelationEntry) {
           <button
             class="icon-button delete-button"
             type="button"
-            :disabled="locked"
+            :disabled="busy"
             :aria-expanded="deletingKey === entryKey(entry)"
             :aria-label="
               deletingKey === entryKey(entry)
@@ -520,7 +503,7 @@ async function removeEntry(entry: RelationEntry) {
               <button
                 class="secondary"
                 type="button"
-                :disabled="locked"
+                :disabled="busy"
                 @click="deletingKey = null"
               >
                 Cancel

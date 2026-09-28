@@ -132,9 +132,6 @@ final class SettingsTransfer {
         }
         JsonObject decisions = object(request, "resolutions");
         List<RelationEntry> resolved = resolve(bundle, selectedTypes, mode, decisions);
-        if (!selectedTypes.isEmpty() && relations.writeProblem() != null) {
-            throw new IllegalArgumentException(relations.writeProblem());
-        }
         if (!chosen.isEmpty()) {
             profiles.importProfiles(chosen);
         }
@@ -172,6 +169,7 @@ final class SettingsTransfer {
             if (!TYPES.contains(type) || !group.getValue().isJsonArray()) {
                 throw new IllegalArgumentException("Invalid relation group");
             }
+            requireRelations();
             ArrayList<RelationEntry> entries = new ArrayList<RelationEntry>();
             for (JsonElement item : group.getValue().getAsJsonArray()) {
                 if (!item.isJsonObject()) {
@@ -209,7 +207,7 @@ final class SettingsTransfer {
 
     private JsonArray conflicts(Bundle bundle) {
         JsonArray result = new JsonArray();
-        if (bundle.groups.isEmpty() || relations.readinessProblem() != null) {
+        if (bundle.groups.isEmpty()) {
             return result;
         }
         List<RelationEntry> local = localEntries();

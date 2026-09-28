@@ -24,30 +24,28 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.minecraft.client.Minecraft;
-import pit12.feature.Feature;
 import pit12.feature.hudeditor.HudEditorFeature;
-import pit12.feature.online.OnlineSettings;
-import pit12.feature.pit.PitContextFeature;
-import pit12.feature.player.PlayerEquipmentFeature;
-import pit12.feature.player.PlayerPresenceFeature;
 import pit12.feature.playerlist.PlayerListConfig;
 import pit12.feature.playerlist.PlayerListFeature;
 import pit12.feature.profile.ProfilesFeature;
 import pit12.feature.relation.RelationFeature;
 import pit12.feature.sprint.AutoSprintConfig;
 import pit12.feature.sprint.AutoSprintFeature;
-import pit12.feature.sync.SyncFeature;
 import pit12.feature.tooltip.TooltipConfig;
 import pit12.feature.tooltip.TooltipFeature;
 import pit12.feature.webui.WebUiConfig;
 import pit12.feature.webui.WebUiFeature;
 import pit12.runtime.config.ConfigCatalog;
 import pit12.runtime.hud.HudRegistry;
+import pit12.runtime.pit.PitContextTracker;
+import pit12.runtime.player.PlayerEquipmentTracker;
+import pit12.runtime.player.TabPresenceTracker;
+import pit12.shared.lifecycle.ClientLifecycle;
 
 public final class ClientBootstrap {
     private static final Logger LOGGER = Logger.getLogger(ClientBootstrap.class.getName());
-    private final List<Feature> features = new ArrayList<Feature>();
-    private final List<Feature> startedFeatures = new ArrayList<Feature>();
+    private final List<ClientLifecycle> components = new ArrayList<ClientLifecycle>();
+    private final List<ClientLifecycle> startedComponents = new ArrayList<ClientLifecycle>();
     private final ConfigCatalog configs;
     private boolean started;
 
@@ -64,74 +62,61 @@ public final class ClientBootstrap {
         configs.freeze();
         File profileDirectory = new File(Minecraft.getMinecraft().mcDataDir, "12pit/config");
         ProfilesFeature profiles = new ProfilesFeature(configs, profileDirectory.toPath());
-        PlayerEquipmentFeature playerEquipment = new PlayerEquipmentFeature();
-        PlayerPresenceFeature presence = new PlayerPresenceFeature();
+        PlayerEquipmentTracker playerEquipment = new PlayerEquipmentTracker();
+        TabPresenceTracker presence = new TabPresenceTracker();
         RelationFeature relations = new RelationFeature(presence,
                 new File(Minecraft.getMinecraft().mcDataDir, "12pit/relations.json").toPath());
-        PitContextFeature pitContext = new PitContextFeature();
+        PitContextTracker pitContext = new PitContextTracker();
         HudRegistry hudRegistry = new HudRegistry();
         HudEditorFeature hudEditor = new HudEditorFeature(hudRegistry);
         PlayerListFeature playerList = new PlayerListFeature(configs, playerListConfig,
                 playerEquipment, pitContext, hudRegistry, relations, presence);
-        features.add(profiles);
-        features.add(playerEquipment);
-        features.add(presence);
-        features.add(relations);
-        features.add(pitContext);
-        features.add(playerList);
-        features.add(new TooltipFeature(tooltipConfig));
-        features.add(new AutoSprintFeature(autoSprintConfig));
-        features.add(hudEditor);
-        File dataDirectory = new File(Minecraft.getMinecraft().mcDataDir, "12pit");
-        OnlineSettings online = new OnlineSettings(dataDirectory.toPath().resolve("settings.json"));
-        SyncFeature sync = new SyncFeature(profiles, relations, online, dataDirectory.toPath());
-        relations.setReadOnlySupplier(sync::relationsReadOnly);
-        features.add(sync);
-        features.add(new WebUiFeature(configs, profiles, relations, sync, hudEditor, webUiConfig));
+        components.add(profiles);
+        components.add(playerEquipment);
+        components.add(presence);
+        components.add(relations);
+        components.add(pitContext);
+        components.add(playerList);
+        components.add(new TooltipFeature(configs, tooltipConfig));
+        components.add(new AutoSprintFeature(autoSprintConfig));
+        components.add(hudEditor);
+        components.add(new WebUiFeature(configs, profiles, relations, hudEditor, webUiConfig));
     }
 
-    /**
-     * Starts all configured features in order. Calling it again after a successful start has no effect. If a feature throws
-     * a {@link RuntimeException}, every feature attempted so far is stopped before the exception is rethrown.
-     */
+    // TODO: Revisit lifecycle management if feature enable rules repeat or shared trackers run without consumers.
     public synchronized void start() {
         if (started) {
             return;
         }
         try {
-            for (Feature feature : features) {
+            for (ClientLifecycle component : components) {
                 // A failed start may still acquire resources that rollback must release.
-                startedFeatures.add(feature);
-                feature.start();
+                startedComponents.add(component);
+                component.start();
             }
             started = true;
         } catch (RuntimeException failure) {
-            stopStartedFeatures();
+            stopStartedComponents();
             throw failure;
         }
     }
 
-    /**
-     * Stops features in reverse order so each one remains available until anything using it has stopped. Cleanup continues
-     * if a feature throws a {@link RuntimeException}; the exception is logged instead of being passed to the caller.
-     */
     public synchronized void stop() {
-        stopStartedFeatures();
+        stopStartedComponents();
         started = false;
     }
 
-    private void stopStartedFeatures() {
+    private void stopStartedComponents() {
         // Dependencies must remain available until their consumers have stopped.
-        for (int index = startedFeatures.size() - 1; index >= 0; index--) {
-            Feature feature = startedFeatures.get(index);
+        for (int index = startedComponents.size() - 1; index >= 0; index--) {
+            ClientLifecycle component = startedComponents.get(index);
             try {
-                feature.stop();
+                component.stop();
             } catch (RuntimeException failure) {
-                // One failed cleanup must not prevent the remaining features from releasing resources.
-                LOGGER.log(Level.WARNING, "Failed to stop feature " + feature.getClass().getName(),
-                        failure);
+                LOGGER.log(Level.WARNING,
+                        "Failed to stop component " + component.getClass().getName(), failure);
             }
         }
-        startedFeatures.clear();
+        startedComponents.clear();
     }
 }

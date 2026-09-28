@@ -28,7 +28,6 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
-import pit12.feature.Feature;
 import pit12.feature.relation.api.Relation;
 import pit12.feature.relation.api.RelationListener;
 import pit12.feature.relation.api.RelationLookup;
@@ -41,9 +40,10 @@ import pit12.runtime.player.PlayerEquipmentAccess;
 import pit12.runtime.player.PlayerEquipmentListener;
 import pit12.runtime.player.TabPresence;
 import pit12.runtime.player.TabPresenceListener;
+import pit12.shared.lifecycle.ClientLifecycle;
 import pit12.shared.rendering.UiRenderState;
 
-public final class PlayerListFeature implements Feature, PlayerEquipmentListener,
+public final class PlayerListFeature implements ClientLifecycle, PlayerEquipmentListener,
         ConfigChangeListener, RelationListener, TabPresenceListener {
     static final int UPDATE_INTERVAL_TICKS = 2;
     private final Minecraft minecraft = Minecraft.getMinecraft();
@@ -61,6 +61,7 @@ public final class PlayerListFeature implements Feature, PlayerEquipmentListener
     private boolean snapshotDirty = true;
     private int ticksSinceUpdate = UPDATE_INTERVAL_TICKS;
     private boolean started;
+    private boolean active;
 
     public PlayerListFeature(ConfigCatalog configs, PlayerListConfig config,
             PlayerEquipmentAccess equipment, PitContext pitContext, HudRegistry hudRegistry,
@@ -80,13 +81,12 @@ public final class PlayerListFeature implements Feature, PlayerEquipmentListener
         if (started) {
             return;
         }
-        hudRegistry.register(hud);
-        equipment.addListener(this);
-        relations.addListener(this);
-        presence.addListener(this);
-        configs.addListener(this);
-        MinecraftForge.EVENT_BUS.register(this);
         started = true;
+        hudRegistry.register(hud);
+        configs.addListener(this);
+        if (config.enabled()) {
+            activate();
+        }
     }
 
     @Override
@@ -95,12 +95,36 @@ public final class PlayerListFeature implements Feature, PlayerEquipmentListener
             return;
         }
         started = false;
-        MinecraftForge.EVENT_BUS.unregister(this);
         configs.removeListener(this);
+        deactivate();
+        hudRegistry.unregister(hud);
+        hud.close();
+    }
+
+    private void activate() {
+        active = true;
+        snapshotDirty = true;
+        ticksSinceUpdate = UPDATE_INTERVAL_TICKS;
+        try {
+            equipment.addListener(this);
+            relations.addListener(this);
+            presence.addListener(this);
+            MinecraftForge.EVENT_BUS.register(this);
+        } catch (RuntimeException failure) {
+            deactivate();
+            throw failure;
+        }
+    }
+
+    private void deactivate() {
+        if (!active) {
+            return;
+        }
+        active = false;
+        MinecraftForge.EVENT_BUS.unregister(this);
         presence.removeListener(this);
         relations.removeListener(this);
         equipment.removeListener(this);
-        hudRegistry.unregister(hud);
         snapshot = PlayerListSnapshot.empty();
         hud.snapshot(snapshot);
         hud.close();
@@ -150,8 +174,17 @@ public final class PlayerListFeature implements Feature, PlayerEquipmentListener
 
     @Override
     public void onConfigChanged(ConfigChangeSet changes) {
-        if (changes.affects("playerlist", "enabled")
-                || changes.affects("playerlist", "show_held_item")
+        if (!started) {
+            return;
+        }
+        if (changes.affects("playerlist", "enabled")) {
+            if (config.enabled() && !active) {
+                activate();
+            } else if (!config.enabled()) {
+                deactivate();
+            }
+        }
+        if (active && (changes.affects("playerlist", "show_held_item")
                 || changes.affects("playerlist", "show_leggings")
                 || changes.affects("playerlist", "enchantment_format")
                 || changes.affects("playerlist", "show_distance")
@@ -168,7 +201,7 @@ public final class PlayerListFeature implements Feature, PlayerEquipmentListener
                 || changes.affects("playerlist", "player_list.scale")
                 || changes.affects("playerlist", "player_list.anchor")
                 || changes.affects("playerlist", "player_list.offset_x")
-                || changes.affects("playerlist", "player_list.offset_y")) {
+                || changes.affects("playerlist", "player_list.offset_y"))) {
             snapshotDirty = true;
         }
     }
@@ -176,10 +209,6 @@ public final class PlayerListFeature implements Feature, PlayerEquipmentListener
     @SubscribeEvent
     public void onClientTick(ClientTickEvent event) {
         if (event.phase != Phase.START) {
-            return;
-        }
-        if (!config.enabled()) {
-            ticksSinceUpdate = UPDATE_INTERVAL_TICKS;
             return;
         }
         ticksSinceUpdate++;
@@ -208,8 +237,7 @@ public final class PlayerListFeature implements Feature, PlayerEquipmentListener
 
     @SubscribeEvent
     public void onRenderOverlay(RenderGameOverlayEvent.Post event) {
-        if (event.type != ElementType.ALL || !config.enabled() || minecraft.theWorld == null
-                || snapshot.isEmpty()) {
+        if (event.type != ElementType.ALL || minecraft.theWorld == null || snapshot.isEmpty()) {
             return;
         }
         ScaledResolution resolution = event.resolution;

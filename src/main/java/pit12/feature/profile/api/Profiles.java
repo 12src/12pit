@@ -41,6 +41,4 @@ public interface Profiles {
     void validateImportProfiles(List<String> profiles);
 
     void importProfiles(List<String> profiles);
-
-    void replaceAllProfiles(List<String> profiles);
 }
