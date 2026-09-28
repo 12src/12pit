@@ -34,6 +34,8 @@ import pit12.feature.playerlist.PlayerListConfig;
 import pit12.feature.playerlist.PlayerListFeature;
 import pit12.feature.profile.ProfilesFeature;
 import pit12.feature.relation.RelationFeature;
+import pit12.feature.sprint.AutoSprintConfig;
+import pit12.feature.sprint.AutoSprintFeature;
 import pit12.feature.sync.SyncFeature;
 import pit12.feature.tooltip.TooltipConfig;
 import pit12.feature.tooltip.TooltipFeature;
@@ -54,9 +56,11 @@ public final class ClientBootstrap {
         WebUiConfig webUiConfig = new WebUiConfig();
         PlayerListConfig playerListConfig = new PlayerListConfig();
         TooltipConfig tooltipConfig = new TooltipConfig();
+        AutoSprintConfig autoSprintConfig = new AutoSprintConfig();
         configs.register(webUiConfig);
         configs.register(playerListConfig);
         configs.register(tooltipConfig);
+        configs.register(autoSprintConfig);
         configs.freeze();
         File profileDirectory = new File(Minecraft.getMinecraft().mcDataDir, "12pit/config");
         ProfilesFeature profiles = new ProfilesFeature(configs, profileDirectory.toPath());
@@ -76,6 +80,7 @@ public final class ClientBootstrap {
         features.add(pitContext);
         features.add(playerList);
         features.add(new TooltipFeature(tooltipConfig));
+        features.add(new AutoSprintFeature(autoSprintConfig));
         features.add(hudEditor);
         File dataDirectory = new File(Minecraft.getMinecraft().mcDataDir, "12pit");
         OnlineSettings online = new OnlineSettings(dataDirectory.toPath().resolve("settings.json"));
