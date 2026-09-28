@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.player;
+package pit12.runtime.player;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,17 +35,9 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.common.network.FMLNetworkEvent.ClientDisconnectionFromServerEvent;
-import pit12.feature.Feature;
-import pit12.runtime.player.PlayerEquipmentAccess;
-import pit12.runtime.player.PlayerEquipmentCache;
-import pit12.runtime.player.PlayerEquipmentListener;
-import pit12.runtime.player.PlayerEquipmentPacketBinding;
-import pit12.runtime.player.PlayerEquipmentPacketObserver;
-import pit12.runtime.player.PlayerEquipmentSnapshot;
-import pit12.runtime.player.PlayerEquipmentWorldBinding;
-import pit12.runtime.player.PlayerEquipmentWorldObserver;
+import pit12.shared.lifecycle.ClientLifecycle;
 
-public final class PlayerEquipmentFeature implements Feature, PlayerEquipmentAccess,
+public final class PlayerEquipmentTracker implements ClientLifecycle, PlayerEquipmentAccess,
         PlayerEquipmentPacketObserver, PlayerEquipmentWorldObserver {
     private final Minecraft minecraft = Minecraft.getMinecraft();
     private final PlayerEquipmentCache cache = new PlayerEquipmentCache();

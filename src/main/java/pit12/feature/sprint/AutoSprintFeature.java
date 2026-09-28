@@ -23,9 +23,9 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
-import pit12.feature.Feature;
+import pit12.shared.lifecycle.ClientLifecycle;
 
-public final class AutoSprintFeature implements Feature {
+public final class AutoSprintFeature implements ClientLifecycle {
     private final AutoSprintConfig config;
     private boolean started;
 

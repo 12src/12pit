@@ -16,15 +16,11 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature;
+package pit12.shared.lifecycle;
 
-public interface Feature {
-    /** Starts this feature. Calling it again while already started must not acquire resources twice. */
+/** Stop must release resources after a partial start and remain safe on repeated calls. */
+public interface ClientLifecycle {
     void start();
 
-    /**
-     * Stops this feature and releases everything acquired by {@link #start()}. It is safe to call after a partial start or
-     * an earlier stop.
-     */
     void stop();
 }

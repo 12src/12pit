@@ -25,11 +25,11 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
-import pit12.feature.Feature;
 import pit12.feature.hudeditor.api.HudEditor;
 import pit12.runtime.hud.HudRegistry;
+import pit12.shared.lifecycle.ClientLifecycle;
 
-public final class HudEditorFeature implements Feature, HudEditor {
+public final class HudEditorFeature implements ClientLifecycle, HudEditor {
     private final Minecraft minecraft = Minecraft.getMinecraft();
     private final HudEditorController controller;
     private boolean started;
@@ -46,7 +46,6 @@ public final class HudEditorFeature implements Feature, HudEditor {
             return;
         }
         started = true;
-        MinecraftForge.EVENT_BUS.register(this);
         if (!registered) {
             // Forge's client command registry has no matching unregister operation.
             ClientCommandHandler.instance.registerCommand(new HudEditorCommand(this));
@@ -56,7 +55,7 @@ public final class HudEditorFeature implements Feature, HudEditor {
 
     @Override
     public void stop() {
-        if (started) {
+        if (pendingOpen) {
             MinecraftForge.EVENT_BUS.unregister(this);
         }
         started = false;
@@ -69,8 +68,9 @@ public final class HudEditorFeature implements Feature, HudEditor {
     }
 
     void requestOpen() {
-        if (started) {
+        if (started && !pendingOpen) {
             pendingOpen = true;
+            MinecraftForge.EVENT_BUS.register(this);
         }
     }
 
@@ -82,6 +82,7 @@ public final class HudEditorFeature implements Feature, HudEditor {
             return;
         }
         pendingOpen = false;
+        MinecraftForge.EVENT_BUS.unregister(this);
         open();
     }
 

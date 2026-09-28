@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.pit;
+package pit12.runtime.pit;
 
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
@@ -28,12 +28,9 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.common.network.FMLNetworkEvent.ClientDisconnectionFromServerEvent;
-import pit12.feature.Feature;
-import pit12.runtime.pit.PitContext;
-import pit12.runtime.pit.PitMap;
-import pit12.runtime.pit.PitSnapshot;
+import pit12.shared.lifecycle.ClientLifecycle;
 
-public final class PitContextFeature implements Feature, PitContext {
+public final class PitContextTracker implements ClientLifecycle, PitContext {
     private static final int ORIGIN_X = 0;
     private static final int ORIGIN_Z = 0;
     private final Minecraft minecraft = Minecraft.getMinecraft();

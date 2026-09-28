@@ -38,7 +38,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraftforge.client.ClientCommandHandler;
-import pit12.feature.Feature;
 import pit12.feature.relation.api.Relation;
 import pit12.feature.relation.api.RelationEntry;
 import pit12.feature.relation.api.RelationListener;
@@ -47,8 +46,9 @@ import pit12.feature.relation.storage.RelationIoWorker;
 import pit12.feature.relation.storage.RelationStore;
 import pit12.runtime.player.TabPresence;
 import pit12.runtime.player.TabPresenceListener;
+import pit12.shared.lifecycle.ClientLifecycle;
 
-public final class RelationFeature implements Feature, Relations, TabPresenceListener {
+public final class RelationFeature implements ClientLifecycle, Relations, TabPresenceListener {
     private static final Logger LOGGER = Logger.getLogger(RelationFeature.class.getName());
     private final Minecraft minecraft = Minecraft.getMinecraft();
     private final TabPresence presence;

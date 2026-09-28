@@ -28,13 +28,13 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
 import org.lwjgl.input.Keyboard;
-import pit12.feature.Feature;
 import pit12.feature.hudeditor.api.HudEditor;
 import pit12.feature.profile.api.Profiles;
 import pit12.feature.relation.api.Relations;
 import pit12.runtime.config.ConfigCatalog;
+import pit12.shared.lifecycle.ClientLifecycle;
 
-public final class WebUiFeature implements Feature {
+public final class WebUiFeature implements ClientLifecycle {
     private static final Logger LOGGER = Logger.getLogger(WebUiFeature.class.getName());
     private final Minecraft minecraft = Minecraft.getMinecraft();
     private final WebUiConfig config;
