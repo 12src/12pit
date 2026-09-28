@@ -32,7 +32,6 @@ import pit12.feature.Feature;
 import pit12.feature.hudeditor.api.HudEditor;
 import pit12.feature.profile.api.Profiles;
 import pit12.feature.relation.api.Relations;
-import pit12.feature.sync.api.Sync;
 import pit12.runtime.config.ConfigCatalog;
 
 public final class WebUiFeature implements Feature {
@@ -42,10 +41,10 @@ public final class WebUiFeature implements Feature {
     private final WebUiServer server;
     private boolean started;
 
-    public WebUiFeature(ConfigCatalog catalog, Profiles profiles, Relations relations, Sync sync,
+    public WebUiFeature(ConfigCatalog catalog, Profiles profiles, Relations relations,
             HudEditor hudEditor, WebUiConfig config) {
         this.config = config;
-        server = new WebUiServer(minecraft, catalog, profiles, relations, sync, hudEditor);
+        server = new WebUiServer(minecraft, catalog, profiles, relations, hudEditor);
     }
 
     @Override

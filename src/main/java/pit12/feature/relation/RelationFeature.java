@@ -32,8 +32,6 @@ import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.function.BooleanSupplier;
-import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.minecraft.client.Minecraft;
@@ -58,7 +56,6 @@ public final class RelationFeature implements Feature, Relations, TabPresenceLis
     private final RelationBook book = new RelationBook();
     private final List<RelationListener> listeners = new ArrayList<RelationListener>();
     private final List<Runnable> changeListeners = new ArrayList<Runnable>();
-    private BooleanSupplier readOnly = () -> false;
     private RelationIoWorker worker;
     private ExecutorService lookupWorker;
     private boolean started;
@@ -71,10 +68,6 @@ public final class RelationFeature implements Feature, Relations, TabPresenceLis
     public RelationFeature(TabPresence presence, Path path) {
         this.presence = presence;
         this.path = path;
-    }
-
-    public void setReadOnlySupplier(BooleanSupplier supplier) {
-        readOnly = Objects.requireNonNull(supplier, "supplier");
     }
 
     @Override
@@ -245,15 +238,7 @@ public final class RelationFeature implements Feature, Relations, TabPresenceLis
                         : !ready ? "Relations are still loading" : null;
     }
 
-    @Override
-    public String writeProblem() {
-        return readOnly.getAsBoolean() ? "Relations are read-only while synced"
-                : readinessProblem();
-    }
-
     public String change(Relation target, String action, String name) {
-        if (readOnly.getAsBoolean())
-            return "Relations are read-only while synced";
         String problem = readinessProblem();
         if (problem != null) {
             return problem;
@@ -265,9 +250,6 @@ public final class RelationFeature implements Feature, Relations, TabPresenceLis
 
     @Override
     public List<String> changeMany(Relation target, String action, List<RelationEntry> entries) {
-        if (readOnly.getAsBoolean()) {
-            throw new IllegalArgumentException("Relations are read-only while synced");
-        }
         String problem = readinessProblem();
         if (problem != null) {
             throw new IllegalStateException(problem);
@@ -298,14 +280,6 @@ public final class RelationFeature implements Feature, Relations, TabPresenceLis
 
     @Override
     public void replaceAll(List<RelationEntry> entries) {
-        if (readOnly.getAsBoolean()) {
-            throw new IllegalArgumentException("Relations are read-only while synced");
-        }
-        applyRemoteSnapshot(entries);
-    }
-
-    @Override
-    public void applyRemoteSnapshot(List<RelationEntry> entries) {
         String problem = readinessProblem();
         if (problem != null) {
             throw new IllegalArgumentException(problem);
@@ -320,95 +294,25 @@ public final class RelationFeature implements Feature, Relations, TabPresenceLis
                 throw new IllegalArgumentException("Duplicate or invalid relation identity");
             }
         }
-        List<RelationEntry> previous = new ArrayList<RelationEntry>(book.entries());
-        book.replace(entries);
-        for (Map.Entry<UUID, String> player : presence.players().entrySet()) {
-            book.observe(player.getKey(), player.getValue());
-        }
-        for (RelationEntry entry : book.entries()) {
-            if (entry.playerId() == null) {
-                lookup(entry);
-            }
-        }
-        notifyRelationChanges(previous);
-        save();
-    }
-
-    @Override
-    public void applyRemotePatch(String action, UUID playerId, String name, Relation relation) {
-        String problem = readinessProblem();
-        if (problem != null) {
-            throw new IllegalStateException(problem);
-        }
-        if (!"set".equals(action) && !"remove".equals(action)) {
-            throw new IllegalArgumentException("Invalid remote relation action");
-        }
-        if (name == null || name.isEmpty() || name.length() > 48 || relation == Relation.NONE) {
-            throw new IllegalArgumentException("Invalid remote relation");
-        }
-        List<RelationEntry> previous = new ArrayList<RelationEntry>(book.entries());
-        book.applyRemotePatch(action, playerId, name, relation);
-        notifyRelationChanges(previous);
-        save();
-    }
-
-    @Override
-    public void refreshIdentity(UUID playerId, String expectedName, boolean lookupByName,
-            BooleanSupplier active, Consumer<RelationEntry> callback) {
-        if (!lookupByName && playerId == null || lookupWorker == null) {
-            if (callback != null) {
-                callback.accept(null);
-            }
-            return;
-        }
-        long requestGeneration = generation;
-        lookupWorker.execute(() -> {
-            MojangProfileLookup.Profile profile;
-            try {
-                profile = lookupByName ? new MojangProfileLookup().lookup(expectedName)
-                        : new MojangProfileLookup().lookup(playerId);
-            } catch (IOException failure) {
-                LOGGER.log(Level.FINE,
-                        "Mojang lookup failed for " + (lookupByName ? expectedName : playerId),
-                        failure);
-                dispatch(requestGeneration, () -> callback.accept(null));
-                return;
-            }
-            if (profile == null) {
-                dispatch(requestGeneration, () -> callback.accept(null));
-                return;
-            }
-            dispatch(requestGeneration, () -> {
-                if (!active.getAsBoolean()) {
-                    callback.accept(null);
-                    return;
-                }
-                RelationEntry refreshed =
-                        book.rebind(playerId, expectedName, profile.id, profile.name);
-                if (refreshed == null) {
-                    callback.accept(null);
-                    return;
-                }
-                save();
-                callback.accept(refreshed);
-            });
-        });
-    }
-
-    private void notifyRelationChanges(List<RelationEntry> previousEntries) {
         Map<UUID, Relation> previous = new HashMap<UUID, Relation>();
-        for (RelationEntry entry : previousEntries) {
+        for (RelationEntry entry : book.entries()) {
             if (entry.playerId() != null) {
                 previous.put(entry.playerId(), entry.relation());
             }
+        }
+        book.replace(entries);
+        for (Map.Entry<UUID, String> player : presence.players().entrySet()) {
+            book.observe(player.getKey(), player.getValue());
         }
         Map<UUID, Relation> current = new HashMap<UUID, Relation>();
         for (RelationEntry entry : book.entries()) {
             if (entry.playerId() != null) {
                 current.put(entry.playerId(), entry.relation());
+            } else {
+                lookup(entry);
             }
         }
-        Set<UUID> ids = new HashSet<UUID>(previous.keySet());
+        ids.addAll(previous.keySet());
         ids.addAll(current.keySet());
         for (UUID id : ids) {
             Relation before = previous.containsKey(id) ? previous.get(id) : Relation.NONE;
@@ -426,6 +330,7 @@ public final class RelationFeature implements Feature, Relations, TabPresenceLis
                 }
             }
         }
+        save();
     }
 
     private void apply(RelationBook.Change result, boolean persist) {

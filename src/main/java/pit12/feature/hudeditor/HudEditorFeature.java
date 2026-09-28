@@ -19,7 +19,12 @@
 package pit12.feature.hudeditor;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiChat;
 import net.minecraftforge.client.ClientCommandHandler;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import pit12.feature.Feature;
 import pit12.feature.hudeditor.api.HudEditor;
 import pit12.runtime.hud.HudRegistry;
@@ -29,6 +34,7 @@ public final class HudEditorFeature implements Feature, HudEditor {
     private final HudEditorController controller;
     private boolean started;
     private boolean registered;
+    private boolean pendingOpen;
 
     public HudEditorFeature(HudRegistry registry) {
         controller = new HudEditorController(registry);
@@ -36,7 +42,11 @@ public final class HudEditorFeature implements Feature, HudEditor {
 
     @Override
     public void start() {
+        if (started) {
+            return;
+        }
         started = true;
+        MinecraftForge.EVENT_BUS.register(this);
         if (!registered) {
             // Forge's client command registry has no matching unregister operation.
             ClientCommandHandler.instance.registerCommand(new HudEditorCommand(this));
@@ -46,12 +56,33 @@ public final class HudEditorFeature implements Feature, HudEditor {
 
     @Override
     public void stop() {
+        if (started) {
+            MinecraftForge.EVENT_BUS.unregister(this);
+        }
         started = false;
+        pendingOpen = false;
         if (minecraft.currentScreen instanceof HudEditorScreen
                 && ((HudEditorScreen) minecraft.currentScreen).belongsTo(controller)) {
             minecraft.displayGuiScreen(null);
         }
         controller.dispose();
+    }
+
+    void requestOpen() {
+        if (started) {
+            pendingOpen = true;
+        }
+    }
+
+    @SubscribeEvent
+    public void onClientTick(ClientTickEvent event) {
+        // GuiChat closes itself after dispatching a command, so wait until it is gone.
+        if (event.phase != Phase.END || !pendingOpen
+                || minecraft.currentScreen instanceof GuiChat) {
+            return;
+        }
+        pendingOpen = false;
+        open();
     }
 
     @Override

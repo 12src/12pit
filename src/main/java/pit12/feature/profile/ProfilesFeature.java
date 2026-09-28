@@ -188,11 +188,6 @@ public final class ProfilesFeature implements Feature, Profiles, ProfileControll
         controller.importProfiles(decodeProfiles(profiles));
     }
 
-    @Override
-    public void replaceAllProfiles(List<String> profiles) {
-        controller.replaceAll(decodeProfiles(profiles));
-    }
-
     private List<StoredProfile> decodeProfiles(List<String> profiles) {
         ArrayList<StoredProfile> decoded = new ArrayList<StoredProfile>();
         for (String text : profiles) {

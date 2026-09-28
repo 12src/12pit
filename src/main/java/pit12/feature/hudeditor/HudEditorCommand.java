@@ -50,6 +50,6 @@ final class HudEditorCommand extends CommandBase {
             sender.addChatMessage(new ChatComponentText("Usage: " + getCommandUsage(sender)));
             return;
         }
-        feature.open();
+        feature.requestOpen();
     }
 }
