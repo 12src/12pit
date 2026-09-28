@@ -12,6 +12,7 @@
     "player.NetHandlerPlayClientEquipmentMixin",
     "player.NetHandlerPlayClientTabMixin",
     "player.WorldClientEquipmentMixin",
+    "feature.sprint.EntityPlayerSPMixin",
     "feature.tooltip.HeldItemTooltipMixin"
   ]
 }
