@@ -49,8 +49,7 @@ final class HudEditorController {
         this.registry = Objects.requireNonNull(registry, "registry");
         Minecraft minecraft = Minecraft.getMinecraft();
         renderer = new UiRenderer(minecraft,
-                new ResourceLocation(Pit12.MOD_ID, "fonts/montserrat-regular.ttf"),
-                new ResourceLocation(Pit12.MOD_ID, "fonts/noto-sans-sc.otf"));
+                new ResourceLocation(Pit12.MOD_ID, "fonts/montserrat-regular.otf"));
     }
 
     void resize(int screenWidth, int screenHeight, float pixelScale) {

@@ -75,8 +75,7 @@ final class PlayerListHud implements HudElement {
         minecraft = Minecraft.getMinecraft();
         vanillaFont = minecraft.fontRendererObj;
         renderer = new UiRenderer(minecraft,
-                new ResourceLocation(Pit12.MOD_ID, "fonts/montserrat-regular.ttf"),
-                new ResourceLocation(Pit12.MOD_ID, "fonts/noto-sans-sc.otf"));
+                new ResourceLocation(Pit12.MOD_ID, "fonts/montserrat-regular.otf"));
     }
 
     void snapshot(PlayerListSnapshot snapshot) {

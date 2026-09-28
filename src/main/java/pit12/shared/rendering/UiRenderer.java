@@ -38,16 +38,13 @@ public final class UiRenderer {
     private final Minecraft minecraft;
     private final FontRenderer fallbackFont;
     private final ResourceLocation fontLocation;
-    private final ResourceLocation fallbackFontLocation;
     private final Map<Float, FontResources> fonts = new HashMap<Float, FontResources>();
     private float pixelScale = Float.NaN;
 
-    public UiRenderer(Minecraft minecraft, ResourceLocation fontLocation,
-            ResourceLocation fallbackFontLocation) {
+    public UiRenderer(Minecraft minecraft, ResourceLocation fontLocation) {
         this.minecraft = minecraft;
         fallbackFont = minecraft.fontRendererObj;
         this.fontLocation = fontLocation;
-        this.fallbackFontLocation = fallbackFontLocation;
     }
 
     public void resize(float pixelScale) {
@@ -132,8 +129,8 @@ public final class UiRenderer {
         if (resources != null && resources.font != null && resources.font.canRender(text)) {
             return (int) Math.ceil(resources.font.width(text) / pixelScale);
         }
-        int width = resources == null ? -1
-                : fallbackWidth(resources.cjkText, resources.systemText, text);
+        int width = resources == null || resources.systemText == null ? -1
+                : resources.systemText.width(text);
         return width >= 0 ? width : fallbackFont.getStringWidth(text);
     }
 
@@ -154,8 +151,8 @@ public final class UiRenderer {
         FontResources resources = fontResources(fontSize);
         if (resources != null && resources.font != null && resources.font.canRender(text)) {
             draw(resources.font, text, x, y, color, shadow);
-        } else if (resources == null || !drawFallback(resources.cjkText, resources.systemText, text,
-                x, y, color, shadow)) {
+        } else if (resources == null || resources.systemText == null
+                || !resources.systemText.draw(text, x, y, color, shadow)) {
             fallbackFont.drawString(text, x, y, color, false);
         }
     }
@@ -213,15 +210,6 @@ public final class UiRenderer {
                 : Math.round(coordinate * pixelScale) / pixelScale;
     }
 
-    private UiTextCache prepareFallbackFont(ResourceLocation location, float fontSize) {
-        try {
-            return new UiTextCache(minecraft, location, fontSize, pixelScale);
-        } catch (RuntimeException failure) {
-            LOGGER.log(Level.WARNING, "Unable to prepare fallback UI font " + location, failure);
-            return null;
-        }
-    }
-
     private UiTextCache prepareSystemFont(float fontSize) {
         try {
             return new UiTextCache(minecraft, fontSize, pixelScale);
@@ -229,22 +217,6 @@ public final class UiRenderer {
             LOGGER.log(Level.WARNING, "Unable to prepare system fallback UI font", failure);
             return null;
         }
-    }
-
-    private static boolean drawFallback(UiTextCache primary, UiTextCache secondary, String text,
-            float x, float y, int color, boolean shadow) {
-        return primary != null && primary.draw(text, x, y, color, shadow)
-                || secondary != null && secondary.draw(text, x, y, color, shadow);
-    }
-
-    private static int fallbackWidth(UiTextCache primary, UiTextCache secondary, String text) {
-        if (primary != null) {
-            int width = primary.width(text);
-            if (width >= 0) {
-                return width;
-            }
-        }
-        return secondary == null ? -1 : secondary.width(text);
     }
 
     private static void color(int color) {
@@ -259,7 +231,6 @@ public final class UiRenderer {
     private final class FontResources {
         private UiFont font;
         private final UiTextCache systemText;
-        private final UiTextCache cjkText;
 
         private FontResources(float fontSize) {
             try {
@@ -268,7 +239,6 @@ public final class UiRenderer {
                 LOGGER.log(Level.WARNING, "Unable to prepare UI font", failure);
             }
             systemText = prepareSystemFont(fontSize);
-            cjkText = prepareFallbackFont(fallbackFontLocation, fontSize);
         }
 
         private void close() {
@@ -278,9 +248,6 @@ public final class UiRenderer {
             }
             if (systemText != null) {
                 systemText.close();
-            }
-            if (cjkText != null) {
-                cjkText.close();
             }
         }
     }
