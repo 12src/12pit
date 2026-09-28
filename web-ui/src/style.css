@@ -381,7 +381,7 @@ select:focus,
   color: var(--text);
   text-align: left;
 }
-.feature-link:hover strong {
+button.feature-link:hover strong {
   color: var(--accent);
 }
 .feature-link strong {

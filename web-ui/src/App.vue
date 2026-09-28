@@ -421,6 +421,10 @@ function openFeature(id: string) {
   selectedId.value = id
 }
 
+function hasDetails(feature: Feature) {
+  return feature.sections.some((section) => section.options.length > 0)
+}
+
 function backToFeatures() {
   pageTransition.value = 'slide-right'
   selectedId.value = null
@@ -670,6 +674,7 @@ onUnmounted(() => {
                     class="feature-row"
                   >
                     <button
+                      v-if="hasDetails(feature)"
                       class="feature-link"
                       @click="openFeature(feature.id)"
                     >
@@ -680,6 +685,13 @@ onUnmounted(() => {
                       ></span>
                       <ChevronRight :size="16" />
                     </button>
+                    <span v-else class="feature-link">
+                      <span
+                        ><strong><FormattedText :text="feature.name" /></strong
+                        ><small v-if="showDetails"
+                          ><FormattedText :text="feature.description" /></small
+                      ></span>
+                    </span>
                     <button
                       v-if="feature.toggleable"
                       class="switch-button"
