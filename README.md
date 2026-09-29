@@ -48,8 +48,9 @@ Install the recommended extensions when prompted. `Ctrl+Shift+B` runs `assemble`
 
 12pit bundles the following third-party components.
 
-- [SpongePowered Mixin](https://github.com/SpongePowered/Mixin), MIT. [License text](src/main/resources/META-INF/third-party-licenses/MIXIN-MIT.txt).
-- [Vue](https://vuejs.org/), MIT, and [Lucide](https://lucide.dev/), ISC. Their license texts are packaged with the web interface in `META-INF/third-party-licenses/`.
-- [Montserrat](https://github.com/JulietaUla/Montserrat), SIL Open Font License 1.1. [Font](src/main/resources/assets/pit12/fonts/montserrat-regular.otf) and [license text](src/main/resources/META-INF/third-party-licenses/MONTSERRAT-OFL.txt).
+- [SpongePowered Mixin](https://github.com/SpongePowered/Mixin), MIT. License text: [MIXIN-MIT.txt](src/main/resources/META-INF/third-party-licenses/MIXIN-MIT.txt).
+- [Vue](https://vuejs.org/), MIT. License text: [VUE-MIT.txt](src/main/resources/META-INF/third-party-licenses/VUE-MIT.txt).
+- [Lucide](https://lucide.dev/), ISC. License text: [LUCIDE-ISC.txt](src/main/resources/META-INF/third-party-licenses/LUCIDE-ISC.txt).
+- [Montserrat](https://github.com/JulietaUla/Montserrat), SIL Open Font License 1.1. Font: [montserrat-regular.otf](src/main/resources/assets/pit12/fonts/montserrat-regular.otf). License text: [MONTSERRAT-OFL.txt](src/main/resources/META-INF/third-party-licenses/MONTSERRAT-OFL.txt).
 
 12pit is licensed under [GPL-3.0-or-later](LICENSE).
