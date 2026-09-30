@@ -33,14 +33,14 @@ public final class RelationIoWorker {
     }
 
     private final Object lock = new Object();
-    private final RelationStore store;
+    private final RelationStorage store;
     private final Listener listener;
     private final Thread thread;
     private List<RelationEntry> pendingWrite;
     private long writeDeadline;
     private boolean closing;
 
-    public RelationIoWorker(RelationStore store, Listener listener) {
+    public RelationIoWorker(RelationStorage store, Listener listener) {
         this.store = store;
         this.listener = listener;
         thread = new Thread(this::run, "12pit-relations");

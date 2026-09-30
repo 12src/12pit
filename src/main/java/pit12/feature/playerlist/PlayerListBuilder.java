@@ -28,6 +28,7 @@ import net.minecraft.client.network.NetworkPlayerInfo;
 import net.minecraft.entity.player.EntityPlayer;
 import pit12.feature.relation.api.Relation;
 import pit12.feature.relation.api.RelationLookup;
+import pit12.feature.relation.api.RelationReadiness;
 import pit12.runtime.item.PitEnchantment;
 import pit12.runtime.item.PitEnchantments;
 import pit12.runtime.pit.PitContext;
@@ -80,7 +81,9 @@ final class PlayerListBuilder {
                 continue;
             }
             PlayerEquipmentSnapshot playerEquipment = equipment.loadedEquipment(playerId);
-            PlayerListGroup group = groupOf(relations.relationOf(playerId), playerEquipment);
+            PlayerListGroup group = groupOf(relations.readiness() == RelationReadiness.READY
+                    ? relations.relationOf(playerId)
+                    : Relation.NONE, playerEquipment);
             if (group == null || !config.showGroup(group)) {
                 continue;
             }

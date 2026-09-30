@@ -22,9 +22,11 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -32,85 +34,119 @@ import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.function.LongSupplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.ChatComponentText;
-import net.minecraft.util.EnumChatFormatting;
-import net.minecraftforge.client.ClientCommandHandler;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
+import pit12.feature.relation.api.IdentityLookupState;
 import pit12.feature.relation.api.Relation;
 import pit12.feature.relation.api.RelationEntry;
 import pit12.feature.relation.api.RelationListener;
+import pit12.feature.relation.api.RelationReadiness;
 import pit12.feature.relation.api.Relations;
 import pit12.feature.relation.storage.RelationIoWorker;
+import pit12.feature.relation.storage.RelationStorage;
 import pit12.feature.relation.storage.RelationStore;
+import pit12.runtime.command.CommandRegistry;
 import pit12.runtime.player.TabPresence;
 import pit12.runtime.player.TabPresenceListener;
+import pit12.shared.concurrent.ClientThread;
+import pit12.shared.event.Listeners;
 import pit12.shared.lifecycle.ClientLifecycle;
+import pit12.shared.result.OperationResult;
+import pit12.shared.result.OperationResult.Status;
 
 public final class RelationFeature implements ClientLifecycle, Relations, TabPresenceListener {
     private static final Logger LOGGER = Logger.getLogger(RelationFeature.class.getName());
-    private final Minecraft minecraft = Minecraft.getMinecraft();
     private final TabPresence presence;
     private final Path path;
+    private final ClientThread client;
+    private final RelationStorage storage;
+    private final IdentityResolver resolver;
+    private final LongSupplier time;
+    private final boolean installAdapters;
     private final RelationBook book = new RelationBook();
-    private final List<RelationListener> listeners = new ArrayList<RelationListener>();
-    private final List<Runnable> changeListeners = new ArrayList<Runnable>();
+    private final List<RelationListener> listeners = new ArrayList<>();
+    private final List<Runnable> changeListeners = new ArrayList<>();
     private RelationIoWorker worker;
     private ExecutorService lookupWorker;
+    private PendingLookups lookups;
     private boolean started;
-    private boolean registered;
     private boolean ready;
     private boolean failed;
     private boolean dirty;
     private long generation;
+    private List<String> shownLookupProblems = Collections.emptyList();
 
-    public RelationFeature(TabPresence presence, Path path) {
+    public RelationFeature(TabPresence presence, Path path, ClientThread client,
+            CommandRegistry commands) {
+        this(presence, path, client, new RelationStore(path), new MojangProfileLookup()::lookup,
+                () -> System.nanoTime() / 1000000L, true);
+        commands.register(new RelationCommand(this, presence, Relation.FRIEND));
+        commands.register(new RelationCommand(this, presence, Relation.ENEMY));
+    }
+
+    RelationFeature(TabPresence presence, Path path, ClientThread client, RelationStorage storage,
+            IdentityResolver resolver, LongSupplier time, boolean installAdapters) {
         this.presence = presence;
         this.path = path;
+        this.client = client;
+        this.storage = storage;
+        this.resolver = resolver;
+        this.time = time;
+        this.installAdapters = installAdapters;
     }
 
     @Override
     public void start() {
-        if (started) {
+        client.check();
+        if (started)
             return;
-        }
-        if (worker != null && worker.isAlive()) {
+        if (worker != null && worker.isAlive())
             throw new IllegalStateException("Previous relation worker is still stopping");
-        }
         ready = false;
         failed = false;
         dirty = false;
+        shownLookupProblems = Collections.emptyList();
+        book.replace(Collections.emptyList());
         started = true;
         long activeGeneration = ++generation;
-        worker = new RelationIoWorker(new RelationStore(path), new IoListener(activeGeneration));
+        worker = new RelationIoWorker(storage, new IoListener(activeGeneration));
         lookupWorker = Executors.newSingleThreadExecutor(task -> {
             Thread thread = new Thread(task, "12pit-relation-lookup");
             thread.setDaemon(true);
             return thread;
         });
+        lookups = new PendingLookups(resolver, lookupWorker, client, time, this::bindResolved,
+                this::notifyChanged);
         presence.addListener(this);
-        if (!registered) {
-            // Forge's client command registry has no matching unregister operation.
-            ClientCommandHandler.instance.registerCommand(new RelationCommand(this, presence));
-            registered = true;
+        if (installAdapters) {
+            MinecraftForge.EVENT_BUS.register(this);
         }
         worker.start();
     }
 
     @Override
     public void stop() {
-        if (!started && worker == null) {
+        client.check();
+        if (!started && worker == null)
             return;
-        }
         started = false;
         generation++;
         presence.removeListener(this);
+        if (installAdapters)
+            MinecraftForge.EVENT_BUS.unregister(this);
+        if (lookups != null)
+            lookups.clear();
         ExecutorService closingLookups = lookupWorker;
-        if (closingLookups != null) {
+        if (closingLookups != null)
             closingLookups.shutdownNow();
-            lookupWorker = null;
-        }
+        lookupWorker = null;
         RelationIoWorker closing = worker;
         if (closing != null) {
             closing.closeAfter(ready && dirty ? book.entries() : null);
@@ -126,335 +162,334 @@ public final class RelationFeature implements ClientLifecycle, Relations, TabPre
                 throw new IllegalStateException("Interrupted while stopping relation worker",
                         interrupted);
             }
-            if (closing.isAlive()) {
+            if (closing.isAlive())
                 throw new IllegalStateException("Relation worker did not stop");
-            }
             worker = null;
         }
         if (closingLookups != null) {
             try {
-                if (!closingLookups.awaitTermination(7000L, TimeUnit.MILLISECONDS)) {
-                    LOGGER.warning("Relation lookup worker did not stop after cancellation");
-                }
+                if (!closingLookups.awaitTermination(7000L, TimeUnit.MILLISECONDS))
+                    LOGGER.warning("Relation lookup worker did not stop");
             } catch (InterruptedException interrupted) {
                 Thread.currentThread().interrupt();
                 throw new IllegalStateException("Interrupted while stopping relation lookups",
                         interrupted);
             }
         }
+        ready = false;
         listeners.clear();
         changeListeners.clear();
-        ready = false;
+    }
+
+    @Override
+    public RelationReadiness readiness() {
+        client.check();
+        return !started ? RelationReadiness.UNAVAILABLE
+                : failed ? RelationReadiness.FAILED
+                        : ready ? RelationReadiness.READY : RelationReadiness.LOADING;
+    }
+
+    @Override
+    public String readinessProblem() {
+        switch (readiness()) {
+            case UNAVAILABLE:
+                return "Relations are unavailable";
+            case FAILED:
+                return "Relations could not be loaded; the file is read-only";
+            case LOADING:
+                return "Relations are still loading";
+            default:
+                return null;
+        }
     }
 
     @Override
     public Relation relationOf(UUID playerId) {
+        client.check();
         return ready ? book.relationOf(playerId) : Relation.NONE;
     }
 
     @Override
     public List<RelationEntry> entries(Relation relation) {
+        client.check();
         return ready ? Collections.unmodifiableList(book.entries(relation))
-                : Collections.<RelationEntry>emptyList();
+                : Collections.emptyList();
     }
 
     @Override
     public List<RelationEntry> presentRelations() {
-        if (!ready) {
-            return Collections.emptyList();
-        }
-        List<RelationEntry> result = new ArrayList<RelationEntry>();
-        for (RelationEntry entry : book.entries()) {
-            if (entry.playerId() != null && presence.contains(entry.playerId())) {
-                result.add(entry);
+        client.check();
+        List<RelationEntry> result = new ArrayList<>();
+        if (ready)
+            for (RelationEntry entry : book.entries()) {
+                if (entry.playerId() != null && presence.contains(entry.playerId()))
+                    result.add(entry);
             }
-        }
         return Collections.unmodifiableList(result);
     }
 
     @Override
+    public IdentityLookupState resolutionOf(String name) {
+        client.check();
+        if (ready)
+            for (RelationEntry entry : book.entries()) {
+                if (entry.playerId() != null && entry.name().equalsIgnoreCase(name))
+                    return IdentityLookupState.CONFIRMED;
+            }
+        return lookups == null ? IdentityLookupState.UNKNOWN : lookups.stateOf(name);
+    }
+
+    @Override
+    public List<String> lookupProblems() {
+        client.check();
+        return lookups == null ? Collections.emptyList()
+                : Collections.unmodifiableList(lookups.problems());
+    }
+
+    @Override
     public void addListener(RelationListener listener) {
-        if (!listeners.contains(Objects.requireNonNull(listener, "listener"))) {
+        client.check();
+        if (!listeners.contains(Objects.requireNonNull(listener, "listener")))
             listeners.add(listener);
-        }
     }
 
     @Override
     public void removeListener(RelationListener listener) {
+        client.check();
         listeners.remove(listener);
     }
 
     @Override
     public void addChangeListener(Runnable listener) {
-        if (!changeListeners.contains(Objects.requireNonNull(listener, "listener"))) {
+        client.check();
+        if (!changeListeners.contains(Objects.requireNonNull(listener, "listener")))
             changeListeners.add(listener);
-        }
     }
 
     @Override
     public void removeChangeListener(Runnable listener) {
+        client.check();
         changeListeners.remove(listener);
     }
 
     private void notifyChanged() {
-        for (Runnable listener : new ArrayList<Runnable>(changeListeners)) {
-            try {
-                listener.run();
-            } catch (RuntimeException failure) {
-                LOGGER.log(Level.WARNING, "Relation listener failed", failure);
+        List<String> problems = lookupProblems();
+        if (installAdapters && Minecraft.getMinecraft().thePlayer != null) {
+            for (String problem : problems) {
+                if (!shownLookupProblems.contains(problem)) {
+                    Minecraft.getMinecraft().thePlayer
+                            .addChatMessage(new ChatComponentText("[12pit] " + problem));
+                }
             }
         }
+        shownLookupProblems = problems;
+        Listeners.notify(changeListeners, Runnable::run);
     }
 
     @Override
     public void onPlayerSeen(UUID playerId, String name, boolean joined) {
-        if (!ready) {
+        client.check();
+        if (!ready)
             return;
-        }
-        RelationBook.Observation observed = book.observe(playerId, name);
-        if (observed != null && observed.changed) {
-            save();
-        }
-        if (observed != null && observed.bound) {
-            notifyRelation(playerId, Relation.NONE, observed.relation);
-        }
-        if (observed != null && (joined || observed.bound)) {
-            notifyPresence(playerId, observed.relation, true);
-        }
+        List<RelationEntry> previous = book.entries();
+        boolean changed = book.observe(playerId, name);
+        finish(previous, changed, false, joined ? playerId : null);
     }
 
     @Override
     public void onPlayerLeft(UUID playerId) {
+        client.check();
         Relation relation = book.relationOf(playerId);
-        if (ready && relation != Relation.NONE) {
+        if (ready && relation != Relation.NONE)
             notifyPresence(playerId, relation, false);
-        }
     }
 
-    @Override
-    public String readinessProblem() {
-        return !started ? "Relations are unavailable"
-                : failed ? "Relations could not be loaded; the file is read-only"
-                        : !ready ? "Relations are still loading" : null;
-    }
-
-    public String change(Relation target, String action, String name) {
+    public OperationResult<Void> change(Relation target, String action, String name) {
+        client.check();
         String problem = readinessProblem();
-        if (problem != null) {
-            return problem;
+        if (problem != null)
+            return OperationResult.failure(Status.UNAVAILABLE, problem);
+        if (target == null || target == Relation.NONE
+                || !("add".equals(action) || "remove".equals(action) || "toggle".equals(action))) {
+            return OperationResult.failure(Status.INVALID_VALUE, "Invalid relation change");
         }
+        List<RelationEntry> previous = book.entries();
         RelationBook.Change result = book.change(target, action, name, presence.players());
-        apply(result, true);
-        return result.message;
+        finish(previous, result.changed, false, null);
+        if (result.succeeded && !"remove".equals(action))
+            lookups.retry(name);
+        lookups.tick();
+        return result.succeeded ? OperationResult.success(null, result.message)
+                : OperationResult.failure(Status.INVALID_VALUE, result.message);
     }
 
     @Override
-    public List<String> changeMany(Relation target, String action, List<RelationEntry> entries) {
+    public OperationResult<List<OperationResult<Void>>> changeMany(Relation target, String action,
+            List<RelationEntry> entries) {
+        client.check();
         String problem = readinessProblem();
-        if (problem != null) {
-            throw new IllegalStateException(problem);
-        }
-        if (target == Relation.NONE || !"add".equals(action) && !"remove".equals(action)) {
-            throw new IllegalArgumentException("Invalid relation change");
+        if (problem != null)
+            return OperationResult.failure(Status.UNAVAILABLE, problem);
+        if (target == null || target == Relation.NONE
+                || !("add".equals(action) || "remove".equals(action)) || entries == null) {
+            return OperationResult.failure(Status.INVALID_VALUE, "Invalid relation change");
         }
         for (RelationEntry entry : entries) {
-            if (entry.relation() != target || "add".equals(action) && entry.playerId() != null) {
-                throw new IllegalArgumentException("Invalid relation entry");
+            if (entry == null || entry.relation() != target
+                    || "add".equals(action) && entry.playerId() != null) {
+                return OperationResult.failure(Status.INVALID_VALUE, "Invalid relation entry");
             }
         }
-        List<String> messages = new ArrayList<String>(entries.size());
+        Map<UUID, String> online = presence.players();
+        List<RelationEntry> previous = book.entries();
+        List<OperationResult<Void>> results = new ArrayList<>();
         boolean changed = false;
         for (RelationEntry entry : entries) {
-            RelationBook.Change result = entry.playerId() == null
-                    ? book.change(target, action, entry.name(), presence.players())
-                    : book.remove(target, entry.playerId());
+            RelationBook.Change result =
+                    entry.playerId() == null ? book.change(target, action, entry.name(), online)
+                            : book.remove(target, entry.playerId());
             changed |= result.changed;
-            apply(result, false);
-            messages.add(result.message);
+            results.add(result.succeeded ? OperationResult.success(null, result.message)
+                    : OperationResult.failure(Status.INVALID_VALUE, result.message));
         }
-        if (changed) {
-            save();
-        }
-        return messages;
+        finish(previous, changed, false, null);
+        if ("add".equals(action))
+            for (RelationEntry entry : entries)
+                lookups.retry(entry.name());
+        lookups.tick();
+        return OperationResult.success(Collections.unmodifiableList(results));
     }
 
     @Override
-    public void replaceAll(List<RelationEntry> entries) {
+    public OperationResult<Void> replaceAll(List<RelationEntry> entries) {
+        client.check();
         String problem = readinessProblem();
-        if (problem != null) {
-            throw new IllegalArgumentException(problem);
-        }
-        Set<UUID> ids = new HashSet<UUID>();
-        Set<String> pending = new HashSet<String>();
+        if (problem != null)
+            return OperationResult.failure(Status.UNAVAILABLE, problem);
+        if (entries == null)
+            return OperationResult.failure(Status.INVALID_VALUE, "Relations are missing");
+        Set<UUID> ids = new HashSet<>();
+        Set<String> pending = new HashSet<>();
         for (RelationEntry entry : entries) {
-            if (entry.relation() == Relation.NONE
-                    || entry.playerId() == null
-                            && !pending.add(entry.name().toLowerCase(java.util.Locale.ROOT))
-                    || entry.playerId() != null && !ids.add(entry.playerId())) {
-                throw new IllegalArgumentException("Duplicate or invalid relation identity");
+            if (entry == null || (entry.playerId() == null
+                    ? !pending.add(entry.name().toLowerCase(Locale.ROOT))
+                    : !ids.add(entry.playerId()))) {
+                return OperationResult.failure(Status.INVALID_VALUE, "Duplicate relation identity");
             }
         }
-        Map<UUID, Relation> previous = new HashMap<UUID, Relation>();
-        for (RelationEntry entry : book.entries()) {
-            if (entry.playerId() != null) {
-                previous.put(entry.playerId(), entry.relation());
-            }
-        }
+        List<RelationEntry> previous = book.entries();
         book.replace(entries);
+        observeOnline();
+        finish(previous, true, false, null);
+        lookups.tick();
+        return OperationResult.success(null);
+    }
+
+    @SubscribeEvent
+    public void onTick(ClientTickEvent event) {
+        client.check();
+        if (event.phase == Phase.START && started && ready)
+            lookups.tick();
+    }
+
+    private boolean observeOnline() {
+        boolean changed = false;
         for (Map.Entry<UUID, String> player : presence.players().entrySet()) {
-            book.observe(player.getKey(), player.getValue());
+            changed |= book.observe(player.getKey(), player.getValue());
         }
-        Map<UUID, Relation> current = new HashMap<UUID, Relation>();
-        for (RelationEntry entry : book.entries()) {
-            if (entry.playerId() != null) {
-                current.put(entry.playerId(), entry.relation());
-            } else {
-                lookup(entry);
-            }
-        }
-        ids.addAll(previous.keySet());
-        ids.addAll(current.keySet());
-        for (UUID id : ids) {
-            Relation before = previous.containsKey(id) ? previous.get(id) : Relation.NONE;
-            Relation after = current.containsKey(id) ? current.get(id) : Relation.NONE;
-            if (before == after) {
-                continue;
-            }
-            notifyRelation(id, before, after);
-            if (presence.contains(id)) {
-                if (before != Relation.NONE) {
-                    notifyPresence(id, before, false);
-                }
-                if (after != Relation.NONE) {
-                    notifyPresence(id, after, true);
-                }
-            }
-        }
-        save();
+        return changed;
     }
 
-    private void apply(RelationBook.Change result, boolean persist) {
-        if (persist && result.changed) {
-            save();
-        }
-        if (result.lookup != null) {
-            lookup(result.lookup);
-        }
-        if (!result.changed || result.playerId == null) {
+    private void bindResolved(RelationEntry waiting, MojangProfileLookup.Profile profile) {
+        if (!started || !ready)
             return;
-        }
-        if (result.previous != result.current) {
-            notifyRelation(result.playerId, result.previous, result.current);
-        }
-        if (result.previous != result.current && presence.contains(result.playerId)) {
-            if (result.previous != Relation.NONE) {
-                notifyPresence(result.playerId, result.previous, false);
-            }
-            if (result.current != Relation.NONE) {
-                notifyPresence(result.playerId, result.current, true);
-            }
-        }
+        List<RelationEntry> previous = book.entries();
+        String tabName = presence.players().get(profile.id);
+        RelationBook.Change result =
+                book.bind(waiting, profile.id, tabName == null ? profile.name : tabName);
+        if (result != null)
+            finish(previous, result.changed, false, null);
     }
 
-    private void lookup(RelationEntry waiting) {
-        long requestGeneration = generation;
-        lookupWorker.execute(() -> {
-            MojangProfileLookup.Profile profile;
-            try {
-                profile = new MojangProfileLookup().lookup(waiting.name());
-            } catch (IOException failure) {
-                LOGGER.log(Level.FINE, "Mojang lookup failed for " + waiting.name(), failure);
-                return;
+    private void finish(List<RelationEntry> previous, boolean changed, boolean loaded,
+            UUID joined) {
+        List<RelationEntry> current = book.entries();
+        if (changed) {
+            dirty = true;
+            if (worker != null)
+                worker.requestWrite(current);
+        }
+        lookups.refresh(current);
+        Map<UUID, Relation> before = relationsById(previous);
+        Map<UUID, Relation> after = relationsById(current);
+        Set<UUID> ids = new LinkedHashSet<>(before.keySet());
+        ids.addAll(after.keySet());
+        List<Runnable> notifications = new ArrayList<>();
+        for (UUID id : ids) {
+            Relation oldRelation = before.getOrDefault(id, Relation.NONE);
+            Relation newRelation = after.getOrDefault(id, Relation.NONE);
+            if (oldRelation != newRelation) {
+                notifications.add(() -> Listeners.notify(listeners,
+                        listener -> listener.onRelationChanged(id, oldRelation, newRelation)));
+                if (presence.contains(id)) {
+                    if (oldRelation != Relation.NONE)
+                        notifications.add(() -> notifyPresence(id, oldRelation, false));
+                    if (newRelation != Relation.NONE)
+                        notifications.add(() -> notifyPresence(id, newRelation, true));
+                }
+            } else if (id.equals(joined) && newRelation != Relation.NONE) {
+                notifications.add(() -> notifyPresence(id, newRelation, true));
             }
-            if (profile == null) {
-                return;
-            }
-            dispatch(requestGeneration, () -> {
-                String tabName = presence.players().get(profile.id);
-                RelationBook.Change bound =
-                        book.bind(waiting, profile.id, tabName == null ? profile.name : tabName);
-                if (bound == null) {
-                    return;
-                }
-                save();
-                if (bound.previous != bound.current) {
-                    notifyRelation(bound.playerId, bound.previous, bound.current);
-                }
-                if (presence.contains(bound.playerId)) {
-                    if (bound.previous != Relation.NONE && bound.previous != bound.current) {
-                        notifyPresence(bound.playerId, bound.previous, false);
-                    }
-                    if (bound.previous == Relation.NONE || bound.previous != bound.current) {
-                        notifyPresence(bound.playerId, bound.current, true);
-                    }
-                }
-            });
-        });
+        }
+        if (loaded)
+            notifications
+                    .add(() -> Listeners.notify(listeners, RelationListener::onRelationsLoaded));
+        notifications.forEach(Runnable::run);
+        if (changed || loaded)
+            notifyChanged();
     }
 
-    private void notifyRelation(UUID id, Relation previous, Relation current) {
-        for (RelationListener listener : new ArrayList<RelationListener>(listeners)) {
-            listener.onRelationChanged(id, previous, current);
-        }
-    }
-
-    private void save() {
-        dirty = true;
-        if (worker != null) {
-            worker.requestWrite(book.entries());
-        }
-        notifyChanged();
+    private static Map<UUID, Relation> relationsById(List<RelationEntry> entries) {
+        Map<UUID, Relation> result = new LinkedHashMap<>();
+        for (RelationEntry entry : entries)
+            if (entry.playerId() != null)
+                result.put(entry.playerId(), entry.relation());
+        return result;
     }
 
     private void notifyPresence(UUID id, Relation relation, boolean present) {
-        for (RelationListener listener : new ArrayList<RelationListener>(listeners)) {
-            listener.onPresenceChanged(id, relation, present);
-        }
+        Listeners.notify(listeners, listener -> listener.onPresenceChanged(id, relation, present));
     }
 
-    private void dispatch(long taskGeneration, Runnable task) {
-        minecraft.addScheduledTask(() -> {
-            if (started && generation == taskGeneration) {
+    private void dispatch(long expected, Runnable task) {
+        client.execute(() -> {
+            if (started && generation == expected)
                 task.run();
-            }
         });
     }
 
     private final class IoListener implements RelationIoWorker.Listener {
-        private final long taskGeneration;
+        private final long expected;
 
-        private IoListener(long taskGeneration) {
-            this.taskGeneration = taskGeneration;
+        IoListener(long expected) {
+            this.expected = expected;
         }
 
         @Override
         public void loaded(List<RelationEntry> entries) {
-            dispatch(taskGeneration, () -> {
+            dispatch(expected, () -> {
                 book.replace(entries);
                 ready = true;
-                for (Map.Entry<UUID, String> player : presence.players().entrySet()) {
-                    RelationBook.Observation observed =
-                            book.observe(player.getKey(), player.getValue());
-                    if (observed != null && observed.changed) {
-                        save();
-                    }
-                }
-                for (RelationEntry entry : book.entries()) {
-                    if (entry.playerId() != null && presence.contains(entry.playerId())) {
-                        notifyPresence(entry.playerId(), entry.relation(), true);
-                    }
-                }
-                for (RelationListener listener : new ArrayList<RelationListener>(listeners)) {
-                    listener.onRelationsLoaded();
-                }
-                notifyChanged();
+                boolean changed = observeOnline();
+                finish(Collections.emptyList(), changed, true, null);
+                lookups.tick();
             });
         }
 
         @Override
         public void loadFailed(Exception failure) {
             LOGGER.log(Level.WARNING, "Failed to load relations from " + path, failure);
-            dispatch(taskGeneration, () -> {
+            dispatch(expected, () -> {
                 failed = true;
                 notifyChanged();
             });
@@ -463,11 +498,10 @@ public final class RelationFeature implements ClientLifecycle, Relations, TabPre
         @Override
         public void writeFailed(IOException failure) {
             LOGGER.log(Level.WARNING, "Failed to save relations to " + path, failure);
-            dispatch(taskGeneration, () -> {
-                if (minecraft.thePlayer != null) {
-                    minecraft.thePlayer.addChatMessage(
-                            new ChatComponentText(EnumChatFormatting.AQUA + "[12pit]"
-                                    + EnumChatFormatting.RESET + " Relations could not be saved"));
+            dispatch(expected, () -> {
+                if (installAdapters && Minecraft.getMinecraft().thePlayer != null) {
+                    Minecraft.getMinecraft().thePlayer.addChatMessage(
+                            new ChatComponentText("[12pit] Relations could not be saved"));
                 }
             });
         }

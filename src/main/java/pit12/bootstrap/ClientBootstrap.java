@@ -37,22 +37,34 @@ import pit12.feature.tooltip.TooltipConfig;
 import pit12.feature.tooltip.TooltipFeature;
 import pit12.feature.webui.WebUiConfig;
 import pit12.feature.webui.WebUiFeature;
+import pit12.runtime.command.CommandRegistry;
 import pit12.runtime.config.ConfigCatalog;
 import pit12.runtime.hud.HudRegistry;
 import pit12.runtime.pit.PitContextTracker;
 import pit12.runtime.player.PlayerEquipmentTracker;
 import pit12.runtime.player.TabPresenceTracker;
+import pit12.runtime.session.ClientSession;
+import pit12.shared.concurrent.ClientThread;
 import pit12.shared.lifecycle.ClientLifecycle;
+import pit12.shared.lifecycle.ClientShutdownBinding;
 
 public final class ClientBootstrap {
     private static final Logger LOGGER = Logger.getLogger(ClientBootstrap.class.getName());
     private final List<ClientLifecycle> components = new ArrayList<ClientLifecycle>();
     private final List<ClientLifecycle> startedComponents = new ArrayList<ClientLifecycle>();
     private final ConfigCatalog configs;
+    private final ClientThread client;
+    private final ClientShutdownBinding shutdown;
     private boolean started;
 
     public ClientBootstrap() {
-        configs = new ConfigCatalog();
+        Minecraft minecraft = Minecraft.getMinecraft();
+        client = new ClientThread(minecraft::isCallingFromMinecraftThread,
+                task -> minecraft.addScheduledTask(task));
+        configs = new ConfigCatalog(client);
+        shutdown = (ClientShutdownBinding) minecraft;
+        ClientSession session = new ClientSession(minecraft, client);
+        CommandRegistry commands = new CommandRegistry(client);
         WebUiConfig webUiConfig = new WebUiConfig();
         PlayerListConfig playerListConfig = new PlayerListConfig();
         TooltipConfig tooltipConfig = new TooltipConfig();
@@ -66,15 +78,18 @@ public final class ClientBootstrap {
         configs.freeze();
         File profileDirectory = new File(Minecraft.getMinecraft().mcDataDir, "12pit/config");
         ProfilesFeature profiles = new ProfilesFeature(configs, profileDirectory.toPath());
-        PlayerEquipmentTracker playerEquipment = new PlayerEquipmentTracker();
-        TabPresenceTracker presence = new TabPresenceTracker();
+        PlayerEquipmentTracker playerEquipment = new PlayerEquipmentTracker(session);
+        TabPresenceTracker presence = new TabPresenceTracker(session);
         RelationFeature relations = new RelationFeature(presence,
-                new File(Minecraft.getMinecraft().mcDataDir, "12pit/relations.json").toPath());
-        PitContextTracker pitContext = new PitContextTracker();
-        HudRegistry hudRegistry = new HudRegistry();
-        HudEditorFeature hudEditor = new HudEditorFeature(hudRegistry);
+                new File(Minecraft.getMinecraft().mcDataDir, "12pit/relations.json").toPath(),
+                client, commands);
+        PitContextTracker pitContext = new PitContextTracker(session);
+        HudRegistry hudRegistry = new HudRegistry(client);
+        HudEditorFeature hudEditor = new HudEditorFeature(hudRegistry, commands);
         PlayerListFeature playerList = new PlayerListFeature(configs, playerListConfig,
                 playerEquipment, pitContext, hudRegistry, relations, presence);
+        components.add(session);
+        components.add(commands);
         components.add(profiles);
         components.add(playerEquipment);
         components.add(presence);
@@ -88,8 +103,8 @@ public final class ClientBootstrap {
         components.add(new WebUiFeature(configs, profiles, relations, hudEditor, webUiConfig));
     }
 
-    // TODO: Revisit lifecycle management if feature enable rules repeat or shared trackers run without consumers.
-    public synchronized void start() {
+    public void start() {
+        client.check();
         if (started) {
             return;
         }
@@ -100,13 +115,16 @@ public final class ClientBootstrap {
                 component.start();
             }
             started = true;
+            shutdown.bindClientShutdown(this::stop);
         } catch (RuntimeException failure) {
             stopStartedComponents();
             throw failure;
         }
     }
 
-    public synchronized void stop() {
+    public void stop() {
+        client.check();
+        shutdown.bindClientShutdown(null);
         stopStartedComponents();
         started = false;
     }

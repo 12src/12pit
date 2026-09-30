@@ -21,7 +21,6 @@ package pit12.feature.playerlist;
 import java.util.UUID;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
-import net.minecraft.client.renderer.GlStateManager;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
 import net.minecraftforge.common.MinecraftForge;
@@ -35,13 +34,13 @@ import pit12.runtime.config.ConfigCatalog;
 import pit12.runtime.config.ConfigChangeListener;
 import pit12.runtime.config.ConfigChangeSet;
 import pit12.runtime.hud.HudRegistry;
+import pit12.runtime.hud.HudRenderer;
 import pit12.runtime.pit.PitContext;
 import pit12.runtime.player.PlayerEquipmentAccess;
 import pit12.runtime.player.PlayerEquipmentListener;
 import pit12.runtime.player.TabPresence;
 import pit12.runtime.player.TabPresenceListener;
 import pit12.shared.lifecycle.ClientLifecycle;
-import pit12.shared.rendering.UiRenderState;
 
 public final class PlayerListFeature implements ClientLifecycle, PlayerEquipmentListener,
         ConfigChangeListener, RelationListener, TabPresenceListener {
@@ -55,7 +54,7 @@ public final class PlayerListFeature implements ClientLifecycle, PlayerEquipment
     private final PlayerListBuilder builder;
     private final PlayerListHud hud;
     private final HudRegistry hudRegistry;
-    private final UiRenderState renderState = new UiRenderState();
+    private final HudRenderer hudRenderer = new HudRenderer();
     private PlayerListSnapshot snapshot = PlayerListSnapshot.empty();
     private long lastTabSignature;
     private boolean snapshotDirty = true;
@@ -237,31 +236,14 @@ public final class PlayerListFeature implements ClientLifecycle, PlayerEquipment
 
     @SubscribeEvent
     public void onRenderOverlay(RenderGameOverlayEvent.Post event) {
-        if (event.type != ElementType.ALL || minecraft.theWorld == null || snapshot.isEmpty()) {
+        if (event.type != ElementType.ALL || hudRegistry.editing() || minecraft.theWorld == null
+                || snapshot.isEmpty()) {
             return;
         }
         ScaledResolution resolution = event.resolution;
-        float scale = config.hud().scaleFactor();
-        hud.resize(resolution.getScaleFactor() * scale);
-        int width = Math.max(1, Math.round(hud.width() * scale));
-        int height = Math.max(1, Math.round(hud.height() * scale));
-        int x = clamp(config.hud().resolveX(resolution.getScaledWidth(), width), 0,
-                Math.max(0, resolution.getScaledWidth() - width));
-        int y = clamp(config.hud().resolveY(resolution.getScaledHeight(), height), 0,
-                Math.max(0, resolution.getScaledHeight() - height));
-        GlStateManager.pushMatrix();
-        GlStateManager.translate(x, y, 0.0F);
-        GlStateManager.scale(scale, scale, 1.0F);
-        renderState.begin();
-        try {
-            hud.render(event.partialTicks, false);
-        } finally {
-            renderState.end();
-            GlStateManager.popMatrix();
-        }
-    }
-
-    private static int clamp(int value, int minimum, int maximum) {
-        return Math.max(minimum, Math.min(maximum, value));
+        hudRenderer.render(
+                hud, HudRenderer.layout(hud, resolution.getScaledWidth(),
+                        resolution.getScaledHeight(), resolution.getScaleFactor(), false),
+                event.partialTicks, false);
     }
 }

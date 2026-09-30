@@ -25,17 +25,11 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import java.io.BufferedWriter;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -43,8 +37,9 @@ import java.util.Set;
 import java.util.UUID;
 import pit12.feature.relation.api.Relation;
 import pit12.feature.relation.api.RelationEntry;
+import pit12.shared.storage.AtomicFile;
 
-public final class RelationStore {
+public final class RelationStore implements RelationStorage {
     private static final int SCHEMA_VERSION = 1;
     private final Path path;
     private final Gson gson = new GsonBuilder().setPrettyPrinting().create();
@@ -98,7 +93,7 @@ public final class RelationStore {
         }
     }
 
-    public void write(Collection<RelationEntry> entries) throws IOException {
+    public void write(List<RelationEntry> entries) throws IOException {
         JsonObject root = new JsonObject();
         root.addProperty("schemaVersion", Integer.valueOf(SCHEMA_VERSION));
         JsonArray values = new JsonArray();
@@ -114,29 +109,7 @@ public final class RelationStore {
             values.add(value);
         }
         root.add("entries", values);
-        Files.createDirectories(path.getParent());
-        Path temporary = path.resolveSibling(path.getFileName().toString() + ".tmp");
-        boolean moved = false;
-        try {
-            try (FileOutputStream output = new FileOutputStream(temporary.toFile());
-                    BufferedWriter writer = new BufferedWriter(
-                            new OutputStreamWriter(output, StandardCharsets.UTF_8))) {
-                writer.write(gson.toJson(root));
-                writer.flush();
-                output.getFD().sync();
-            }
-            try {
-                Files.move(temporary, path, StandardCopyOption.ATOMIC_MOVE,
-                        StandardCopyOption.REPLACE_EXISTING);
-            } catch (AtomicMoveNotSupportedException unsupported) {
-                Files.move(temporary, path, StandardCopyOption.REPLACE_EXISTING);
-            }
-            moved = true;
-        } finally {
-            if (!moved) {
-                Files.deleteIfExists(temporary);
-            }
-        }
+        AtomicFile.write(path, gson.toJson(root));
     }
 
     private static String string(JsonObject object, String key) {

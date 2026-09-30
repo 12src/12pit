@@ -21,7 +21,10 @@ package pit12.feature.relation.api;
 import java.util.List;
 import java.util.UUID;
 
+/** Queries and subscriptions require the client thread. NONE is definitive only when readiness is READY. */
 public interface RelationLookup {
+    RelationReadiness readiness();
+
     Relation relationOf(UUID playerId);
 
     List<RelationEntry> entries(Relation relation);

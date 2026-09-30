@@ -20,41 +20,40 @@ package pit12.feature.hudeditor;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiChat;
-import net.minecraftforge.client.ClientCommandHandler;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import pit12.feature.hudeditor.api.HudEditor;
+import pit12.runtime.command.CommandRegistry;
 import pit12.runtime.hud.HudRegistry;
 import pit12.shared.lifecycle.ClientLifecycle;
 
 public final class HudEditorFeature implements ClientLifecycle, HudEditor {
     private final Minecraft minecraft = Minecraft.getMinecraft();
     private final HudEditorController controller;
+    private final HudRegistry registry;
     private boolean started;
-    private boolean registered;
     private boolean pendingOpen;
 
-    public HudEditorFeature(HudRegistry registry) {
+    public HudEditorFeature(HudRegistry registry, CommandRegistry commands) {
+        this.registry = registry;
         controller = new HudEditorController(registry);
+        commands.register(new HudEditorCommand(this), true);
     }
 
     @Override
     public void start() {
+        registry.checkThread();
         if (started) {
             return;
         }
         started = true;
-        if (!registered) {
-            // Forge's client command registry has no matching unregister operation.
-            ClientCommandHandler.instance.registerCommand(new HudEditorCommand(this));
-            registered = true;
-        }
     }
 
     @Override
     public void stop() {
+        registry.checkThread();
         if (pendingOpen) {
             MinecraftForge.EVENT_BUS.unregister(this);
         }
@@ -76,6 +75,7 @@ public final class HudEditorFeature implements ClientLifecycle, HudEditor {
 
     @SubscribeEvent
     public void onClientTick(ClientTickEvent event) {
+        registry.checkThread();
         // GuiChat closes itself after dispatching a command, so wait until it is gone.
         if (event.phase != Phase.END || !pendingOpen
                 || minecraft.currentScreen instanceof GuiChat) {
@@ -88,6 +88,7 @@ public final class HudEditorFeature implements ClientLifecycle, HudEditor {
 
     @Override
     public void open() {
+        registry.checkThread();
         if (!started) {
             return;
         }

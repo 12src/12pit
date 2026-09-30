@@ -34,6 +34,11 @@ public interface HudElement {
     /** Pixel scale includes both Minecraft GUI scale and this HUD's configured scale. */
     void resize(float pixelScale);
 
+    /** Prepare the current or sample content before its bounds are read. */
+    default void prepare(float pixelScale, boolean editing) {
+        resize(pixelScale);
+    }
+
     /** Width remains inexpensive to query each frame and matches the unscaled render bounds. */
     int width();
 

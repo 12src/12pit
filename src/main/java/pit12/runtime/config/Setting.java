@@ -35,6 +35,7 @@ public abstract class Setting<T> {
     private final StorageType storageType;
     private T value;
     private ChangeSink changeSink;
+    private Runnable checkThread;
 
     /**
      * Subclasses validate their default after initializing any state used by {@link #requireValue(Object)}.
@@ -70,11 +71,15 @@ public abstract class Setting<T> {
     }
 
     public final T get() {
+        if (checkThread != null)
+            checkThread.run();
         return value;
     }
 
     /** Setting values are client-thread confined once their catalog is used by started features. */
     public final void set(T candidate) {
+        if (checkThread != null)
+            checkThread.run();
         T validated = requireValue(candidate);
         if (Objects.equals(value, validated)) {
             return;
@@ -97,10 +102,11 @@ public abstract class Setting<T> {
         value = (T) candidate;
     }
 
-    final void bind(ChangeSink sink) {
+    final void bind(ChangeSink sink, Runnable checkThread) {
         if (changeSink != null) {
             throw new IllegalStateException("Setting is already registered: " + id);
         }
         changeSink = Objects.requireNonNull(sink, "sink");
+        this.checkThread = Objects.requireNonNull(checkThread, "checkThread");
     }
 }

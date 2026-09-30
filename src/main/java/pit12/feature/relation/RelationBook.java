@@ -30,36 +30,22 @@ import pit12.feature.relation.api.RelationEntry;
 
 final class RelationBook {
     static final class Change {
-        final UUID playerId;
-        final Relation previous;
-        final Relation current;
-        final RelationEntry lookup;
         final boolean changed;
         final String message;
+        final boolean succeeded;
 
-        Change(UUID playerId, Relation previous, Relation current, RelationEntry lookup,
-                boolean changed, String message) {
-            this.playerId = playerId;
-            this.previous = previous;
-            this.current = current;
-            this.lookup = lookup;
+        Change(boolean changed, String message) {
+            this(changed, message, true);
+        }
+
+        private Change(boolean changed, String message, boolean succeeded) {
             this.changed = changed;
             this.message = message;
+            this.succeeded = succeeded;
         }
 
         static Change error(String message) {
-            return new Change(null, Relation.NONE, Relation.NONE, null, false, message);
-        }
-    }
-    static final class Observation {
-        final Relation relation;
-        final boolean bound;
-        final boolean changed;
-
-        Observation(Relation relation, boolean bound, boolean changed) {
-            this.relation = relation;
-            this.bound = bound;
-            this.changed = changed;
+            return new Change(false, message, false);
         }
     }
 
@@ -107,9 +93,8 @@ final class RelationBook {
                         + target.name().toLowerCase(Locale.ROOT) + " list");
             }
             remove(targetEntry);
-            return new Change(targetEntry.playerId(), target, Relation.NONE, null, true,
-                    targetEntry.name() + " removed from the "
-                            + target.name().toLowerCase(Locale.ROOT) + " list");
+            return new Change(true, targetEntry.name() + " removed from the "
+                    + target.name().toLowerCase(Locale.ROOT) + " list");
         }
         if (matches.size() > 1) {
             return Change.error("Multiple saved players have that name");
@@ -137,29 +122,27 @@ final class RelationBook {
             Relation previous = old == null ? Relation.NONE : old.relation();
             boolean changed = (saved != null && saved.playerId() == null) || old == null
                     || previous != target || !old.name().equals(tabName);
-            return new Change(tabId, previous, target, null, changed,
+            return new Change(changed,
                     tabName + " added to the " + target.name().toLowerCase(Locale.ROOT) + " list");
         }
         if (saved != null && saved.playerId() != null) {
             if (saved.relation() == target) {
-                return new Change(saved.playerId(), target, target, null, false, saved.name()
-                        + " is already on the " + target.name().toLowerCase(Locale.ROOT) + " list");
+                return new Change(false, saved.name() + " is already on the "
+                        + target.name().toLowerCase(Locale.ROOT) + " list");
             }
             byId.put(saved.playerId(), new RelationEntry(saved.playerId(), saved.name(), target));
-            return new Change(saved.playerId(), saved.relation(), target, null, true, saved.name()
-                    + " added to the " + target.name().toLowerCase(Locale.ROOT) + " list");
+            return new Change(true, saved.name() + " added to the "
+                    + target.name().toLowerCase(Locale.ROOT) + " list");
         }
         if (saved != null && saved.relation() == target) {
-            return new Change(null, target, target, null, false,
-                    saved.name() + " is already on the " + target.name().toLowerCase(Locale.ROOT)
-                            + " list (UUID pending)");
+            return new Change(false, saved.name() + " is already on the "
+                    + target.name().toLowerCase(Locale.ROOT) + " list (UUID pending)");
         }
         RelationEntry waiting =
                 new RelationEntry(null, saved == null ? name : saved.name(), target);
         pending.put(key(name), waiting);
-        return new Change(null, saved == null ? Relation.NONE : saved.relation(), target, waiting,
-                true, waiting.name() + " added to the " + target.name().toLowerCase(Locale.ROOT)
-                        + " list (UUID pending)");
+        return new Change(true, waiting.name() + " added to the "
+                + target.name().toLowerCase(Locale.ROOT) + " list (UUID pending)");
     }
 
     Change remove(Relation target, UUID id) {
@@ -169,28 +152,28 @@ final class RelationBook {
                     "Player is not on the " + target.name().toLowerCase(Locale.ROOT) + " list");
         }
         byId.remove(id);
-        return new Change(id, target, Relation.NONE, null, true, entry.name() + " removed from the "
+        return new Change(true, entry.name() + " removed from the "
                 + target.name().toLowerCase(Locale.ROOT) + " list");
     }
 
-    Observation observe(UUID id, String name) {
+    boolean observe(UUID id, String name) {
         RelationEntry known = byId.get(id);
         if (known != null) {
             if (validName(name) && !known.name().equals(name)) {
                 byId.put(id, new RelationEntry(id, name, known.relation()));
-                return new Observation(known.relation(), false, true);
+                return true;
             }
-            return new Observation(known.relation(), false, false);
+            return false;
         }
         if (!validName(name)) {
-            return null;
+            return false;
         }
         RelationEntry waiting = pending.remove(key(name));
         if (waiting == null) {
-            return null;
+            return false;
         }
         byId.put(id, new RelationEntry(id, name, waiting.relation()));
-        return new Observation(waiting.relation(), true, true);
+        return true;
     }
 
     Change bind(RelationEntry expected, UUID id, String name) {
@@ -198,10 +181,9 @@ final class RelationBook {
             return null;
         }
         pending.remove(key(expected.name()));
-        RelationEntry previous = byId.put(id, new RelationEntry(id,
-                validName(name) ? name : expected.name(), expected.relation()));
-        return new Change(id, previous == null ? Relation.NONE : previous.relation(),
-                expected.relation(), null, true, null);
+        byId.put(id, new RelationEntry(id, validName(name) ? name : expected.name(),
+                expected.relation()));
+        return new Change(true, "");
     }
 
     List<RelationEntry> entries() {

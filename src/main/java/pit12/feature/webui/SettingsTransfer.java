@@ -37,11 +37,13 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import pit12.feature.profile.api.ProfileMutationResult;
 import pit12.feature.profile.api.ProfileSummary;
 import pit12.feature.profile.api.Profiles;
 import pit12.feature.relation.api.Relation;
 import pit12.feature.relation.api.RelationEntry;
 import pit12.feature.relation.api.Relations;
+import pit12.shared.result.OperationResult;
 
 final class SettingsTransfer {
     private static final int VERSION = 1;
@@ -62,7 +64,7 @@ final class SettingsTransfer {
         JsonObject data = new JsonObject();
         data.addProperty("schemaVersion", VERSION);
         JsonArray exported = new JsonArray();
-        for (String text : profiles.exportProfiles(selected)) {
+        for (String text : requireSuccess(profiles.exportProfiles(selected))) {
             exported.add(new JsonParser().parse(text));
         }
         data.add("profiles", exported);
@@ -128,16 +130,27 @@ final class SettingsTransfer {
             }
         }
         if (!chosen.isEmpty()) {
-            profiles.validateImportProfiles(chosen);
+            requireSuccess(profiles.validateImportProfiles(chosen));
         }
         JsonObject decisions = object(request, "resolutions");
         List<RelationEntry> resolved = resolve(bundle, selectedTypes, mode, decisions);
         if (!chosen.isEmpty()) {
-            profiles.importProfiles(chosen);
+            requireSuccess(profiles.importProfiles(chosen));
         }
         if (!selectedTypes.isEmpty()) {
-            relations.replaceAll(resolved);
+            requireSuccess(relations.replaceAll(resolved));
         }
+    }
+
+    private static <T> T requireSuccess(OperationResult<T> result) {
+        if (!result.succeeded())
+            throw new IllegalArgumentException(result.message());
+        return result.value();
+    }
+
+    private static void requireSuccess(ProfileMutationResult result) {
+        if (!result.succeeded())
+            throw new IllegalArgumentException(result.message());
     }
 
     private Bundle parseData(JsonObject data) {
@@ -154,7 +167,7 @@ final class SettingsTransfer {
             savedProfiles.add(gson.toJson(element));
         }
         if (!savedProfiles.isEmpty()) {
-            profiles.validateImportProfiles(savedProfiles);
+            requireSuccess(profiles.validateImportProfiles(savedProfiles));
         }
         EnumMap<Relation, List<RelationEntry>> groups =
                 new EnumMap<Relation, List<RelationEntry>>(Relation.class);
@@ -297,7 +310,8 @@ final class SettingsTransfer {
         for (ProfileSummary profile : profiles.snapshot().profiles()) {
             all.add(profile.id());
         }
-        StringBuilder state = new StringBuilder(gson.toJson(profiles.exportProfiles(all)));
+        StringBuilder state =
+                new StringBuilder(gson.toJson(requireSuccess(profiles.exportProfiles(all))));
         state.append(profiles.snapshot().activeProfileId());
         for (Relation type : TYPES) {
             state.append(type).append(gson.toJson(entries(relations.entries(type))));

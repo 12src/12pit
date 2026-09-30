@@ -25,8 +25,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import pit12.shared.concurrent.ClientThread;
 
 public final class ConfigCatalog {
     private static final Logger LOGGER = Logger.getLogger(ConfigCatalog.class.getName());
@@ -38,8 +40,22 @@ public final class ConfigCatalog {
     private final List<ConfigChangeListener> listeners = new ArrayList<ConfigChangeListener>();
     private boolean frozen;
     private long revision;
+    private final ClientThread client;
+
+    public ConfigCatalog() {
+        this(ClientThread.current());
+    }
+
+    public ConfigCatalog(ClientThread client) {
+        this.client = Objects.requireNonNull(client, "client");
+    }
+
+    public ClientThread clientThread() {
+        return client;
+    }
 
     public void register(FeatureConfig feature) {
+        client.check();
         if (frozen) {
             throw new IllegalStateException("Config catalog is frozen");
         }
@@ -48,7 +64,7 @@ public final class ConfigCatalog {
             throw new IllegalArgumentException("Duplicate feature id: " + feature.id());
         }
         for (Setting<?> setting : feature.settings()) {
-            setting.bind(this::onSettingChanged);
+            setting.bind(this::onSettingChanged, client::check);
             settingOwners.put(setting, feature);
         }
         features.add(feature);
@@ -56,26 +72,32 @@ public final class ConfigCatalog {
     }
 
     public void freeze() {
+        client.check();
         frozen = true;
     }
 
     public boolean isFrozen() {
+        client.check();
         return frozen;
     }
 
     public long revision() {
+        client.check();
         return revision;
     }
 
     public List<FeatureConfig> features() {
+        client.check();
         return Collections.unmodifiableList(features);
     }
 
     public FeatureConfig feature(String featureId) {
+        client.check();
         return featuresById.get(featureId);
     }
 
     public void addListener(ConfigChangeListener listener) {
+        client.check();
         Objects.requireNonNull(listener, "listener");
         if (!listeners.contains(listener)) {
             listeners.add(listener);
@@ -83,11 +105,13 @@ public final class ConfigCatalog {
     }
 
     public void removeListener(ConfigChangeListener listener) {
+        client.check();
         listeners.remove(listener);
     }
 
     /** Catalog values are client-thread confined once started features consume this catalog. */
     public ConfigSnapshot snapshot() {
+        client.check();
         LinkedHashMap<String, Map<String, Object>> values =
                 new LinkedHashMap<String, Map<String, Object>>();
         for (FeatureConfig feature : features) {
@@ -101,6 +125,7 @@ public final class ConfigCatalog {
     }
 
     public ConfigSnapshot defaults() {
+        client.check();
         LinkedHashMap<String, Map<String, Object>> values =
                 new LinkedHashMap<String, Map<String, Object>>();
         for (FeatureConfig feature : features) {
@@ -114,6 +139,16 @@ public final class ConfigCatalog {
     }
 
     public ConfigSnapshot normalize(ConfigSnapshot snapshot) {
+        client.check();
+        return normalize(snapshot, null);
+    }
+
+    public ConfigSnapshot recoverSavedValues(ConfigSnapshot snapshot, Consumer<String> problems) {
+        client.check();
+        return normalize(snapshot, Objects.requireNonNull(problems, "problems"));
+    }
+
+    private ConfigSnapshot normalize(ConfigSnapshot snapshot, Consumer<String> problems) {
         Objects.requireNonNull(snapshot, "snapshot");
         LinkedHashMap<String, Map<String, Object>> values =
                 new LinkedHashMap<String, Map<String, Object>>();
@@ -125,7 +160,16 @@ public final class ConfigCatalog {
                         suppliedValues != null && suppliedValues.containsKey(setting.id())
                                 ? suppliedValues.get(setting.id())
                                 : setting.defaultValue();
-                featureValues.put(setting.id(), setting.validatedCandidate(candidate));
+                try {
+                    featureValues.put(setting.id(), setting.validatedCandidate(candidate));
+                } catch (IllegalArgumentException failure) {
+                    if (problems == null) {
+                        throw failure;
+                    }
+                    problems.accept(
+                            feature.id() + "." + setting.id() + ": " + failure.getMessage());
+                    featureValues.put(setting.id(), setting.defaultValue());
+                }
             }
             values.put(feature.id(), featureValues);
         }
@@ -134,6 +178,7 @@ public final class ConfigCatalog {
 
     /** All candidates are validated before any live setting is changed. Missing known values reset to defaults. */
     public ConfigChangeSet apply(ConfigSnapshot snapshot) {
+        client.check();
         Objects.requireNonNull(snapshot, "snapshot");
         ConfigSnapshot normalized = normalize(snapshot);
         LinkedHashMap<Setting<?>, Object> candidates = new LinkedHashMap<Setting<?>, Object>();

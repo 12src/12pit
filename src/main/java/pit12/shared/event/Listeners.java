@@ -16,19 +16,27 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.runtime.player;
+package pit12.shared.event;
 
-import java.util.Map;
-import java.util.UUID;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.function.Consumer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-/** Queries and subscriptions require the client thread. */
-public interface TabPresence {
-    boolean contains(UUID playerId);
+public final class Listeners {
+    private static final Logger LOGGER = Logger.getLogger(Listeners.class.getName());
 
-    /** Returns current Tab UUIDs with known profile names; unnamed entries can still be present. */
-    Map<UUID, String> players();
+    private Listeners() {}
 
-    void addListener(TabPresenceListener listener);
-
-    void removeListener(TabPresenceListener listener);
+    public static <T> void notify(Collection<T> listeners, Consumer<T> callback) {
+        for (T listener : new ArrayList<>(listeners)) {
+            try {
+                callback.accept(listener);
+            } catch (RuntimeException failure) {
+                LOGGER.log(Level.WARNING, "Listener failed: " + listener.getClass().getName(),
+                        failure);
+            }
+        }
+    }
 }

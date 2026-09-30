@@ -49,7 +49,6 @@ final class ProfileRecord {
         this.name = name;
         this.order = order;
         updatedAt = System.currentTimeMillis();
-        revision = 1L;
         this.config = config;
         preservedRoot = new JsonObject();
         dirty = true;
@@ -91,8 +90,8 @@ final class ProfileRecord {
         return dirty;
     }
 
-    void touch() {
-        revision++;
+    void touch(long revision) {
+        this.revision = revision;
         updatedAt = System.currentTimeMillis();
         dirty = true;
     }

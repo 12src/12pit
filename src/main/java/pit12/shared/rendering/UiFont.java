@@ -40,7 +40,6 @@ final class UiFont {
     private static final int ATLAS_SIZE = 512;
     private static final int FIRST_CHARACTER = 32;
     private static final int LAST_CHARACTER = 255;
-    private final Minecraft minecraft;
     private final Glyph[] glyphs = new Glyph[LAST_CHARACTER + 1];
     private final Map<String, Integer> widthCache =
             new LinkedHashMap<String, Integer>(256, 0.75F, true) {
@@ -51,12 +50,11 @@ final class UiFont {
                     return size() > 512;
                 }
             };
-    private final ResourceLocation texture;
+    private final DynamicTexture texture;
     private final int height;
 
     UiFont(Minecraft minecraft, ResourceLocation fontLocation, float logicalFontSize,
             float pixelScale) {
-        this.minecraft = minecraft;
         float fontSize = Math.max(1.0F, Math.round(logicalFontSize * pixelScale));
         Font font = loadFont(minecraft, fontLocation, fontSize);
         BufferedImage atlas =
@@ -92,10 +90,13 @@ final class UiFont {
         }
         height = lineHeight;
         graphics.dispose();
-        DynamicTexture dynamicTexture = new DynamicTexture(atlas);
-        texture = minecraft.getTextureManager().getDynamicTextureLocation("pit12-hud-font",
-                dynamicTexture);
-        minecraft.getTextureManager().bindTexture(texture);
+        // TextureManager keeps deleted dynamic textures in its registry, so the font owns this texture directly.
+        try {
+            texture = new DynamicTexture(atlas);
+        } finally {
+            atlas.flush();
+        }
+        GlStateManager.bindTexture(texture.getGlTextureId());
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
     }
@@ -156,7 +157,7 @@ final class UiFont {
         GlStateManager.enableTexture2D();
         GlStateManager.enableBlend();
         GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0);
-        minecraft.getTextureManager().bindTexture(texture);
+        GlStateManager.bindTexture(texture.getGlTextureId());
         int currentColor = color;
         boolean bold = false;
         setColor(currentColor);
@@ -225,7 +226,7 @@ final class UiFont {
     }
 
     void close() {
-        minecraft.getTextureManager().deleteTexture(texture);
+        texture.deleteGlTexture();
     }
 
     private Glyph glyph(char character) {

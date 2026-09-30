@@ -57,8 +57,11 @@ final class ProfileController {
     private LoadState loadState = LoadState.LOADING;
     private UUID activeProfileId;
     private long revision;
+    private long persistenceRevision;
     private boolean applyingProfile;
     private boolean stateDirty;
+    private long stateRevision;
+    private long operationGeneration;
 
     ProfileController(ConfigCatalog catalog, PersistenceSink persistence,
             Runnable snapshotChanged) {
@@ -123,7 +126,7 @@ final class ProfileController {
                 }
             }
             ProfileRecord record = new ProfileRecord(profile, catalog.normalize(profile.config()));
-            record.touch();
+            markChanged(record);
             profiles.add(position, record);
             profilesById.put(record.id(), record);
             added.add(record);
@@ -136,7 +139,7 @@ final class ProfileController {
             } finally {
                 applyingProfile = false;
             }
-            stateDirty = true;
+            markStateChanged();
         }
         publish();
         for (UUID id : removed) {
@@ -156,8 +159,22 @@ final class ProfileController {
     }
 
     void beginLoading() {
+        invalidateOperations();
         loadState = LoadState.LOADING;
         publish();
+    }
+
+    void checkThread() {
+        catalog.clientThread().check();
+    }
+
+    long operationGeneration() {
+        return operationGeneration;
+    }
+
+    void invalidateOperations() {
+        checkThread();
+        operationGeneration++;
     }
 
     void applyLoaded(LoadedProfiles loaded) {
@@ -180,13 +197,8 @@ final class ProfileController {
                 problems.add(stored.id() + ": duplicate profile name " + stored.name());
                 continue;
             }
-            ConfigSnapshot normalized;
-            try {
-                normalized = catalog.normalize(stored.config());
-            } catch (IllegalArgumentException failure) {
-                problems.add(stored.id() + ": " + failure.getMessage());
-                normalized = catalog.defaults();
-            }
+            ConfigSnapshot normalized = catalog.recoverSavedValues(stored.config(),
+                    problem -> problems.add(stored.id() + ": " + problem));
             ProfileRecord record = new ProfileRecord(stored, normalized);
             profiles.add(record);
             profilesById.put(record.id(), record);
@@ -194,16 +206,17 @@ final class ProfileController {
         if (profiles.isEmpty()) {
             ProfileRecord defaultProfile =
                     new ProfileRecord(UUID.randomUUID(), "Default", 0, catalog.defaults());
+            markChanged(defaultProfile);
             profiles.add(defaultProfile);
             profilesById.put(defaultProfile.id(), defaultProfile);
             activeProfileId = defaultProfile.id();
-            stateDirty = true;
+            markStateChanged();
         } else {
             activeProfileId =
                     profilesById.containsKey(loaded.activeProfileId()) ? loaded.activeProfileId()
                             : profiles.get(0).id();
             if (!activeProfileId.equals(loaded.activeProfileId())) {
-                stateDirty = true;
+                markStateChanged();
             }
         }
         normalizeOrders();
@@ -263,7 +276,7 @@ final class ProfileController {
             applyingProfile = false;
         }
         activeProfileId = target.id();
-        stateDirty = true;
+        markStateChanged();
         publish();
         persistence.profileChanged(previous.id());
         if (target.dirty()) {
@@ -280,12 +293,15 @@ final class ProfileController {
         }
         ProfileRecord active = profilesById.get(activeProfileId);
         active.config(catalog.snapshot());
-        ProfileCreateOperation operation =
-                new ProfileCreateOperation(this, UUID.randomUUID(), active.config());
+        ProfileCreateOperation operation = new ProfileCreateOperation(this, UUID.randomUUID(),
+                active.config(), operationGeneration);
         return ProfileMutationResult.create(operation);
     }
 
     ProfileMutationResult rename(UUID profileId, String requestedName) {
+        ProfileMutationResult ready = requireLoaded();
+        if (ready != null)
+            return ready;
         ProfileRecord record = profilesById.get(profileId);
         if (record == null) {
             return loadState == LoadState.LOADING
@@ -310,6 +326,9 @@ final class ProfileController {
     }
 
     ProfileMutationResult delete(UUID profileId) {
+        ProfileMutationResult ready = requireLoaded();
+        if (ready != null)
+            return ready;
         ProfileRecord record = profilesById.get(profileId);
         if (record == null) {
             return loadState == LoadState.LOADING
@@ -331,6 +350,10 @@ final class ProfileController {
     }
 
     ProfileMutationResult commit(ProfileCreateOperation operation) {
+        checkThread();
+        ProfileMutationResult ready = requireLoaded();
+        if (ready != null)
+            return ready;
         String name = validatedName(operation.name());
         if (name == null) {
             return failure(Status.INVALID_NAME, "Name must contain 1 to 48 characters");
@@ -348,6 +371,7 @@ final class ProfileController {
         previous.config(catalog.snapshot());
         markChanged(previous);
         ProfileRecord created = new ProfileRecord(operation.profileId(), name, 0, config);
+        markChanged(created);
         profiles.add(0, created);
         profilesById.put(created.id(), created);
         List<ProfileRecord> reordered = normalizeOrders();
@@ -358,7 +382,7 @@ final class ProfileController {
             applyingProfile = false;
         }
         activeProfileId = created.id();
-        stateDirty = true;
+        markStateChanged();
         publish();
         persistence.profileChanged(previous.id());
         persistence.profileChanged(created.id());
@@ -398,11 +422,21 @@ final class ProfileController {
         }
     }
 
-    void statePersisted(UUID persistedActiveProfileId) {
-        if (persistedActiveProfileId.equals(activeProfileId)) {
+    long stateRevision() {
+        return stateRevision;
+    }
+
+    void statePersisted(UUID persistedActiveProfileId, long persistedRevision) {
+        if (stateDirty && persistedRevision == stateRevision
+                && persistedActiveProfileId.equals(activeProfileId)) {
             stateDirty = false;
             publish();
         }
+    }
+
+    private void markStateChanged() {
+        stateRevision++;
+        stateDirty = true;
     }
 
     void persistenceFailed(String message) {
@@ -427,7 +461,8 @@ final class ProfileController {
     }
 
     private void markChanged(ProfileRecord record) {
-        record.touch();
+        persistenceRevision = Math.max(persistenceRevision, record.revision()) + 1L;
+        record.touch(persistenceRevision);
     }
 
     private void publish() {

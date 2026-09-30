@@ -19,16 +19,18 @@
 package pit12.feature.profile;
 
 import com.google.gson.JsonElement;
+import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
 import java.io.IOException;
 import java.io.StringReader;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import net.minecraft.client.Minecraft;
 import pit12.feature.profile.api.ProfileMutationResult;
 import pit12.feature.profile.api.Profiles;
 import pit12.feature.profile.api.ProfilesSnapshot;
@@ -37,17 +39,20 @@ import pit12.feature.profile.storage.LoadedProfiles;
 import pit12.feature.profile.storage.ProfileCodec;
 import pit12.feature.profile.storage.ProfileIoWorker;
 import pit12.feature.profile.storage.ProfileSchema;
+import pit12.feature.profile.storage.ProfileStore;
 import pit12.feature.profile.storage.ProfileWriteBatch;
 import pit12.feature.profile.storage.StoredProfile;
 import pit12.runtime.config.ConfigCatalog;
 import pit12.runtime.config.ConfigChangeListener;
 import pit12.shared.lifecycle.ClientLifecycle;
+import pit12.shared.result.OperationResult;
 
 public final class ProfilesFeature
         implements ClientLifecycle, Profiles, ProfileController.PersistenceSink {
     private static final Logger LOGGER = Logger.getLogger(ProfilesFeature.class.getName());
     private final ConfigCatalog catalog;
     private final Path directory;
+    private final Function<ProfileCodec, ProfileStore> storeFactory;
     private final ProfileController controller;
     private final ConfigChangeListener configListener;
     private final List<Runnable> listeners = new ArrayList<Runnable>();
@@ -57,6 +62,12 @@ public final class ProfilesFeature
     private long generation;
 
     public ProfilesFeature(ConfigCatalog catalog, Path directory) {
+        this(catalog, directory, codec -> new JsonProfileStore(directory, codec));
+    }
+
+    ProfilesFeature(ConfigCatalog catalog, Path directory,
+            Function<ProfileCodec, ProfileStore> storeFactory) {
+        this.storeFactory = storeFactory;
         this.catalog = catalog;
         this.directory = directory;
         controller = new ProfileController(catalog, this, this::notifyListeners);
@@ -64,7 +75,8 @@ public final class ProfilesFeature
     }
 
     @Override
-    public synchronized void start() {
+    public void start() {
+        catalog.clientThread().check();
         if (started) {
             return;
         }
@@ -78,7 +90,7 @@ public final class ProfilesFeature
         long activeGeneration = ++generation;
         controller.beginLoading();
         codec = new ProfileCodec(ProfileSchema.capture(catalog));
-        JsonProfileStore store = new JsonProfileStore(directory, codec);
+        ProfileStore store = storeFactory.apply(codec);
         worker = new ProfileIoWorker(store, directory, new IoListener(activeGeneration));
         catalog.addListener(configListener);
         try {
@@ -93,12 +105,14 @@ public final class ProfilesFeature
     }
 
     @Override
-    public synchronized void stop() {
+    public void stop() {
+        catalog.clientThread().check();
         if (!started && worker == null) {
             return;
         }
         started = false;
         generation++;
+        controller.invalidateOperations();
         catalog.removeListener(configListener);
         ProfileIoWorker closingWorker = worker;
         if (closingWorker == null) {
@@ -125,11 +139,13 @@ public final class ProfilesFeature
 
     @Override
     public ProfilesSnapshot snapshot() {
+        catalog.clientThread().check();
         return controller.snapshot();
     }
 
     @Override
     public void addListener(Runnable listener) {
+        catalog.clientThread().check();
         if (!listeners.contains(listener)) {
             listeners.add(listener);
         }
@@ -137,6 +153,7 @@ public final class ProfilesFeature
 
     @Override
     public void removeListener(Runnable listener) {
+        catalog.clientThread().check();
         listeners.remove(listener);
     }
 
@@ -152,41 +169,90 @@ public final class ProfilesFeature
 
     @Override
     public ProfileMutationResult switchTo(UUID profileId) {
-        return controller.switchTo(profileId);
+        catalog.clientThread().check();
+        return started ? controller.switchTo(profileId) : unavailable();
     }
 
     @Override
     public ProfileMutationResult beginCreate() {
-        return controller.beginCreate();
+        catalog.clientThread().check();
+        return started ? controller.beginCreate() : unavailable();
     }
 
     @Override
     public ProfileMutationResult rename(UUID profileId, String name) {
-        return controller.rename(profileId, name);
+        catalog.clientThread().check();
+        return started ? controller.rename(profileId, name) : unavailable();
     }
 
     @Override
     public ProfileMutationResult delete(UUID profileId) {
-        return controller.delete(profileId);
+        catalog.clientThread().check();
+        return started ? controller.delete(profileId) : unavailable();
+    }
+
+    private ProfileMutationResult unavailable() {
+        return ProfileMutationResult.failure(ProfileMutationResult.Status.STORAGE_UNAVAILABLE,
+                "Profiles are unavailable");
     }
 
     @Override
-    public List<String> exportProfiles(List<UUID> ids) {
-        ArrayList<String> result = new ArrayList<String>();
-        for (StoredProfile profile : controller.exportProfiles(ids)) {
-            result.add(codec.encode(profile));
+    public OperationResult<List<String>> exportProfiles(List<UUID> ids) {
+        catalog.clientThread().check();
+        if (!started || controller.snapshot().loadState() == ProfilesSnapshot.LoadState.LOADING) {
+            return OperationResult.failure(OperationResult.Status.UNAVAILABLE,
+                    "Profiles are still loading or unavailable");
         }
-        return result;
+        if (ids == null || ids.contains(null))
+            return OperationResult.failure(OperationResult.Status.INVALID_VALUE,
+                    "Profile IDs are missing");
+        try {
+            ArrayList<String> result = new ArrayList<>();
+            for (StoredProfile profile : controller.exportProfiles(ids))
+                result.add(codec.encode(profile));
+            return OperationResult.success(Collections.unmodifiableList(result));
+        } catch (IllegalArgumentException failure) {
+            return OperationResult.failure(OperationResult.Status.NOT_FOUND, failure.getMessage());
+        }
     }
 
     @Override
-    public void validateImportProfiles(List<String> profiles) {
-        controller.validateImported(decodeProfiles(profiles));
+    public ProfileMutationResult validateImportProfiles(List<String> profiles) {
+        return importProfiles(profiles, false);
     }
 
     @Override
-    public void importProfiles(List<String> profiles) {
-        controller.importProfiles(decodeProfiles(profiles));
+    public ProfileMutationResult importProfiles(List<String> profiles) {
+        return importProfiles(profiles, true);
+    }
+
+    private ProfileMutationResult importProfiles(List<String> profiles, boolean apply) {
+        catalog.clientThread().check();
+        if (!started)
+            return unavailable();
+        if (controller.snapshot().loadState() == ProfilesSnapshot.LoadState.LOADING) {
+            return ProfileMutationResult.failure(ProfileMutationResult.Status.LOADING,
+                    "Profiles are still loading");
+        }
+        if (controller.snapshot().loadState() != ProfilesSnapshot.LoadState.READY) {
+            return ProfileMutationResult.failure(ProfileMutationResult.Status.STORAGE_UNAVAILABLE,
+                    "Profiles are not ready for import");
+        }
+        if (profiles == null || profiles.contains(null)) {
+            return ProfileMutationResult.failure(ProfileMutationResult.Status.INVALID_VALUE,
+                    "Profiles are missing");
+        }
+        try {
+            List<StoredProfile> decoded = decodeProfiles(profiles);
+            if (apply)
+                controller.importProfiles(decoded);
+            else
+                controller.validateImported(decoded);
+            return ProfileMutationResult.success();
+        } catch (JsonParseException | IllegalArgumentException failure) {
+            return ProfileMutationResult.failure(ProfileMutationResult.Status.INVALID_VALUE,
+                    failure.getMessage());
+        }
     }
 
     private List<StoredProfile> decodeProfiles(List<String> profiles) {
@@ -212,16 +278,19 @@ public final class ProfilesFeature
 
     @Override
     public void profileChanged(UUID ignoredProfileId) {
+        catalog.clientThread().check();
         requestWrite(false);
     }
 
     @Override
     public void activeProfileChanged() {
+        catalog.clientThread().check();
         requestWrite(false);
     }
 
     @Override
     public void profileDeleted(UUID profileId) {
+        catalog.clientThread().check();
         ProfileIoWorker activeWorker = worker;
         if (activeWorker != null) {
             activeWorker.requestDelete(profileId);
@@ -230,6 +299,7 @@ public final class ProfilesFeature
     }
 
     public void requestImmediateWrite() {
+        catalog.clientThread().check();
         requestWrite(true);
     }
 
@@ -242,16 +312,13 @@ public final class ProfilesFeature
 
     private ProfileWriteBatch captureWriteBatch() {
         return new ProfileWriteBatch(controller.dirtyProfiles(), controller.activeProfileId(),
-                controller.isStateDirty());
+                controller.isStateDirty(), controller.stateRevision());
     }
 
     private void dispatchToClient(long taskGeneration, Runnable task) {
-        Minecraft.getMinecraft().addScheduledTask(() -> {
-            synchronized (ProfilesFeature.this) {
-                if (!started || generation != taskGeneration) {
-                    return;
-                }
-            }
+        catalog.clientThread().execute(() -> {
+            if (!started || generation != taskGeneration)
+                return;
             task.run();
         });
     }
@@ -275,8 +342,9 @@ public final class ProfilesFeature
         }
 
         @Override
-        public void stateWritten(UUID activeProfileId) {
-            dispatchToClient(taskGeneration, () -> controller.statePersisted(activeProfileId));
+        public void stateWritten(UUID activeProfileId, long revision) {
+            dispatchToClient(taskGeneration,
+                    () -> controller.statePersisted(activeProfileId, revision));
         }
 
         @Override

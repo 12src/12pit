@@ -19,58 +19,68 @@
 package pit12.runtime.pit;
 
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.util.BlockPos;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
-import net.minecraftforge.fml.common.network.FMLNetworkEvent.ClientDisconnectionFromServerEvent;
+import pit12.runtime.session.ClientSession;
 import pit12.shared.lifecycle.ClientLifecycle;
 
 public final class PitContextTracker implements ClientLifecycle, PitContext {
     private static final int ORIGIN_X = 0;
     private static final int ORIGIN_Z = 0;
-    private final Minecraft minecraft = Minecraft.getMinecraft();
+    private final ClientSession session;
+    private final Runnable sessionChanged = this::onSessionChanged;
     private WorldClient boundWorld;
     private PitSnapshot snapshot = PitSnapshot.initial();
     private long revision;
     private boolean detectionComplete;
     private boolean started;
 
+    public PitContextTracker(ClientSession session) {
+        this.session = session;
+    }
+
     @Override
     public void start() {
+        session.checkThread();
         if (started) {
             return;
         }
         MinecraftForge.EVENT_BUS.register(this);
         started = true;
+        session.addListener(sessionChanged);
+        bindWorld(session.world());
     }
 
     @Override
     public void stop() {
+        session.checkThread();
         if (!started) {
             reset();
             return;
         }
         started = false;
+        session.removeListener(sessionChanged);
         MinecraftForge.EVENT_BUS.unregister(this);
         reset();
     }
 
     @Override
     public PitSnapshot current() {
+        session.checkThread();
         return snapshot;
     }
 
     @SubscribeEvent
     public void onClientTick(ClientTickEvent event) {
+        session.checkThread();
         if (event.phase != Phase.START) {
             return;
         }
-        WorldClient world = minecraft.theWorld;
+        WorldClient world = session.world();
         if (world != boundWorld) {
             bindWorld(world);
         }
@@ -83,22 +93,14 @@ public final class PitContextTracker implements ClientLifecycle, PitContext {
         detect(world);
     }
 
-    @SubscribeEvent
-    public void onWorldUnload(WorldEvent.Unload event) {
-        if (event.world.isRemote && event.world == boundWorld) {
-            reset();
-        }
-    }
-
-    @SubscribeEvent
-    public void onDisconnect(ClientDisconnectionFromServerEvent event) {
-        reset();
-    }
-
     private void bindWorld(WorldClient world) {
         boundWorld = world;
         detectionComplete = false;
         replaceSnapshot(PitMap.UNKNOWN);
+    }
+
+    private void onSessionChanged() {
+        bindWorld(session.world());
     }
 
     private void detect(WorldClient world) {

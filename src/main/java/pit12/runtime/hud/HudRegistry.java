@@ -24,15 +24,30 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import pit12.shared.concurrent.ClientThread;
 
 public final class HudRegistry {
     private final List<HudElement> elements = new ArrayList<HudElement>();
     private final List<HudElement> elementsView = Collections.unmodifiableList(elements);
     private final Map<String, HudElement> elementsById = new LinkedHashMap<String, HudElement>();
     private boolean editing;
+    private final ClientThread client;
+
+    public HudRegistry() {
+        this(ClientThread.current());
+    }
+
+    public HudRegistry(ClientThread client) {
+        this.client = Objects.requireNonNull(client, "client");
+    }
+
+    public void checkThread() {
+        client.check();
+    }
 
     /** Registration and reads are client-thread confined after features start. */
     public void register(HudElement element) {
+        client.check();
         Objects.requireNonNull(element, "element");
         String id = requireId(element.id());
         if (element.displayName() == null || element.displayName().trim().isEmpty()) {
@@ -51,6 +66,7 @@ public final class HudRegistry {
     }
 
     public void unregister(HudElement element) {
+        client.check();
         if (element == null || elementsById.get(element.id()) != element) {
             return;
         }
@@ -59,18 +75,22 @@ public final class HudRegistry {
     }
 
     public List<HudElement> elements() {
+        client.check();
         return elementsView;
     }
 
     public boolean contains(HudElement element) {
+        client.check();
         return element != null && elementsById.get(element.id()) == element;
     }
 
     public boolean editing() {
+        client.check();
         return editing;
     }
 
     public void setEditing(boolean editing) {
+        client.check();
         this.editing = editing;
     }
 

@@ -24,16 +24,11 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -42,8 +37,9 @@ import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
+import pit12.shared.storage.AtomicFile;
 
-public final class JsonProfileStore {
+public final class JsonProfileStore implements ProfileStore {
     private static final Logger LOGGER = Logger.getLogger(JsonProfileStore.class.getName());
     private static final String STATE_FILE = "profiles.json";
     private static final Pattern PROFILE_FILE = Pattern.compile(
@@ -109,7 +105,7 @@ public final class JsonProfileStore {
 
     public void writeProfile(StoredProfile profile) throws IOException {
         // UUID identity keeps renames and untrusted display names out of filesystem paths.
-        writeAtomically(directory.resolve(profile.id().toString() + ".json"),
+        AtomicFile.write(directory.resolve(profile.id().toString() + ".json"),
                 codec.encode(profile));
     }
 
@@ -117,7 +113,7 @@ public final class JsonProfileStore {
         JsonObject root = new JsonObject();
         root.addProperty("schemaVersion", Integer.valueOf(ProfileCodec.SCHEMA_VERSION));
         root.addProperty("activeProfileId", activeProfileId.toString());
-        writeAtomically(directory.resolve(STATE_FILE), gson.toJson(root));
+        AtomicFile.write(directory.resolve(STATE_FILE), gson.toJson(root));
     }
 
     public void moveToTrash(UUID profileId) throws IOException {
@@ -165,32 +161,6 @@ public final class JsonProfileStore {
                     failure.getMessage() == null ? "Profile state could not be loaded"
                             : failure.getMessage()));
             return null;
-        }
-    }
-
-    private void writeAtomically(Path target, String content) throws IOException {
-        Files.createDirectories(directory);
-        Path temporary = target.resolveSibling(target.getFileName().toString() + ".tmp");
-        boolean moved = false;
-        try {
-            try (FileOutputStream output = new FileOutputStream(temporary.toFile());
-                    BufferedWriter writer = new BufferedWriter(
-                            new OutputStreamWriter(output, StandardCharsets.UTF_8))) {
-                writer.write(content);
-                writer.flush();
-                output.getFD().sync();
-            }
-            try {
-                Files.move(temporary, target, StandardCopyOption.ATOMIC_MOVE,
-                        StandardCopyOption.REPLACE_EXISTING);
-            } catch (AtomicMoveNotSupportedException unsupported) {
-                Files.move(temporary, target, StandardCopyOption.REPLACE_EXISTING);
-            }
-            moved = true;
-        } finally {
-            if (!moved) {
-                Files.deleteIfExists(temporary);
-            }
         }
     }
 }

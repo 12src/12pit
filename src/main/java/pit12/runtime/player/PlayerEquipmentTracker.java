@@ -23,23 +23,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.network.NetHandlerPlayClient;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
-import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
-import net.minecraftforge.fml.common.network.FMLNetworkEvent.ClientDisconnectionFromServerEvent;
+import pit12.runtime.session.ClientSession;
+import pit12.shared.event.Listeners;
 import pit12.shared.lifecycle.ClientLifecycle;
 
 public final class PlayerEquipmentTracker implements ClientLifecycle, PlayerEquipmentAccess,
         PlayerEquipmentPacketObserver, PlayerEquipmentWorldObserver {
-    private final Minecraft minecraft = Minecraft.getMinecraft();
+    private final ClientSession session;
+    private final Runnable sessionChanged = this::onSessionChanged;
     private final PlayerEquipmentCache cache = new PlayerEquipmentCache();
     private final List<PlayerEquipmentListener> listeners =
             new ArrayList<PlayerEquipmentListener>();
@@ -47,22 +47,31 @@ public final class PlayerEquipmentTracker implements ClientLifecycle, PlayerEqui
     private WorldClient boundWorld;
     private boolean started;
 
+    public PlayerEquipmentTracker(ClientSession session) {
+        this.session = session;
+    }
+
     @Override
     public void start() {
+        session.checkThread();
         if (started) {
             return;
         }
         MinecraftForge.EVENT_BUS.register(this);
         started = true;
+        session.addListener(sessionChanged);
+        onSessionChanged();
     }
 
     @Override
     public void stop() {
+        session.checkThread();
         if (!started) {
             clearCache();
             return;
         }
         started = false;
+        session.removeListener(sessionChanged);
         unbindNetHandler();
         unbindWorld();
         MinecraftForge.EVENT_BUS.unregister(this);
@@ -72,11 +81,13 @@ public final class PlayerEquipmentTracker implements ClientLifecycle, PlayerEqui
 
     @Override
     public PlayerEquipmentSnapshot loadedEquipment(UUID playerId) {
+        session.checkThread();
         return cache.loadedEquipment(playerId);
     }
 
     @Override
     public void addListener(PlayerEquipmentListener listener) {
+        session.checkThread();
         PlayerEquipmentListener nonNullListener = Objects.requireNonNull(listener, "listener");
         if (!listeners.contains(nonNullListener)) {
             listeners.add(nonNullListener);
@@ -85,16 +96,18 @@ public final class PlayerEquipmentTracker implements ClientLifecycle, PlayerEqui
 
     @Override
     public void removeListener(PlayerEquipmentListener listener) {
+        session.checkThread();
         listeners.remove(listener);
     }
 
     @Override
     public void onEquipmentPacket(int entityId, int equipmentSlot) {
+        session.checkThread();
         int slots = slotsFor(equipmentSlot);
         if (slots == 0) {
             return;
         }
-        WorldClient world = minecraft.theWorld;
+        WorldClient world = session.world();
         Entity entity = world == null ? null : world.getEntityByID(entityId);
         if (entity instanceof EntityPlayer) {
             cache.markDirty(entity.getUniqueID(), slots);
@@ -103,6 +116,7 @@ public final class PlayerEquipmentTracker implements ClientLifecycle, PlayerEqui
 
     @Override
     public void onEntityRemoved(Entity entity) {
+        session.checkThread();
         if (entity instanceof EntityPlayer) {
             UUID playerId = entity.getUniqueID();
             if (cache.remove(playerId) != null) {
@@ -113,7 +127,10 @@ public final class PlayerEquipmentTracker implements ClientLifecycle, PlayerEqui
 
     @SubscribeEvent
     public void onEntityJoinWorld(EntityJoinWorldEvent event) {
-        if (!event.world.isRemote || !(event.entity instanceof EntityPlayer)) {
+        if (!event.world.isRemote)
+            return;
+        session.checkThread();
+        if (event.world != session.world() || !(event.entity instanceof EntityPlayer)) {
             return;
         }
         cache.markDirty(event.entity.getUniqueID(), PlayerEquipmentCache.ALL);
@@ -121,12 +138,12 @@ public final class PlayerEquipmentTracker implements ClientLifecycle, PlayerEqui
 
     @SubscribeEvent
     public void onClientTick(ClientTickEvent event) {
+        session.checkThread();
         if (event.phase != Phase.START) {
             return;
         }
-        WorldClient world = minecraft.theWorld;
-        bindNetHandler(minecraft.getNetHandler());
-        bindWorld(world);
+        session.refresh();
+        WorldClient world = session.world();
         if (world == null) {
             clearCache();
             return;
@@ -134,20 +151,9 @@ public final class PlayerEquipmentTracker implements ClientLifecycle, PlayerEqui
         applyDirty(world);
     }
 
-    @SubscribeEvent
-    public void onWorldUnload(WorldEvent.Unload event) {
-        if (!event.world.isRemote) {
-            return;
-        }
-        clearCache();
-        unbindWorld();
-    }
-
-    @SubscribeEvent
-    public void onDisconnect(ClientDisconnectionFromServerEvent event) {
-        clearCache();
-        unbindNetHandler();
-        unbindWorld();
+    private void onSessionChanged() {
+        bindNetHandler(session.connection());
+        bindWorld(session.world());
     }
 
     private void bindNetHandler(NetHandlerPlayClient netHandler) {
@@ -156,7 +162,12 @@ public final class PlayerEquipmentTracker implements ClientLifecycle, PlayerEqui
         }
         unbindNetHandler();
         if (netHandler instanceof PlayerEquipmentPacketBinding) {
-            ((PlayerEquipmentPacketBinding) netHandler).bindPlayerEquipmentObserver(this);
+            ((PlayerEquipmentPacketBinding) netHandler)
+                    .bindPlayerEquipmentObserver((entityId, slot) -> {
+                        session.refresh();
+                        if (started && session.connection() == netHandler)
+                            onEquipmentPacket(entityId, slot);
+                    });
             boundNetHandler = netHandler;
         }
     }
@@ -173,16 +184,23 @@ public final class PlayerEquipmentTracker implements ClientLifecycle, PlayerEqui
             return;
         }
         unbindWorld();
-        clearCache();
+        boolean hadEquipment = !cache.isEmpty();
+        cache.clear();
         boundWorld = world;
         if (world instanceof PlayerEquipmentWorldBinding) {
-            ((PlayerEquipmentWorldBinding) world).bindPlayerEquipmentObserver(this);
+            ((PlayerEquipmentWorldBinding) world).bindPlayerEquipmentObserver(entity -> {
+                session.refresh();
+                if (started && session.world() == world)
+                    onEntityRemoved(entity);
+            });
         }
         if (world != null) {
             for (EntityPlayer player : world.playerEntities) {
                 cache.markDirty(player.getUniqueID(), PlayerEquipmentCache.ALL);
             }
         }
+        if (hadEquipment)
+            Listeners.notify(listeners, PlayerEquipmentListener::onPlayerEquipmentReset);
     }
 
     private void unbindWorld() {
@@ -193,17 +211,19 @@ public final class PlayerEquipmentTracker implements ClientLifecycle, PlayerEqui
     }
 
     private void applyDirty(WorldClient world) {
+        List<Runnable> notifications = new ArrayList<>();
         for (Map.Entry<UUID, Integer> change : cache.drainDirty().entrySet()) {
             EntityPlayer player = world.getPlayerEntityByUUID(change.getKey());
             if (player == null) {
                 if (cache.remove(change.getKey()) != null) {
-                    notifyRemoved(change.getKey());
+                    notifications.add(() -> notifyRemoved(change.getKey()));
                 }
                 continue;
             }
             PlayerEquipmentSnapshot snapshot = cache.observe(player, change.getValue().intValue());
-            notifyChanged(snapshot, change.getValue().intValue());
+            notifications.add(() -> notifyChanged(snapshot, change.getValue().intValue()));
         }
+        notifications.forEach(Runnable::run);
     }
 
     private void clearCache() {
@@ -212,22 +232,16 @@ public final class PlayerEquipmentTracker implements ClientLifecycle, PlayerEqui
             return;
         }
         cache.clear();
-        for (PlayerEquipmentListener listener : new ArrayList<PlayerEquipmentListener>(listeners)) {
-            listener.onPlayerEquipmentReset();
-        }
+        Listeners.notify(listeners, PlayerEquipmentListener::onPlayerEquipmentReset);
     }
 
     private void notifyChanged(PlayerEquipmentSnapshot snapshot, int changedSlots) {
-        for (PlayerEquipmentListener listener : new ArrayList<PlayerEquipmentListener>(listeners)) {
-            listener.onPlayerEquipmentChanged(snapshot.playerId(), changedSlots,
-                    snapshot.revision());
-        }
+        Listeners.notify(listeners, listener -> listener
+                .onPlayerEquipmentChanged(snapshot.playerId(), changedSlots, snapshot.revision()));
     }
 
     private void notifyRemoved(UUID playerId) {
-        for (PlayerEquipmentListener listener : new ArrayList<PlayerEquipmentListener>(listeners)) {
-            listener.onPlayerEquipmentRemoved(playerId);
-        }
+        Listeners.notify(listeners, listener -> listener.onPlayerEquipmentRemoved(playerId));
     }
 
     private static int slotsFor(int equipmentSlot) {

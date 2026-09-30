@@ -68,6 +68,7 @@ final class PlayerListHud implements HudElement {
     private double renderRightX;
     private double renderRightZ;
     private boolean renderDirectionReady;
+    private boolean sampleLayout;
 
     PlayerListHud(PlayerListConfig config) {
         this.config = config;
@@ -127,6 +128,16 @@ final class PlayerListHud implements HudElement {
     }
 
     @Override
+    public void prepare(float pixelScale, boolean editing) {
+        resize(pixelScale);
+        boolean sample = editing && snapshot.isEmpty();
+        if (sample != sampleLayout) {
+            recalculateLayout(sample ? SAMPLE : snapshot);
+            sampleLayout = sample;
+        }
+    }
+
+    @Override
     public int height() {
         return height;
     }
@@ -137,7 +148,6 @@ final class PlayerListHud implements HudElement {
         prepareRenderDirection(partialTicks);
         if (editing && content.isEmpty()) {
             content = SAMPLE;
-            recalculateLayout(content);
         }
         int y = EDGE_PADDING;
         boolean hasGroup = false;
@@ -268,6 +278,7 @@ final class PlayerListHud implements HudElement {
     }
 
     private void recalculateLayout() {
+        sampleLayout = false;
         recalculateLayout(snapshot);
     }
 

@@ -34,20 +34,22 @@ import pit12.runtime.player.TabPresence;
 final class RelationCommand extends CommandBase {
     private final RelationFeature feature;
     private final TabPresence presence;
+    private final Relation relation;
 
-    RelationCommand(RelationFeature feature, TabPresence presence) {
+    RelationCommand(RelationFeature feature, TabPresence presence, Relation relation) {
         this.feature = feature;
         this.presence = presence;
+        this.relation = relation;
     }
 
     @Override
     public String getCommandName() {
-        return "12pit";
+        return relation.name().toLowerCase(Locale.ROOT);
     }
 
     @Override
     public String getCommandUsage(ICommandSender sender) {
-        return "/12pit <friend|enemy> [list|add|remove|player]";
+        return "/12pit " + getCommandName() + " [list|add|remove|player]";
     }
 
     @Override
@@ -57,41 +59,31 @@ final class RelationCommand extends CommandBase {
 
     @Override
     public void processCommand(ICommandSender sender, String[] args) {
-        if (args.length == 0) {
-            reply(sender, getCommandUsage(sender));
-            return;
-        }
-        Relation relation;
-        String group = args[0].toLowerCase(Locale.ROOT);
-        if ("friend".equals(group)) {
-            relation = Relation.FRIEND;
-        } else if ("enemy".equals(group)) {
-            relation = Relation.ENEMY;
-        } else {
-            reply(sender, getCommandUsage(sender));
-            return;
-        }
         String problem = feature.readinessProblem();
         if (problem != null) {
             reply(sender, problem);
             return;
         }
-        if (args.length == 1 || args.length == 2 && "list".equalsIgnoreCase(args[1])) {
+        if (args.length == 0 || args.length == 1 && "list".equalsIgnoreCase(args[0])) {
             List<RelationEntry> entries = feature.entries(relation);
             reply(sender, relation.name() + " (" + entries.size() + "):");
             for (RelationEntry entry : entries) {
-                reply(sender, "  " + entry.name());
+                reply(sender,
+                        "  " + entry.name() + (entry.playerId() == null ? " (UUID "
+                                + feature.resolutionOf(entry.name()).name().toLowerCase(Locale.ROOT)
+                                + ")" : ""));
             }
             return;
         }
-        if (args.length == 2 && !"add".equalsIgnoreCase(args[1])
-                && !"remove".equalsIgnoreCase(args[1])) {
-            reply(sender, feature.change(relation, "toggle", args[1]));
+        if (args.length == 1 && !"add".equalsIgnoreCase(args[0])
+                && !"remove".equalsIgnoreCase(args[0])) {
+            reply(sender, feature.change(relation, "toggle", args[0]).message());
             return;
         }
-        if (args.length == 3
-                && ("add".equalsIgnoreCase(args[1]) || "remove".equalsIgnoreCase(args[1]))) {
-            reply(sender, feature.change(relation, args[1].toLowerCase(Locale.ROOT), args[2]));
+        if (args.length == 2
+                && ("add".equalsIgnoreCase(args[0]) || "remove".equalsIgnoreCase(args[0]))) {
+            reply(sender,
+                    feature.change(relation, args[0].toLowerCase(Locale.ROOT), args[1]).message());
             return;
         }
         reply(sender, getCommandUsage(sender));
@@ -101,28 +93,17 @@ final class RelationCommand extends CommandBase {
     public List<String> addTabCompletionOptions(ICommandSender sender, String[] args,
             BlockPos position) {
         if (args.length == 1) {
-            return getListOfStringsMatchingLastWord(args, "friend", "enemy");
-        }
-        if (args.length < 2
-                || !"friend".equalsIgnoreCase(args[0]) && !"enemy".equalsIgnoreCase(args[0])) {
-            return null;
-        }
-        if (args.length == 2) {
             List<String> options = new ArrayList<String>(Arrays.asList("list", "add", "remove"));
             options.addAll(presence.players().values());
-            Relation relation =
-                    "friend".equalsIgnoreCase(args[0]) ? Relation.FRIEND : Relation.ENEMY;
             for (RelationEntry entry : feature.entries(relation)) {
                 options.add(entry.name());
             }
             return getListOfStringsMatchingLastWord(args, options);
         }
-        if (args.length == 3
-                && ("add".equalsIgnoreCase(args[1]) || "remove".equalsIgnoreCase(args[1]))) {
+        if (args.length == 2
+                && ("add".equalsIgnoreCase(args[0]) || "remove".equalsIgnoreCase(args[0]))) {
             List<String> options = new ArrayList<String>();
-            if ("remove".equalsIgnoreCase(args[1])) {
-                Relation relation =
-                        "friend".equalsIgnoreCase(args[0]) ? Relation.FRIEND : Relation.ENEMY;
+            if ("remove".equalsIgnoreCase(args[0])) {
                 for (RelationEntry entry : feature.entries(relation)) {
                     options.add(entry.name());
                 }
