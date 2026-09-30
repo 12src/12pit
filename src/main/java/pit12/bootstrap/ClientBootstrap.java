@@ -55,7 +55,6 @@ public final class ClientBootstrap {
     private static final Logger LOGGER = Logger.getLogger(ClientBootstrap.class.getName());
     private final List<ClientLifecycle> components = new ArrayList<ClientLifecycle>();
     private final List<ClientLifecycle> startedComponents = new ArrayList<ClientLifecycle>();
-    private final ConfigCatalog configs;
     private final ClientThread client;
     private final ClientShutdownBinding shutdown;
     private boolean started;
@@ -64,7 +63,7 @@ public final class ClientBootstrap {
         Minecraft minecraft = Minecraft.getMinecraft();
         client = new ClientThread(minecraft::isCallingFromMinecraftThread,
                 task -> minecraft.addScheduledTask(task));
-        configs = new ConfigCatalog(client);
+        ConfigCatalog configs = new ConfigCatalog(client);
         shutdown = (ClientShutdownBinding) minecraft;
         ClientSession session = new ClientSession(minecraft, client);
         CommandRegistry commands = new CommandRegistry(client);
@@ -81,18 +80,15 @@ public final class ClientBootstrap {
         configs.register(autoSprintConfig);
         configs.register(autoQuickMathConfig);
         configs.freeze();
-        File profileDirectory = new File(Minecraft.getMinecraft().mcDataDir, "12pit/config");
-        ProfilesFeature profiles = new ProfilesFeature(configs, profileDirectory.toPath());
+        ProfilesFeature profiles = new ProfilesFeature(configs,
+                new File(minecraft.mcDataDir, "12pit/config").toPath());
         PlayerEquipmentTracker playerEquipment = new PlayerEquipmentTracker(session);
         TabPresenceTracker presence = new TabPresenceTracker(session);
         RelationFeature relations = new RelationFeature(presence,
-                new File(Minecraft.getMinecraft().mcDataDir, "12pit/relations.json").toPath(),
-                client, commands);
+                new File(minecraft.mcDataDir, "12pit/relations.json").toPath(), client, commands);
         PitContextTracker pitContext = new PitContextTracker(session);
         HudRegistry hudRegistry = new HudRegistry(client);
         HudEditorFeature hudEditor = new HudEditorFeature(hudRegistry, commands);
-        PlayerListFeature playerList = new PlayerListFeature(configs, playerListConfig,
-                playerEquipment, pitContext, hudRegistry, relations, presence);
         components.add(session);
         components.add(commands);
         components.add(profiles);
@@ -100,7 +96,8 @@ public final class ClientBootstrap {
         components.add(presence);
         components.add(relations);
         components.add(pitContext);
-        components.add(playerList);
+        components.add(new PlayerListFeature(configs, playerListConfig, playerEquipment, pitContext,
+                hudRegistry, relations, presence));
         components.add(new TooltipFeature(configs, tooltipConfig));
         components.add(
                 new GammaFeature(configs, gammaConfig, (GammaBinding) minecraft.entityRenderer));
