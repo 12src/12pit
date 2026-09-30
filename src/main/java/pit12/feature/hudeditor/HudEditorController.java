@@ -21,13 +21,14 @@ package pit12.feature.hudeditor;
 import java.util.List;
 import java.util.Objects;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.util.ResourceLocation;
 import pit12.Pit12;
 import pit12.runtime.config.HudPlacement;
 import pit12.runtime.config.IntegerSetting;
+import pit12.runtime.hud.HudBounds;
 import pit12.runtime.hud.HudElement;
 import pit12.runtime.hud.HudRegistry;
+import pit12.runtime.hud.HudRenderer;
 import pit12.shared.rendering.UiRenderState;
 import pit12.shared.rendering.UiRenderer;
 
@@ -35,6 +36,7 @@ final class HudEditorController {
     private final HudRegistry registry;
     private final UiRenderer renderer;
     private final UiRenderState renderState = new UiRenderState();
+    private final HudRenderer hudRenderer = new HudRenderer();
     private HudElement selected;
     private HudElement dragging;
     private int screenWidth;
@@ -116,8 +118,10 @@ final class HudEditorController {
         if (dragging == null) {
             return;
         }
-        int width = scaledWidth(dragging);
-        int height = scaledHeight(dragging);
+        HudBounds bounds =
+                HudRenderer.layout(dragging, screenWidth, screenHeight, pixelScale, true);
+        int width = bounds.width;
+        int height = bounds.height;
         dragX = snap(clamp(mouseX - dragOffsetX, 0, Math.max(0, screenWidth - width)), width,
                 screenWidth);
         dragY = snap(clamp(mouseY - dragOffsetY, 0, Math.max(0, screenHeight - height)), height,
@@ -129,8 +133,10 @@ final class HudEditorController {
             return;
         }
         if (registry.contains(dragging)) {
-            int width = scaledWidth(dragging);
-            int height = scaledHeight(dragging);
+            HudBounds bounds =
+                    HudRenderer.layout(dragging, screenWidth, screenHeight, pixelScale, true);
+            int width = bounds.width;
+            int height = bounds.height;
             dragging.config().placement(HudPlacement.fromOrigin(dragX, dragY, width, height,
                     screenWidth, screenHeight));
         }
@@ -159,10 +165,13 @@ final class HudEditorController {
     }
 
     private boolean beginDrag(HudElement element, int mouseX, int mouseY) {
-        int width = scaledWidth(element);
-        int height = scaledHeight(element);
-        int x = originX(element, width);
-        int y = originY(element, height);
+        HudBounds bounds = HudRenderer.layout(element, screenWidth, screenHeight, pixelScale, true);
+        if (element == dragging)
+            bounds = bounds.at(dragX, dragY);
+        int width = bounds.width;
+        int height = bounds.height;
+        int x = bounds.x;
+        int y = bounds.y;
         if (!contains(mouseX, mouseY, x, y, width, height)) {
             return false;
         }
@@ -176,19 +185,14 @@ final class HudEditorController {
     }
 
     private void renderElement(HudElement element, int mouseX, int mouseY, float partialTicks) {
-        int width = scaledWidth(element);
-        int height = scaledHeight(element);
-        int x = originX(element, width);
-        int y = originY(element, height);
-        float scale = element.config().scaleFactor();
-        GlStateManager.pushMatrix();
-        GlStateManager.translate(x, y, 0.0F);
-        GlStateManager.scale(scale, scale, 1.0F);
-        try {
-            element.render(partialTicks, true);
-        } finally {
-            GlStateManager.popMatrix();
-        }
+        HudBounds bounds = HudRenderer.layout(element, screenWidth, screenHeight, pixelScale, true);
+        if (element == dragging)
+            bounds = bounds.at(dragX, dragY);
+        int width = bounds.width;
+        int height = bounds.height;
+        int x = bounds.x;
+        int y = bounds.y;
+        hudRenderer.render(element, bounds, partialTicks, true);
         boolean hovered = contains(mouseX, mouseY, x, y, width, height);
         int color = element == selected ? 0xFF26CEAA : hovered ? 0xFFD1D1D1 : 0x80909090;
         outline(x, y, width, height, color);
@@ -201,34 +205,6 @@ final class HudEditorController {
                     Math.max(1, screenHeight - fontHeight - 1));
             renderer.text(label, labelX, labelY, 8.0F, 0xFFF0F0F0, true);
         }
-    }
-
-    private int scaledWidth(HudElement element) {
-        prepare(element);
-        return Math.max(1,
-                Math.round(Math.max(1, element.width()) * element.config().scaleFactor()));
-    }
-
-    private int scaledHeight(HudElement element) {
-        prepare(element);
-        return Math.max(1,
-                Math.round(Math.max(1, element.height()) * element.config().scaleFactor()));
-    }
-
-    private void prepare(HudElement element) {
-        element.resize(pixelScale * element.config().scaleFactor());
-    }
-
-    private int originX(HudElement element, int width) {
-        return element == dragging ? dragX
-                : clamp(element.config().resolveX(screenWidth, width), 0,
-                        Math.max(0, screenWidth - width));
-    }
-
-    private int originY(HudElement element, int height) {
-        return element == dragging ? dragY
-                : clamp(element.config().resolveY(screenHeight, height), 0,
-                        Math.max(0, screenHeight - height));
     }
 
     private void outline(int x, int y, int width, int height, int color) {

@@ -212,7 +212,7 @@ public final class UiRenderer {
 
     private UiTextCache prepareSystemFont(float fontSize) {
         try {
-            return new UiTextCache(minecraft, fontSize, pixelScale);
+            return new UiTextCache(fontSize, pixelScale);
         } catch (RuntimeException failure) {
             LOGGER.log(Level.WARNING, "Unable to prepare system fallback UI font", failure);
             return null;

@@ -36,7 +36,7 @@ final class HudEditorCommand extends CommandBase {
 
     @Override
     public String getCommandUsage(ICommandSender sender) {
-        return "/hudeditor";
+        return "/12pit hudeditor or /hudeditor";
     }
 
     @Override

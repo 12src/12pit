@@ -70,6 +70,7 @@ import pit12.runtime.config.ConfigOption;
 import pit12.runtime.config.FeatureConfig;
 import pit12.runtime.config.NumberSetting;
 import pit12.runtime.config.Setting;
+import pit12.shared.result.OperationResult;
 
 final class WebUiServer {
     private static final String RESOURCES = "assets/pit12/web";
@@ -420,7 +421,8 @@ final class WebUiServer {
         Set<String> existing = new HashSet<String>();
         if ("add".equals(action)) {
             for (RelationEntry saved : relations.entries(relation)) {
-                existing.add(saved.name().toLowerCase(Locale.ROOT));
+                if (saved.playerId() != null)
+                    existing.add(saved.name().toLowerCase(Locale.ROOT));
             }
         }
         for (int index = 0; index < entries.size(); index++) {
@@ -443,10 +445,14 @@ final class WebUiServer {
                 positions.add(Integer.valueOf(index));
             }
         }
-        List<String> messages = relations.changeMany(relation, action, changes);
+        OperationResult<List<OperationResult<Void>>> batch =
+                relations.changeMany(relation, action, changes);
+        if (!batch.succeeded())
+            throw new IllegalArgumentException(batch.message());
+        List<OperationResult<Void>> messages = batch.value();
         for (int index = 0; index < messages.size(); index++) {
-            results.set(positions.get(index).intValue(),
-                    object("name", changes.get(index).name(), "message", messages.get(index)));
+            results.set(positions.get(index).intValue(), object("name", changes.get(index).name(),
+                    "message", messages.get(index).message()));
         }
         return results;
     }
@@ -492,7 +498,8 @@ final class WebUiServer {
             }
         }
         return object("version", BUILD_LABEL, "features", features, "relations",
-                object("problem", relations.readinessProblem(), "entries", relationEntries),
+                object("problem", relations.readinessProblem(), "lookupProblems",
+                        relations.lookupProblems(), "entries", relationEntries),
                 "profiles",
                 object("loadState", snapshot.loadState().name(), "activeId",
                         snapshot.activeProfileId() == null ? null

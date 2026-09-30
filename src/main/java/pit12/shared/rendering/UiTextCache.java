@@ -28,29 +28,25 @@ import java.awt.image.BufferedImage;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.texture.DynamicTexture;
-import net.minecraft.util.ResourceLocation;
 import org.lwjgl.opengl.GL11;
 
 final class UiTextCache {
     private static final int MAX_ENTRIES = 128;
-    private final Minecraft minecraft;
     private final float pixelScale;
     private final Font font;
     private final FontMetrics metrics;
     private final Map<String, TextureEntry> entries =
             new LinkedHashMap<String, TextureEntry>(MAX_ENTRIES, 0.75F, true);
 
-    UiTextCache(Minecraft minecraft, float logicalFontSize, float pixelScale) {
-        this(minecraft, new Font(Font.SANS_SERIF, Font.PLAIN,
+    UiTextCache(float logicalFontSize, float pixelScale) {
+        this(new Font(Font.SANS_SERIF, Font.PLAIN,
                 Math.max(1, Math.round(logicalFontSize * pixelScale))), pixelScale);
     }
 
-    private UiTextCache(Minecraft minecraft, Font font, float pixelScale) {
-        this.minecraft = minecraft;
+    private UiTextCache(Font font, float pixelScale) {
         this.pixelScale = pixelScale;
         this.font = font;
         BufferedImage metricsImage = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
@@ -103,7 +99,7 @@ final class UiTextCache {
             GlStateManager.enableBlend();
             GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1,
                     0);
-            minecraft.getTextureManager().bindTexture(entry.location);
+            GlStateManager.bindTexture(entry.texture.getGlTextureId());
             GlStateManager.color(red, green, blue, alpha);
             Gui.drawModalRectWithCustomSizedTexture(pixelX, pixelY, 0.0F, 0.0F, entry.width,
                     entry.height, entry.width, entry.height);
@@ -121,7 +117,7 @@ final class UiTextCache {
 
     void close() {
         for (TextureEntry entry : entries.values()) {
-            minecraft.getTextureManager().deleteTexture(entry.location);
+            entry.texture.deleteGlTexture();
         }
         entries.clear();
     }
@@ -154,11 +150,13 @@ final class UiTextCache {
         } finally {
             graphics.dispose();
         }
-        DynamicTexture dynamicTexture = new DynamicTexture(image);
-        image.flush();
-        ResourceLocation location = minecraft.getTextureManager()
-                .getDynamicTextureLocation("pit12-ui-text", dynamicTexture);
-        TextureEntry created = new TextureEntry(location, textWidth + 2, textHeight + 2);
+        DynamicTexture texture;
+        try {
+            texture = new DynamicTexture(image);
+        } finally {
+            image.flush();
+        }
+        TextureEntry created = new TextureEntry(texture, textWidth + 2, textHeight + 2);
         entries.put(plainText, created);
         trimOldest();
         return created;
@@ -169,7 +167,7 @@ final class UiTextCache {
             Iterator<Map.Entry<String, TextureEntry>> iterator = entries.entrySet().iterator();
             TextureEntry oldest = iterator.next().getValue();
             iterator.remove();
-            minecraft.getTextureManager().deleteTexture(oldest.location);
+            oldest.texture.deleteGlTexture();
         }
     }
 
@@ -190,12 +188,12 @@ final class UiTextCache {
     }
 
     private static final class TextureEntry {
-        private final ResourceLocation location;
+        private final DynamicTexture texture;
         private final int width;
         private final int height;
 
-        private TextureEntry(ResourceLocation location, int width, int height) {
-            this.location = location;
+        private TextureEntry(DynamicTexture texture, int width, int height) {
+            this.texture = texture;
             this.width = width;
             this.height = height;
         }

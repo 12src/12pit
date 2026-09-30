@@ -16,6 +16,10 @@ Features can depend on `runtime` and `shared`. `runtime` can depend on `shared`,
 
 The component that creates a resource must release it. `ClientBootstrap` starts providers before consumers. If startup fails, it stops everything that was started, in reverse order. Components must tolerate partial startup, and calling `stop()` more than once must be safe.
 
+`ClientSession` owns the current connection and world identities. Trackers subscribe to it instead of handling disconnects separately. It dispatches network events to the client thread, ignores events from replaced connections, and publishes both identities before notifying subscribers. `ClientThread` checks live API access and dispatches copied worker results. Storage and identity lookup dependencies can be replaced in tests.
+
+The Minecraft shutdown adapter calls `ClientBootstrap.stop()` before Minecraft releases the world and graphics context. Features stop their workers and flush pending changes during that call. Forced process termination cannot run this cleanup.
+
 Starting a feature with the client is not the same as enabling it in settings. Disabling a feature releases work that is only needed while it is active. A server disconnect ends the session, not the feature or mod. World state ends when the world is replaced. A multi-tick operation owns its temporary state, timeout, cancellation, and recovery.
 
 Treat Minecraft as the source of truth for current Tab entries, loaded entities, scoreboards, and inventory state. Keep your own copy only when Minecraft does not retain the information, when it must outlive the game object, or when calculating it again is meaningfully expensive. Give each mutable fact one owner and a clear reset rule. Keep unknown information separate from confirmed absence. Prefer UUIDs for player identity. Entity IDs are valid only in their world. Display snapshots are views derived from that state, not a second source of truth.
@@ -26,13 +30,15 @@ Forge listeners and Mixin classes should pass observations or decisions to their
 
 Use a direct call for a query or a local synchronous action. Notify listeners when several consumers care about a meaningful change. Use an explicit operation for work that spans ticks, can fail, or needs recovery. Add an event bus or scheduler only when the code actually needs one.
 
+Public mutations return explicit success or failure results for expected input and readiness failures. Thread violations remain programming errors. State changes finish before subscribers are notified. Listener failures are logged without stopping delivery to other subscribers.
+
 Read and change Minecraft objects on the client thread unless an API says otherwise. For disk IO, HTTP, or expensive calculations, give background workers copied plain data. Apply their results on the client thread only after checking that the feature, request, session, and world are still current. Every worker needs an owner and a way to shut down.
 
 ## Rendering and saved data
 
 Build display snapshots when their inputs change. Renderers read those snapshots each frame and restore any rendering state they change. Do not do blocking IO, broad world scans, or large parsing jobs in render callbacks. Add a cache only when it addresses a measured or obvious cost, and give it an owner and an invalidation rule.
 
-Keep configuration and persistent data with the feature that uses them. Update derived display state when settings change. Validate saved data when loading it, and handle older formats when changing it. A failed write must not silently discard live state. Disconnecting must not delete user data.
+Keep configuration and persistent data with the feature that uses them. Update derived display state when settings change. Validate saved data when loading it, and handle older formats when changing it. A failed write must not silently discard live state or damage saved data. Older save results must not clear newer unsaved changes. Disconnecting must not delete user data.
 
 ## Changing these boundaries
 

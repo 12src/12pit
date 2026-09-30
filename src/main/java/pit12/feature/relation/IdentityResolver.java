@@ -16,19 +16,10 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.runtime.player;
+package pit12.feature.relation;
 
-import java.util.Map;
-import java.util.UUID;
+import java.io.IOException;
 
-/** Queries and subscriptions require the client thread. */
-public interface TabPresence {
-    boolean contains(UUID playerId);
-
-    /** Returns current Tab UUIDs with known profile names; unnamed entries can still be present. */
-    Map<UUID, String> players();
-
-    void addListener(TabPresenceListener listener);
-
-    void removeListener(TabPresenceListener listener);
+interface IdentityResolver {
+    MojangProfileLookup.Profile lookup(String name) throws IOException;
 }

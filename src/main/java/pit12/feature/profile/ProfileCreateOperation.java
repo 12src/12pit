@@ -28,30 +28,34 @@ final class ProfileCreateOperation implements ProfileCreateSession {
     private final ProfileController controller;
     private final UUID profileId;
     private final ConfigSnapshot config;
+    private final long generation;
     private String name = "";
     private boolean closed;
 
-    ProfileCreateOperation(ProfileController controller, UUID profileId, ConfigSnapshot config) {
+    ProfileCreateOperation(ProfileController controller, UUID profileId, ConfigSnapshot config,
+            long generation) {
         this.controller = controller;
         this.profileId = profileId;
         this.config = config;
+        this.generation = generation;
     }
 
     @Override
     public boolean isClosed() {
-        return closed;
+        controller.checkThread();
+        return closed || generation != controller.operationGeneration();
     }
 
     @Override
     public void setName(String name) {
-        if (!closed) {
+        if (!isClosed()) {
             this.name = name == null ? "" : name;
         }
     }
 
     @Override
     public ProfileMutationResult commit() {
-        if (closed) {
+        if (isClosed()) {
             return closedResult();
         }
         ProfileMutationResult result = controller.commit(this);
@@ -63,6 +67,7 @@ final class ProfileCreateOperation implements ProfileCreateSession {
 
     @Override
     public void cancel() {
+        controller.checkThread();
         closed = true;
     }
 

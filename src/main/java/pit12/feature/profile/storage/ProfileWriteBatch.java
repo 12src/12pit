@@ -27,12 +27,14 @@ public final class ProfileWriteBatch {
     private final List<StoredProfile> profiles;
     private final UUID activeProfileId;
     private final boolean stateDirty;
+    private final long stateRevision;
 
-    public ProfileWriteBatch(List<StoredProfile> profiles, UUID activeProfileId,
-            boolean stateDirty) {
+    public ProfileWriteBatch(List<StoredProfile> profiles, UUID activeProfileId, boolean stateDirty,
+            long stateRevision) {
         this.profiles = Collections.unmodifiableList(new ArrayList<StoredProfile>(profiles));
         this.activeProfileId = activeProfileId;
         this.stateDirty = stateDirty;
+        this.stateRevision = stateRevision;
     }
 
     public List<StoredProfile> profiles() {
@@ -47,7 +49,21 @@ public final class ProfileWriteBatch {
         return stateDirty;
     }
 
+    public long stateRevision() {
+        return stateRevision;
+    }
+
     public boolean isEmpty() {
         return profiles.isEmpty() && !stateDirty;
+    }
+
+    ProfileWriteBatch without(UUID profileId) {
+        ArrayList<StoredProfile> retained = new ArrayList<StoredProfile>();
+        for (StoredProfile profile : profiles) {
+            if (!profile.id().equals(profileId)) {
+                retained.add(profile);
+            }
+        }
+        return new ProfileWriteBatch(retained, activeProfileId, stateDirty, stateRevision);
     }
 }

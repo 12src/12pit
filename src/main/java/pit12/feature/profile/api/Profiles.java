@@ -20,7 +20,9 @@ package pit12.feature.profile.api;
 
 import java.util.List;
 import java.util.UUID;
+import pit12.shared.result.OperationResult;
 
+/** Live operations and subscriptions require the client thread. Snapshots can be passed to workers. */
 public interface Profiles {
     ProfilesSnapshot snapshot();
 
@@ -36,9 +38,9 @@ public interface Profiles {
 
     ProfileMutationResult delete(UUID profileId);
 
-    List<String> exportProfiles(List<UUID> ids);
+    OperationResult<List<String>> exportProfiles(List<UUID> ids);
 
-    void validateImportProfiles(List<String> profiles);
+    ProfileMutationResult validateImportProfiles(List<String> profiles);
 
-    void importProfiles(List<String> profiles);
+    ProfileMutationResult importProfiles(List<String> profiles);
 }

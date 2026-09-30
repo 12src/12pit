@@ -18,6 +18,7 @@
  */
 package pit12.runtime.pit;
 
+/** Queries require the client thread. Returned snapshots can be passed to workers. */
 public interface PitContext {
     /** Returns UNKNOWN while no world is bound or the world's center chunk has not been scanned. */
     PitSnapshot current();

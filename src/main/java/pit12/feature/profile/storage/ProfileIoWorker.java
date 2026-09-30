@@ -31,14 +31,14 @@ public final class ProfileIoWorker implements AutoCloseable {
 
         void profileWritten(UUID profileId, long revision);
 
-        void stateWritten(UUID activeProfileId);
+        void stateWritten(UUID activeProfileId, long revision);
 
         void failed(String operation, Path path, IOException failure);
     }
 
     private static final long SAVE_DEBOUNCE_MILLIS = 300L;
     private final Object lock = new Object();
-    private final JsonProfileStore store;
+    private final ProfileStore store;
     private final Listener listener;
     private final Path directory;
     private final Thread thread;
@@ -48,7 +48,7 @@ public final class ProfileIoWorker implements AutoCloseable {
     private long writeDeadline;
     private boolean closeRequested;
 
-    public ProfileIoWorker(JsonProfileStore store, Path directory, Listener listener) {
+    public ProfileIoWorker(ProfileStore store, Path directory, Listener listener) {
         this.store = store;
         this.listener = listener;
         this.directory = directory;
@@ -61,14 +61,11 @@ public final class ProfileIoWorker implements AutoCloseable {
     }
 
     public void requestWrite(ProfileWriteBatch batch, boolean immediate) {
-        if (batch == null || batch.isEmpty()) {
-            return;
-        }
         synchronized (lock) {
             if (closeRequested) {
                 return;
             }
-            pendingWrite = batch;
+            pendingWrite = batch == null || batch.isEmpty() ? null : batch;
             writeDeadline = immediate ? 0L : System.currentTimeMillis() + SAVE_DEBOUNCE_MILLIS;
             lock.notifyAll();
         }
@@ -80,14 +77,20 @@ public final class ProfileIoWorker implements AutoCloseable {
                 return;
             }
             pendingDeletes.add(profileId);
+            if (pendingWrite != null) {
+                pendingWrite = pendingWrite.without(profileId);
+                if (pendingWrite.isEmpty()) {
+                    pendingWrite = null;
+                }
+            }
             lock.notifyAll();
         }
     }
 
     public void closeAfter(ProfileWriteBatch finalWrite) {
         synchronized (lock) {
-            if (finalWrite != null && !finalWrite.isEmpty()) {
-                pendingWrite = finalWrite;
+            if (finalWrite != null) {
+                pendingWrite = finalWrite.isEmpty() ? null : finalWrite;
                 writeDeadline = 0L;
             }
             closeRequested = true;
@@ -197,7 +200,7 @@ public final class ProfileIoWorker implements AutoCloseable {
         if (batch.isStateDirty() && batch.activeProfileId() != null) {
             try {
                 store.writeState(batch.activeProfileId());
-                listener.stateWritten(batch.activeProfileId());
+                listener.stateWritten(batch.activeProfileId(), batch.stateRevision());
             } catch (IOException failure) {
                 listener.failed("write state", directory.resolve("profiles.json"), failure);
             }

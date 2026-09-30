@@ -28,167 +28,150 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.network.NetHandlerPlayClient;
 import net.minecraft.client.network.NetworkPlayerInfo;
 import net.minecraft.network.play.server.S38PacketPlayerListItem;
 import net.minecraft.network.play.server.S38PacketPlayerListItem.Action;
 import net.minecraft.network.play.server.S38PacketPlayerListItem.AddPlayerData;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
-import net.minecraftforge.fml.common.network.FMLNetworkEvent.ClientDisconnectionFromServerEvent;
+import pit12.runtime.session.ClientSession;
+import pit12.shared.event.Listeners;
 import pit12.shared.lifecycle.ClientLifecycle;
 
+/** All queries, subscriptions and packet observations run on the client thread. */
 public final class TabPresenceTracker implements ClientLifecycle, TabPresence, TabPacketObserver {
-    private final Minecraft minecraft = Minecraft.getMinecraft();
-    private final Set<UUID> present = new LinkedHashSet<UUID>();
-    private final List<TabPresenceListener> listeners = new ArrayList<TabPresenceListener>();
+    private final ClientSession session;
+    private final Runnable sessionChanged = this::onSessionChanged;
+    private final Set<UUID> present = new LinkedHashSet<>();
+    private final List<TabPresenceListener> listeners = new ArrayList<>();
     private NetHandlerPlayClient boundHandler;
-    private NetHandlerPlayClient disconnectedHandler;
     private boolean started;
+
+    public TabPresenceTracker(ClientSession session) {
+        this.session = session;
+    }
 
     @Override
     public void start() {
-        if (started) {
+        session.checkThread();
+        if (started)
             return;
-        }
-        MinecraftForge.EVENT_BUS.register(this);
         started = true;
-        bind(minecraft.getNetHandler());
+        session.addListener(sessionChanged);
+        onSessionChanged();
     }
 
     @Override
     public void stop() {
-        if (!started) {
+        session.checkThread();
+        if (!started)
             return;
-        }
         started = false;
-        MinecraftForge.EVENT_BUS.unregister(this);
+        session.removeListener(sessionChanged);
         bind(null);
-        disconnectedHandler = null;
         listeners.clear();
     }
 
     @Override
     public boolean contains(UUID playerId) {
+        session.checkThread();
         return present.contains(playerId);
     }
 
     @Override
     public Map<UUID, String> players() {
-        if (boundHandler == null) {
-            return Collections.emptyMap();
-        }
-        Map<UUID, String> current = new LinkedHashMap<UUID, String>();
-        for (NetworkPlayerInfo info : boundHandler.getPlayerInfoMap()) {
-            GameProfile profile = info.getGameProfile();
-            if (profile.getId() != null && profile.getName() != null) {
-                current.put(profile.getId(), profile.getName());
+        session.checkThread();
+        return Collections.unmodifiableMap(currentPlayers());
+    }
+
+    private Map<UUID, String> currentPlayers() {
+        Map<UUID, String> current = new LinkedHashMap<>();
+        if (boundHandler != null) {
+            for (NetworkPlayerInfo info : boundHandler.getPlayerInfoMap()) {
+                GameProfile profile = info.getGameProfile();
+                if (profile.getId() != null && profile.getName() != null) {
+                    current.put(profile.getId(), profile.getName());
+                }
             }
         }
-        return Collections.unmodifiableMap(current);
+        return current;
     }
 
     @Override
     public void addListener(TabPresenceListener listener) {
-        if (!listeners.contains(Objects.requireNonNull(listener, "listener"))) {
+        session.checkThread();
+        if (!listeners.contains(Objects.requireNonNull(listener, "listener")))
             listeners.add(listener);
-        }
     }
 
     @Override
     public void removeListener(TabPresenceListener listener) {
+        session.checkThread();
         listeners.remove(listener);
-    }
-
-    @SubscribeEvent
-    public void onClientTick(ClientTickEvent event) {
-        if (event.phase == Phase.START) {
-            NetHandlerPlayClient handler = minecraft.getNetHandler();
-            if (handler == null || handler != disconnectedHandler) {
-                disconnectedHandler = null;
-                bind(handler);
-            }
-        }
-    }
-
-    @SubscribeEvent
-    public void onDisconnect(ClientDisconnectionFromServerEvent event) {
-        // The old handler can remain accessible for a tick after disconnect.
-        disconnectedHandler = boundHandler;
-        bind(null);
     }
 
     @Override
     public void onTabPacket(S38PacketPlayerListItem packet) {
+        session.checkThread();
+        if (!started || boundHandler == null || boundHandler != session.connection())
+            return;
         Action action = packet.getAction();
         if (action == Action.UPDATE_DISPLAY_NAME) {
-            for (TabPresenceListener listener : new ArrayList<TabPresenceListener>(listeners)) {
-                listener.onTabDisplayChanged();
-            }
+            Listeners.notify(listeners, TabPresenceListener::onTabDisplayChanged);
             return;
         }
-        if (action != Action.ADD_PLAYER && action != Action.REMOVE_PLAYER) {
+        if (action != Action.ADD_PLAYER && action != Action.REMOVE_PLAYER)
             return;
-        }
+        List<Runnable> notifications = new ArrayList<>();
         for (AddPlayerData entry : packet.getEntries()) {
-            GameProfile profile = entry.getProfile();
-            UUID id = profile.getId();
-            if (id == null) {
+            UUID id = entry.getProfile().getId();
+            if (id == null)
                 continue;
-            }
             if (action == Action.REMOVE_PLAYER) {
-                if (present.remove(id)) {
-                    for (TabPresenceListener listener : new ArrayList<TabPresenceListener>(
-                            listeners)) {
-                        listener.onPlayerLeft(id);
-                    }
-                }
+                if (present.remove(id))
+                    notifications.add(() -> Listeners.notify(listeners,
+                            listener -> listener.onPlayerLeft(id)));
             } else {
                 NetworkPlayerInfo info = boundHandler.getPlayerInfo(id);
                 if (info != null) {
                     String name = info.getGameProfile().getName();
                     boolean joined = present.add(id);
-                    for (TabPresenceListener listener : new ArrayList<TabPresenceListener>(
-                            listeners)) {
-                        listener.onPlayerSeen(id, name, joined);
-                    }
+                    notifications.add(() -> Listeners.notify(listeners,
+                            listener -> listener.onPlayerSeen(id, name, joined)));
                 }
             }
         }
+        notifications.forEach(Runnable::run);
+    }
+
+    private void onSessionChanged() {
+        bind(session.connection());
     }
 
     private void bind(NetHandlerPlayClient handler) {
-        if (boundHandler == handler) {
+        if (boundHandler == handler)
             return;
-        }
-        if (boundHandler instanceof TabPacketBinding) {
+        if (boundHandler instanceof TabPacketBinding)
             ((TabPacketBinding) boundHandler).bindTabObserver(null);
-        }
-        boundHandler = null;
-        for (UUID id : new LinkedHashSet<UUID>(present)) {
-            present.remove(id);
-            for (TabPresenceListener listener : new ArrayList<TabPresenceListener>(listeners)) {
-                listener.onPlayerLeft(id);
-            }
-        }
-        if (handler == null) {
-            return;
-        }
+        Set<UUID> previous = new LinkedHashSet<>(present);
+        present.clear();
         boundHandler = handler;
         if (handler instanceof TabPacketBinding) {
-            ((TabPacketBinding) handler).bindTabObserver(this);
+            ((TabPacketBinding) handler).bindTabObserver(packet -> {
+                session.refresh();
+                if (started && boundHandler == handler && session.connection() == handler)
+                    onTabPacket(packet);
+            });
         }
-        for (NetworkPlayerInfo info : handler.getPlayerInfoMap()) {
-            GameProfile profile = info.getGameProfile();
-            if (profile.getId() != null) {
-                boolean joined = present.add(profile.getId());
-                for (TabPresenceListener listener : new ArrayList<TabPresenceListener>(listeners)) {
-                    listener.onPlayerSeen(profile.getId(), profile.getName(), joined);
-                }
+        if (handler != null) {
+            for (NetworkPlayerInfo info : handler.getPlayerInfoMap()) {
+                if (info.getGameProfile().getId() != null)
+                    present.add(info.getGameProfile().getId());
             }
         }
+        Map<UUID, String> current = currentPlayers();
+        for (UUID id : previous)
+            Listeners.notify(listeners, listener -> listener.onPlayerLeft(id));
+        current.forEach((id, name) -> Listeners.notify(listeners,
+                listener -> listener.onPlayerSeen(id, name, true)));
     }
 }

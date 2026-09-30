@@ -7,6 +7,7 @@
   "compatibilityLevel": "JAVA_8",
   "mixins": [],
   "client": [
+    "lifecycle.MinecraftShutdownMixin",
     "accessor.FMLModContainerAccessor",
     "network.FMLHandshakeClientStateMixin",
     "player.NetHandlerPlayClientEquipmentMixin",

@@ -19,13 +19,19 @@
 package pit12.feature.relation.api;
 
 import java.util.List;
+import pit12.shared.result.OperationResult;
 
 public interface Relations extends RelationLookup {
     String readinessProblem();
 
-    List<String> changeMany(Relation relation, String action, List<RelationEntry> entries);
+    OperationResult<List<OperationResult<Void>>> changeMany(Relation relation, String action,
+            List<RelationEntry> entries);
 
-    void replaceAll(List<RelationEntry> entries);
+    OperationResult<Void> replaceAll(List<RelationEntry> entries);
+
+    IdentityLookupState resolutionOf(String name);
+
+    List<String> lookupProblems();
 
     void addChangeListener(Runnable listener);
 

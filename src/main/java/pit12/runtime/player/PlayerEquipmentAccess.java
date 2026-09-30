@@ -20,6 +20,7 @@ package pit12.runtime.player;
 
 import java.util.UUID;
 
+/** Queries and subscriptions require the client thread. Returned snapshots can be passed to workers. */
 public interface PlayerEquipmentAccess {
     /** Returns null when the player's entity is not currently loaded or has not been observed. */
     PlayerEquipmentSnapshot loadedEquipment(UUID playerId);

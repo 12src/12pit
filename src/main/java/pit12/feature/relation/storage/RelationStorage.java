@@ -16,19 +16,14 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.runtime.player;
+package pit12.feature.relation.storage;
 
-import java.util.Map;
-import java.util.UUID;
+import java.io.IOException;
+import java.util.List;
+import pit12.feature.relation.api.RelationEntry;
 
-/** Queries and subscriptions require the client thread. */
-public interface TabPresence {
-    boolean contains(UUID playerId);
+public interface RelationStorage {
+    List<RelationEntry> load() throws IOException;
 
-    /** Returns current Tab UUIDs with known profile names; unnamed entries can still be present. */
-    Map<UUID, String> players();
-
-    void addListener(TabPresenceListener listener);
-
-    void removeListener(TabPresenceListener listener);
+    void write(List<RelationEntry> entries) throws IOException;
 }

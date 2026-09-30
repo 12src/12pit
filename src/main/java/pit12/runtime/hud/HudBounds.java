@@ -16,19 +16,24 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.runtime.player;
+package pit12.runtime.hud;
 
-import java.util.Map;
-import java.util.UUID;
+public final class HudBounds {
+    public final int x;
+    public final int y;
+    public final int width;
+    public final int height;
+    public final float scale;
 
-/** Queries and subscriptions require the client thread. */
-public interface TabPresence {
-    boolean contains(UUID playerId);
+    HudBounds(int x, int y, int width, int height, float scale) {
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+        this.scale = scale;
+    }
 
-    /** Returns current Tab UUIDs with known profile names; unnamed entries can still be present. */
-    Map<UUID, String> players();
-
-    void addListener(TabPresenceListener listener);
-
-    void removeListener(TabPresenceListener listener);
+    public HudBounds at(int x, int y) {
+        return new HudBounds(x, y, width, height, scale);
+    }
 }
