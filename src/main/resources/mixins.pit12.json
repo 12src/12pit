@@ -13,6 +13,7 @@
     "player.NetHandlerPlayClientEquipmentMixin",
     "player.NetHandlerPlayClientTabMixin",
     "player.WorldClientEquipmentMixin",
+    "feature.gamma.EntityRendererMixin",
     "feature.sprint.EntityPlayerSPMixin",
     "feature.tooltip.HeldItemTooltipMixin"
   ]

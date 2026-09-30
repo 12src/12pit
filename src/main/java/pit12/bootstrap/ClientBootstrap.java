@@ -24,6 +24,9 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.minecraft.client.Minecraft;
+import pit12.feature.gamma.GammaBinding;
+import pit12.feature.gamma.GammaConfig;
+import pit12.feature.gamma.GammaFeature;
 import pit12.feature.hudeditor.HudEditorFeature;
 import pit12.feature.playerlist.PlayerListConfig;
 import pit12.feature.playerlist.PlayerListFeature;
@@ -68,11 +71,13 @@ public final class ClientBootstrap {
         WebUiConfig webUiConfig = new WebUiConfig();
         PlayerListConfig playerListConfig = new PlayerListConfig();
         TooltipConfig tooltipConfig = new TooltipConfig();
+        GammaConfig gammaConfig = new GammaConfig();
         AutoSprintConfig autoSprintConfig = new AutoSprintConfig();
         AutoQuickMathConfig autoQuickMathConfig = new AutoQuickMathConfig();
         configs.register(webUiConfig);
         configs.register(playerListConfig);
         configs.register(tooltipConfig);
+        configs.register(gammaConfig);
         configs.register(autoSprintConfig);
         configs.register(autoQuickMathConfig);
         configs.freeze();
@@ -97,6 +102,8 @@ public final class ClientBootstrap {
         components.add(pitContext);
         components.add(playerList);
         components.add(new TooltipFeature(configs, tooltipConfig));
+        components.add(
+                new GammaFeature(configs, gammaConfig, (GammaBinding) minecraft.entityRenderer));
         components.add(new AutoSprintFeature(autoSprintConfig));
         components.add(new AutoQuickMathFeature(autoQuickMathConfig));
         components.add(hudEditor);
