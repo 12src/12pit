@@ -48,6 +48,11 @@ public abstract class FeatureConfig {
 
     protected FeatureConfig(String id, String displayName, ConfigCategory category,
             String description, boolean toggleable) {
+        this(id, displayName, category, description, toggleable, true);
+    }
+
+    protected FeatureConfig(String id, String displayName, ConfigCategory category,
+            String description, boolean toggleable, boolean defaultEnabled) {
         this.id = ConfigNames.requireStableId(id, "feature id");
         this.displayName = ConfigNames.requireText(displayName, "feature display name");
         this.category = Objects.requireNonNull(category, "category");
@@ -55,7 +60,7 @@ public abstract class FeatureConfig {
         enabled =
                 toggleable
                         ? new BooleanSetting("enabled", "Enabled",
-                                "Enables " + this.displayName + ".", true)
+                                "Enables " + this.displayName + ".", defaultEnabled)
                         : null;
         if (enabled != null) {
             register(enabled, null);

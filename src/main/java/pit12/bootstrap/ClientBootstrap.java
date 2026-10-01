@@ -28,6 +28,10 @@ import pit12.feature.gamma.GammaBinding;
 import pit12.feature.gamma.GammaConfig;
 import pit12.feature.gamma.GammaFeature;
 import pit12.feature.hudeditor.HudEditorFeature;
+import pit12.feature.itemesp.ItemEspConfig;
+import pit12.feature.itemesp.ItemEspFeature;
+import pit12.feature.playeresp.PlayerEspConfig;
+import pit12.feature.playeresp.PlayerEspFeature;
 import pit12.feature.playerlist.PlayerListConfig;
 import pit12.feature.playerlist.PlayerListFeature;
 import pit12.feature.profile.ProfilesFeature;
@@ -69,12 +73,16 @@ public final class ClientBootstrap {
         CommandRegistry commands = new CommandRegistry(client);
         WebUiConfig webUiConfig = new WebUiConfig();
         PlayerListConfig playerListConfig = new PlayerListConfig();
+        PlayerEspConfig playerEspConfig = new PlayerEspConfig();
+        ItemEspConfig itemEspConfig = new ItemEspConfig();
         TooltipConfig tooltipConfig = new TooltipConfig();
         GammaConfig gammaConfig = new GammaConfig();
         AutoSprintConfig autoSprintConfig = new AutoSprintConfig();
         AutoQuickMathConfig autoQuickMathConfig = new AutoQuickMathConfig();
         configs.register(webUiConfig);
         configs.register(playerListConfig);
+        configs.register(playerEspConfig);
+        configs.register(itemEspConfig);
         configs.register(tooltipConfig);
         configs.register(gammaConfig);
         configs.register(autoSprintConfig);
@@ -98,6 +106,9 @@ public final class ClientBootstrap {
         components.add(pitContext);
         components.add(new PlayerListFeature(configs, playerListConfig, playerEquipment, pitContext,
                 hudRegistry, relations, presence));
+        components
+                .add(new PlayerEspFeature(configs, playerEspConfig, session, presence, relations));
+        components.add(new ItemEspFeature(configs, itemEspConfig, session));
         components.add(new TooltipFeature(configs, tooltipConfig));
         components.add(
                 new GammaFeature(configs, gammaConfig, (GammaBinding) minecraft.entityRenderer));

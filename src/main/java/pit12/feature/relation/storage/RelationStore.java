@@ -22,7 +22,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import java.io.IOException;
@@ -78,10 +77,8 @@ public final class RelationStore implements RelationStorage {
                 }
                 JsonObject entry = element.getAsJsonObject();
                 JsonElement uuid = entry.get("uuid");
-                if (uuid == null) {
-                    throw new IllegalArgumentException("Relation uuid is missing");
-                }
-                UUID id = uuid.isJsonNull() ? null : UUID.fromString(string(entry, "uuid"));
+                UUID id = uuid == null || uuid.isJsonNull() ? null
+                        : UUID.fromString(string(entry, "uuid"));
                 Relation relation = Relation.valueOf(string(entry, "relation"));
                 String name = string(entry, "name");
                 if (id == null ? !pendingNames.add(name.toLowerCase(Locale.ROOT)) : !ids.add(id)) {
@@ -99,9 +96,7 @@ public final class RelationStore implements RelationStorage {
         JsonArray values = new JsonArray();
         for (RelationEntry entry : entries) {
             JsonObject value = new JsonObject();
-            if (entry.playerId() == null) {
-                value.add("uuid", JsonNull.INSTANCE);
-            } else {
+            if (entry.playerId() != null) {
                 value.addProperty("uuid", entry.playerId().toString());
             }
             value.addProperty("name", entry.name());

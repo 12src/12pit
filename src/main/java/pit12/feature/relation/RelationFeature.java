@@ -78,7 +78,7 @@ public final class RelationFeature implements ClientLifecycle, Relations, TabPre
     private PendingLookups lookups;
     private boolean started;
     private boolean ready;
-    private boolean failed;
+    private String loadProblem;
     private boolean dirty;
     private long generation;
     private List<String> shownLookupProblems = Collections.emptyList();
@@ -110,7 +110,7 @@ public final class RelationFeature implements ClientLifecycle, Relations, TabPre
         if (worker != null && worker.isAlive())
             throw new IllegalStateException("Previous relation worker is still stopping");
         ready = false;
-        failed = false;
+        loadProblem = null;
         dirty = false;
         shownLookupProblems = Collections.emptyList();
         book.replace(Collections.emptyList());
@@ -185,7 +185,7 @@ public final class RelationFeature implements ClientLifecycle, Relations, TabPre
     public RelationReadiness readiness() {
         client.check();
         return !started ? RelationReadiness.UNAVAILABLE
-                : failed ? RelationReadiness.FAILED
+                : loadProblem != null ? RelationReadiness.FAILED
                         : ready ? RelationReadiness.READY : RelationReadiness.LOADING;
     }
 
@@ -195,7 +195,7 @@ public final class RelationFeature implements ClientLifecycle, Relations, TabPre
             case UNAVAILABLE:
                 return "Relations are unavailable";
             case FAILED:
-                return "Relations could not be loaded; the file is read-only";
+                return "Relations could not be loaded: " + loadProblem;
             case LOADING:
                 return "Relations are still loading";
             default:
@@ -479,6 +479,7 @@ public final class RelationFeature implements ClientLifecycle, Relations, TabPre
         public void loaded(List<RelationEntry> entries) {
             dispatch(expected, () -> {
                 book.replace(entries);
+                loadProblem = null;
                 ready = true;
                 boolean changed = observeOnline();
                 finish(Collections.emptyList(), changed, true, null);
@@ -490,7 +491,10 @@ public final class RelationFeature implements ClientLifecycle, Relations, TabPre
         public void loadFailed(Exception failure) {
             LOGGER.log(Level.WARNING, "Failed to load relations from " + path, failure);
             dispatch(expected, () -> {
-                failed = true;
+                String message = failure.getMessage();
+                loadProblem =
+                        message == null || message.isEmpty() ? failure.getClass().getSimpleName()
+                                : message;
                 notifyChanged();
             });
         }
