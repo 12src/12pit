@@ -124,8 +124,10 @@ export function parseColor(text: string): Rgba | null {
   const hueText = parts[0].replace(/deg$/i, '')
   if (
     !/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$/.test(hueText) ||
-    !parts[1].endsWith('%') || !parts[2].endsWith('%')
-  ) return null
+    !parts[1].endsWith('%') ||
+    !parts[2].endsWith('%')
+  )
+    return null
   const h = Number(hueText)
   const s = component(parts[1], 1)
   const l = component(parts[2], 1)

@@ -31,6 +31,7 @@ import org.lwjgl.input.Keyboard;
 import pit12.feature.hudeditor.api.HudEditor;
 import pit12.feature.profile.api.Profiles;
 import pit12.feature.relation.api.Relations;
+import pit12.feature.swap.api.SwapBindings;
 import pit12.runtime.config.ConfigCatalog;
 import pit12.shared.lifecycle.ClientLifecycle;
 
@@ -42,9 +43,9 @@ public final class WebUiFeature implements ClientLifecycle {
     private boolean started;
 
     public WebUiFeature(ConfigCatalog catalog, Profiles profiles, Relations relations,
-            HudEditor hudEditor, WebUiConfig config) {
+            HudEditor hudEditor, SwapBindings swapBindings, WebUiConfig config) {
         this.config = config;
-        server = new WebUiServer(minecraft, catalog, profiles, relations, hudEditor);
+        server = new WebUiServer(minecraft, catalog, profiles, relations, hudEditor, swapBindings);
     }
 
     @Override

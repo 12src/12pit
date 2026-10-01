@@ -31,16 +31,24 @@ const format = ref<'Hex' | 'RGBA' | 'HSLA'>('Hex')
 const invalid = ref(false)
 let pointer: number | null = null
 const rgba = computed(() => toRgba(draft.value))
-const preview = computed(() => `rgba(${rgba.value.r}, ${rgba.value.g}, ${rgba.value.b}, ${rgba.value.a})`)
-const opaque = computed(() => `rgb(${rgba.value.r}, ${rgba.value.g}, ${rgba.value.b})`)
+const preview = computed(
+  () =>
+    `rgba(${rgba.value.r}, ${rgba.value.g}, ${rgba.value.b}, ${rgba.value.a})`,
+)
+const opaque = computed(
+  () => `rgb(${rgba.value.r}, ${rgba.value.g}, ${rgba.value.b})`,
+)
 const formatted = computed(() => {
   const color = rgba.value
   if (format.value === 'Hex') return toHex(color)
   const alpha = Number(color.a.toFixed(3))
-  if (format.value === 'RGBA') return `rgba(${color.r}, ${color.g}, ${color.b}, ${alpha})`
+  if (format.value === 'RGBA')
+    return `rgba(${color.r}, ${color.g}, ${color.b}, ${alpha})`
   const lightness = draft.value.v * (1 - draft.value.s / 2)
-  const saturation = lightness === 0 || lightness === 1
-    ? 0 : (draft.value.v - lightness) / Math.min(lightness, 1 - lightness)
+  const saturation =
+    lightness === 0 || lightness === 1
+      ? 0
+      : (draft.value.v - lightness) / Math.min(lightness, 1 - lightness)
   return `hsla(${Number(draft.value.h.toFixed(2))}, ${Number((saturation * 100).toFixed(2))}%, ${Number((lightness * 100).toFixed(2))}%, ${alpha})`
 })
 const text = ref(formatted.value)
@@ -50,17 +58,23 @@ function syncText() {
   invalid.value = false
 }
 
-watch(() => props.value, (value) => {
-  if (value === toArgb(rgba.value)) return
-  draft.value = toHsva(fromArgb(value))
-  if (document.activeElement !== textInput.value) syncText()
-})
+watch(
+  () => props.value,
+  (value) => {
+    if (value === toArgb(rgba.value)) return
+    draft.value = toHsva(fromArgb(value))
+    if (document.activeElement !== textInput.value) syncText()
+  },
+)
 watch(format, syncText)
-watch(() => props.busy, (busy) => {
-  if (!busy) return
-  cancelPointer()
-  if (menu.value) menu.value.open = false
-})
+watch(
+  () => props.busy,
+  (busy) => {
+    if (!busy) return
+    cancelPointer()
+    if (menu.value) menu.value.open = false
+  },
+)
 
 function publish() {
   if (props.busy) return
@@ -90,7 +104,8 @@ function resetText() {
 function setChannel(channel: 'h' | 's' | 'v' | 'a', event: Event) {
   if (props.busy) return
   const value = Number((event.target as HTMLInputElement).value)
-  draft.value[channel] = channel === 'h' ? value % 360 : value / (channel === 'a' ? 255 : 100)
+  draft.value[channel] =
+    channel === 'h' ? value % 360 : value / (channel === 'a' ? 255 : 100)
   syncText()
 }
 
@@ -98,13 +113,18 @@ function movePointer(event: PointerEvent) {
   if (pointer !== event.pointerId || props.busy || !area.value) return
   const bounds = area.value.getBoundingClientRect()
   if (!bounds.width || !bounds.height) return
-  draft.value.s = Math.max(0, Math.min(1, (event.clientX - bounds.left) / bounds.width))
-  draft.value.v = 1 - Math.max(0, Math.min(1, (event.clientY - bounds.top) / bounds.height))
+  draft.value.s = Math.max(
+    0,
+    Math.min(1, (event.clientX - bounds.left) / bounds.width),
+  )
+  draft.value.v =
+    1 - Math.max(0, Math.min(1, (event.clientY - bounds.top) / bounds.height))
   syncText()
 }
 
 function startPointer(event: PointerEvent) {
-  if (props.busy || event.button !== 0 || pointer !== null || !area.value) return
+  if (props.busy || event.button !== 0 || pointer !== null || !area.value)
+    return
   pointer = event.pointerId
   area.value.setPointerCapture(pointer)
   area.value.querySelector('input')?.focus({ preventScroll: true })
@@ -140,7 +160,11 @@ function closeOutside(event: PointerEvent) {
 }
 
 function closeOnBlur(event: FocusEvent) {
-  if (pointer === null && !menu.value?.contains(event.relatedTarget as Node | null)) closeMenu()
+  if (
+    pointer === null &&
+    !menu.value?.contains(event.relatedTarget as Node | null)
+  )
+    closeMenu()
 }
 
 function escapeMenu(event: KeyboardEvent) {
@@ -164,7 +188,11 @@ onUnmounted(() => document.removeEventListener('pointerdown', closeOutside))
     @keydown="escapeMenu"
     @toggle="menu?.open ? syncText() : cancelPointer()"
   >
-    <summary :aria-label="label" :aria-disabled="busy" :tabindex="busy ? -1 : 0">
+    <summary
+      :aria-label="label"
+      :aria-disabled="busy"
+      :tabindex="busy ? -1 : 0"
+    >
       <span class="color-preview" :style="{ '--picked-color': preview }" />
       <span class="color-value">{{ toHex(rgba) }}</span>
       <ChevronDown :size="15" />
@@ -245,13 +273,15 @@ onUnmounted(() => document.removeEventListener('pointerdown', closeOutside))
       </label>
       <div class="color-formats" role="group" aria-label="Color format">
         <button
-          v-for="name in (['Hex', 'RGBA', 'HSLA'] as const)"
+          v-for="name in ['Hex', 'RGBA', 'HSLA'] as const"
           :key="name"
           type="button"
           :aria-pressed="format === name"
           :disabled="busy"
           @click="format = name"
-        >{{ name }}</button>
+        >
+          {{ name }}
+        </button>
       </div>
       <input
         ref="textInput"
@@ -268,7 +298,9 @@ onUnmounted(() => document.removeEventListener('pointerdown', closeOutside))
         @keydown.enter.prevent="textInput?.blur()"
         @keydown.esc.prevent.stop="resetText"
       />
-      <span v-if="invalid" class="color-error" role="alert">Enter a valid Hex, RGBA or HSLA color.</span>
+      <span v-if="invalid" class="color-error" role="alert"
+        >Enter a valid Hex, RGBA or HSLA color.</span
+      >
     </div>
   </details>
 </template>
@@ -285,7 +317,13 @@ onUnmounted(() => document.removeEventListener('pointerdown', closeOutside))
   overflow: hidden;
   border: 1px solid #ffffff33;
   border-radius: 4px;
-  background: conic-gradient(#40464b 25%, #7a8186 0 50%, #40464b 0 75%, #7a8186 0) 0 0 / 8px 8px;
+  background: conic-gradient(
+      #40464b 25%,
+      #7a8186 0 50%,
+      #40464b 0 75%,
+      #7a8186 0
+    )
+    0 0 / 8px 8px;
 }
 .color-preview::after {
   content: '';
@@ -317,7 +355,9 @@ onUnmounted(() => document.removeEventListener('pointerdown', closeOutside))
   height: 146px;
   border: 1px solid var(--control-border);
   border-radius: 4px;
-  background: linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, transparent), var(--picked-hue);
+  background:
+    linear-gradient(to top, #000, transparent),
+    linear-gradient(to right, #fff, transparent), var(--picked-hue);
   cursor: crosshair;
   touch-action: none;
 }
@@ -360,10 +400,21 @@ onUnmounted(() => document.removeEventListener('pointerdown', closeOutside))
   cursor: pointer;
 }
 .color-hue {
-  --color-track: linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
+  --color-track: linear-gradient(
+    to right,
+    #f00,
+    #ff0,
+    #0f0,
+    #0ff,
+    #00f,
+    #f0f,
+    #f00
+  );
 }
 .color-alpha {
-  --color-track: linear-gradient(to right, transparent, var(--opaque-color)), conic-gradient(#40464b 25%, #7a8186 0 50%, #40464b 0 75%, #7a8186 0);
+  --color-track:
+    linear-gradient(to right, transparent, var(--opaque-color)),
+    conic-gradient(#40464b 25%, #7a8186 0 50%, #40464b 0 75%, #7a8186 0);
   --color-track-size: auto, 8px 8px;
 }
 .color-slider::-webkit-slider-runnable-track {

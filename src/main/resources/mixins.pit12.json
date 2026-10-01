@@ -15,6 +15,10 @@
     "player.WorldClientEquipmentMixin",
     "feature.gamma.EntityRendererMixin",
     "feature.sprint.EntityPlayerSPMixin",
-    "feature.tooltip.HeldItemTooltipMixin"
+    "feature.tooltip.HeldItemTooltipMixin",
+    "feature.swap.MinecraftMixin",
+    "feature.swap.MouseHelperMixin",
+    "feature.swap.GuiContainerMixin",
+    "feature.swap.GuiIngameMixin"
   ]
 }

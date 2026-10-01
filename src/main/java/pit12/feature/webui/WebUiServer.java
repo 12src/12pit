@@ -63,6 +63,7 @@ import pit12.feature.profile.api.ProfilesSnapshot;
 import pit12.feature.relation.api.Relation;
 import pit12.feature.relation.api.RelationEntry;
 import pit12.feature.relation.api.Relations;
+import pit12.feature.swap.api.SwapBindings;
 import pit12.runtime.config.ChoiceSetting;
 import pit12.runtime.config.ConfigCatalog;
 import pit12.runtime.config.ConfigChangeListener;
@@ -85,23 +86,26 @@ final class WebUiServer {
     private final Profiles profiles;
     private final Relations relations;
     private final HudEditor hudEditor;
+    private final SwapBindings swapBindings;
     private final SettingsTransfer transfer;
     private final Gson gson = new Gson();
     private final Set<BlockingQueue<Boolean>> streams = new HashSet<BlockingQueue<Boolean>>();
     private final ConfigChangeListener configListener = ignored -> notifyStreams();
     private final Runnable profileListener = this::notifyStreams;
     private final Runnable relationListener = this::notifyStreams;
+    private final Runnable swapListener = this::notifyStreams;
     private HttpServer server;
     private ExecutorService executor;
 
     WebUiServer(Minecraft minecraft, ConfigCatalog catalog, Profiles profiles, Relations relations,
-            HudEditor hudEditor) {
+            HudEditor hudEditor, SwapBindings swapBindings) {
         this.minecraft = minecraft;
         this.catalog = catalog;
         this.profiles = profiles;
         this.relations = relations;
         this.hudEditor = hudEditor;
-        transfer = new SettingsTransfer(profiles, relations);
+        this.swapBindings = swapBindings;
+        transfer = new SettingsTransfer(profiles, relations, swapBindings);
     }
 
     void start() throws IOException {
@@ -127,12 +131,14 @@ final class WebUiServer {
         catalog.addListener(configListener);
         profiles.addListener(profileListener);
         relations.addChangeListener(relationListener);
+        swapBindings.addChangeListener(swapListener);
     }
 
     void stop() {
         catalog.removeListener(configListener);
         profiles.removeListener(profileListener);
         relations.removeChangeListener(relationListener);
+        swapBindings.removeChangeListener(swapListener);
         if (server != null) {
             server.stop(0);
             server = null;
@@ -500,6 +506,8 @@ final class WebUiServer {
         return object("version", BUILD_LABEL, "features", features, "relations",
                 object("problem", relations.readinessProblem(), "lookupProblems",
                         relations.lookupProblems(), "entries", relationEntries),
+                "swapBindings",
+                object("problem", swapBindings.readinessProblem(), "count", swapBindings.count()),
                 "profiles",
                 object("loadState", snapshot.loadState().name(), "activeId",
                         snapshot.activeProfileId() == null ? null

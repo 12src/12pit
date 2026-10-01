@@ -33,7 +33,7 @@ public final class WebUiConfig extends FeatureConfig {
         color = colorSetting("gui_color", "Accent color", "Controls the interface accent.",
                 0x7BADE2);
         booleanSetting("show_details", "Show details",
-                "Shows descriptions for features and settings.", true);
+                "Shows descriptions for features and settings.", false);
         keybind = keybindSetting("keybind", "Open Web UI key", "Opens the web interface.",
                 Keyboard.KEY_RSHIFT);
     }

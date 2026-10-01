@@ -40,6 +40,9 @@ import pit12.feature.quickmath.AutoQuickMathFeature;
 import pit12.feature.relation.RelationFeature;
 import pit12.feature.sprint.AutoSprintConfig;
 import pit12.feature.sprint.AutoSprintFeature;
+import pit12.feature.swap.SwapConfig;
+import pit12.feature.swap.SwapFeature;
+import pit12.feature.swap.SwapHooksBinding;
 import pit12.feature.tooltip.TooltipConfig;
 import pit12.feature.tooltip.TooltipFeature;
 import pit12.feature.webui.WebUiConfig;
@@ -79,6 +82,7 @@ public final class ClientBootstrap {
         GammaConfig gammaConfig = new GammaConfig();
         AutoSprintConfig autoSprintConfig = new AutoSprintConfig();
         AutoQuickMathConfig autoQuickMathConfig = new AutoQuickMathConfig();
+        SwapConfig swapConfig = new SwapConfig();
         configs.register(webUiConfig);
         configs.register(playerListConfig);
         configs.register(playerEspConfig);
@@ -87,6 +91,7 @@ public final class ClientBootstrap {
         configs.register(gammaConfig);
         configs.register(autoSprintConfig);
         configs.register(autoQuickMathConfig);
+        configs.register(swapConfig);
         configs.freeze();
         ProfilesFeature profiles = new ProfilesFeature(configs,
                 new File(minecraft.mcDataDir, "12pit/config").toPath());
@@ -97,6 +102,9 @@ public final class ClientBootstrap {
         PitContextTracker pitContext = new PitContextTracker(session);
         HudRegistry hudRegistry = new HudRegistry(client);
         HudEditorFeature hudEditor = new HudEditorFeature(hudRegistry, commands);
+        SwapFeature swap = new SwapFeature(minecraft, client, configs, swapConfig, session,
+                commands, new File(minecraft.mcDataDir, "12pit/swap-bindings.json").toPath(),
+                (SwapHooksBinding) minecraft);
         components.add(session);
         components.add(commands);
         components.add(profiles);
@@ -115,7 +123,9 @@ public final class ClientBootstrap {
         components.add(new AutoSprintFeature(autoSprintConfig));
         components.add(new AutoQuickMathFeature(autoQuickMathConfig));
         components.add(hudEditor);
-        components.add(new WebUiFeature(configs, profiles, relations, hudEditor, webUiConfig));
+        components.add(swap);
+        components.add(new WebUiFeature(configs, profiles, relations, hudEditor, swap.bindings(),
+                webUiConfig));
     }
 
     public void start() {

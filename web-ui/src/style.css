@@ -847,6 +847,9 @@ button.feature-link:hover strong {
   align-items: center;
   min-height: 42px;
 }
+.transfer-leaf {
+  padding-left: 31px;
+}
 .transfer-expand {
   display: grid;
   place-items: center;
