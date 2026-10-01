@@ -20,6 +20,7 @@ along with 12pit. If not, see <https://www.gnu.org/licenses/>.
 import { computed, ref, watch } from 'vue'
 import { Check, ChevronDown } from '@lucide/vue'
 import type { Option } from './api'
+import ColorPicker from './ColorPicker.vue'
 import FormattedText from './FormattedText.vue'
 
 const props = defineProps<{
@@ -250,6 +251,13 @@ function keyLabel(value: string) {
           <span />
         </button>
       </div>
+      <ColorPicker
+        v-else-if="option.kind === 'COLOR_PICKER'"
+        :value="Number(option.value)"
+        :label="option.name"
+        :busy="busy"
+        @change="emit('change', $event)"
+      />
       <button
         v-else-if="option.kind === 'KEYBIND'"
         type="button"

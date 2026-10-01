@@ -85,6 +85,14 @@ public abstract class FeatureConfig {
         return setting;
     }
 
+    /** defaultValue is an ARGB integer (0xAARRGGBB). */
+    protected final ColorSetting colorPickerSetting(String id, String displayName,
+            String description, int defaultValue) {
+        ColorSetting setting = new ColorSetting(id, displayName, description, defaultValue);
+        register(setting, ConfigOption.Kind.COLOR_PICKER);
+        return setting;
+    }
+
     protected final IntegerSetting integerSliderSetting(String id, String displayName,
             String description, int defaultValue, int minimum, int maximum, int step) {
         IntegerSetting setting = new IntegerSetting(id, displayName, description, defaultValue,
