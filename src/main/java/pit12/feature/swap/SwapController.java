@@ -20,6 +20,7 @@ package pit12.feature.swap;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Deque;
 import java.util.HashSet;
@@ -107,14 +108,14 @@ final class SwapController {
         for (SwapBinding binding : bindings.forKey(key)) {
             if (!binding.identity.matches(minecraft.thePlayer.inventoryContainer
                     .getSlot(binding.guiTarget()).getStack())) {
-                enqueue(new Request(key, null), Integer.valueOf(key));
+                enqueue(new Request(key, null), key);
                 return;
             }
         }
     }
 
     void enqueueUnequip() {
-        enqueue(new Request(-1, null), Integer.valueOf(-1));
+        enqueue(new Request(-1, null), -1);
     }
 
     void enqueueArmor(SwapBinding binding) {
@@ -122,16 +123,16 @@ final class SwapController {
     }
 
     boolean enqueueAutomatic(List<Target> targets, BooleanSupplier ready) {
-        if (!idle() || !acceptsInput() || targets.isEmpty() || !ready.getAsBoolean())
+        if (!idle() || !acceptsInput() || !ready.getAsBoolean())
             return false;
-        enqueue(new Request(0, null, new ArrayList<>(targets), 0, ready), targets);
+        enqueue(new Request(0, null, targets, 0, ready), targets);
         return true;
     }
 
     boolean enqueueAutomaticUnequip(int slot, BooleanSupplier ready) {
-        if (!idle() || !acceptsInput() || slot < 5 || slot > 8 || !ready.getAsBoolean())
+        if (!idle() || !acceptsInput() || !ready.getAsBoolean())
             return false;
-        enqueue(new Request(0, null, null, slot, ready), Integer.valueOf(slot));
+        enqueue(new Request(0, null, null, slot, ready), slot);
         return true;
     }
 
@@ -241,7 +242,7 @@ final class SwapController {
                 candidates.add(target.binding);
         } else
             candidates = current.direct == null ? bindings.forKey(current.key)
-                    : java.util.Collections.singletonList(current.direct);
+                    : Collections.singletonList(current.direct);
         LinkedHashMap<ItemIdentity, Integer> locations = new LinkedHashMap<>();
         for (int slot = 36; slot <= 44; slot++)
             addLocation(locations, slot);
@@ -324,8 +325,7 @@ final class SwapController {
         }
         minecraft.playerController.windowClick(player.inventoryContainer.windowId, slot, button,
                 mode, player);
-        if (current != null)
-            current.started = true;
+        current.started = true;
         clicked = true;
         lastClickTick = tick;
     }

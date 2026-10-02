@@ -18,7 +18,6 @@
  */
 package pit12.feature.quickmath;
 
-/** Evaluates the integer expression syntax accepted by the Quick Math feature. */
 public final class QuickMathExpression {
     private QuickMathExpression() {}
 
@@ -80,21 +79,20 @@ public final class QuickMathExpression {
                 return -parseFactor();
             }
             int start = position;
-            long value;
             if (eat('(')) {
-                value = parseExpression();
+                long value = parseExpression();
                 if (!eat(')')) {
                     throw new IllegalArgumentException("Missing ')'");
                 }
-            } else if (character >= '0' && character <= '9') {
+                return value;
+            }
+            if (character >= '0' && character <= '9') {
                 while (character >= '0' && character <= '9') {
                     nextCharacter();
                 }
-                value = Long.parseLong(text.substring(start, position));
-            } else {
-                throw new IllegalArgumentException("Unexpected: " + (char) character);
+                return Long.parseLong(text.substring(start, position));
             }
-            return value;
+            throw new IllegalArgumentException("Unexpected: " + (char) character);
         }
 
         private void nextCharacter() {
@@ -102,9 +100,6 @@ public final class QuickMathExpression {
         }
 
         private boolean eat(int characterToEat) {
-            while (character == ' ') {
-                nextCharacter();
-            }
             if (character == characterToEat) {
                 nextCharacter();
                 return true;

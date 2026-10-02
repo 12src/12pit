@@ -152,7 +152,6 @@ public final class PlayerEspFeature
                 candidates.put(player.getEntityId(), player);
             }
         }
-        targetsDirty = true;
         rebuildTargets();
     }
 

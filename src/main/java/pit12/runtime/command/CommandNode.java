@@ -23,7 +23,6 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.Predicate;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
@@ -97,10 +96,7 @@ public final class CommandNode {
         private Builder(String name, String description) {
             checkName(name);
             this.name = name;
-            this.description = Objects.requireNonNull(description, "description");
-            if (description.trim().isEmpty()) {
-                throw new IllegalArgumentException("Command description must not be empty");
-            }
+            this.description = description;
         }
 
         public Builder aliases(String... names) {
@@ -115,10 +111,6 @@ public final class CommandNode {
         }
 
         public Builder arguments(String usage, int minimum, int maximum) {
-            Objects.requireNonNull(usage, "usage");
-            if (usage.trim().isEmpty() || minimum < 0 || maximum < minimum) {
-                throw new IllegalArgumentException("Invalid command arguments");
-            }
             arguments = usage;
             minimumArguments = minimum;
             maximumArguments = maximum;
@@ -127,26 +119,25 @@ public final class CommandNode {
 
         /** Groups use this handler for unmatched arguments and show help when called without arguments. */
         public Builder executes(Handler handler) {
-            this.handler = Objects.requireNonNull(handler, "handler");
+            this.handler = handler;
             return this;
         }
 
         public Builder suggests(Suggestions suggestions) {
-            this.suggestions = Objects.requireNonNull(suggestions, "suggestions");
+            this.suggestions = suggestions;
             return this;
         }
 
         public Builder requires(Predicate<ICommandSender> requirement) {
-            this.requirement = Objects.requireNonNull(requirement, "requirement");
+            this.requirement = requirement;
             return this;
         }
 
         public Builder child(Builder child) {
-            return child(Objects.requireNonNull(child, "child").build());
+            return child(child.build());
         }
 
         public Builder child(CommandNode child) {
-            Objects.requireNonNull(child, "child");
             List<String> names = new ArrayList<>(child.aliases);
             names.add(child.name);
             for (String childName : names) {
@@ -166,7 +157,7 @@ public final class CommandNode {
         }
 
         private static void checkName(String name) {
-            if (name == null || !name.matches("[a-z0-9_-]+")) {
+            if (!name.matches("[a-z0-9_-]+")) {
                 throw new IllegalArgumentException("Invalid command name: " + name);
             }
         }

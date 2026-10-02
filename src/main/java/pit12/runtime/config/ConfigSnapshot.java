@@ -21,64 +21,21 @@ package pit12.runtime.config;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Objects;
 
 public final class ConfigSnapshot {
     private final Map<String, Map<String, Object>> features;
 
     public ConfigSnapshot(Map<String, ? extends Map<String, ?>> features) {
-        if (features == null) {
-            throw new NullPointerException("features");
-        }
         LinkedHashMap<String, Map<String, Object>> featureCopy =
                 new LinkedHashMap<String, Map<String, Object>>();
         for (Map.Entry<String, ? extends Map<String, ?>> featureEntry : features.entrySet()) {
-            String featureId = ConfigNames.requireStableId(featureEntry.getKey(), "feature id");
-            Map<String, ?> sourceSettings = featureEntry.getValue();
-            if (sourceSettings == null) {
-                throw new NullPointerException("settings for " + featureId);
-            }
-            LinkedHashMap<String, Object> settingCopy = new LinkedHashMap<String, Object>();
-            for (Map.Entry<String, ?> settingEntry : sourceSettings.entrySet()) {
-                String settingId = ConfigNames.requireStableId(settingEntry.getKey(), "setting id");
-                Object value = settingEntry.getValue();
-                if (value == null) {
-                    throw new NullPointerException("value for " + featureId + "." + settingId);
-                }
-                settingCopy.put(settingId, value);
-            }
-            featureCopy.put(featureId, Collections.unmodifiableMap(settingCopy));
+            featureCopy.put(featureEntry.getKey(), Collections
+                    .unmodifiableMap(new LinkedHashMap<String, Object>(featureEntry.getValue())));
         }
         this.features = Collections.unmodifiableMap(featureCopy);
     }
 
-    public Map<String, Map<String, Object>> features() {
-        return features;
-    }
-
     public Map<String, Object> feature(String featureId) {
         return features.get(featureId);
-    }
-
-    public Object value(String featureId, String settingId) {
-        Map<String, Object> settings = features.get(featureId);
-        return settings == null ? null : settings.get(settingId);
-    }
-
-    @Override
-    public boolean equals(Object other) {
-        if (this == other) {
-            return true;
-        }
-        if (!(other instanceof ConfigSnapshot)) {
-            return false;
-        }
-        ConfigSnapshot snapshot = (ConfigSnapshot) other;
-        return features.equals(snapshot.features);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(features);
     }
 }

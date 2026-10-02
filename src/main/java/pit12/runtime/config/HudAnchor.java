@@ -32,9 +32,6 @@ public enum HudAnchor {
     private static final HudAnchor[] BY_ID = new HudAnchor[9];
     static {
         for (HudAnchor anchor : values()) {
-            if (anchor.id < 0 || anchor.id >= BY_ID.length || BY_ID[anchor.id] != null) {
-                throw new IllegalStateException("Invalid HUD anchor id: " + anchor.id);
-            }
             BY_ID[anchor.id] = anchor;
         }
     }
@@ -69,9 +66,6 @@ public enum HudAnchor {
     }
 
     public static HudAnchor fromId(int id) {
-        if (id < 0 || id >= BY_ID.length || BY_ID[id] == null) {
-            throw new IllegalArgumentException("Unknown HUD anchor: " + id);
-        }
         return BY_ID[id];
     }
 

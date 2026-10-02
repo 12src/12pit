@@ -18,38 +18,16 @@
  */
 package pit12.runtime.config;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public final class ConfigChangeSet {
-    public static final class Change {
+    static final class Change {
         private final String featureId;
         private final String settingId;
-        private final Object previousValue;
-        private final Object currentValue;
 
-        Change(String featureId, String settingId, Object previousValue, Object currentValue) {
+        Change(String featureId, String settingId) {
             this.featureId = featureId;
             this.settingId = settingId;
-            this.previousValue = previousValue;
-            this.currentValue = currentValue;
-        }
-
-        public String featureId() {
-            return featureId;
-        }
-
-        public String settingId() {
-            return settingId;
-        }
-
-        public Object previousValue() {
-            return previousValue;
-        }
-
-        public Object currentValue() {
-            return currentValue;
         }
     }
 
@@ -58,15 +36,11 @@ public final class ConfigChangeSet {
 
     ConfigChangeSet(long revision, List<Change> changes) {
         this.revision = revision;
-        this.changes = Collections.unmodifiableList(new ArrayList<Change>(changes));
+        this.changes = changes;
     }
 
     public long revision() {
         return revision;
-    }
-
-    public List<Change> changes() {
-        return changes;
     }
 
     public boolean affects(String featureId, String settingId) {

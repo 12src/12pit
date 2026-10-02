@@ -29,30 +29,18 @@ public final class DoubleSetting extends NumberSetting<Double> {
                 minimum, maximum, step, decimalPlaces(minimum, maximum, step));
     }
 
-    public double minimum() {
-        return minimumValue();
-    }
-
-    public double maximum() {
-        return maximumValue();
-    }
-
-    public double step() {
-        return stepValue();
-    }
-
     @Override
     protected Double valueFromDouble(double value) {
-        return Double.valueOf(BigDecimal.valueOf(value)
-                .setScale(decimalPlaces(), RoundingMode.HALF_UP).doubleValue());
+        return BigDecimal.valueOf(value).setScale(decimalPlaces(), RoundingMode.HALF_UP)
+                .doubleValue();
     }
 
     private static Double normalizedDefaultValue(double defaultValue, double minimum,
             double maximum, double step) {
         double normalized = normalizedDefault(defaultValue, minimum, maximum, step);
-        return Double.valueOf(BigDecimal.valueOf(normalized)
+        return BigDecimal.valueOf(normalized)
                 .setScale(decimalPlaces(minimum, maximum, step), RoundingMode.HALF_UP)
-                .doubleValue());
+                .doubleValue();
     }
 
     private static int decimalPlaces(double minimum, double maximum, double step) {

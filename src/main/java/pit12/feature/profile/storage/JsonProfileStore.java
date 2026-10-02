@@ -98,8 +98,6 @@ public final class JsonProfileStore implements ProfileStore {
                                 : failure.getMessage()));
             }
         }
-        Collections.sort(profiles,
-                Comparator.comparingInt(StoredProfile::order).thenComparing(StoredProfile::id));
         return new LoadedProfiles(profiles, activeProfileId, problems, true);
     }
 
@@ -111,7 +109,7 @@ public final class JsonProfileStore implements ProfileStore {
 
     public void writeState(UUID activeProfileId) throws IOException {
         JsonObject root = new JsonObject();
-        root.addProperty("schemaVersion", Integer.valueOf(ProfileCodec.SCHEMA_VERSION));
+        root.addProperty("schemaVersion", ProfileCodec.SCHEMA_VERSION);
         root.addProperty("activeProfileId", activeProfileId.toString());
         AtomicFile.write(directory.resolve(STATE_FILE), gson.toJson(root));
     }
@@ -139,7 +137,7 @@ public final class JsonProfileStore implements ProfileStore {
         }
         try (BufferedReader reader = Files.newBufferedReader(statePath, StandardCharsets.UTF_8)) {
             JsonElement parsed = new JsonParser().parse(reader);
-            if (parsed == null || !parsed.isJsonObject()) {
+            if (!parsed.isJsonObject()) {
                 throw new IllegalArgumentException("root must be a JSON object");
             }
             JsonObject root = parsed.getAsJsonObject();

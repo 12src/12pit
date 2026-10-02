@@ -84,13 +84,9 @@ public final class UiRenderer {
         }
     }
 
-    public void text(String text, int x, int y, float fontSize, int color) {
-        text(text, x, y, fontSize, color, false);
-    }
-
     public void text(String text, int x, int y, float fontSize, int color, boolean shadow) {
         if (shadow) {
-            drawText(text, x + 1, y + 1, fontSize, shadowColor(color), true);
+            drawText(text, x + 1, y + 1, fontSize, McFormatting.shadowColor(color), true);
         }
         drawText(text, x, y, fontSize, color, false);
     }
@@ -172,13 +168,10 @@ public final class UiRenderer {
     }
 
     private FontResources fontResources(float fontSize) {
-        if (!(fontSize > 0.0F) || Float.isInfinite(fontSize)) {
-            throw new IllegalArgumentException("fontSize must be finite and greater than zero");
-        }
         if (Float.isNaN(pixelScale)) {
             return null;
         }
-        Float key = Float.valueOf(fontSize);
+        Float key = fontSize;
         FontResources cached = fonts.get(key);
         if (cached != null) {
             return cached;
@@ -222,10 +215,6 @@ public final class UiRenderer {
     private static void color(int color) {
         GlStateManager.color((color >>> 16 & 0xFF) / 255.0F, (color >>> 8 & 0xFF) / 255.0F,
                 (color & 0xFF) / 255.0F, (color >>> 24 & 0xFF) / 255.0F);
-    }
-
-    private static int shadowColor(int color) {
-        return McFormatting.shadowColor(color);
     }
 
     private final class FontResources {

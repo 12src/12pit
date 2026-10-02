@@ -21,7 +21,6 @@ package pit12.runtime.player;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.UUID;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.network.NetHandlerPlayClient;
@@ -67,7 +66,6 @@ public final class PlayerEquipmentTracker implements ClientLifecycle, PlayerEqui
     public void stop() {
         session.checkThread();
         if (!started) {
-            clearCache();
             return;
         }
         started = false;
@@ -88,9 +86,8 @@ public final class PlayerEquipmentTracker implements ClientLifecycle, PlayerEqui
     @Override
     public void addListener(PlayerEquipmentListener listener) {
         session.checkThread();
-        PlayerEquipmentListener nonNullListener = Objects.requireNonNull(listener, "listener");
-        if (!listeners.contains(nonNullListener)) {
-            listeners.add(nonNullListener);
+        if (!listeners.contains(listener)) {
+            listeners.add(listener);
         }
     }
 
@@ -220,19 +217,17 @@ public final class PlayerEquipmentTracker implements ClientLifecycle, PlayerEqui
                 }
                 continue;
             }
-            PlayerEquipmentSnapshot snapshot = cache.observe(player, change.getValue().intValue());
-            notifications.add(() -> notifyChanged(snapshot, change.getValue().intValue()));
+            PlayerEquipmentSnapshot snapshot = cache.observe(player, change.getValue());
+            notifications.add(() -> notifyChanged(snapshot, change.getValue()));
         }
         notifications.forEach(Runnable::run);
     }
 
     private void clearCache() {
-        if (cache.isEmpty()) {
-            cache.clear();
-            return;
-        }
+        boolean hadEquipment = !cache.isEmpty();
         cache.clear();
-        Listeners.notify(listeners, PlayerEquipmentListener::onPlayerEquipmentReset);
+        if (hadEquipment)
+            Listeners.notify(listeners, PlayerEquipmentListener::onPlayerEquipmentReset);
     }
 
     private void notifyChanged(PlayerEquipmentSnapshot snapshot, int changedSlots) {

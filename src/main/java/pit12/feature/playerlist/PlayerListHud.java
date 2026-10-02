@@ -188,10 +188,8 @@ final class PlayerListHud implements HudElement {
                 text(SPAWN_TEXT, x, y, MUTED_COLOR);
             } else {
                 String text = entry.distanceText();
-                if (!text.isEmpty()) {
-                    text(text, x + distanceWidth - textWidth(text), y,
-                            entry.distanceKnown() ? distanceColor(entry.distance()) : MUTED_COLOR);
-                }
+                text(text, x + distanceWidth - textWidth(text), y,
+                        entry.distanceKnown() ? distanceColor(entry.distance()) : MUTED_COLOR);
             }
             x += distanceWidth + directionGap;
         }
@@ -236,12 +234,8 @@ final class PlayerListHud implements HudElement {
     }
 
     private void prepareRenderDirection(float partialTicks) {
-        if (!config.showDirection()) {
-            renderDirectionReady = false;
-            return;
-        }
         EntityPlayer localPlayer = minecraft.thePlayer;
-        if (localPlayer == null) {
+        if (!config.showDirection() || localPlayer == null) {
             renderDirectionReady = false;
             return;
         }
@@ -342,12 +336,11 @@ final class PlayerListHud implements HudElement {
                 hasGroup = true;
             }
         }
-        width = Math.max(1, width);
         height = Math.max(lineHeight, height);
     }
 
     private void text(String text, int x, int y, int color) {
-        boolean shadow = hudConfig.textShadow().get().booleanValue();
+        boolean shadow = hudConfig.textShadow().get();
         if (!config.useVanillaFont()) {
             renderer.text(text, x, y, FONT_SIZE, color, shadow);
             return;
@@ -388,13 +381,10 @@ final class PlayerListHud implements HudElement {
     private static PlayerListSnapshot sampleSnapshot() {
         Map<PlayerListGroup, List<PlayerListEntry>> groups =
                 new EnumMap<PlayerListGroup, List<PlayerListEntry>>(PlayerListGroup.class);
-        groups.put(PlayerListGroup.REGULARITY,
-                Collections.singletonList(
-                        new PlayerListEntry(null, 0, "ExamplePlayer", PlayerListGroup.REGULARITY,
-                                "§4REG 3", "§bSW 3", 12.0F, 18.0F, true, true, false)));
-        groups.put(PlayerListGroup.DARK,
-                Collections.singletonList(new PlayerListEntry(null, 0, "DarkPlayer",
-                        PlayerListGroup.DARK, "§dDark 2", "", 28.0F, -42.0F, true, true, false)));
-        return PlayerListSnapshot.create(groups, 2);
+        groups.put(PlayerListGroup.REGULARITY, Collections.singletonList(new PlayerListEntry(null,
+                0, "ExamplePlayer", "§4REG 3", "§bSW 3", 12.0F, 18.0F, true, true, false)));
+        groups.put(PlayerListGroup.DARK, Collections.singletonList(new PlayerListEntry(null, 0,
+                "DarkPlayer", "§dDark 2", "", 28.0F, -42.0F, true, true, false)));
+        return PlayerListSnapshot.create(groups);
     }
 }

@@ -25,7 +25,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.google.gson.JsonPrimitive;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -55,14 +54,6 @@ public final class ProfileCodec {
             return warnings;
         }
     }
-    public static final class UnsupportedSchemaException extends IllegalArgumentException {
-        private static final long serialVersionUID = 1L;
-
-        UnsupportedSchemaException(int version) {
-            super("schemaVersion " + version + " is newer than supported version "
-                    + SCHEMA_VERSION);
-        }
-    }
 
     private final ProfileSchema schema;
     private final Gson gson = new GsonBuilder().setPrettyPrinting().create();
@@ -74,13 +65,14 @@ public final class ProfileCodec {
     public DecodeResult decode(UUID expectedId, Reader reader) {
         // Minecraft's Gson 2.2.4 predates the static parseReader helpers in newer Gson releases.
         JsonElement parsed = new JsonParser().parse(reader);
-        if (parsed == null || !parsed.isJsonObject()) {
+        if (!parsed.isJsonObject()) {
             throw new IllegalArgumentException("root must be a JSON object");
         }
         JsonObject root = parsed.getAsJsonObject();
         int schemaVersion = requiredInt(root, "schemaVersion", 0);
         if (schemaVersion > SCHEMA_VERSION) {
-            throw new UnsupportedSchemaException(schemaVersion);
+            throw new IllegalArgumentException("schemaVersion " + schemaVersion
+                    + " is newer than supported version " + SCHEMA_VERSION);
         }
         if (schemaVersion != SCHEMA_VERSION) {
             throw new IllegalArgumentException("unsupported schemaVersion " + schemaVersion);
@@ -94,9 +86,6 @@ public final class ProfileCodec {
             throw new IllegalArgumentException("name must contain 1 to 48 characters");
         }
         int order = requiredInt(root, "order", 0);
-        if (order < 0) {
-            throw new IllegalArgumentException("order must be non-negative");
-        }
         long updatedAt = optionalLong(root, "updatedAt", 0L);
         ArrayList<String> warnings = new ArrayList<String>();
         LinkedHashMap<String, Map<String, Object>> configValues =
@@ -131,13 +120,12 @@ public final class ProfileCodec {
                     }
                     if (settingEntry.getValue() == Setting.StorageType.BOOLEAN
                             && value.isJsonPrimitive() && value.getAsJsonPrimitive().isBoolean()) {
-                        settingValues.put(settingEntry.getKey(),
-                                Boolean.valueOf(value.getAsBoolean()));
+                        settingValues.put(settingEntry.getKey(), value.getAsBoolean());
                     } else if (settingEntry.getValue() == Setting.StorageType.INTEGER
                             && value.isJsonPrimitive() && value.getAsJsonPrimitive().isNumber()) {
                         try {
                             settingValues.put(settingEntry.getKey(),
-                                    Integer.valueOf(Integer.parseInt(value.getAsString())));
+                                    Integer.parseInt(value.getAsString()));
                         } catch (NumberFormatException failure) {
                             warnings.add("$.features." + featureEntry.getKey() + "."
                                     + settingEntry.getKey()
@@ -150,7 +138,7 @@ public final class ProfileCodec {
                             if (!Double.isFinite(decimalValue)) {
                                 throw new NumberFormatException("non-finite decimal");
                             }
-                            settingValues.put(settingEntry.getKey(), Double.valueOf(decimalValue));
+                            settingValues.put(settingEntry.getKey(), decimalValue);
                         } catch (NumberFormatException failure) {
                             warnings.add("$.features." + featureEntry.getKey() + "."
                                     + settingEntry.getKey()
@@ -166,18 +154,17 @@ public final class ProfileCodec {
             configValues.put(featureEntry.getKey(), settingValues);
         }
         return new DecodeResult(new StoredProfile(id, name, order, updatedAt, 0L,
-                new ConfigSnapshot(configValues), copy(root).getAsJsonObject()), warnings);
+                new ConfigSnapshot(configValues), root), warnings);
     }
 
     public String encode(StoredProfile profile) {
-        JsonObject root = profile.preservedRoot() == null ? new JsonObject()
-                : copy(profile.preservedRoot()).getAsJsonObject();
-        root.addProperty("schemaVersion", Integer.valueOf(SCHEMA_VERSION));
+        JsonObject root = copy(profile.preservedRoot()).getAsJsonObject();
+        root.addProperty("schemaVersion", SCHEMA_VERSION);
         root.addProperty("id", profile.id().toString());
         root.addProperty("name", profile.name());
-        root.addProperty("order", Integer.valueOf(profile.order()));
+        root.addProperty("order", profile.order());
         root.remove("visible");
-        root.addProperty("updatedAt", Long.valueOf(profile.updatedAt()));
+        root.addProperty("updatedAt", profile.updatedAt());
         if (!root.has("binding")) {
             root.add("binding", JsonNull.INSTANCE);
         }
@@ -257,10 +244,7 @@ public final class ProfileCodec {
         }
     }
 
-    public static JsonElement copy(JsonElement source) {
-        if (source == null || source.isJsonNull()) {
-            return JsonNull.INSTANCE;
-        }
+    private static JsonElement copy(JsonElement source) {
         if (source.isJsonObject()) {
             JsonObject result = new JsonObject();
             for (Map.Entry<String, JsonElement> entry : source.getAsJsonObject().entrySet()) {
@@ -275,13 +259,6 @@ public final class ProfileCodec {
             }
             return result;
         }
-        JsonPrimitive primitive = source.getAsJsonPrimitive();
-        if (primitive.isBoolean()) {
-            return new JsonPrimitive(Boolean.valueOf(primitive.getAsBoolean()));
-        }
-        if (primitive.isNumber()) {
-            return new JsonPrimitive(primitive.getAsNumber());
-        }
-        return new JsonPrimitive(primitive.getAsString());
+        return source;
     }
 }

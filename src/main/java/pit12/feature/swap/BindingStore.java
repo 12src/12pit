@@ -24,6 +24,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -75,7 +76,7 @@ final class BindingStore {
 
     static List<SwapBinding> decode(String text) {
         JsonElement parsed = new JsonParser().parse(text);
-        if (parsed == null || !parsed.isJsonObject()) {
+        if (!parsed.isJsonObject()) {
             throw new IllegalArgumentException("Swap bindings must be an object");
         }
         JsonObject root = parsed.getAsJsonObject();
@@ -127,7 +128,7 @@ final class BindingStore {
             throw new IllegalArgumentException("Expected " + key + " integer");
         }
         try {
-            return new java.math.BigDecimal(value.getAsString()).intValueExact();
+            return new BigDecimal(value.getAsString()).intValueExact();
         } catch (ArithmeticException | NumberFormatException failure) {
             throw new IllegalArgumentException("Invalid " + key + " integer", failure);
         }

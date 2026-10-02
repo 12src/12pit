@@ -20,9 +20,25 @@ The [architecture guide](ARCHITECTURE.md) outlines package roles and dependencie
 
 Read through the relevant code and use existing helpers when appropriate. Keep all new behavior within its feature. Extract any shared code when really necessary. Do not add any unrelated code cleanup in the pull request.
 
-Keep short pieces of one-off code inline if it is clearer this way. Extract a helper when this improves readability or reusability. Do not introduce unnecessary complexity when it does not provide much performance gain. Do not add unnecessary boilerplate or copyright headers to match the files around.
-
 Write short sentences in all prose in the project. Use common words and project terminology where it helps to explain things clearly, naturally, and concisely.
+
+## Keep the code plain
+
+Implement the code the feature requires at the moment, in the most concise way possible. For every added functionality ask yourself who needs it. If the answer is nobody or only future feature, do not add it but rather add it in the relevant changeset. No extra wording should be included simply to make it consistent with other existing documents. Do not manually include any copyright notices; let Spotless take care of those for you. Implement interfaces or wrappers only if they have a reason, such as second implementation or testing.
+
+Extract a method, constant or variable if that improves the readability of the code or is used in several places. If it is used in just one place and is clearly written inline then it should remain there. Do not keep two methods that do the same job or a method that simply calls another one.
+
+Check a value where it enters the project, and only there. To decide where to check a value ask yourself who is responsible for giving you a good one. Value from a user, file, network or a Minecraft call that might return nothing is questionable, thus checking should be done where the value is obtained. Code called by a caller in this repository already knows what it passes, thus the callee does not need to check it again. If an internal invariant is violated, it is a bug. Handle such situation in place and do not hide it behind a fallback logic. An exception to this rule is `stop()`. The method may be called after failed initialization, thus it has to work with uncreated resources.
+
+Make a copy of the collection when somebody else might modify it or it is passed to a different thread. If the collection is owned by just one class, then making a copy or returning an unmodifiable view protects nothing. When a method takes control of a collection make sure that it is specified in a comment in few words.
+
+Catch an exception only if you can do something with it, handle it or provide more information to the caller. A `catch` block that either rethrows an exception or ignores it should be removed.
+
+Avoid obvious waste, like parsing or scanning the whole world on every frame. Do not add any caches or specific cases for unmeasured gain. In case of small gain and complicated code use a simpler approach.
+
+Remove any unused code, including methods, fields, parameters, imports and classes. Prior to removing a public member search the entire repository for it, including tests, documentation and Mixin configuration. Do that for your own changeset code; other unrelated cleanup should go in a separate pull request.
+
+Use plain forms provided by the language. Rely on autoboxing instead of performing boxing operations yourself, and prefer imports over fully qualified names.
 
 ## Comments
 
@@ -30,7 +46,7 @@ Do not put comments when the code can explain the important reasons by itself. P
 
 ## Check and submit
 
-Run the checks relevant to your change and do a build once before submitting the pull request. Mention what you ran and any known limitations. Submit focused tests if the behavior has changed.
+Format code with ./gradlew spotlessApply, run the checks relevant to your change, and do a build once before submitting the pull request. Mention what you ran and any known limitations. Submit focused tests if the behavior has changed.
 
 Update the architecture guide and relevant tests if package role or dependencies change. Update the implementation guide if some basic interface, calling convention, or registration step changes.
 

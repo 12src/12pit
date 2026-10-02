@@ -18,7 +18,7 @@
  */
 package pit12.feature.playerlist;
 
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.UUID;
@@ -28,7 +28,6 @@ import net.minecraft.client.network.NetworkPlayerInfo;
 import net.minecraft.entity.player.EntityPlayer;
 import pit12.feature.relation.api.Relation;
 import pit12.feature.relation.api.RelationLookup;
-import pit12.feature.relation.api.RelationReadiness;
 import pit12.runtime.item.PitEnchantment;
 import pit12.runtime.item.PitEnchantments;
 import pit12.runtime.pit.PitContext;
@@ -72,18 +71,14 @@ final class PlayerListBuilder {
         }
         EnumMap<PlayerListGroup, List<PlayerListEntry>> groups =
                 new EnumMap<PlayerListGroup, List<PlayerListEntry>>(PlayerListGroup.class);
-        int playerCount = 0;
         PitSnapshot pitSnapshot = pitContext.current();
-        Collection<NetworkPlayerInfo> tabPlayers = minecraft.getNetHandler().getPlayerInfoMap();
-        for (NetworkPlayerInfo info : tabPlayers) {
+        for (NetworkPlayerInfo info : minecraft.getNetHandler().getPlayerInfoMap()) {
             UUID playerId = info.getGameProfile().getId();
             if (playerId == null) {
                 continue;
             }
             PlayerEquipmentSnapshot playerEquipment = equipment.loadedEquipment(playerId);
-            PlayerListGroup group = groupOf(relations.readiness() == RelationReadiness.READY
-                    ? relations.relationOf(playerId)
-                    : Relation.NONE, playerEquipment);
+            PlayerListGroup group = groupOf(relations.relationOf(playerId), playerEquipment);
             if (group == null || !config.showGroup(group)) {
                 continue;
             }
@@ -106,17 +101,16 @@ final class PlayerListBuilder {
                             ? formatEnchantments(playerEquipment.heldEnchantments())
                             : null;
             PlayerListEntry entry = new PlayerListEntry(playerId,
-                    player == null ? 0 : player.getEntityId(), nameOf(info), group, leggingsText,
+                    player == null ? 0 : player.getEntityId(), nameOf(info), leggingsText,
                     heldItemText, distance, direction, distanceKnown, directionKnown, spawn);
             List<PlayerListEntry> groupEntries = groups.get(group);
             if (groupEntries == null) {
-                groupEntries = new java.util.ArrayList<PlayerListEntry>();
+                groupEntries = new ArrayList<PlayerListEntry>();
                 groups.put(group, groupEntries);
             }
             groupEntries.add(entry);
-            playerCount++;
         }
-        return PlayerListSnapshot.create(groups, playerCount);
+        return PlayerListSnapshot.create(groups);
     }
 
     private String formatEnchantments(PitEnchantments enchantments) {
@@ -171,7 +165,7 @@ final class PlayerListBuilder {
         while (end > 0 && Character.isWhitespace(name.charAt(end - 1))) {
             end--;
         }
-        return end == name.length() ? name : name.substring(0, end);
+        return name.substring(0, end);
     }
 
     private static float distance(EntityPlayer localPlayer, EntityPlayer player) {

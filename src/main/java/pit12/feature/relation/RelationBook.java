@@ -74,7 +74,7 @@ final class RelationBook {
     }
 
     Change change(Relation target, String action, String name, Map<UUID, String> online) {
-        if (name == null || name.isEmpty() || name.length() > 48) {
+        if (!validName(name)) {
             return Change.error("Enter a valid player name");
         }
         List<RelationEntry> matches = named(name);
@@ -157,16 +157,16 @@ final class RelationBook {
     }
 
     boolean observe(UUID id, String name) {
-        RelationEntry known = byId.get(id);
-        if (known != null) {
-            if (validName(name) && !known.name().equals(name)) {
-                byId.put(id, new RelationEntry(id, name, known.relation()));
-                return true;
-            }
-            return false;
-        }
         if (!validName(name)) {
             return false;
+        }
+        RelationEntry known = byId.get(id);
+        if (known != null) {
+            if (known.name().equals(name)) {
+                return false;
+            }
+            byId.put(id, new RelationEntry(id, name, known.relation()));
+            return true;
         }
         RelationEntry waiting = pending.remove(key(name));
         if (waiting == null) {
@@ -176,14 +176,14 @@ final class RelationBook {
         return true;
     }
 
-    Change bind(RelationEntry expected, UUID id, String name) {
-        if (id == null || pending(expected.name()) != expected) {
-            return null;
+    boolean bind(RelationEntry expected, UUID id, String name) {
+        if (pending(expected.name()) != expected) {
+            return false;
         }
         pending.remove(key(expected.name()));
         byId.put(id, new RelationEntry(id, validName(name) ? name : expected.name(),
                 expected.relation()));
-        return new Change(true, "");
+        return true;
     }
 
     List<RelationEntry> entries() {

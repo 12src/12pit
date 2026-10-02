@@ -80,11 +80,31 @@ public final class UiRenderState {
             return;
         }
         try {
-            restoreEnableState(blendEnabled, State.BLEND);
-            restoreEnableState(textureEnabled, State.TEXTURE);
-            restoreEnableState(alphaEnabled, State.ALPHA);
-            restoreEnableState(lightingEnabled, State.LIGHTING);
-            restoreEnableState(cullEnabled, State.CULL);
+            if (blendEnabled) {
+                GlStateManager.enableBlend();
+            } else {
+                GlStateManager.disableBlend();
+            }
+            if (textureEnabled) {
+                GlStateManager.enableTexture2D();
+            } else {
+                GlStateManager.disableTexture2D();
+            }
+            if (alphaEnabled) {
+                GlStateManager.enableAlpha();
+            } else {
+                GlStateManager.disableAlpha();
+            }
+            if (lightingEnabled) {
+                GlStateManager.enableLighting();
+            } else {
+                GlStateManager.disableLighting();
+            }
+            if (cullEnabled) {
+                GlStateManager.enableCull();
+            } else {
+                GlStateManager.disableCull();
+            }
             GlStateManager.tryBlendFuncSeparate(blendSourceRgb, blendDestinationRgb,
                     blendSourceAlpha, blendDestinationAlpha);
             GlStateManager.bindTexture(boundTexture);
@@ -95,41 +115,5 @@ public final class UiRenderState {
             GlStateManager.popMatrix();
             active = false;
         }
-    }
-
-    private static void restoreEnableState(boolean enabled, State state) {
-        if (state == State.BLEND) {
-            if (enabled) {
-                GlStateManager.enableBlend();
-            } else {
-                GlStateManager.disableBlend();
-            }
-        } else if (state == State.TEXTURE) {
-            if (enabled) {
-                GlStateManager.enableTexture2D();
-            } else {
-                GlStateManager.disableTexture2D();
-            }
-        } else if (state == State.ALPHA) {
-            if (enabled) {
-                GlStateManager.enableAlpha();
-            } else {
-                GlStateManager.disableAlpha();
-            }
-        } else if (state == State.LIGHTING) {
-            if (enabled) {
-                GlStateManager.enableLighting();
-            } else {
-                GlStateManager.disableLighting();
-            }
-        } else if (enabled) {
-            GlStateManager.enableCull();
-        } else {
-            GlStateManager.disableCull();
-        }
-    }
-
-    private enum State {
-        BLEND, TEXTURE, ALPHA, LIGHTING, CULL
     }
 }

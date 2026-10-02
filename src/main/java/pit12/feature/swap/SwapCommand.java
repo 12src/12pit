@@ -162,11 +162,8 @@ final class SwapCommand {
 
     private List<String> unbindSuggestions(ICommandSender sender, String[] args) {
         List<String> keys = new ArrayList<>();
-        for (SwapBinding entry : bindings.entries()) {
-            String name = Keyboard.getKeyName(entry.key);
-            if (name != null)
-                keys.add(name);
-        }
+        for (SwapBinding entry : bindings.entries())
+            keys.add(Keyboard.getKeyName(entry.key));
         return keys;
     }
 }

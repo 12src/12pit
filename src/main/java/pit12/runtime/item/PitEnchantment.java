@@ -188,13 +188,11 @@ public enum PitEnchantment {
     Think_of_the_People("think_of_the_people", "§eTOTP"),
     GENTLEMEN_AGREEMENT("gentlemen_agreement", "Deal with the Devil");
 
-    private static final Map<String, PitEnchantment> BY_KEY;
+    private static final Map<String, PitEnchantment> BY_KEY = new HashMap<String, PitEnchantment>();
     static {
-        Map<String, PitEnchantment> byKey = new HashMap<String, PitEnchantment>();
         for (PitEnchantment enchantment : values()) {
-            byKey.put(enchantment.key, enchantment);
+            BY_KEY.put(enchantment.key, enchantment);
         }
-        BY_KEY = byKey;
     }
     private final String key;
     private final String displayName;
@@ -213,6 +211,6 @@ public enum PitEnchantment {
     }
 
     public static PitEnchantment fromKey(String key) {
-        return key == null ? null : BY_KEY.get(key);
+        return BY_KEY.get(key);
     }
 }

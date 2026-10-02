@@ -38,10 +38,10 @@ public final class TooltipConfig extends FeatureConfig {
     }
 
     public boolean showEnchantments() {
-        return showEnchantments.get().booleanValue();
+        return showEnchantments.get();
     }
 
     public int upwardOffset() {
-        return upwardOffset.get().intValue();
+        return upwardOffset.get();
     }
 }

@@ -24,7 +24,6 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
 import java.util.Set;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
@@ -43,8 +42,8 @@ public final class CommandRegistry implements ClientLifecycle {
     private boolean started;
 
     public CommandRegistry(ClientThread client, Registrar registrar) {
-        this.client = Objects.requireNonNull(client, "client");
-        this.registrar = Objects.requireNonNull(registrar, "registrar");
+        this.client = client;
+        this.registrar = registrar;
     }
 
     public void register(CommandNode command) {
@@ -56,7 +55,6 @@ public final class CommandRegistry implements ClientLifecycle {
         if (root != null) {
             throw new IllegalStateException("Commands must be registered before startup");
         }
-        Objects.requireNonNull(command, "command");
         if ("12pit".equals(command.name) || command.aliases.contains("12pit")) {
             throw new IllegalArgumentException("The command name 12pit is reserved");
         }

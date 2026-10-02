@@ -29,9 +29,7 @@ public interface RelationLookup {
 
     List<RelationEntry> entries(Relation relation);
 
-    List<RelationEntry> presentRelations();
-
-    /** Subscription does not replay state; use presentRelations after subscribing. */
+    /** Subscription does not replay state. */
     void addListener(RelationListener listener);
 
     void removeListener(RelationListener listener);

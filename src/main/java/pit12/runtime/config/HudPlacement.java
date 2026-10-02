@@ -18,15 +18,13 @@
  */
 package pit12.runtime.config;
 
-import java.util.Objects;
-
 public final class HudPlacement {
     private final HudAnchor anchor;
     private final int offsetX;
     private final int offsetY;
 
     public HudPlacement(HudAnchor anchor, int offsetX, int offsetY) {
-        this.anchor = Objects.requireNonNull(anchor, "anchor");
+        this.anchor = anchor;
         this.offsetX = offsetX;
         this.offsetY = offsetY;
     }
@@ -41,14 +39,6 @@ public final class HudPlacement {
 
     public int offsetY() {
         return offsetY;
-    }
-
-    public int resolveX(int screenWidth, int elementWidth) {
-        return anchor.screenX(screenWidth) - anchor.elementX(elementWidth) + offsetX;
-    }
-
-    public int resolveY(int screenHeight, int elementHeight) {
-        return anchor.screenY(screenHeight) - anchor.elementY(elementHeight) + offsetY;
     }
 
     public static HudPlacement fromOrigin(int x, int y, int elementWidth, int elementHeight,

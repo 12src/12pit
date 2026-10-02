@@ -20,10 +20,9 @@ package pit12.runtime.config;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedHashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.Set;
 
 public abstract class FeatureConfig {
     private final String id;
@@ -33,12 +32,9 @@ public abstract class FeatureConfig {
     private final BooleanSetting enabled;
     private final List<Setting<?>> settings = new ArrayList<Setting<?>>();
     private final List<ConfigOption<?>> options = new ArrayList<ConfigOption<?>>();
-    private final List<HudConfig> huds = new ArrayList<HudConfig>();
     private final List<Setting<?>> settingsView = Collections.unmodifiableList(settings);
     private final List<ConfigOption<?>> optionsView = Collections.unmodifiableList(options);
-    private final List<HudConfig> hudsView = Collections.unmodifiableList(huds);
-    private final Map<String, Setting<?>> settingsById = new LinkedHashMap<String, Setting<?>>();
-    private final Map<String, HudConfig> hudsById = new LinkedHashMap<String, HudConfig>();
+    private final Set<String> settingIds = new HashSet<String>();
     private ConfigSubcategory currentSubcategory;
 
     protected FeatureConfig(String id, String displayName, ConfigCategory category,
@@ -54,9 +50,9 @@ public abstract class FeatureConfig {
     protected FeatureConfig(String id, String displayName, ConfigCategory category,
             String description, boolean toggleable, boolean defaultEnabled) {
         this.id = ConfigNames.requireStableId(id, "feature id");
-        this.displayName = ConfigNames.requireText(displayName, "feature display name");
-        this.category = Objects.requireNonNull(category, "category");
-        this.description = ConfigNames.requireDescription(description);
+        this.displayName = displayName;
+        this.category = category;
+        this.description = description;
         enabled =
                 toggleable
                         ? new BooleanSetting("enabled", "Enabled",
@@ -128,16 +124,9 @@ public abstract class FeatureConfig {
 
     protected final HudConfig hudConfig(String id, String displayName, HudAnchor defaultAnchor,
             int defaultOffsetX, int defaultOffsetY, boolean defaultTextShadow) {
-        String hudId = ConfigNames.requireStableId(id, "HUD id");
-        String hudDisplayName = ConfigNames.requireText(displayName, "HUD display name");
-        Objects.requireNonNull(defaultAnchor, "defaultAnchor");
-        if (hudsById.containsKey(hudId)) {
-            throw new IllegalArgumentException(
-                    "Duplicate HUD id " + hudId + " in feature " + this.id);
-        }
-        String prefix = hudId + ".";
+        String prefix = id + ".";
         BooleanSetting textShadow = new BooleanSetting(prefix + "text_shadow", "Text shadow",
-                "Draws a shadow behind text in the " + hudDisplayName + ".", defaultTextShadow);
+                "Draws a shadow behind text in the " + displayName + ".", defaultTextShadow);
         IntegerSetting anchor = new IntegerSetting(prefix + "anchor", "Anchor", "",
                 defaultAnchor.id(), HudAnchor.TOP_LEFT.id(), HudAnchor.BOTTOM_RIGHT.id());
         IntegerSetting offsetX = new IntegerSetting(prefix + "offset_x", "Horizontal offset", "",
@@ -150,15 +139,11 @@ public abstract class FeatureConfig {
         register(offsetX, null);
         register(offsetY, null);
         register(scale, null);
-        HudConfig hud =
-                new HudConfig(hudId, hudDisplayName, textShadow, anchor, offsetX, offsetY, scale);
-        huds.add(hud);
-        hudsById.put(hudId, hud);
-        return hud;
+        return new HudConfig(textShadow, anchor, offsetX, offsetY, scale);
     }
 
     private <T> void register(Setting<T> setting, ConfigOption.Kind optionKind) {
-        if (settingsById.containsKey(setting.id())) {
+        if (!settingIds.add(setting.id())) {
             throw new IllegalArgumentException(
                     "Duplicate setting id " + setting.id() + " in feature " + id);
         }
@@ -166,7 +151,6 @@ public abstract class FeatureConfig {
         if (optionKind != null) {
             options.add(new ConfigOption<T>(setting, optionKind, currentSubcategory));
         }
-        settingsById.put(setting.id(), setting);
     }
 
     public final String id() {
@@ -190,14 +174,11 @@ public abstract class FeatureConfig {
     }
 
     public final boolean enabled() {
-        return enabled == null || enabled.get().booleanValue();
+        return enabled == null || enabled.get();
     }
 
     public final void setEnabled(boolean enabled) {
-        if (this.enabled == null) {
-            throw new IllegalStateException("Feature cannot be disabled: " + id);
-        }
-        this.enabled.set(Boolean.valueOf(enabled));
+        this.enabled.set(enabled);
     }
 
     public final List<Setting<?>> settings() {
@@ -206,17 +187,5 @@ public abstract class FeatureConfig {
 
     public final List<ConfigOption<?>> options() {
         return optionsView;
-    }
-
-    public final List<HudConfig> huds() {
-        return hudsView;
-    }
-
-    public final HudConfig hud(String hudId) {
-        return hudsById.get(hudId);
-    }
-
-    public final Setting<?> setting(String settingId) {
-        return settingsById.get(settingId);
     }
 }

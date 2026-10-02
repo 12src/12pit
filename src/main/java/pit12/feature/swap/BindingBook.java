@@ -23,11 +23,11 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import pit12.feature.swap.api.SwapBindings;
@@ -43,13 +43,13 @@ final class BindingBook implements SwapBindings {
     private final LinkedHashMap<ItemIdentity, SwapBinding> bindings = new LinkedHashMap<>();
     private final Set<Integer> keys = new HashSet<>();
     private final List<Runnable> listeners = new ArrayList<>();
-    private final java.util.function.Consumer<String> report;
+    private final Consumer<String> report;
     private ExecutorService worker;
     private boolean loading = true;
     private String problem = "Swap bindings are loading";
     private long revision;
 
-    BindingBook(ClientThread client, Path path, java.util.function.Consumer<String> report) {
+    BindingBook(ClientThread client, Path path, Consumer<String> report) {
         this.client = client;
         store = new BindingStore(path);
         this.report = report;
@@ -254,7 +254,7 @@ final class BindingBook implements SwapBindings {
     @Override
     public void addChangeListener(Runnable listener) {
         client.check();
-        if (!listeners.contains(Objects.requireNonNull(listener, "listener")))
+        if (!listeners.contains(listener))
             listeners.add(listener);
     }
 

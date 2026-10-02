@@ -59,7 +59,7 @@ final class MojangProfileLookup {
             try (InputStreamReader reader =
                     new InputStreamReader(connection.getInputStream(), StandardCharsets.UTF_8)) {
                 JsonElement parsed = new JsonParser().parse(reader);
-                if (parsed == null || !parsed.isJsonObject()) {
+                if (!parsed.isJsonObject()) {
                     throw new IOException("Mojang profile lookup returned invalid JSON");
                 }
                 JsonObject object = parsed.getAsJsonObject();
@@ -81,8 +81,6 @@ final class MojangProfileLookup {
                         + compact.substring(20);
                 return new Profile(UUID.fromString(formatted), resolvedName);
             }
-        } catch (RuntimeException failure) {
-            throw new IOException("Mojang profile lookup could not be read", failure);
         } finally {
             connection.disconnect();
         }

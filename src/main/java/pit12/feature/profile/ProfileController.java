@@ -21,10 +21,12 @@ package pit12.feature.profile;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import pit12.feature.profile.api.ProfileMutationResult;
 import pit12.feature.profile.api.ProfileMutationResult.Status;
@@ -40,9 +42,7 @@ import pit12.runtime.config.ConfigSnapshot;
 
 final class ProfileController {
     interface PersistenceSink {
-        void profileChanged(UUID profileId);
-
-        void activeProfileChanged();
+        void changed();
 
         void profileDeleted(UUID profileId);
     }
@@ -56,7 +56,6 @@ final class ProfileController {
     private ProfilesSnapshot snapshot = ProfilesSnapshot.loading();
     private LoadState loadState = LoadState.LOADING;
     private UUID activeProfileId;
-    private long revision;
     private long persistenceRevision;
     private boolean applyingProfile;
     private boolean stateDirty;
@@ -75,9 +74,6 @@ final class ProfileController {
     }
 
     List<StoredProfile> exportProfiles(List<UUID> ids) {
-        if (loadState == LoadState.LOADING) {
-            throw new IllegalArgumentException("Profiles are still loading");
-        }
         ArrayList<StoredProfile> exported = new ArrayList<StoredProfile>();
         for (UUID id : ids) {
             ProfileRecord record = profilesById.get(id);
@@ -90,11 +86,8 @@ final class ProfileController {
     }
 
     void validateImported(List<StoredProfile> imported) {
-        if (loadState != LoadState.READY) {
-            throw new IllegalArgumentException("Profiles are not ready for import");
-        }
-        java.util.Set<UUID> ids = new java.util.HashSet<UUID>();
-        java.util.Set<String> names = new java.util.HashSet<String>();
+        Set<UUID> ids = new HashSet<UUID>();
+        Set<String> names = new HashSet<String>();
         for (StoredProfile profile : imported) {
             if (!ids.add(profile.id()) || !names.add(profile.name().toLowerCase(Locale.ROOT))) {
                 throw new IllegalArgumentException("Duplicate profile in file");
@@ -111,7 +104,6 @@ final class ProfileController {
     void importProfiles(List<StoredProfile> imported) {
         validateImported(imported);
         ArrayList<UUID> removed = new ArrayList<UUID>();
-        ArrayList<ProfileRecord> added = new ArrayList<ProfileRecord>();
         boolean activeReplaced = false;
         for (StoredProfile profile : imported) {
             ProfileRecord old = findByName(profile.name(), null);
@@ -129,9 +121,8 @@ final class ProfileController {
             markChanged(record);
             profiles.add(position, record);
             profilesById.put(record.id(), record);
-            added.add(record);
         }
-        List<ProfileRecord> reordered = normalizeOrders();
+        normalizeOrders();
         if (activeReplaced) {
             applyingProfile = true;
             try {
@@ -145,17 +136,7 @@ final class ProfileController {
         for (UUID id : removed) {
             persistence.profileDeleted(id);
         }
-        for (ProfileRecord record : added) {
-            persistence.profileChanged(record.id());
-        }
-        for (ProfileRecord record : reordered) {
-            if (!added.contains(record)) {
-                persistence.profileChanged(record.id());
-            }
-        }
-        if (activeReplaced) {
-            persistence.activeProfileChanged();
-        }
+        persistence.changed();
     }
 
     void beginLoading() {
@@ -230,14 +211,7 @@ final class ProfileController {
         loadState = loaded.storageAvailable() && problems.isEmpty() ? LoadState.READY
                 : LoadState.DEGRADED;
         publish();
-        for (ProfileRecord record : profiles) {
-            if (record.dirty()) {
-                persistence.profileChanged(record.id());
-            }
-        }
-        if (stateDirty) {
-            persistence.activeProfileChanged();
-        }
+        persistence.changed();
     }
 
     void onConfigChanged(ConfigChangeSet ignoredChanges) {
@@ -245,13 +219,10 @@ final class ProfileController {
             return;
         }
         ProfileRecord active = profilesById.get(activeProfileId);
-        if (active == null) {
-            return;
-        }
         active.config(catalog.snapshot());
         markChanged(active);
         publish();
-        persistence.profileChanged(active.id());
+        persistence.changed();
     }
 
     ProfileMutationResult switchTo(UUID profileId) {
@@ -278,11 +249,7 @@ final class ProfileController {
         activeProfileId = target.id();
         markStateChanged();
         publish();
-        persistence.profileChanged(previous.id());
-        if (target.dirty()) {
-            persistence.profileChanged(target.id());
-        }
-        persistence.activeProfileChanged();
+        persistence.changed();
         return ProfileMutationResult.success();
     }
 
@@ -304,9 +271,7 @@ final class ProfileController {
             return ready;
         ProfileRecord record = profilesById.get(profileId);
         if (record == null) {
-            return loadState == LoadState.LOADING
-                    ? failure(Status.LOADING, "Profiles are still loading")
-                    : failure(Status.NOT_FOUND, "Profile was not found");
+            return failure(Status.NOT_FOUND, "Profile was not found");
         }
         String validated = validatedName(requestedName);
         if (validated == null) {
@@ -321,7 +286,7 @@ final class ProfileController {
         record.name(validated);
         markChanged(record);
         publish();
-        persistence.profileChanged(record.id());
+        persistence.changed();
         return ProfileMutationResult.success();
     }
 
@@ -331,26 +296,20 @@ final class ProfileController {
             return ready;
         ProfileRecord record = profilesById.get(profileId);
         if (record == null) {
-            return loadState == LoadState.LOADING
-                    ? failure(Status.LOADING, "Profiles are still loading")
-                    : failure(Status.NOT_FOUND, "Profile was not found");
+            return failure(Status.NOT_FOUND, "Profile was not found");
         }
         if (profileId.equals(activeProfileId)) {
             return failure(Status.ACTIVE_PROFILE_PROTECTED, "The active profile cannot be deleted");
         }
         profiles.remove(record);
         profilesById.remove(profileId);
-        List<ProfileRecord> changed = normalizeOrders();
+        normalizeOrders();
         publish();
         persistence.profileDeleted(profileId);
-        for (ProfileRecord changedRecord : changed) {
-            persistence.profileChanged(changedRecord.id());
-        }
         return ProfileMutationResult.success();
     }
 
     ProfileMutationResult commit(ProfileCreateOperation operation) {
-        checkThread();
         ProfileMutationResult ready = requireLoaded();
         if (ready != null)
             return ready;
@@ -374,7 +333,7 @@ final class ProfileController {
         markChanged(created);
         profiles.add(0, created);
         profilesById.put(created.id(), created);
-        List<ProfileRecord> reordered = normalizeOrders();
+        normalizeOrders();
         applyingProfile = true;
         try {
             catalog.apply(config);
@@ -384,15 +343,7 @@ final class ProfileController {
         activeProfileId = created.id();
         markStateChanged();
         publish();
-        persistence.profileChanged(previous.id());
-        persistence.profileChanged(created.id());
-        for (ProfileRecord reorderedRecord : reordered) {
-            if (!reorderedRecord.id().equals(created.id())
-                    && !reorderedRecord.id().equals(previous.id())) {
-                persistence.profileChanged(reorderedRecord.id());
-            }
-        }
-        persistence.activeProfileChanged();
+        persistence.changed();
         return ProfileMutationResult.success();
     }
 
@@ -447,17 +398,14 @@ final class ProfileController {
         publish();
     }
 
-    private List<ProfileRecord> normalizeOrders() {
-        ArrayList<ProfileRecord> changed = new ArrayList<ProfileRecord>();
+    private void normalizeOrders() {
         for (int index = 0; index < profiles.size(); index++) {
             ProfileRecord record = profiles.get(index);
             if (record.order() != index) {
                 record.order(index);
                 markChanged(record);
-                changed.add(record);
             }
         }
-        return changed;
     }
 
     private void markChanged(ProfileRecord record) {
@@ -472,8 +420,7 @@ final class ProfileController {
             summaries.add(record.summary());
             dirty |= record.dirty();
         }
-        snapshot = new ProfilesSnapshot(loadState, ++revision, activeProfileId, summaries, problems,
-                dirty);
+        snapshot = new ProfilesSnapshot(loadState, activeProfileId, summaries, problems, dirty);
         snapshotChanged.run();
     }
 

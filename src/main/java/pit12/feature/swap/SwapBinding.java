@@ -18,7 +18,6 @@
  */
 package pit12.feature.swap;
 
-import java.util.Objects;
 import net.minecraft.item.ItemArmor;
 import net.minecraft.item.ItemStack;
 import org.lwjgl.input.Keyboard;
@@ -35,15 +34,15 @@ final class SwapBinding {
     SwapBinding(int key, ItemIdentity identity, boolean equipment, int target, String name,
             String details) {
         if (key <= 0 || key >= Keyboard.KEYBOARD_SIZE || Keyboard.getKeyName(key) == null
-                || target < 1 || target > (equipment ? 4 : 9) || name == null || name.isEmpty()) {
+                || target < 1 || target > (equipment ? 4 : 9) || name.isEmpty()) {
             throw new IllegalArgumentException("Invalid swap binding");
         }
         this.key = key;
-        this.identity = Objects.requireNonNull(identity, "identity");
+        this.identity = identity;
         this.equipment = equipment;
         this.target = target;
         this.name = name;
-        this.details = Objects.requireNonNull(details, "details");
+        this.details = details;
     }
 
     static SwapBinding create(int key, ItemStack stack, int hotbarTarget) {

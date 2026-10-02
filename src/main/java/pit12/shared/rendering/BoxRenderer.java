@@ -50,6 +50,7 @@ public final class BoxRenderer {
         if (frustum == null) {
             frustum = new Frustum(ClippingHelperImpl.getInstance());
         } else {
+            // getInstance() refreshes the shared clipping planes from the current matrices.
             ClippingHelperImpl.getInstance();
         }
         frustum.setPosition(cameraX, cameraY, cameraZ);

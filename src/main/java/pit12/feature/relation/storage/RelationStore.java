@@ -24,6 +24,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -51,10 +52,9 @@ public final class RelationStore implements RelationStorage {
         if (Files.notExists(path)) {
             return new ArrayList<RelationEntry>();
         }
-        try (java.io.BufferedReader reader =
-                Files.newBufferedReader(path, StandardCharsets.UTF_8)) {
+        try (BufferedReader reader = Files.newBufferedReader(path, StandardCharsets.UTF_8)) {
             JsonElement parsed = new JsonParser().parse(reader);
-            if (parsed == null || !parsed.isJsonObject()) {
+            if (!parsed.isJsonObject()) {
                 throw new IllegalArgumentException("Relation file must be an object");
             }
             JsonObject root = parsed.getAsJsonObject();
@@ -92,7 +92,7 @@ public final class RelationStore implements RelationStorage {
 
     public void write(List<RelationEntry> entries) throws IOException {
         JsonObject root = new JsonObject();
-        root.addProperty("schemaVersion", Integer.valueOf(SCHEMA_VERSION));
+        root.addProperty("schemaVersion", SCHEMA_VERSION);
         JsonArray values = new JsonArray();
         for (RelationEntry entry : entries) {
             JsonObject value = new JsonObject();

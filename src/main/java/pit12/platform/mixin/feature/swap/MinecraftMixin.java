@@ -64,9 +64,8 @@ public abstract class MinecraftMixin implements SwapHooksBinding {
             target = "Lorg/lwjgl/input/Keyboard;getEventKeyState()Z", remap = false))
     private boolean pit12$swapKeyState() {
         boolean pressed = Keyboard.getEventKeyState();
-        return pit12$swapHooks == null
-                || !pit12$swapHooks.key(Keyboard.getEventKey(), pressed, Keyboard.isRepeatEvent())
-                        ? pressed
-                        : false;
+        return (pit12$swapHooks == null
+                || !pit12$swapHooks.key(Keyboard.getEventKey(), pressed, Keyboard.isRepeatEvent()))
+                && pressed;
     }
 }

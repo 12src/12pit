@@ -49,14 +49,15 @@ final class ProfileCreateOperation implements ProfileCreateSession {
     @Override
     public void setName(String name) {
         if (!isClosed()) {
-            this.name = name == null ? "" : name;
+            this.name = name;
         }
     }
 
     @Override
     public ProfileMutationResult commit() {
         if (isClosed()) {
-            return closedResult();
+            return ProfileMutationResult.failure(Status.CLOSED_SESSION,
+                    "This create session is already closed");
         }
         ProfileMutationResult result = controller.commit(this);
         if (result.succeeded()) {
@@ -81,10 +82,5 @@ final class ProfileCreateOperation implements ProfileCreateSession {
 
     ConfigSnapshot config() {
         return config;
-    }
-
-    private static ProfileMutationResult closedResult() {
-        return ProfileMutationResult.failure(Status.CLOSED_SESSION,
-                "This create session is already closed");
     }
 }

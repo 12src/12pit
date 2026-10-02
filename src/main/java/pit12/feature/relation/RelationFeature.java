@@ -28,7 +28,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
@@ -141,8 +140,7 @@ public final class RelationFeature implements ClientLifecycle, Relations, TabPre
         presence.removeListener(this);
         if (installAdapters)
             MinecraftForge.EVENT_BUS.unregister(this);
-        if (lookups != null)
-            lookups.clear();
+        lookups.clear();
         ExecutorService closingLookups = lookupWorker;
         if (closingLookups != null)
             closingLookups.shutdownNow();
@@ -212,20 +210,7 @@ public final class RelationFeature implements ClientLifecycle, Relations, TabPre
     @Override
     public List<RelationEntry> entries(Relation relation) {
         client.check();
-        return ready ? Collections.unmodifiableList(book.entries(relation))
-                : Collections.emptyList();
-    }
-
-    @Override
-    public List<RelationEntry> presentRelations() {
-        client.check();
-        List<RelationEntry> result = new ArrayList<>();
-        if (ready)
-            for (RelationEntry entry : book.entries()) {
-                if (entry.playerId() != null && presence.contains(entry.playerId()))
-                    result.add(entry);
-            }
-        return Collections.unmodifiableList(result);
+        return ready ? book.entries(relation) : Collections.emptyList();
     }
 
     @Override
@@ -242,14 +227,13 @@ public final class RelationFeature implements ClientLifecycle, Relations, TabPre
     @Override
     public List<String> lookupProblems() {
         client.check();
-        return lookups == null ? Collections.emptyList()
-                : Collections.unmodifiableList(lookups.problems());
+        return lookups == null ? Collections.emptyList() : lookups.problems();
     }
 
     @Override
     public void addListener(RelationListener listener) {
         client.check();
-        if (!listeners.contains(Objects.requireNonNull(listener, "listener")))
+        if (!listeners.contains(listener))
             listeners.add(listener);
     }
 
@@ -262,7 +246,7 @@ public final class RelationFeature implements ClientLifecycle, Relations, TabPre
     @Override
     public void addChangeListener(Runnable listener) {
         client.check();
-        if (!changeListeners.contains(Objects.requireNonNull(listener, "listener")))
+        if (!changeListeners.contains(listener))
             changeListeners.add(listener);
     }
 
@@ -292,30 +276,20 @@ public final class RelationFeature implements ClientLifecycle, Relations, TabPre
         if (!ready)
             return;
         List<RelationEntry> previous = book.entries();
-        boolean changed = book.observe(playerId, name);
-        finish(previous, changed, false, joined ? playerId : null);
+        finish(previous, book.observe(playerId, name), false);
     }
 
     @Override
-    public void onPlayerLeft(UUID playerId) {
-        client.check();
-        Relation relation = book.relationOf(playerId);
-        if (ready && relation != Relation.NONE)
-            notifyPresence(playerId, relation, false);
-    }
+    public void onPlayerLeft(UUID playerId) {}
 
     public OperationResult<Void> change(Relation target, String action, String name) {
         client.check();
         String problem = readinessProblem();
         if (problem != null)
             return OperationResult.failure(Status.UNAVAILABLE, problem);
-        if (target == null || target == Relation.NONE
-                || !("add".equals(action) || "remove".equals(action) || "toggle".equals(action))) {
-            return OperationResult.failure(Status.INVALID_VALUE, "Invalid relation change");
-        }
         List<RelationEntry> previous = book.entries();
         RelationBook.Change result = book.change(target, action, name, presence.players());
-        finish(previous, result.changed, false, null);
+        finish(previous, result.changed, false);
         if (result.succeeded && !"remove".equals(action))
             lookups.retry(name);
         lookups.tick();
@@ -330,16 +304,6 @@ public final class RelationFeature implements ClientLifecycle, Relations, TabPre
         String problem = readinessProblem();
         if (problem != null)
             return OperationResult.failure(Status.UNAVAILABLE, problem);
-        if (target == null || target == Relation.NONE
-                || !("add".equals(action) || "remove".equals(action)) || entries == null) {
-            return OperationResult.failure(Status.INVALID_VALUE, "Invalid relation change");
-        }
-        for (RelationEntry entry : entries) {
-            if (entry == null || entry.relation() != target
-                    || "add".equals(action) && entry.playerId() != null) {
-                return OperationResult.failure(Status.INVALID_VALUE, "Invalid relation entry");
-            }
-        }
         Map<UUID, String> online = presence.players();
         List<RelationEntry> previous = book.entries();
         List<OperationResult<Void>> results = new ArrayList<>();
@@ -352,12 +316,12 @@ public final class RelationFeature implements ClientLifecycle, Relations, TabPre
             results.add(result.succeeded ? OperationResult.success(null, result.message)
                     : OperationResult.failure(Status.INVALID_VALUE, result.message));
         }
-        finish(previous, changed, false, null);
+        finish(previous, changed, false);
         if ("add".equals(action))
             for (RelationEntry entry : entries)
                 lookups.retry(entry.name());
         lookups.tick();
-        return OperationResult.success(Collections.unmodifiableList(results));
+        return OperationResult.success(results);
     }
 
     @Override
@@ -366,21 +330,18 @@ public final class RelationFeature implements ClientLifecycle, Relations, TabPre
         String problem = readinessProblem();
         if (problem != null)
             return OperationResult.failure(Status.UNAVAILABLE, problem);
-        if (entries == null)
-            return OperationResult.failure(Status.INVALID_VALUE, "Relations are missing");
         Set<UUID> ids = new HashSet<>();
         Set<String> pending = new HashSet<>();
         for (RelationEntry entry : entries) {
-            if (entry == null || (entry.playerId() == null
-                    ? !pending.add(entry.name().toLowerCase(Locale.ROOT))
-                    : !ids.add(entry.playerId()))) {
+            if (entry.playerId() == null ? !pending.add(entry.name().toLowerCase(Locale.ROOT))
+                    : !ids.add(entry.playerId())) {
                 return OperationResult.failure(Status.INVALID_VALUE, "Duplicate relation identity");
             }
         }
         List<RelationEntry> previous = book.entries();
         book.replace(entries);
         observeOnline();
-        finish(previous, true, false, null);
+        finish(previous, true, false);
         lookups.tick();
         return OperationResult.success(null);
     }
@@ -405,14 +366,11 @@ public final class RelationFeature implements ClientLifecycle, Relations, TabPre
             return;
         List<RelationEntry> previous = book.entries();
         String tabName = presence.players().get(profile.id);
-        RelationBook.Change result =
-                book.bind(waiting, profile.id, tabName == null ? profile.name : tabName);
-        if (result != null)
-            finish(previous, result.changed, false, null);
+        if (book.bind(waiting, profile.id, tabName == null ? profile.name : tabName))
+            finish(previous, true, false);
     }
 
-    private void finish(List<RelationEntry> previous, boolean changed, boolean loaded,
-            UUID joined) {
+    private void finish(List<RelationEntry> previous, boolean changed, boolean loaded) {
         List<RelationEntry> current = book.entries();
         if (changed) {
             dirty = true;
@@ -424,27 +382,15 @@ public final class RelationFeature implements ClientLifecycle, Relations, TabPre
         Map<UUID, Relation> after = relationsById(current);
         Set<UUID> ids = new LinkedHashSet<>(before.keySet());
         ids.addAll(after.keySet());
-        List<Runnable> notifications = new ArrayList<>();
         for (UUID id : ids) {
             Relation oldRelation = before.getOrDefault(id, Relation.NONE);
             Relation newRelation = after.getOrDefault(id, Relation.NONE);
-            if (oldRelation != newRelation) {
-                notifications.add(() -> Listeners.notify(listeners,
-                        listener -> listener.onRelationChanged(id, oldRelation, newRelation)));
-                if (presence.contains(id)) {
-                    if (oldRelation != Relation.NONE)
-                        notifications.add(() -> notifyPresence(id, oldRelation, false));
-                    if (newRelation != Relation.NONE)
-                        notifications.add(() -> notifyPresence(id, newRelation, true));
-                }
-            } else if (id.equals(joined) && newRelation != Relation.NONE) {
-                notifications.add(() -> notifyPresence(id, newRelation, true));
-            }
+            if (oldRelation != newRelation)
+                Listeners.notify(listeners,
+                        listener -> listener.onRelationChanged(id, oldRelation, newRelation));
         }
         if (loaded)
-            notifications
-                    .add(() -> Listeners.notify(listeners, RelationListener::onRelationsLoaded));
-        notifications.forEach(Runnable::run);
+            Listeners.notify(listeners, RelationListener::onRelationsLoaded);
         if (changed || loaded)
             notifyChanged();
     }
@@ -455,10 +401,6 @@ public final class RelationFeature implements ClientLifecycle, Relations, TabPre
             if (entry.playerId() != null)
                 result.put(entry.playerId(), entry.relation());
         return result;
-    }
-
-    private void notifyPresence(UUID id, Relation relation, boolean present) {
-        Listeners.notify(listeners, listener -> listener.onPresenceChanged(id, relation, present));
     }
 
     private void dispatch(long expected, Runnable task) {
@@ -482,7 +424,7 @@ public final class RelationFeature implements ClientLifecycle, Relations, TabPre
                 loadProblem = null;
                 ready = true;
                 boolean changed = observeOnline();
-                finish(Collections.emptyList(), changed, true, null);
+                finish(Collections.emptyList(), changed, true);
                 lookups.tick();
             });
         }

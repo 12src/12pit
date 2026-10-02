@@ -35,6 +35,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import pit12.feature.profile.api.ProfileMutationResult;
@@ -115,11 +116,8 @@ final class SettingsTransfer {
         List<Relation> selectedTypes = types(array(request, "relations"));
         boolean includeSwap = selectedSwap(request);
         requireSelection(selectedProfiles, selectedTypes, includeSwap);
-        if (includeSwap) {
-            if (bundle.swapBindings == null)
-                throw new IllegalArgumentException("File has no swap bindings");
-            requireSuccess(swapBindings.validateImport(bundle.swapBindings));
-        }
+        if (includeSwap && bundle.swapBindings == null)
+            throw new IllegalArgumentException("File has no swap bindings");
         if (!string(request, "fingerprint").equals(fingerprint())) {
             throw new IllegalArgumentException("Settings changed; preview the file again");
         }
@@ -144,9 +142,6 @@ final class SettingsTransfer {
             if (!bundle.groups.containsKey(type)) {
                 throw new IllegalArgumentException("Relation group is not in the file");
             }
-        }
-        if (!chosen.isEmpty()) {
-            requireSuccess(profiles.validateImportProfiles(chosen));
         }
         JsonObject decisions = object(request, "resolutions");
         List<RelationEntry> resolved = resolve(bundle, selectedTypes, mode, decisions);
@@ -387,7 +382,7 @@ final class SettingsTransfer {
         }
         RelationEntry local = matches.get(0);
         return local.relation() != incoming.relation() || !local.name().equals(incoming.name())
-                || !java.util.Objects.equals(local.playerId(), incoming.playerId());
+                || !Objects.equals(local.playerId(), incoming.playerId());
     }
 
     private static String kind(List<RelationEntry> matches, RelationEntry incoming) {
@@ -397,7 +392,7 @@ final class SettingsTransfer {
             }
         }
         for (RelationEntry entry : matches) {
-            if (!java.util.Objects.equals(entry.playerId(), incoming.playerId())) {
+            if (!Objects.equals(entry.playerId(), incoming.playerId())) {
                 return "identity";
             }
         }
@@ -414,11 +409,7 @@ final class SettingsTransfer {
 
     private static JsonObject entry(RelationEntry value) {
         JsonObject result = new JsonObject();
-        if (value.playerId() == null) {
-            result.add("uuid", com.google.gson.JsonNull.INSTANCE);
-        } else {
-            result.addProperty("uuid", value.playerId().toString());
-        }
+        result.addProperty("uuid", value.playerId() == null ? null : value.playerId().toString());
         result.addProperty("name", value.name());
         result.addProperty("relation", value.relation().name());
         return result;

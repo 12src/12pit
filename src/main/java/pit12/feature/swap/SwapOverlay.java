@@ -74,9 +74,8 @@ final class SwapOverlay {
             if (binding.identity.equals(identities.get(target)))
                 continue;
             String name = Keyboard.getKeyName(binding.key);
-            if (name != null)
-                labels.put(entry.getKey(), new Label("\u00a7c\u00a7l" + name, binding.equipment,
-                        minecraft.fontRendererObj.getStringWidth(name)));
+            labels.put(entry.getKey(), new Label("\u00a7c\u00a7l" + name, binding.equipment,
+                    minecraft.fontRendererObj.getStringWidth(name)));
         }
     }
 

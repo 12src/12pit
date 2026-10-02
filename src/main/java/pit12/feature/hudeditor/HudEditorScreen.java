@@ -19,6 +19,7 @@
 package pit12.feature.hudeditor;
 
 import java.io.IOException;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.ScaledResolution;
 import org.lwjgl.input.Keyboard;
@@ -52,7 +53,7 @@ final class HudEditorScreen extends GuiScreen {
     }
 
     @Override
-    protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
+    protected void mouseClicked(int mouseX, int mouseY, int mouseButton) {
         controller.mousePressed(mouseX, mouseY, mouseButton);
     }
 
@@ -77,7 +78,7 @@ final class HudEditorScreen extends GuiScreen {
     }
 
     @Override
-    protected void keyTyped(char typedChar, int keyCode) throws IOException {
+    protected void keyTyped(char typedChar, int keyCode) {
         if (keyCode == Keyboard.KEY_ESCAPE) {
             mc.displayGuiScreen(parent);
         }
@@ -89,7 +90,7 @@ final class HudEditorScreen extends GuiScreen {
     }
 
     @Override
-    public void onResize(net.minecraft.client.Minecraft minecraft, int width, int height) {
+    public void onResize(Minecraft minecraft, int width, int height) {
         super.onResize(minecraft, width, height);
         resizeController();
     }

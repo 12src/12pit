@@ -62,7 +62,7 @@ public final class StatusConfig extends FeatureConfig {
     }
 
     public boolean showNames() {
-        return showNames.get().booleanValue();
+        return showNames.get();
     }
 }
 ```

@@ -21,23 +21,13 @@ package pit12.feature.profile.storage;
 import java.nio.file.Path;
 
 public final class ProfileLoadProblem {
-    private final Path path;
-    private final String message;
+    private final String summary;
 
     public ProfileLoadProblem(Path path, String message) {
-        this.path = path;
-        this.message = message;
-    }
-
-    public Path path() {
-        return path;
-    }
-
-    public String message() {
-        return message;
+        summary = path.getFileName() + ": " + message;
     }
 
     public String summary() {
-        return path == null ? message : path.getFileName() + ": " + message;
+        return summary;
     }
 }

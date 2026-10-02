@@ -47,9 +47,6 @@ public final class HudEditorFeature implements ClientLifecycle, HudEditor {
     @Override
     public void start() {
         registry.checkThread();
-        if (started) {
-            return;
-        }
         started = true;
     }
 

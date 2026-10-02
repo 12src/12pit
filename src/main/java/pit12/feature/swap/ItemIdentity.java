@@ -43,10 +43,10 @@ final class ItemIdentity {
     final String value;
 
     ItemIdentity(String item, int variant, Kind kind, String value) {
-        this.item = Objects.requireNonNull(item, "item");
+        this.item = item;
         this.variant = variant;
-        this.kind = Objects.requireNonNull(kind, "kind");
-        this.value = Objects.requireNonNull(value, "value");
+        this.kind = kind;
+        this.value = value;
         if (item.isEmpty() || kind != Kind.NAME && value.isEmpty() || variant < 0
                 || kind == Kind.NONCE && Long.parseLong(value) < 10) {
             throw new IllegalArgumentException("Invalid item identity");

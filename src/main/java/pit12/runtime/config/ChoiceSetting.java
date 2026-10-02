@@ -18,11 +18,10 @@
  */
 package pit12.runtime.config;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 
 public final class ChoiceSetting extends Setting<Integer> {
     public static final class Choice {
@@ -31,7 +30,7 @@ public final class ChoiceSetting extends Setting<Integer> {
 
         public Choice(int value, String displayName) {
             this.value = value;
-            this.displayName = ConfigNames.requireText(displayName, "choice display name");
+            this.displayName = displayName;
         }
 
         public int value() {
@@ -44,37 +43,22 @@ public final class ChoiceSetting extends Setting<Integer> {
     }
 
     private final List<Choice> choices;
-    private final Map<Integer, Choice> choicesByValue;
+    private final Set<Integer> values = new HashSet<Integer>();
 
     ChoiceSetting(String id, String displayName, String description, int defaultValue,
             Choice... choices) {
-        super(id, displayName, description, Integer.valueOf(defaultValue), StorageType.INTEGER);
-        if (choices == null || choices.length == 0) {
-            throw new IllegalArgumentException("Choice setting requires at least one choice");
-        }
-        ArrayList<Choice> ordered = new ArrayList<Choice>(choices.length);
-        LinkedHashMap<Integer, Choice> indexed = new LinkedHashMap<Integer, Choice>();
+        super(id, displayName, description, defaultValue, StorageType.INTEGER);
         for (Choice choice : choices) {
-            if (choice == null) {
-                throw new NullPointerException("choice");
+            if (!values.add(choice.value())) {
+                throw new IllegalArgumentException("Duplicate choice value " + choice.value());
             }
-            Integer value = Integer.valueOf(choice.value());
-            if (indexed.put(value, choice) != null) {
-                throw new IllegalArgumentException("Duplicate choice value " + value);
-            }
-            ordered.add(choice);
         }
-        this.choices = Collections.unmodifiableList(ordered);
-        choicesByValue = Collections.unmodifiableMap(indexed);
-        requireValue(Integer.valueOf(defaultValue));
+        this.choices = Arrays.asList(choices);
+        requireValue(defaultValue);
     }
 
     public List<Choice> choices() {
         return choices;
-    }
-
-    public Choice selectedChoice() {
-        return choicesByValue.get(get());
     }
 
     @Override
@@ -84,10 +68,10 @@ public final class ChoiceSetting extends Setting<Integer> {
         }
         Number number = (Number) candidate;
         int value = number.intValue();
-        if (number.doubleValue() != value || !choicesByValue.containsKey(Integer.valueOf(value))) {
+        if (number.doubleValue() != value || !values.contains(value)) {
             throw new IllegalArgumentException(
                     "Setting " + id() + " requires one of its configured choices");
         }
-        return Integer.valueOf(value);
+        return value;
     }
 }

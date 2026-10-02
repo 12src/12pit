@@ -47,6 +47,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -91,9 +92,7 @@ final class WebUiServer {
     private final Gson gson = new Gson();
     private final Set<BlockingQueue<Boolean>> streams = new HashSet<BlockingQueue<Boolean>>();
     private final ConfigChangeListener configListener = ignored -> notifyStreams();
-    private final Runnable profileListener = this::notifyStreams;
-    private final Runnable relationListener = this::notifyStreams;
-    private final Runnable swapListener = this::notifyStreams;
+    private final Runnable changeListener = this::notifyStreams;
     private HttpServer server;
     private ExecutorService executor;
 
@@ -109,9 +108,6 @@ final class WebUiServer {
     }
 
     void start() throws IOException {
-        if (server != null) {
-            return;
-        }
         InetAddress loopback = InetAddress.getByName("127.0.0.1");
         HttpServer created;
         try {
@@ -129,16 +125,16 @@ final class WebUiServer {
         created.start();
         server = created;
         catalog.addListener(configListener);
-        profiles.addListener(profileListener);
-        relations.addChangeListener(relationListener);
-        swapBindings.addChangeListener(swapListener);
+        profiles.addListener(changeListener);
+        relations.addChangeListener(changeListener);
+        swapBindings.addChangeListener(changeListener);
     }
 
     void stop() {
         catalog.removeListener(configListener);
-        profiles.removeListener(profileListener);
-        relations.removeChangeListener(relationListener);
-        swapBindings.removeChangeListener(swapListener);
+        profiles.removeListener(changeListener);
+        relations.removeChangeListener(changeListener);
+        swapBindings.removeChangeListener(changeListener);
         if (server != null) {
             server.stop(0);
             server = null;
@@ -150,9 +146,6 @@ final class WebUiServer {
     }
 
     URI address() {
-        if (server == null) {
-            throw new IllegalStateException("Settings server is not running");
-        }
         return URI.create("http://127.0.0.1:" + server.getAddress().getPort() + "/");
     }
 
@@ -204,8 +197,7 @@ final class WebUiServer {
             return;
         }
         String origin = exchange.getRequestHeaders().getFirst("Origin");
-        if (origin != null && !origin
-                .equals(address().toString().substring(0, address().toString().length() - 1))) {
+        if (origin != null && !address().toString().equals(origin + "/")) {
             sendJson(exchange, 403, object("error", "Unexpected origin"));
             return;
         }
@@ -289,8 +281,7 @@ final class WebUiServer {
         }
     }
 
-    private <T> T onClient(java.util.concurrent.Callable<T> action)
-            throws ExecutionException, InterruptedException {
+    private <T> T onClient(Callable<T> action) throws ExecutionException, InterruptedException {
         // ConfigCatalog and Profiles are confined to Minecraft's client thread.
         return minecraft.addScheduledTask(action).get();
     }
@@ -328,9 +319,9 @@ final class WebUiServer {
                 if (code == Keyboard.KEY_NONE && !"NONE".equals(name)) {
                     throw new IllegalArgumentException("Unknown key");
                 }
-                candidate = Integer.valueOf(code);
+                candidate = code;
             } else if (primitive.isBoolean()) {
-                candidate = Boolean.valueOf(primitive.getAsBoolean());
+                candidate = primitive.getAsBoolean();
             } else if (primitive.isNumber()) {
                 candidate = primitive.getAsNumber();
             } else {
@@ -406,20 +397,6 @@ final class WebUiServer {
         if (entries.size() > 100) {
             throw new IllegalArgumentException("Select at most 100 players at a time");
         }
-        for (JsonElement element : entries) {
-            if (!element.isJsonObject()) {
-                throw new IllegalArgumentException("Expected a player entry");
-            }
-            JsonObject entry = element.getAsJsonObject();
-            requiredString(entry, "name");
-            JsonElement idValue = entry.get("uuid");
-            if (idValue != null && !idValue.isJsonNull()) {
-                if ("add".equals(action)) {
-                    throw new IllegalArgumentException("Cannot add a player by UUID");
-                }
-                UUID.fromString(requiredString(entry, "uuid"));
-            }
-        }
         List<Object> results = new ArrayList<Object>(Collections.nCopies(entries.size(), null));
         List<RelationEntry> changes = new ArrayList<RelationEntry>();
         List<Integer> positions = new ArrayList<Integer>();
@@ -433,11 +410,19 @@ final class WebUiServer {
         }
         for (int index = 0; index < entries.size(); index++) {
             JsonElement element = entries.get(index);
+            if (!element.isJsonObject()) {
+                throw new IllegalArgumentException("Expected a player entry");
+            }
             JsonObject entry = element.getAsJsonObject();
             String name = requiredString(entry, "name").trim();
             JsonElement idValue = entry.get("uuid");
-            UUID id = idValue == null || idValue.isJsonNull() ? null
-                    : UUID.fromString(requiredString(entry, "uuid"));
+            UUID id = null;
+            if (idValue != null && !idValue.isJsonNull()) {
+                if ("add".equals(action)) {
+                    throw new IllegalArgumentException("Cannot add a player by UUID");
+                }
+                id = UUID.fromString(requiredString(entry, "uuid"));
+            }
             String identity = id == null ? name.toLowerCase(Locale.ROOT) : id.toString();
             if (name.isEmpty() || name.length() > 48
                     || id == null && "add".equals(action) && !name.matches("[A-Za-z0-9_]{1,48}")) {
@@ -448,7 +433,7 @@ final class WebUiServer {
                 results.set(index, object("name", name, "message", "Already on this list"));
             } else {
                 changes.add(new RelationEntry(id, name, relation));
-                positions.add(Integer.valueOf(index));
+                positions.add(index);
             }
         }
         OperationResult<List<OperationResult<Void>>> batch =
@@ -457,8 +442,8 @@ final class WebUiServer {
             throw new IllegalArgumentException(batch.message());
         List<OperationResult<Void>> messages = batch.value();
         for (int index = 0; index < messages.size(); index++) {
-            results.set(positions.get(index).intValue(), object("name", changes.get(index).name(),
-                    "message", messages.get(index).message()));
+            results.set(positions.get(index), object("name", changes.get(index).name(), "message",
+                    messages.get(index).message()));
         }
         return results;
     }
