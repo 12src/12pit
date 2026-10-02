@@ -18,20 +18,19 @@
  */
 package pit12.feature.swap;
 
+import static pit12.runtime.command.CommandRegistry.reply;
+
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import net.minecraft.client.Minecraft;
-import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
-import net.minecraft.util.BlockPos;
-import net.minecraft.util.ChatComponentText;
 import org.lwjgl.input.Keyboard;
+import pit12.runtime.command.CommandNode;
 import pit12.runtime.item.PitEnchantment;
 
-final class SwapCommand extends CommandBase {
+final class SwapCommand {
     private final Minecraft minecraft;
     private final BindingBook bindings;
     private final SwapConfig config;
@@ -45,110 +44,85 @@ final class SwapCommand extends CommandBase {
         this.automatic = automatic;
     }
 
-    @Override
-    public String getCommandName() {
-        return "swap";
-    }
-
-    @Override
-    public String getCommandUsage(ICommandSender sender) {
-        return "/swap <bind|unbind|list|clear|status|reset|help> or /12pit swap <...>";
-    }
-
-    @Override
-    public int getRequiredPermissionLevel() {
-        return 0;
-    }
-
-    @Override
-    public void processCommand(ICommandSender sender, String[] args) {
-        try {
-            String operation = args.length == 0 ? "help" : args[0].toLowerCase(Locale.ROOT);
-            switch (operation) {
-                case "bind":
-                    if (args.length < 2 || args.length > 3)
-                        throw new IllegalArgumentException("Usage: /swap bind <key> [slot]");
-                    requirePlayer();
-                    int target = args.length == 3 ? Integer.parseInt(args[2]) : 0;
-                    if (args.length == 3 && (target < 1 || target > 9)) {
-                        throw new IllegalArgumentException("Hotbar slot must be from 1 to 9");
-                    }
-                    SwapBinding binding = SwapBinding.create(key(args[1]),
-                            minecraft.thePlayer.getHeldItem(), target);
-                    bindings.bind(binding);
-                    if (config.bindingMessages.get())
-                        reply(sender, "Bound "
-                                + (config.messageDetails.get() ? binding.display(true) + " to "
-                                        : "")
-                                + Keyboard.getKeyName(binding.key) + " (" + binding.targetName()
-                                + ")");
-                    break;
-                case "unbind":
-                    if (args.length > 2)
-                        throw new IllegalArgumentException("Usage: /swap unbind [key]");
-                    ItemIdentity held = null;
-                    if (args.length == 1) {
-                        requirePlayer();
-                        held = ItemIdentity.read(minecraft.thePlayer.getHeldItem());
-                        if (held == null)
-                            throw new IllegalArgumentException("Hold an item to unbind");
-                    }
-                    int removed = bindings.unbind(args.length == 2 ? key(args[1]) : 0, held);
-                    if (removed == 0 || config.bindingMessages.get())
-                        reply(sender, removed == 0 ? "No matching bindings"
-                                : "Removed " + removed + " binding(s)");
-                    break;
-                case "clear":
-                    if (args.length != 1)
-                        throw new IllegalArgumentException("Usage: /swap clear");
+    CommandNode definition() {
+        return CommandNode.command("swap", "Manage swap bindings")
+                .child(operation("bind", "Bind held armor or a hotbar item", this::bind)
+                        .arguments("<key> [slot]", 1, 2).suggests(this::bindSuggestions))
+                .child(operation("unbind", "Remove key or held item bindings", this::unbind)
+                        .arguments("[key]", 0, 1).suggests(this::unbindSuggestions))
+                .child(operation("list", "Show swap bindings", this::list))
+                .child(operation("clear", "Clear swap bindings", (sender, args) -> {
                     bindings.clear();
                     if (config.bindingMessages.get())
                         reply(sender, "Cleared swap bindings");
-                    break;
-                case "list":
-                    if (args.length != 1)
-                        throw new IllegalArgumentException("Usage: /swap list");
-                    if (bindings.readinessProblem() != null)
-                        throw new IllegalArgumentException(bindings.readinessProblem());
-                    reply(sender, "Swap bindings: " + bindings.count());
-                    for (SwapBinding entry : bindings.entries())
-                        reply(sender,
-                                Keyboard.getKeyName(entry.key) + ": "
-                                        + entry.display(config.messageDetails.get()) + " -> "
-                                        + entry.targetName());
-                    break;
-                case "status":
-                    if (args.length != 1)
-                        throw new IllegalArgumentException("Usage: /swap status");
-                    reply(sender,
-                            "Automatic swap: " + (config.autoSwap.get() ? "enabled" : "disabled"));
-                    reply(sender, "Escape Pod: "
-                            + state(PitEnchantment.Escape_Pod, config.escapePod.get()));
-                    reply(sender,
-                            "Phoenix: " + state(PitEnchantment.Phoenix, config.phoenix.get()));
-                    break;
-                case "reset":
-                    if (args.length != 1)
-                        throw new IllegalArgumentException("Usage: /swap reset");
+                })).child(operation("status", "Show automatic swap state", this::status))
+                .child(operation("reset", "Reset automatic swap state", (sender, args) -> {
                     automatic.manualReset();
                     reply(sender, "Reset automatic swap state");
-                    break;
-                case "help":
-                    if (args.length > 1)
-                        throw new IllegalArgumentException("Usage: /swap help");
-                    reply(sender, "/swap bind <key> [slot] - bind held armor or a hotbar item");
-                    reply(sender, "/swap unbind [key] - remove key or held item bindings");
-                    reply(sender, "/swap list | clear | status | reset | help");
-                    reply(sender, "All commands also work under /12pit swap");
-                    break;
-                default:
-                    throw new IllegalArgumentException(getCommandUsage(sender));
+                })).build();
+    }
+
+    private CommandNode.Builder operation(String name, String description,
+            CommandNode.Handler handler) {
+        return CommandNode.command(name, description).executes((sender, args) -> {
+            try {
+                handler.execute(sender, args);
+            } catch (IllegalArgumentException failure) {
+                // Binding operations use IllegalArgumentException for input and readiness failures.
+                reply(sender, failure.getMessage());
             }
-        } catch (IllegalArgumentException failure) {
-            reply(sender,
-                    failure instanceof NumberFormatException ? "Hotbar slot must be from 1 to 9"
-                            : failure.getMessage());
+        });
+    }
+
+    private void bind(ICommandSender sender, String[] args) {
+        requirePlayer();
+        int target = 0;
+        if (args.length == 2) {
+            try {
+                target = Integer.parseInt(args[1]);
+            } catch (NumberFormatException failure) {
+                throw new IllegalArgumentException("Hotbar slot must be from 1 to 9");
+            }
+            if (target < 1 || target > 9) {
+                throw new IllegalArgumentException("Hotbar slot must be from 1 to 9");
+            }
         }
+        SwapBinding binding =
+                SwapBinding.create(key(args[0]), minecraft.thePlayer.getHeldItem(), target);
+        bindings.bind(binding);
+        if (config.bindingMessages.get())
+            reply(sender,
+                    "Bound " + (config.messageDetails.get() ? binding.display(true) + " to " : "")
+                            + Keyboard.getKeyName(binding.key) + " (" + binding.targetName() + ")");
+    }
+
+    private void unbind(ICommandSender sender, String[] args) {
+        ItemIdentity held = null;
+        if (args.length == 0) {
+            requirePlayer();
+            held = ItemIdentity.read(minecraft.thePlayer.getHeldItem());
+            if (held == null)
+                throw new IllegalArgumentException("Hold an item to unbind");
+        }
+        int removed = bindings.unbind(args.length == 1 ? key(args[0]) : 0, held);
+        if (removed == 0 || config.bindingMessages.get())
+            reply(sender,
+                    removed == 0 ? "No matching bindings" : "Removed " + removed + " binding(s)");
+    }
+
+    private void list(ICommandSender sender, String[] args) {
+        if (bindings.readinessProblem() != null)
+            throw new IllegalArgumentException(bindings.readinessProblem());
+        reply(sender, "Swap bindings: " + bindings.count());
+        for (SwapBinding entry : bindings.entries())
+            reply(sender, Keyboard.getKeyName(entry.key) + ": "
+                    + entry.display(config.messageDetails.get()) + " -> " + entry.targetName());
+    }
+
+    private void status(ICommandSender sender, String[] args) {
+        reply(sender, "Automatic swap: " + (config.autoSwap.get() ? "enabled" : "disabled"));
+        reply(sender, "Escape Pod: " + state(PitEnchantment.Escape_Pod, config.escapePod.get()));
+        reply(sender, "Phoenix: " + state(PitEnchantment.Phoenix, config.phoenix.get()));
     }
 
     private void requirePlayer() {
@@ -173,38 +147,26 @@ final class SwapCommand extends CommandBase {
         return code;
     }
 
-    @Override
-    public List<String> addTabCompletionOptions(ICommandSender sender, String[] args,
-            BlockPos pos) {
-        if (args.length == 1)
-            return getListOfStringsMatchingLastWord(args, "bind", "unbind", "list", "clear",
-                    "status", "reset", "help");
-        if (args.length == 2 && "bind".equalsIgnoreCase(args[0])) {
-            List<String> keys = new ArrayList<>();
-            for (int code = 1; code < Keyboard.KEYBOARD_SIZE; code++) {
-                String name = Keyboard.getKeyName(code);
-                if (name != null)
-                    keys.add(name);
-            }
-            return getListOfStringsMatchingLastWord(args, keys);
+    private List<String> bindSuggestions(ICommandSender sender, String[] args) {
+        if (args.length == 2) {
+            return Arrays.asList("1", "2", "3", "4", "5", "6", "7", "8", "9");
         }
-        if (args.length == 2 && "unbind".equalsIgnoreCase(args[0])) {
-            List<String> keys = new ArrayList<>();
-            for (SwapBinding entry : bindings.entries()) {
-                String name = Keyboard.getKeyName(entry.key);
-                if (name != null && !keys.contains(name))
-                    keys.add(name);
-            }
-            return getListOfStringsMatchingLastWord(args, keys);
+        List<String> keys = new ArrayList<>();
+        for (int code = 1; code < Keyboard.KEYBOARD_SIZE; code++) {
+            String name = Keyboard.getKeyName(code);
+            if (name != null)
+                keys.add(name);
         }
-        if (args.length == 3 && "bind".equalsIgnoreCase(args[0])) {
-            return getListOfStringsMatchingLastWord(args,
-                    Arrays.asList("1", "2", "3", "4", "5", "6", "7", "8", "9"));
-        }
-        return Collections.emptyList();
+        return keys;
     }
 
-    static void reply(ICommandSender sender, String message) {
-        sender.addChatMessage(new ChatComponentText("\u00a7b[12pit]\u00a7r " + message));
+    private List<String> unbindSuggestions(ICommandSender sender, String[] args) {
+        List<String> keys = new ArrayList<>();
+        for (SwapBinding entry : bindings.entries()) {
+            String name = Keyboard.getKeyName(entry.key);
+            if (name != null)
+                keys.add(name);
+        }
+        return keys;
     }
 }

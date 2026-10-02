@@ -75,7 +75,8 @@ public final class SwapFeature implements ClientLifecycle, ConfigChangeListener,
                 this::lockInput, this::releaseInput);
         automatic = new AutoSwapController(minecraft, config, controller, pit);
         overlay = new SwapOverlay(minecraft, bindings, config);
-        commands.register(new SwapCommand(minecraft, bindings, config, automatic), true);
+        commands.register(new SwapCommand(minecraft, bindings, config, automatic).definition(),
+                true);
     }
 
     public SwapBindings bindings() {
@@ -292,6 +293,6 @@ public final class SwapFeature implements ClientLifecycle, ConfigChangeListener,
 
     private void report(String message) {
         if (minecraft.thePlayer != null)
-            SwapCommand.reply(minecraft.thePlayer, message);
+            CommandRegistry.reply(minecraft.thePlayer, message);
     }
 }

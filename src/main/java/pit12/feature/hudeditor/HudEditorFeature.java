@@ -25,6 +25,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import pit12.feature.hudeditor.api.HudEditor;
+import pit12.runtime.command.CommandNode;
 import pit12.runtime.command.CommandRegistry;
 import pit12.runtime.hud.HudRegistry;
 import pit12.shared.lifecycle.ClientLifecycle;
@@ -39,7 +40,8 @@ public final class HudEditorFeature implements ClientLifecycle, HudEditor {
     public HudEditorFeature(HudRegistry registry, CommandRegistry commands) {
         this.registry = registry;
         controller = new HudEditorController(registry);
-        commands.register(new HudEditorCommand(this), true);
+        commands.register(CommandNode.command("hudeditor", "Open the HUD editor")
+                .executes((sender, args) -> requestOpen()).build(), true);
     }
 
     @Override

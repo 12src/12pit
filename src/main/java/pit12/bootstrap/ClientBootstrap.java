@@ -47,6 +47,7 @@ import pit12.feature.tooltip.TooltipConfig;
 import pit12.feature.tooltip.TooltipFeature;
 import pit12.feature.webui.WebUiConfig;
 import pit12.feature.webui.WebUiFeature;
+import pit12.platform.command.ForgeCommandAdapter;
 import pit12.runtime.command.CommandRegistry;
 import pit12.runtime.config.ConfigCatalog;
 import pit12.runtime.hud.HudRegistry;
@@ -73,7 +74,7 @@ public final class ClientBootstrap {
         ConfigCatalog configs = new ConfigCatalog(client);
         shutdown = (ClientShutdownBinding) minecraft;
         ClientSession session = new ClientSession(minecraft, client);
-        CommandRegistry commands = new CommandRegistry(client);
+        CommandRegistry commands = new CommandRegistry(client, ForgeCommandAdapter::register);
         WebUiConfig webUiConfig = new WebUiConfig();
         PlayerListConfig playerListConfig = new PlayerListConfig();
         PlayerEspConfig playerEspConfig = new PlayerEspConfig();

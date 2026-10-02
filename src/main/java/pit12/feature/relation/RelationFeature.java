@@ -87,8 +87,8 @@ public final class RelationFeature implements ClientLifecycle, Relations, TabPre
             CommandRegistry commands) {
         this(presence, path, client, new RelationStore(path), new MojangProfileLookup()::lookup,
                 () -> System.nanoTime() / 1000000L, true);
-        commands.register(new RelationCommand(this, presence, Relation.FRIEND));
-        commands.register(new RelationCommand(this, presence, Relation.ENEMY));
+        commands.register(new RelationCommand(this, presence, Relation.FRIEND).definition());
+        commands.register(new RelationCommand(this, presence, Relation.ENEMY).definition());
     }
 
     RelationFeature(TabPresence presence, Path path, ClientThread client, RelationStorage storage,
