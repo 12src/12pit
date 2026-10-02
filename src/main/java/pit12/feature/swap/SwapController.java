@@ -27,6 +27,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
@@ -80,6 +81,10 @@ final class SwapController {
                 && (minecraft.currentScreen == null || owns(minecraft.currentScreen));
     }
 
+    boolean idle() {
+        return options == null;
+    }
+
     boolean owns(GuiScreen candidate) {
         return screen != null && screen == candidate;
     }
@@ -114,6 +119,20 @@ final class SwapController {
 
     void enqueueArmor(SwapBinding binding) {
         enqueue(new Request(0, binding), binding.identity);
+    }
+
+    boolean enqueueAutomatic(List<Target> targets, BooleanSupplier ready) {
+        if (!idle() || !acceptsInput() || targets.isEmpty() || !ready.getAsBoolean())
+            return false;
+        enqueue(new Request(0, null, new ArrayList<>(targets), 0, ready), targets);
+        return true;
+    }
+
+    boolean enqueueAutomaticUnequip(int slot, BooleanSupplier ready) {
+        if (!idle() || !acceptsInput() || slot < 5 || slot > 8 || !ready.getAsBoolean())
+            return false;
+        enqueue(new Request(0, null, null, slot, ready), Integer.valueOf(slot));
+        return true;
     }
 
     private void enqueue(Request request, Object identity) {
@@ -158,6 +177,11 @@ final class SwapController {
                     current = queue.removeFirst();
                     prepare();
                 }
+                // Recheck delayed automatic requests before their first click, then finish the transfer safely.
+                if (current.ready != null && !current.started && !current.ready.getAsBoolean()) {
+                    cancel();
+                    return;
+                }
                 if (actions.isEmpty()) {
                     reportGroup();
                     current = null;
@@ -198,6 +222,11 @@ final class SwapController {
     private void prepare() {
         problems.clear();
         completed.clear();
+        if (current.unequipSlot != 0) {
+            if (stack(current.unequipSlot) != null)
+                actions.addLast(new Action(null, current.unequipSlot));
+            return;
+        }
         if (current.key == -1) {
             for (int slot = 5; slot <= 8; slot++) {
                 if (stack(slot) != null)
@@ -205,8 +234,14 @@ final class SwapController {
             }
             return;
         }
-        List<SwapBinding> candidates = current.direct == null ? bindings.forKey(current.key)
-                : java.util.Collections.singletonList(current.direct);
+        List<SwapBinding> candidates;
+        if (current.automatic != null) {
+            candidates = new ArrayList<>();
+            for (Target target : current.automatic)
+                candidates.add(target.binding);
+        } else
+            candidates = current.direct == null ? bindings.forKey(current.key)
+                    : java.util.Collections.singletonList(current.direct);
         LinkedHashMap<ItemIdentity, Integer> locations = new LinkedHashMap<>();
         for (int slot = 36; slot <= 44; slot++)
             addLocation(locations, slot);
@@ -214,6 +249,12 @@ final class SwapController {
             addLocation(locations, slot);
         for (int slot = 5; slot <= 8; slot++)
             addLocation(locations, slot);
+        if (current.automatic != null) {
+            // Keep the selected source when identical enchantments have different Lives.
+            for (Target target : current.automatic)
+                if (target.binding.identity.matches(stack(target.source)))
+                    locations.put(target.binding.identity, target.source);
+        }
         LinkedHashMap<Integer, SwapBinding> selected = new LinkedHashMap<>();
         LinkedHashMap<Integer, SwapBinding> satisfiedSlots = new LinkedHashMap<>();
         for (SwapBinding binding : candidates) {
@@ -283,6 +324,8 @@ final class SwapController {
         }
         minecraft.playerController.windowClick(player.inventoryContainer.windowId, slot, button,
                 mode, player);
+        if (current != null)
+            current.started = true;
         clicked = true;
         lastClickTick = tick;
     }
@@ -475,10 +518,31 @@ final class SwapController {
     private static final class Request {
         final int key;
         final SwapBinding direct;
+        final List<Target> automatic;
+        final int unequipSlot;
+        final BooleanSupplier ready;
+        boolean started;
 
         Request(int key, SwapBinding direct) {
+            this(key, direct, null, 0, null);
+        }
+
+        Request(int key, SwapBinding direct, List<Target> automatic, int unequipSlot,
+                BooleanSupplier ready) {
             this.key = key;
             this.direct = direct;
+            this.automatic = automatic;
+            this.unequipSlot = unequipSlot;
+            this.ready = ready;
+        }
+    }
+    static final class Target {
+        final SwapBinding binding;
+        final int source;
+
+        Target(int source, ItemStack stack, int hotbarTarget) {
+            binding = SwapBinding.create(1, stack, hotbarTarget);
+            this.source = source;
         }
     }
 }

@@ -26,4 +26,6 @@ public interface SwapHooks {
     boolean key(int key, boolean pressed, boolean repeat);
 
     void drawBinding(ItemStack stack, int x, int y);
+
+    void sound(String name, double x, double y, double z, float volume, float pitch);
 }

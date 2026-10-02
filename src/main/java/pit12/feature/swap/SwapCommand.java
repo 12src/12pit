@@ -29,16 +29,20 @@ import net.minecraft.command.ICommandSender;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.ChatComponentText;
 import org.lwjgl.input.Keyboard;
+import pit12.runtime.item.PitEnchantment;
 
 final class SwapCommand extends CommandBase {
     private final Minecraft minecraft;
     private final BindingBook bindings;
     private final SwapConfig config;
+    private final AutoSwapController automatic;
 
-    SwapCommand(Minecraft minecraft, BindingBook bindings, SwapConfig config) {
+    SwapCommand(Minecraft minecraft, BindingBook bindings, SwapConfig config,
+            AutoSwapController automatic) {
         this.minecraft = minecraft;
         this.bindings = bindings;
         this.config = config;
+        this.automatic = automatic;
     }
 
     @Override
@@ -48,7 +52,7 @@ final class SwapCommand extends CommandBase {
 
     @Override
     public String getCommandUsage(ICommandSender sender) {
-        return "/swap <bind|unbind|list|clear|help> or /12pit swap <...>";
+        return "/swap <bind|unbind|list|clear|status|reset|help> or /12pit swap <...>";
     }
 
     @Override
@@ -113,12 +117,28 @@ final class SwapCommand extends CommandBase {
                                         + entry.display(config.messageDetails.get()) + " -> "
                                         + entry.targetName());
                     break;
+                case "status":
+                    if (args.length != 1)
+                        throw new IllegalArgumentException("Usage: /swap status");
+                    reply(sender,
+                            "Automatic swap: " + (config.autoSwap.get() ? "enabled" : "disabled"));
+                    reply(sender, "Escape Pod: "
+                            + state(PitEnchantment.Escape_Pod, config.escapePod.get()));
+                    reply(sender,
+                            "Phoenix: " + state(PitEnchantment.Phoenix, config.phoenix.get()));
+                    break;
+                case "reset":
+                    if (args.length != 1)
+                        throw new IllegalArgumentException("Usage: /swap reset");
+                    automatic.manualReset();
+                    reply(sender, "Reset automatic swap state");
+                    break;
                 case "help":
                     if (args.length > 1)
                         throw new IllegalArgumentException("Usage: /swap help");
                     reply(sender, "/swap bind <key> [slot] - bind held armor or a hotbar item");
                     reply(sender, "/swap unbind [key] - remove key or held item bindings");
-                    reply(sender, "/swap list | clear | help");
+                    reply(sender, "/swap list | clear | status | reset | help");
                     reply(sender, "All commands also work under /12pit swap");
                     break;
                 default:
@@ -136,6 +156,16 @@ final class SwapCommand extends CommandBase {
             throw new IllegalArgumentException("Join a world first");
     }
 
+    private String state(PitEnchantment type, boolean enabled) {
+        if (!enabled)
+            return "disabled";
+        if (automatic.used(type))
+            return "used";
+        if (automatic.active(type))
+            return "equipped";
+        return "unused";
+    }
+
     private static int key(String name) {
         int code = Keyboard.getKeyIndex(name.toUpperCase(Locale.ROOT));
         if (code == Keyboard.KEY_NONE)
@@ -148,7 +178,7 @@ final class SwapCommand extends CommandBase {
             BlockPos pos) {
         if (args.length == 1)
             return getListOfStringsMatchingLastWord(args, "bind", "unbind", "list", "clear",
-                    "help");
+                    "status", "reset", "help");
         if (args.length == 2 && "bind".equalsIgnoreCase(args[0])) {
             List<String> keys = new ArrayList<>();
             for (int code = 1; code < Keyboard.KEYBOARD_SIZE; code++) {

@@ -17,6 +17,7 @@
     "feature.sprint.EntityPlayerSPMixin",
     "feature.tooltip.HeldItemTooltipMixin",
     "feature.swap.MinecraftMixin",
+    "feature.swap.NetHandlerPlayClientMixin",
     "feature.swap.MouseHelperMixin",
     "feature.swap.GuiContainerMixin",
     "feature.swap.GuiIngameMixin"

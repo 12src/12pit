@@ -40,6 +40,7 @@ import pit12.runtime.config.ConfigChangeListener;
 import pit12.runtime.config.ConfigChangeSet;
 import pit12.runtime.item.PitEnchantment;
 import pit12.runtime.item.PitEnchantmentReader;
+import pit12.runtime.pit.PitContext;
 import pit12.runtime.session.ClientSession;
 import pit12.shared.concurrent.ClientThread;
 import pit12.shared.lifecycle.ClientLifecycle;
@@ -51,6 +52,7 @@ public final class SwapFeature implements ClientLifecycle, ConfigChangeListener,
     private final ClientSession session;
     private final BindingBook bindings;
     private final SwapController controller;
+    private final AutoSwapController automatic;
     private final SwapOverlay overlay;
     private final SwapHooksBinding hookBinding;
     private final Runnable sessionListener = this::worldChanged;
@@ -61,8 +63,8 @@ public final class SwapFeature implements ClientLifecycle, ConfigChangeListener,
     private boolean inputLocked;
 
     public SwapFeature(Minecraft minecraft, ClientThread client, ConfigCatalog configs,
-            SwapConfig config, ClientSession session, CommandRegistry commands, Path path,
-            SwapHooksBinding hookBinding) {
+            SwapConfig config, ClientSession session, PitContext pit, CommandRegistry commands,
+            Path path, SwapHooksBinding hookBinding) {
         this.minecraft = minecraft;
         this.configs = configs;
         this.config = config;
@@ -71,8 +73,9 @@ public final class SwapFeature implements ClientLifecycle, ConfigChangeListener,
         bindings = new BindingBook(client, path, this::report);
         controller = new SwapController(minecraft, session, config, bindings, this::report,
                 this::lockInput, this::releaseInput);
+        automatic = new AutoSwapController(minecraft, config, controller, pit);
         overlay = new SwapOverlay(minecraft, bindings, config);
-        commands.register(new SwapCommand(minecraft, bindings, config), true);
+        commands.register(new SwapCommand(minecraft, bindings, config, automatic), true);
     }
 
     public SwapBindings bindings() {
@@ -121,6 +124,7 @@ public final class SwapFeature implements ClientLifecycle, ConfigChangeListener,
             hookBinding.pit12$bindSwapHooks(null);
             MinecraftForge.EVENT_BUS.unregister(this);
             controller.cancel();
+            automatic.reset();
             updateMouseGrab();
             overlay.clear();
             rightClickHeld = false;
@@ -129,6 +133,7 @@ public final class SwapFeature implements ClientLifecycle, ConfigChangeListener,
 
     private void worldChanged() {
         controller.abandon();
+        automatic.reset();
         updateMouseGrab();
         overlay.clear();
         rightClickHeld = false;
@@ -224,12 +229,18 @@ public final class SwapFeature implements ClientLifecycle, ConfigChangeListener,
         overlay.draw(stack, x, y);
     }
 
+    @Override
+    public void sound(String name, double x, double y, double z, float volume, float pitch) {
+        automatic.sound(name, x, y, z, volume, pitch);
+    }
+
     @SubscribeEvent
     public void onTick(TickEvent.ClientTickEvent event) {
         if (event.phase != TickEvent.Phase.END)
             return;
         if (!physicallyHeld(minecraft.gameSettings.keyBindUseItem.getKeyCode()))
             rightClickHeld = false;
+        automatic.tick();
         controller.tick();
         updateMouseGrab();
         overlay.refresh();

@@ -103,7 +103,8 @@ public final class ClientBootstrap {
         HudRegistry hudRegistry = new HudRegistry(client);
         HudEditorFeature hudEditor = new HudEditorFeature(hudRegistry, commands);
         SwapFeature swap = new SwapFeature(minecraft, client, configs, swapConfig, session,
-                commands, new File(minecraft.mcDataDir, "12pit/swap-bindings.json").toPath(),
+                pitContext, commands,
+                new File(minecraft.mcDataDir, "12pit/swap-bindings.json").toPath(),
                 (SwapHooksBinding) minecraft);
         components.add(session);
         components.add(commands);
