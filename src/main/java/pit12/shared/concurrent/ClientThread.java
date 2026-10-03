@@ -18,7 +18,6 @@
  */
 package pit12.shared.concurrent;
 
-import java.util.Objects;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 
@@ -28,8 +27,8 @@ public final class ClientThread {
     private final Consumer<Runnable> dispatch;
 
     public ClientThread(BooleanSupplier current, Consumer<Runnable> dispatch) {
-        this.current = Objects.requireNonNull(current, "current");
-        this.dispatch = Objects.requireNonNull(dispatch, "dispatch");
+        this.current = current;
+        this.dispatch = dispatch;
     }
 
     public static ClientThread current() {

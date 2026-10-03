@@ -132,12 +132,12 @@ public final class PlayerListFeature implements ClientLifecycle, PlayerEquipment
     }
 
     @Override
-    public void onPlayerEquipmentChanged(java.util.UUID playerId, int changedSlots, long revision) {
+    public void onPlayerEquipmentChanged(UUID playerId, int changedSlots, long revision) {
         snapshotDirty = true;
     }
 
     @Override
-    public void onPlayerEquipmentRemoved(java.util.UUID playerId) {
+    public void onPlayerEquipmentRemoved(UUID playerId) {
         snapshotDirty = true;
     }
 

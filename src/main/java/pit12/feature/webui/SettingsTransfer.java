@@ -35,6 +35,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import pit12.feature.profile.api.ProfileMutationResult;
@@ -43,6 +44,7 @@ import pit12.feature.profile.api.Profiles;
 import pit12.feature.relation.api.Relation;
 import pit12.feature.relation.api.RelationEntry;
 import pit12.feature.relation.api.Relations;
+import pit12.feature.swap.api.SwapBindings;
 import pit12.shared.result.OperationResult;
 
 final class SettingsTransfer {
@@ -50,22 +52,27 @@ final class SettingsTransfer {
     private static final List<Relation> TYPES = Arrays.asList(Relation.FRIEND, Relation.ENEMY);
     private final Profiles profiles;
     private final Relations relations;
+    private final SwapBindings swapBindings;
     private final Gson gson = new Gson();
 
-    SettingsTransfer(Profiles profiles, Relations relations) {
+    SettingsTransfer(Profiles profiles, Relations relations, SwapBindings swapBindings) {
         this.profiles = profiles;
         this.relations = relations;
+        this.swapBindings = swapBindings;
     }
 
     JsonObject exportData(JsonObject request) {
         List<UUID> selected = ids(array(request, "profiles"));
         List<Relation> types = types(array(request, "relations"));
-        requireSelection(selected, types);
+        boolean includeSwap = selectedSwap(request);
+        requireSelection(selected, types, includeSwap);
         JsonObject data = new JsonObject();
         data.addProperty("schemaVersion", VERSION);
         JsonArray exported = new JsonArray();
-        for (String text : requireSuccess(profiles.exportProfiles(selected))) {
-            exported.add(new JsonParser().parse(text));
+        if (!selected.isEmpty()) {
+            for (String text : requireSuccess(profiles.exportProfiles(selected))) {
+                exported.add(new JsonParser().parse(text));
+            }
         }
         data.add("profiles", exported);
         JsonObject groups = new JsonObject();
@@ -74,6 +81,9 @@ final class SettingsTransfer {
             groups.add(type.name(), entries(relations.entries(type)));
         }
         data.add("relations", groups);
+        if (includeSwap)
+            data.add("swapBindings",
+                    new JsonParser().parse(requireSuccess(swapBindings.exportBindings())));
         return data;
     }
 
@@ -95,6 +105,7 @@ final class SettingsTransfer {
         result.add("profiles", summaries);
         result.add("relations", groups);
         result.add("conflicts", conflicts(bundle));
+        result.addProperty("swapBindings", bundle.swapBindings != null);
         result.addProperty("fingerprint", fingerprint());
         return result;
     }
@@ -103,7 +114,10 @@ final class SettingsTransfer {
         Bundle bundle = parseData(object(request, "data"));
         List<UUID> selectedProfiles = ids(array(request, "profiles"));
         List<Relation> selectedTypes = types(array(request, "relations"));
-        requireSelection(selectedProfiles, selectedTypes);
+        boolean includeSwap = selectedSwap(request);
+        requireSelection(selectedProfiles, selectedTypes, includeSwap);
+        if (includeSwap && bundle.swapBindings == null)
+            throw new IllegalArgumentException("File has no swap bindings");
         if (!string(request, "fingerprint").equals(fingerprint())) {
             throw new IllegalArgumentException("Settings changed; preview the file again");
         }
@@ -129,9 +143,6 @@ final class SettingsTransfer {
                 throw new IllegalArgumentException("Relation group is not in the file");
             }
         }
-        if (!chosen.isEmpty()) {
-            requireSuccess(profiles.validateImportProfiles(chosen));
-        }
         JsonObject decisions = object(request, "resolutions");
         List<RelationEntry> resolved = resolve(bundle, selectedTypes, mode, decisions);
         if (!chosen.isEmpty()) {
@@ -140,6 +151,8 @@ final class SettingsTransfer {
         if (!selectedTypes.isEmpty()) {
             requireSuccess(relations.replaceAll(resolved));
         }
+        if (includeSwap)
+            requireSuccess(swapBindings.replaceBindings(bundle.swapBindings));
     }
 
     private static <T> T requireSuccess(OperationResult<T> result) {
@@ -212,10 +225,14 @@ final class SettingsTransfer {
                 }
             }
         }
-        if (savedProfiles.isEmpty() && groups.isEmpty()) {
+        JsonElement swapData = data.get("swapBindings");
+        String savedSwap = swapData == null ? null : gson.toJson(swapData);
+        if (savedSwap != null)
+            requireSuccess(swapBindings.validateImport(savedSwap));
+        if (savedProfiles.isEmpty() && groups.isEmpty() && savedSwap == null) {
             throw new IllegalArgumentException("File is empty");
         }
-        return new Bundle(savedProfiles, groups);
+        return new Bundle(savedProfiles, groups, savedSwap);
     }
 
     private JsonArray conflicts(Bundle bundle) {
@@ -313,6 +330,7 @@ final class SettingsTransfer {
         StringBuilder state =
                 new StringBuilder(gson.toJson(requireSuccess(profiles.exportProfiles(all))));
         state.append(profiles.snapshot().activeProfileId());
+        state.append("swapBindings:").append(swapBindings.revision());
         for (Relation type : TYPES) {
             state.append(type).append(gson.toJson(entries(relations.entries(type))));
         }
@@ -364,7 +382,7 @@ final class SettingsTransfer {
         }
         RelationEntry local = matches.get(0);
         return local.relation() != incoming.relation() || !local.name().equals(incoming.name())
-                || !java.util.Objects.equals(local.playerId(), incoming.playerId());
+                || !Objects.equals(local.playerId(), incoming.playerId());
     }
 
     private static String kind(List<RelationEntry> matches, RelationEntry incoming) {
@@ -374,7 +392,7 @@ final class SettingsTransfer {
             }
         }
         for (RelationEntry entry : matches) {
-            if (!java.util.Objects.equals(entry.playerId(), incoming.playerId())) {
+            if (!Objects.equals(entry.playerId(), incoming.playerId())) {
                 return "identity";
             }
         }
@@ -391,11 +409,7 @@ final class SettingsTransfer {
 
     private static JsonObject entry(RelationEntry value) {
         JsonObject result = new JsonObject();
-        if (value.playerId() == null) {
-            result.add("uuid", com.google.gson.JsonNull.INSTANCE);
-        } else {
-            result.addProperty("uuid", value.playerId().toString());
-        }
+        result.addProperty("uuid", value.playerId() == null ? null : value.playerId().toString());
         result.addProperty("name", value.name());
         result.addProperty("relation", value.relation().name());
         return result;
@@ -455,8 +469,19 @@ final class SettingsTransfer {
         return result;
     }
 
-    private static void requireSelection(List<UUID> profiles, List<Relation> relations) {
-        if (profiles.isEmpty() && relations.isEmpty()) {
+    private static boolean selectedSwap(JsonObject request) {
+        JsonElement value = request.get("swapBindings");
+        if (value == null)
+            return false;
+        if (!value.isJsonPrimitive() || !value.getAsJsonPrimitive().isBoolean()) {
+            throw new IllegalArgumentException("Expected swap bindings selection");
+        }
+        return value.getAsBoolean();
+    }
+
+    private static void requireSelection(List<UUID> profiles, List<Relation> relations,
+            boolean swapBindings) {
+        if (profiles.isEmpty() && relations.isEmpty() && !swapBindings) {
             throw new IllegalArgumentException("Select at least one item");
         }
     }
@@ -464,10 +489,13 @@ final class SettingsTransfer {
     private static final class Bundle {
         final List<String> profiles;
         final Map<Relation, List<RelationEntry>> groups;
+        final String swapBindings;
 
-        Bundle(List<String> profiles, Map<Relation, List<RelationEntry>> groups) {
+        Bundle(List<String> profiles, Map<Relation, List<RelationEntry>> groups,
+                String swapBindings) {
             this.profiles = profiles;
             this.groups = groups;
+            this.swapBindings = swapBindings;
         }
     }
 }

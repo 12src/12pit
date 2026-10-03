@@ -23,7 +23,6 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import pit12.shared.concurrent.ClientThread;
 
 public final class HudRegistry {
@@ -33,12 +32,8 @@ public final class HudRegistry {
     private boolean editing;
     private final ClientThread client;
 
-    public HudRegistry() {
-        this(ClientThread.current());
-    }
-
     public HudRegistry(ClientThread client) {
-        this.client = Objects.requireNonNull(client, "client");
+        this.client = client;
     }
 
     public void checkThread() {
@@ -48,12 +43,7 @@ public final class HudRegistry {
     /** Registration and reads are client-thread confined after features start. */
     public void register(HudElement element) {
         client.check();
-        Objects.requireNonNull(element, "element");
-        String id = requireId(element.id());
-        if (element.displayName() == null || element.displayName().trim().isEmpty()) {
-            throw new IllegalArgumentException("HUD element display name must not be blank");
-        }
-        Objects.requireNonNull(element.config(), "element.config()");
+        String id = element.id();
         HudElement existing = elementsById.get(id);
         if (existing != null && existing != element) {
             throw new IllegalArgumentException("Duplicate HUD element id: " + id);
@@ -67,7 +57,7 @@ public final class HudRegistry {
 
     public void unregister(HudElement element) {
         client.check();
-        if (element == null || elementsById.get(element.id()) != element) {
+        if (elementsById.get(element.id()) != element) {
             return;
         }
         elementsById.remove(element.id());
@@ -92,21 +82,5 @@ public final class HudRegistry {
     public void setEditing(boolean editing) {
         client.check();
         this.editing = editing;
-    }
-
-    private static String requireId(String id) {
-        if (id == null || id.trim().isEmpty() || !id.equals(id.trim())) {
-            throw new IllegalArgumentException("HUD element id must not be blank");
-        }
-        for (int index = 0; index < id.length(); index++) {
-            char character = id.charAt(index);
-            boolean valid = character >= 'a' && character <= 'z'
-                    || character >= '0' && character <= '9'
-                    || index > 0 && (character == '-' || character == '_' || character == '.');
-            if (!valid) {
-                throw new IllegalArgumentException("Invalid HUD element id: " + id);
-            }
-        }
-        return id;
     }
 }

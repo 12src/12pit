@@ -29,16 +29,14 @@ public final class ProfilesSnapshot {
     }
 
     private final LoadState loadState;
-    private final long revision;
     private final UUID activeProfileId;
     private final List<ProfileSummary> profiles;
     private final List<String> problems;
     private final boolean unpersistedChanges;
 
-    public ProfilesSnapshot(LoadState loadState, long revision, UUID activeProfileId,
+    public ProfilesSnapshot(LoadState loadState, UUID activeProfileId,
             List<ProfileSummary> profiles, List<String> problems, boolean unpersistedChanges) {
         this.loadState = loadState;
-        this.revision = revision;
         this.activeProfileId = activeProfileId;
         this.profiles = Collections.unmodifiableList(new ArrayList<ProfileSummary>(profiles));
         this.problems = Collections.unmodifiableList(new ArrayList<String>(problems));
@@ -46,16 +44,12 @@ public final class ProfilesSnapshot {
     }
 
     public static ProfilesSnapshot loading() {
-        return new ProfilesSnapshot(LoadState.LOADING, 0L, null,
+        return new ProfilesSnapshot(LoadState.LOADING, null,
                 Collections.<ProfileSummary>emptyList(), Collections.<String>emptyList(), false);
     }
 
     public LoadState loadState() {
         return loadState;
-    }
-
-    public long revision() {
-        return revision;
     }
 
     public UUID activeProfileId() {
@@ -72,21 +66,5 @@ public final class ProfilesSnapshot {
 
     public boolean hasUnpersistedChanges() {
         return unpersistedChanges;
-    }
-
-    public ProfileSummary activeProfile() {
-        return profile(activeProfileId);
-    }
-
-    public ProfileSummary profile(UUID id) {
-        if (id == null) {
-            return null;
-        }
-        for (ProfileSummary profile : profiles) {
-            if (id.equals(profile.id())) {
-                return profile;
-            }
-        }
-        return null;
     }
 }

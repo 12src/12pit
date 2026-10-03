@@ -24,10 +24,16 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.minecraft.client.Minecraft;
+import pit12.feature.eventlist.EventListConfig;
+import pit12.feature.eventlist.EventListFeature;
 import pit12.feature.gamma.GammaBinding;
 import pit12.feature.gamma.GammaConfig;
 import pit12.feature.gamma.GammaFeature;
 import pit12.feature.hudeditor.HudEditorFeature;
+import pit12.feature.itemesp.ItemEspConfig;
+import pit12.feature.itemesp.ItemEspFeature;
+import pit12.feature.playeresp.PlayerEspConfig;
+import pit12.feature.playeresp.PlayerEspFeature;
 import pit12.feature.playerlist.PlayerListConfig;
 import pit12.feature.playerlist.PlayerListFeature;
 import pit12.feature.profile.ProfilesFeature;
@@ -36,10 +42,14 @@ import pit12.feature.quickmath.AutoQuickMathFeature;
 import pit12.feature.relation.RelationFeature;
 import pit12.feature.sprint.AutoSprintConfig;
 import pit12.feature.sprint.AutoSprintFeature;
+import pit12.feature.swap.SwapConfig;
+import pit12.feature.swap.SwapFeature;
+import pit12.feature.swap.SwapHooksBinding;
 import pit12.feature.tooltip.TooltipConfig;
 import pit12.feature.tooltip.TooltipFeature;
 import pit12.feature.webui.WebUiConfig;
 import pit12.feature.webui.WebUiFeature;
+import pit12.platform.command.ForgeCommandAdapter;
 import pit12.runtime.command.CommandRegistry;
 import pit12.runtime.config.ConfigCatalog;
 import pit12.runtime.hud.HudRegistry;
@@ -66,19 +76,27 @@ public final class ClientBootstrap {
         ConfigCatalog configs = new ConfigCatalog(client);
         shutdown = (ClientShutdownBinding) minecraft;
         ClientSession session = new ClientSession(minecraft, client);
-        CommandRegistry commands = new CommandRegistry(client);
+        CommandRegistry commands = new CommandRegistry(client, ForgeCommandAdapter::register);
         WebUiConfig webUiConfig = new WebUiConfig();
         PlayerListConfig playerListConfig = new PlayerListConfig();
+        EventListConfig eventListConfig = new EventListConfig();
+        PlayerEspConfig playerEspConfig = new PlayerEspConfig();
+        ItemEspConfig itemEspConfig = new ItemEspConfig();
         TooltipConfig tooltipConfig = new TooltipConfig();
         GammaConfig gammaConfig = new GammaConfig();
         AutoSprintConfig autoSprintConfig = new AutoSprintConfig();
         AutoQuickMathConfig autoQuickMathConfig = new AutoQuickMathConfig();
+        SwapConfig swapConfig = new SwapConfig();
         configs.register(webUiConfig);
         configs.register(playerListConfig);
+        configs.register(eventListConfig);
+        configs.register(playerEspConfig);
+        configs.register(itemEspConfig);
         configs.register(tooltipConfig);
         configs.register(gammaConfig);
         configs.register(autoSprintConfig);
         configs.register(autoQuickMathConfig);
+        configs.register(swapConfig);
         configs.freeze();
         ProfilesFeature profiles = new ProfilesFeature(configs,
                 new File(minecraft.mcDataDir, "12pit/config").toPath());
@@ -89,6 +107,10 @@ public final class ClientBootstrap {
         PitContextTracker pitContext = new PitContextTracker(session);
         HudRegistry hudRegistry = new HudRegistry(client);
         HudEditorFeature hudEditor = new HudEditorFeature(hudRegistry, commands);
+        SwapFeature swap = new SwapFeature(minecraft, client, configs, swapConfig, session,
+                pitContext, commands,
+                new File(minecraft.mcDataDir, "12pit/swap-bindings.json").toPath(),
+                (SwapHooksBinding) minecraft);
         components.add(session);
         components.add(commands);
         components.add(profiles);
@@ -98,13 +120,19 @@ public final class ClientBootstrap {
         components.add(pitContext);
         components.add(new PlayerListFeature(configs, playerListConfig, playerEquipment, pitContext,
                 hudRegistry, relations, presence));
+        components.add(new EventListFeature(configs, eventListConfig, hudRegistry));
+        components
+                .add(new PlayerEspFeature(configs, playerEspConfig, session, presence, relations));
+        components.add(new ItemEspFeature(configs, itemEspConfig, session));
         components.add(new TooltipFeature(configs, tooltipConfig));
         components.add(
                 new GammaFeature(configs, gammaConfig, (GammaBinding) minecraft.entityRenderer));
         components.add(new AutoSprintFeature(autoSprintConfig));
         components.add(new AutoQuickMathFeature(autoQuickMathConfig));
         components.add(hudEditor);
-        components.add(new WebUiFeature(configs, profiles, relations, hudEditor, webUiConfig));
+        components.add(swap);
+        components.add(new WebUiFeature(configs, profiles, relations, hudEditor, swap.bindings(),
+                webUiConfig));
     }
 
     public void start() {

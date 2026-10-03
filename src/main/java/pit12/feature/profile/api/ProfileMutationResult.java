@@ -49,16 +49,10 @@ public final class ProfileMutationResult {
     }
 
     public static ProfileMutationResult create(ProfileCreateSession createSession) {
-        if (createSession == null) {
-            throw new NullPointerException("createSession");
-        }
         return new ProfileMutationResult(Status.SUCCESS, "", createSession);
     }
 
     public static ProfileMutationResult failure(Status status, String message) {
-        if (status == Status.SUCCESS) {
-            throw new IllegalArgumentException("A failure result cannot use SUCCESS");
-        }
         return new ProfileMutationResult(status, message == null ? "" : message, null);
     }
 

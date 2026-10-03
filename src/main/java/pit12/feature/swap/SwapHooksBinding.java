@@ -16,34 +16,10 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.shared.build;
+package pit12.feature.swap;
 
-public final class BuildInfo {
-    private final String modName;
-    private final String version;
-    private final String gitCommit;
-    private final boolean release;
+public interface SwapHooksBinding {
+    void pit12$bindSwapHooks(SwapHooks hooks);
 
-    public BuildInfo(String modName, String version, String gitCommit, boolean release) {
-        this.modName = modName;
-        this.version = version;
-        this.gitCommit = gitCommit;
-        this.release = release;
-    }
-
-    public String modName() {
-        return modName;
-    }
-
-    public String version() {
-        return version;
-    }
-
-    public String gitCommit() {
-        return gitCommit;
-    }
-
-    public boolean isRelease() {
-        return release;
-    }
+    SwapHooks pit12$swapHooks();
 }

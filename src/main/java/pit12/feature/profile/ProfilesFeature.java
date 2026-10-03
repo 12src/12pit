@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
@@ -203,14 +202,11 @@ public final class ProfilesFeature
             return OperationResult.failure(OperationResult.Status.UNAVAILABLE,
                     "Profiles are still loading or unavailable");
         }
-        if (ids == null || ids.contains(null))
-            return OperationResult.failure(OperationResult.Status.INVALID_VALUE,
-                    "Profile IDs are missing");
         try {
             ArrayList<String> result = new ArrayList<>();
             for (StoredProfile profile : controller.exportProfiles(ids))
                 result.add(codec.encode(profile));
-            return OperationResult.success(Collections.unmodifiableList(result));
+            return OperationResult.success(result);
         } catch (IllegalArgumentException failure) {
             return OperationResult.failure(OperationResult.Status.NOT_FOUND, failure.getMessage());
         }
@@ -238,10 +234,6 @@ public final class ProfilesFeature
             return ProfileMutationResult.failure(ProfileMutationResult.Status.STORAGE_UNAVAILABLE,
                     "Profiles are not ready for import");
         }
-        if (profiles == null || profiles.contains(null)) {
-            return ProfileMutationResult.failure(ProfileMutationResult.Status.INVALID_VALUE,
-                    "Profiles are missing");
-        }
         try {
             List<StoredProfile> decoded = decodeProfiles(profiles);
             if (apply)
@@ -259,7 +251,7 @@ public final class ProfilesFeature
         ArrayList<StoredProfile> decoded = new ArrayList<StoredProfile>();
         for (String text : profiles) {
             JsonElement parsed = new JsonParser().parse(text);
-            if (parsed == null || !parsed.isJsonObject()) {
+            if (!parsed.isJsonObject()) {
                 throw new IllegalArgumentException("Profile must be an object");
             }
             JsonElement id = parsed.getAsJsonObject().get("id");
@@ -277,37 +269,16 @@ public final class ProfilesFeature
     }
 
     @Override
-    public void profileChanged(UUID ignoredProfileId) {
+    public void changed() {
         catalog.clientThread().check();
-        requestWrite(false);
-    }
-
-    @Override
-    public void activeProfileChanged() {
-        catalog.clientThread().check();
-        requestWrite(false);
+        worker.requestWrite(captureWriteBatch());
     }
 
     @Override
     public void profileDeleted(UUID profileId) {
         catalog.clientThread().check();
-        ProfileIoWorker activeWorker = worker;
-        if (activeWorker != null) {
-            activeWorker.requestDelete(profileId);
-        }
-        requestWrite(false);
-    }
-
-    public void requestImmediateWrite() {
-        catalog.clientThread().check();
-        requestWrite(true);
-    }
-
-    private void requestWrite(boolean immediate) {
-        ProfileIoWorker activeWorker = worker;
-        if (activeWorker != null) {
-            activeWorker.requestWrite(captureWriteBatch(), immediate);
-        }
+        worker.requestDelete(profileId);
+        changed();
     }
 
     private ProfileWriteBatch captureWriteBatch() {

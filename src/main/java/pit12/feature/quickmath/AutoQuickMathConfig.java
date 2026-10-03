@@ -23,19 +23,16 @@ import pit12.runtime.config.DoubleSetting;
 import pit12.runtime.config.FeatureConfig;
 
 public final class AutoQuickMathConfig extends FeatureConfig {
-    private static final double DEFAULT_DELAY_SECONDS = 1.0;
-    private static final double MAX_DELAY_SECONDS = 5.0;
     private final DoubleSetting delay;
 
     public AutoQuickMathConfig() {
         super("auto_quick_math", "Auto Quick Math", new ConfigCategory("pit", "Pit", 75),
                 "Solves the QUICK MATHS! expression and answers in chat automatically.");
         delay = doubleSliderSetting("delay", "Answer delay",
-                "Waits this many seconds before sending the answer.", DEFAULT_DELAY_SECONDS, 0.0,
-                MAX_DELAY_SECONDS, 0.1);
+                "Waits this many seconds before sending the answer.", 1.0, 0.0, 5.0, 0.1);
     }
 
     public double delay() {
-        return delay.get().doubleValue();
+        return delay.get();
     }
 }

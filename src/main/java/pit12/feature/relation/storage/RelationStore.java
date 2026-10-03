@@ -22,9 +22,9 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -52,10 +52,9 @@ public final class RelationStore implements RelationStorage {
         if (Files.notExists(path)) {
             return new ArrayList<RelationEntry>();
         }
-        try (java.io.BufferedReader reader =
-                Files.newBufferedReader(path, StandardCharsets.UTF_8)) {
+        try (BufferedReader reader = Files.newBufferedReader(path, StandardCharsets.UTF_8)) {
             JsonElement parsed = new JsonParser().parse(reader);
-            if (parsed == null || !parsed.isJsonObject()) {
+            if (!parsed.isJsonObject()) {
                 throw new IllegalArgumentException("Relation file must be an object");
             }
             JsonObject root = parsed.getAsJsonObject();
@@ -78,10 +77,8 @@ public final class RelationStore implements RelationStorage {
                 }
                 JsonObject entry = element.getAsJsonObject();
                 JsonElement uuid = entry.get("uuid");
-                if (uuid == null) {
-                    throw new IllegalArgumentException("Relation uuid is missing");
-                }
-                UUID id = uuid.isJsonNull() ? null : UUID.fromString(string(entry, "uuid"));
+                UUID id = uuid == null || uuid.isJsonNull() ? null
+                        : UUID.fromString(string(entry, "uuid"));
                 Relation relation = Relation.valueOf(string(entry, "relation"));
                 String name = string(entry, "name");
                 if (id == null ? !pendingNames.add(name.toLowerCase(Locale.ROOT)) : !ids.add(id)) {
@@ -95,13 +92,11 @@ public final class RelationStore implements RelationStorage {
 
     public void write(List<RelationEntry> entries) throws IOException {
         JsonObject root = new JsonObject();
-        root.addProperty("schemaVersion", Integer.valueOf(SCHEMA_VERSION));
+        root.addProperty("schemaVersion", SCHEMA_VERSION);
         JsonArray values = new JsonArray();
         for (RelationEntry entry : entries) {
             JsonObject value = new JsonObject();
-            if (entry.playerId() == null) {
-                value.add("uuid", JsonNull.INSTANCE);
-            } else {
+            if (entry.playerId() != null) {
                 value.addProperty("uuid", entry.playerId().toString());
             }
             value.addProperty("name", entry.name());

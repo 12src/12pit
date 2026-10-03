@@ -104,7 +104,7 @@ final class UiFont {
     int width(String text) {
         Integer cached = widthCache.get(text);
         if (cached != null) {
-            return cached.intValue();
+            return cached;
         }
         int width = 0;
         boolean formatting = false;
@@ -126,7 +126,7 @@ final class UiFont {
             }
             width += glyph(character).advance + (bold ? 1 : 0);
         }
-        widthCache.put(text, Integer.valueOf(width));
+        widthCache.put(text, width);
         return width;
     }
 
@@ -169,15 +169,14 @@ final class UiFont {
                 char character = text.charAt(index);
                 if (formatting) {
                     formatting = false;
-                    int formattedColor =
-                            McFormatting.color(text.charAt(index), color, currentColor, shadow);
+                    int formattedColor = McFormatting.color(character, color, currentColor, shadow);
                     if (formattedColor != currentColor) {
                         currentColor = formattedColor;
                         setColor(currentColor);
                     }
-                    if (McFormatting.isBold(text.charAt(index))) {
+                    if (McFormatting.isBold(character)) {
                         bold = true;
-                    } else if (McFormatting.resetsStyle(text.charAt(index))) {
+                    } else if (McFormatting.resetsStyle(character)) {
                         bold = false;
                     }
                     continue;
@@ -187,10 +186,10 @@ final class UiFont {
                     continue;
                 }
                 Glyph glyph = glyph(character);
-                float left = (glyph.x + 0.5F) / (float) ATLAS_SIZE;
-                float top = (glyph.y + 0.5F) / (float) ATLAS_SIZE;
-                float right = (glyph.x + glyph.width - 0.5F) / (float) ATLAS_SIZE;
-                float bottom = (glyph.y + glyph.height - 0.5F) / (float) ATLAS_SIZE;
+                float left = (glyph.x + 0.5F) / ATLAS_SIZE;
+                float top = (glyph.y + 0.5F) / ATLAS_SIZE;
+                float right = (glyph.x + glyph.width - 0.5F) / ATLAS_SIZE;
+                float bottom = (glyph.y + glyph.height - 0.5F) / ATLAS_SIZE;
                 GL11.glTexCoord2f(left, top);
                 GL11.glVertex2i(cursorX, y);
                 GL11.glTexCoord2f(left, bottom);

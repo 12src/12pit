@@ -37,12 +37,8 @@ public final class PlayerEquipmentCache {
     private final Map<UUID, Integer> dirty = new LinkedHashMap<UUID, Integer>();
 
     public void markDirty(UUID playerId, int slots) {
-        if (playerId == null || (slots & ALL) == 0) {
-            return;
-        }
         Integer previous = dirty.get(playerId);
-        dirty.put(playerId,
-                Integer.valueOf((previous == null ? 0 : previous.intValue()) | (slots & ALL)));
+        dirty.put(playerId, (previous == null ? 0 : previous) | slots);
     }
 
     /** Draining at the Tick boundary coalesces multiple packets for one player. */
@@ -83,9 +79,6 @@ public final class PlayerEquipmentCache {
     }
 
     public PlayerEquipmentSnapshot remove(UUID playerId) {
-        if (playerId == null) {
-            return null;
-        }
         PlayerEquipmentSnapshot removed = entries.remove(playerId);
         dirty.remove(playerId);
         return removed;

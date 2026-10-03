@@ -27,8 +27,7 @@ public final class IntegerSetting extends NumberSetting<Integer> {
     IntegerSetting(String id, String displayName, String description, int defaultValue, int minimum,
             int maximum, int step) {
         super(id, displayName, description,
-                Integer.valueOf(
-                        (int) Math.round(normalizedDefault(defaultValue, minimum, maximum, step))),
+                (int) Math.round(normalizedDefault(defaultValue, minimum, maximum, step)),
                 StorageType.INTEGER, minimum, maximum, step, 0);
     }
 
@@ -40,12 +39,8 @@ public final class IntegerSetting extends NumberSetting<Integer> {
         return (int) maximumValue();
     }
 
-    public int step() {
-        return (int) stepValue();
-    }
-
     @Override
     protected Integer valueFromDouble(double value) {
-        return Integer.valueOf((int) Math.round(value));
+        return (int) Math.round(value);
     }
 }

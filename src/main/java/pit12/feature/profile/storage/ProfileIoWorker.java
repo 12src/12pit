@@ -25,7 +25,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.UUID;
 
-public final class ProfileIoWorker implements AutoCloseable {
+public final class ProfileIoWorker {
     public interface Listener {
         void loaded(LoadedProfiles profiles);
 
@@ -60,13 +60,13 @@ public final class ProfileIoWorker implements AutoCloseable {
         thread.start();
     }
 
-    public void requestWrite(ProfileWriteBatch batch, boolean immediate) {
+    public void requestWrite(ProfileWriteBatch batch) {
         synchronized (lock) {
             if (closeRequested) {
                 return;
             }
-            pendingWrite = batch == null || batch.isEmpty() ? null : batch;
-            writeDeadline = immediate ? 0L : System.currentTimeMillis() + SAVE_DEBOUNCE_MILLIS;
+            pendingWrite = batch.isEmpty() ? null : batch;
+            writeDeadline = System.currentTimeMillis() + SAVE_DEBOUNCE_MILLIS;
             lock.notifyAll();
         }
     }
@@ -89,10 +89,7 @@ public final class ProfileIoWorker implements AutoCloseable {
 
     public void closeAfter(ProfileWriteBatch finalWrite) {
         synchronized (lock) {
-            if (finalWrite != null) {
-                pendingWrite = finalWrite.isEmpty() ? null : finalWrite;
-                writeDeadline = 0L;
-            }
+            pendingWrite = finalWrite.isEmpty() ? null : finalWrite;
             closeRequested = true;
             lock.notifyAll();
         }
@@ -108,11 +105,6 @@ public final class ProfileIoWorker implements AutoCloseable {
 
     public void interrupt() {
         thread.interrupt();
-    }
-
-    @Override
-    public void close() {
-        closeAfter(null);
     }
 
     private void run() {

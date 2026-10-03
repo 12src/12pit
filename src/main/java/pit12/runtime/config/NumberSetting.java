@@ -31,10 +31,6 @@ public abstract class NumberSetting<T extends Number> extends Setting<T> {
             StorageType storageType, double minimum, double maximum, double step,
             int decimalPlaces) {
         super(id, displayName, description, defaultValue, storageType);
-        if (storageType == StorageType.BOOLEAN) {
-            throw new IllegalArgumentException("Number settings require a numeric storage type");
-        }
-        validateRange(minimum, maximum, step);
         this.minimum = minimum;
         this.maximum = maximum;
         this.step = step;
@@ -57,21 +53,6 @@ public abstract class NumberSetting<T extends Number> extends Setting<T> {
         return decimalPlaces;
     }
 
-    public final double fraction() {
-        if (Double.compare(minimum, maximum) == 0) {
-            return 0.0D;
-        }
-        return (get().doubleValue() - minimum) / (maximum - minimum);
-    }
-
-    public final void setFromFraction(double fraction) {
-        if (!Double.isFinite(fraction)) {
-            throw new IllegalArgumentException("fraction must be finite");
-        }
-        double clamped = Math.max(0.0D, Math.min(1.0D, fraction));
-        set(valueFromDouble(snap(minimum + (maximum - minimum) * clamped, minimum, maximum, step)));
-    }
-
     @Override
     protected final T requireValue(Object candidate) {
         if (!(candidate instanceof Number)) {
@@ -89,23 +70,10 @@ public abstract class NumberSetting<T extends Number> extends Setting<T> {
 
     protected static double normalizedDefault(double defaultValue, double minimum, double maximum,
             double step) {
-        validateRange(minimum, maximum, step);
         if (!Double.isFinite(defaultValue) || defaultValue < minimum || defaultValue > maximum) {
             throw new IllegalArgumentException("defaultValue must be within the number range");
         }
         return snap(defaultValue, minimum, maximum, step);
-    }
-
-    private static void validateRange(double minimum, double maximum, double step) {
-        if (!Double.isFinite(minimum) || !Double.isFinite(maximum) || !Double.isFinite(step)) {
-            throw new IllegalArgumentException("Number range and step must be finite");
-        }
-        if (minimum > maximum) {
-            throw new IllegalArgumentException("minimum must not exceed maximum");
-        }
-        if (step <= 0.0D || minimum < maximum && step > maximum - minimum) {
-            throw new IllegalArgumentException("step must be positive and not exceed the range");
-        }
     }
 
     private static double snap(double value, double minimum, double maximum, double step) {

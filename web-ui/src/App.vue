@@ -128,7 +128,7 @@ const showDetails = computed(() =>
   Boolean(
     settings.value?.sections
       .flatMap((section) => section.options)
-      .find((option) => option.id === 'show_details')?.value ?? true,
+      .find((option) => option.id === 'show_details')?.value ?? false,
   ),
 )
 

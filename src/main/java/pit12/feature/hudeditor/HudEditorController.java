@@ -19,7 +19,6 @@
 package pit12.feature.hudeditor;
 
 import java.util.List;
-import java.util.Objects;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.ResourceLocation;
 import pit12.Pit12;
@@ -48,7 +47,7 @@ final class HudEditorController {
     private int dragOffsetY;
 
     HudEditorController(HudRegistry registry) {
-        this.registry = Objects.requireNonNull(registry, "registry");
+        this.registry = registry;
         Minecraft minecraft = Minecraft.getMinecraft();
         renderer = new UiRenderer(minecraft,
                 new ResourceLocation(Pit12.MOD_ID, "fonts/montserrat-regular.otf"));
@@ -66,7 +65,7 @@ final class HudEditorController {
     }
 
     void close() {
-        cancelDrag();
+        dragging = null;
         registry.setEditing(false);
     }
 
@@ -80,11 +79,7 @@ final class HudEditorController {
         renderState.begin();
         try {
             renderer.rect(0, 0, screenWidth, screenHeight, 0x26000000);
-            List<HudElement> elements = registry.elements();
-            if (elements.isEmpty()) {
-                return;
-            }
-            for (HudElement element : elements) {
+            for (HudElement element : registry.elements()) {
                 if (element != selected) {
                     renderElement(element, mouseX, mouseY, partialTicks);
                 }
@@ -146,16 +141,12 @@ final class HudEditorController {
     void mouseWheel(int delta) {
         // A mid-drag scale change invalidates the stored drag offsets, so the wheel only
         // applies once the element is released.
-        if (selected == null || delta == 0 || dragging != null) {
+        if (selected == null || dragging != null) {
             return;
         }
         IntegerSetting scale = selected.config().scale();
-        int next = scale.get().intValue() + Integer.signum(delta) * 5;
-        scale.set(Integer.valueOf(clamp(next, scale.minimum(), scale.maximum())));
-    }
-
-    void cancelDrag() {
-        dragging = null;
+        int next = scale.get() + Integer.signum(delta) * 5;
+        scale.set(clamp(next, scale.minimum(), scale.maximum()));
     }
 
     void dispose() {

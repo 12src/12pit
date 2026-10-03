@@ -18,7 +18,6 @@
  */
 package pit12.feature.relation.api;
 
-import java.util.Objects;
 import java.util.UUID;
 
 public final class RelationEntry {
@@ -28,8 +27,8 @@ public final class RelationEntry {
 
     public RelationEntry(UUID playerId, String name, Relation relation) {
         this.playerId = playerId;
-        this.name = Objects.requireNonNull(name, "name");
-        this.relation = Objects.requireNonNull(relation, "relation");
+        this.name = name;
+        this.relation = relation;
         if (name.isEmpty() || name.length() > 48 || relation == Relation.NONE) {
             throw new IllegalArgumentException("Invalid relation entry");
         }

@@ -20,12 +20,10 @@ package pit12.runtime.player;
 
 import com.mojang.authlib.GameProfile;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import net.minecraft.client.network.NetHandlerPlayClient;
@@ -80,7 +78,7 @@ public final class TabPresenceTracker implements ClientLifecycle, TabPresence, T
     @Override
     public Map<UUID, String> players() {
         session.checkThread();
-        return Collections.unmodifiableMap(currentPlayers());
+        return currentPlayers();
     }
 
     private Map<UUID, String> currentPlayers() {
@@ -99,7 +97,7 @@ public final class TabPresenceTracker implements ClientLifecycle, TabPresence, T
     @Override
     public void addListener(TabPresenceListener listener) {
         session.checkThread();
-        if (!listeners.contains(Objects.requireNonNull(listener, "listener")))
+        if (!listeners.contains(listener))
             listeners.add(listener);
     }
 
@@ -112,8 +110,6 @@ public final class TabPresenceTracker implements ClientLifecycle, TabPresence, T
     @Override
     public void onTabPacket(S38PacketPlayerListItem packet) {
         session.checkThread();
-        if (!started || boundHandler == null || boundHandler != session.connection())
-            return;
         Action action = packet.getAction();
         if (action == Action.UPDATE_DISPLAY_NAME) {
             Listeners.notify(listeners, TabPresenceListener::onTabDisplayChanged);

@@ -42,12 +42,8 @@ public final class ConfigCatalog {
     private long revision;
     private final ClientThread client;
 
-    public ConfigCatalog() {
-        this(ClientThread.current());
-    }
-
     public ConfigCatalog(ClientThread client) {
-        this.client = Objects.requireNonNull(client, "client");
+        this.client = client;
     }
 
     public ClientThread clientThread() {
@@ -59,7 +55,6 @@ public final class ConfigCatalog {
         if (frozen) {
             throw new IllegalStateException("Config catalog is frozen");
         }
-        Objects.requireNonNull(feature, "feature");
         if (featuresById.containsKey(feature.id())) {
             throw new IllegalArgumentException("Duplicate feature id: " + feature.id());
         }
@@ -76,16 +71,6 @@ public final class ConfigCatalog {
         frozen = true;
     }
 
-    public boolean isFrozen() {
-        client.check();
-        return frozen;
-    }
-
-    public long revision() {
-        client.check();
-        return revision;
-    }
-
     public List<FeatureConfig> features() {
         client.check();
         return Collections.unmodifiableList(features);
@@ -98,7 +83,6 @@ public final class ConfigCatalog {
 
     public void addListener(ConfigChangeListener listener) {
         client.check();
-        Objects.requireNonNull(listener, "listener");
         if (!listeners.contains(listener)) {
             listeners.add(listener);
         }
@@ -145,11 +129,10 @@ public final class ConfigCatalog {
 
     public ConfigSnapshot recoverSavedValues(ConfigSnapshot snapshot, Consumer<String> problems) {
         client.check();
-        return normalize(snapshot, Objects.requireNonNull(problems, "problems"));
+        return normalize(snapshot, problems);
     }
 
     private ConfigSnapshot normalize(ConfigSnapshot snapshot, Consumer<String> problems) {
-        Objects.requireNonNull(snapshot, "snapshot");
         LinkedHashMap<String, Map<String, Object>> values =
                 new LinkedHashMap<String, Map<String, Object>>();
         for (FeatureConfig feature : features) {
@@ -161,7 +144,7 @@ public final class ConfigCatalog {
                                 ? suppliedValues.get(setting.id())
                                 : setting.defaultValue();
                 try {
-                    featureValues.put(setting.id(), setting.validatedCandidate(candidate));
+                    featureValues.put(setting.id(), setting.requireValue(candidate));
                 } catch (IllegalArgumentException failure) {
                     if (problems == null) {
                         throw failure;
@@ -179,7 +162,6 @@ public final class ConfigCatalog {
     /** All candidates are validated before any live setting is changed. Missing known values reset to defaults. */
     public ConfigChangeSet apply(ConfigSnapshot snapshot) {
         client.check();
-        Objects.requireNonNull(snapshot, "snapshot");
         ConfigSnapshot normalized = normalize(snapshot);
         LinkedHashMap<Setting<?>, Object> candidates = new LinkedHashMap<Setting<?>, Object>();
         for (FeatureConfig feature : features) {
@@ -195,9 +177,7 @@ public final class ConfigCatalog {
             if (Objects.equals(setting.get(), candidate)) {
                 continue;
             }
-            FeatureConfig owner = settingOwners.get(setting);
-            changes.add(
-                    new ConfigChangeSet.Change(owner.id(), setting.id(), setting.get(), candidate));
+            changes.add(new ConfigChangeSet.Change(settingOwners.get(setting).id(), setting.id()));
         }
         if (changes.isEmpty()) {
             return new ConfigChangeSet(revision, changes);
@@ -210,15 +190,9 @@ public final class ConfigCatalog {
         return changeSet;
     }
 
-    private void onSettingChanged(Setting<?> setting, Object previousValue, Object currentValue) {
-        FeatureConfig owner = settingOwners.get(setting);
-        if (owner == null) {
-            throw new IllegalStateException("Changed setting is not registered: " + setting.id());
-        }
-        ArrayList<ConfigChangeSet.Change> changes = new ArrayList<ConfigChangeSet.Change>(1);
-        changes.add(
-                new ConfigChangeSet.Change(owner.id(), setting.id(), previousValue, currentValue));
-        notifyListeners(new ConfigChangeSet(++revision, changes));
+    private void onSettingChanged(Setting<?> setting) {
+        notifyListeners(new ConfigChangeSet(++revision, Collections.singletonList(
+                new ConfigChangeSet.Change(settingOwners.get(setting).id(), setting.id()))));
     }
 
     private void notifyListeners(ConfigChangeSet changeSet) {

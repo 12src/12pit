@@ -24,7 +24,6 @@ public final class PlayerListEntry {
     private final UUID playerId;
     private final int entityId;
     private final String name;
-    private final PlayerListGroup group;
     private final String leggingsText;
     private final String heldItemText;
     private final float distance;
@@ -34,13 +33,12 @@ public final class PlayerListEntry {
     private final boolean distanceKnown;
     private final boolean directionKnown;
 
-    PlayerListEntry(UUID playerId, int entityId, String name, PlayerListGroup group,
-            String leggingsText, String heldItemText, float distance, float direction,
-            boolean distanceKnown, boolean directionKnown, boolean spawn) {
+    PlayerListEntry(UUID playerId, int entityId, String name, String leggingsText,
+            String heldItemText, float distance, float direction, boolean distanceKnown,
+            boolean directionKnown, boolean spawn) {
         this.playerId = playerId;
         this.entityId = entityId;
         this.name = name;
-        this.group = group;
         this.leggingsText = leggingsText;
         this.heldItemText = heldItemText;
         this.distance = distance;
@@ -61,10 +59,6 @@ public final class PlayerListEntry {
 
     public String name() {
         return name;
-    }
-
-    public PlayerListGroup group() {
-        return group;
     }
 
     public String leggingsText() {

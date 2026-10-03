@@ -1,45 +1,43 @@
 # 12pit architecture
 
-12pit is a client-side Forge mod. Each feature owns one user-facing part of the mod, and shared runtime code stays small. This document describes the current layout; it is not a class template that every feature must follow.
+12pit is a client-side Forge mod. The following describes the responsibility of each component, who owns what state, and what dependencies exist between the components. [Implementation](IMPLEMENTATION.md) covers the classes in this project and how to use them.
 
-## Packages and dependencies
+## Components
 
-`Pit12` receives Forge lifecycle events and passes them to `ClientBootstrap`. `ClientBootstrap` creates the top-level components, wires them together, and manages their lifecycles. Feature behavior stays in the features.
+`Pit12` is the Forge entry point. It routes Forge lifecycle events to `ClientBootstrap`. Bootstrap builds top-level components, wires their dependencies, and is responsible for application start and shutdown.
 
-Each package directly under `feature` owns one user-facing capability. It can keep its settings, rules, commands, rendering, and storage together. A small feature does not need a `Feature` class if it has no resources to start or stop. Feature-specific Forge listeners can stay with that feature.
+Each package immediately under `feature` owns one user-facing capability. Its settings, rules, commands, rendering, and storage are owned by that feature. Also feature-specific Forge listeners may be owned by the feature.
 
-`runtime` is for live data and capabilities used by more than one feature. Put something there only if it has its own owner and lifecycle or if multiple features need it. `shared` is for small reusable contracts and implementations; it does not own live game state. `platform` is for adapters to external mechanisms such as Mixin. Keep feature rules in the feature package so their owner stays clear.
+`runtime` owns live data and services that have their own lifecycle or are used by multiple features. These are the client session, game state trackers, command registry, config catalog, and HUD registry.
 
-Features can depend on `runtime` and `shared`. `runtime` can depend on `shared`, but not on a feature. `shared` must not depend on higher layers. Use narrow contracts for platform adapters. A feature can use another feature only through its public `api` package; `ClientBootstrap` wires that dependency. Avoid package cycles and global service lookup.
+`shared` owns small helper interfaces and utilities for threading, listeners, rendering, and file writes. It does not own live game state.
 
-## Lifetimes and state
+`platform` adapts the use of external mechanisms like Forge commands and Mixin. Adapters route external requests to their owners through narrow interfaces. Rules of features are owned by features.
 
-The component that creates a resource must release it. `ClientBootstrap` starts providers before consumers. If startup fails, it stops everything that was started, in reverse order. Components must tolerate partial startup, and calling `stop()` more than once must be safe.
+Commands definitions and actions are owned by features. `runtime.command` owns routing, help, completion, and availability of commands. `platform.command` owns Forge registration.
 
-`ClientSession` owns the current connection and world identities. Trackers subscribe to it instead of handling disconnects separately. It dispatches network events to the client thread, ignores events from replaced connections, and publishes both identities before notifying subscribers. `ClientThread` checks live API access and dispatches copied worker results. Storage and identity lookup dependencies can be replaced in tests.
+`feature.webui` owns the local HTTP server and the connection of the browser interface to the config and feature APIs. `web-ui` owns the browser pages. Features store their rules and state behind the APIs.
 
-The Minecraft shutdown adapter calls `ClientBootstrap.stop()` before Minecraft releases the world and graphics context. Features stop their workers and flush pending changes during that call. Forced process termination cannot run this cleanup.
+## Dependencies
 
-Starting a feature with the client is not the same as enabling it in settings. Disabling a feature releases work that is only needed while it is active. A server disconnect ends the session, not the feature or mod. World state ends when the world is replaced. A multi-tick operation owns its temporary state, timeout, cancellation, and recovery.
+`Pit12` depends on Bootstrap. Bootstrap may depend on `platform`, `runtime`, `feature`, and `shared`. It wires dependencies between the components; there is no global service lookup.
 
-Treat Minecraft as the source of truth for current Tab entries, loaded entities, scoreboards, and inventory state. Keep your own copy only when Minecraft does not retain the information, when it must outlive the game object, or when calculating it again is meaningfully expensive. Give each mutable fact one owner and a clear reset rule. Keep unknown information separate from confirmed absence. Prefer UUIDs for player identity. Entity IDs are valid only in their world. Display snapshots are views derived from that state, not a second source of truth.
+Features may depend on `runtime` and `shared`. A feature may use another feature only through the public `api` package of that feature. `runtime` may depend on `shared`. `shared` does not depend on other project layers.
 
-## External input and work
+`platform` may depend on `runtime`, `feature`, and `shared`. Features and runtime code use binding interfaces instead of depending on platform classes. Command runtime code does not depend on Forge.
 
-Forge listeners and Mixin classes should pass observations or decisions to their owner. They should not do blocking IO or coordinate unrelated features. Put Mixins under `platform.mixin`; a feature-specific Mixin goes under `platform.mixin.feature`. Register every Mixin in `mixins.pit12.json`. Keep ordinary classes out of Mixin packages. A small, stateless adjustment can stay in a Mixin when moving it would not make the code clearer.
+Packages immediately under a project layer form modules. Modules do not contain any cycles in their dependencies. A feature-specific Mixin belongs to the corresponding feature boundary and does not depend on internals of another feature.
 
-Use a direct call for a query or a local synchronous action. Notify listeners when several consumers care about a meaningful change. Use an explicit operation for work that spans ticks, can fail, or needs recovery. Add an event bus or scheduler only when the code actually needs one.
+## State and resources
 
-Public mutations return explicit success or failure results for expected input and readiness failures. Thread violations remain programming errors. State changes finish before subscribers are notified. Listener failures are logged without stopping delivery to other subscribers.
+`ClientSession` owns connection and world identities. Trackers own state related to those identities. A disconnect ends the session, and a world replacement ends the state of the old world. Neither event influences the life cycle of the mod.
 
-Read and change Minecraft objects on the client thread unless an API says otherwise. For disk IO, HTTP, or expensive calculations, give background workers copied plain data. Apply their results on the client thread only after checking that the feature, request, session, and world are still current. Every worker needs an owner and a way to shut down.
+Minecraft owns current Tab entries, loaded entities, scoreboards, and inventory state. Runtime trackers own data that Minecraft does not keep and derived data shared by features. Each mutable piece of data has one owner. Display snapshots are views on that data.
 
-## Rendering and saved data
+A component owns the resources it allocates, such as workers, subscriptions, and rendering resources. Temporary operations are responsible for their progress, cancellation, and recovery. Startup of a feature and enabled flag of the feature are separate pieces of state.
 
-Build display snapshots when their inputs change. Renderers read those snapshots each frame and restore any rendering state they change. Do not do blocking IO, broad world scans, or large parsing jobs in render callbacks. Add a cache only when it addresses a measured or obvious cost, and give it an owner and an invalidation rule.
+Each feature defines its settings. `ConfigCatalog` owns the registered live config, and the profile feature owns config snapshots and their storage. Other saved data is owned by the feature using it. The user data survives disconnects.
 
-Keep configuration and persistent data with the feature that uses them. Update derived display state when settings change. Validate saved data when loading it, and handle older formats when changing it. A failed write must not silently discard live state or damage saved data. Older save results must not clear newer unsaved changes. Disconnecting must not delete user data.
+## Architecture checks
 
-## Changing these boundaries
-
-Put new behavior in the feature that needs it. Extract shared code only when its owner and reset rules are clear. [ArchitectureTest](../src/test/java/pit12/architecture/ArchitectureTest.java) checks package dependencies and Mixin registration. Update this document and the relevant tests when an architectural decision changes.
+[ArchitectureTest](../src/test/java/pit12/architecture/ArchitectureTest.java) checks package ownership, dependency direction, module cycles, lifecycle ownership, and Mixin registration.

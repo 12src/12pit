@@ -90,55 +90,55 @@ public final class PlayerListConfig extends FeatureConfig {
     }
 
     public boolean showHeldItem() {
-        return showHeldItem.get().booleanValue();
+        return showHeldItem.get();
     }
 
     public boolean showLeggings() {
-        return showLeggings.get().booleanValue();
+        return showLeggings.get();
     }
 
     public int enchantmentFormat() {
-        return enchantmentFormat.get().intValue();
+        return enchantmentFormat.get();
     }
 
     public boolean showDistance() {
-        return showDistance.get().booleanValue();
+        return showDistance.get();
     }
 
     public boolean showDirection() {
-        return showDirection.get().booleanValue();
+        return showDirection.get();
     }
 
     public boolean showSpawn() {
-        return showSpawn.get().booleanValue();
+        return showSpawn.get();
     }
 
     public boolean showGroupName() {
-        return showGroupName.get().booleanValue();
+        return showGroupName.get();
     }
 
     public boolean showFriend() {
-        return showFriend.get().booleanValue();
+        return showFriend.get();
     }
 
     public boolean showEnemy() {
-        return showEnemy.get().booleanValue();
+        return showEnemy.get();
     }
 
     public boolean showRegularity() {
-        return showRegularity.get().booleanValue();
+        return showRegularity.get();
     }
 
     public boolean showDark() {
-        return showDark.get().booleanValue();
+        return showDark.get();
     }
 
     public boolean showBountyHunter() {
-        return showBountyHunter.get().booleanValue();
+        return showBountyHunter.get();
     }
 
     public boolean useVanillaFont() {
-        return useVanillaFont.get().booleanValue();
+        return useVanillaFont.get();
     }
 
     public HudConfig hud() {

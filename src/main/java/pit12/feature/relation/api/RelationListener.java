@@ -24,7 +24,4 @@ public interface RelationListener {
     void onRelationsLoaded();
 
     void onRelationChanged(UUID playerId, Relation previous, Relation current);
-
-    /** Presence changes include edits to the relation of a player already in Tab. */
-    default void onPresenceChanged(UUID playerId, Relation relation, boolean present) {}
 }

@@ -42,13 +42,9 @@ final class UiTextCache {
             new LinkedHashMap<String, TextureEntry>(MAX_ENTRIES, 0.75F, true);
 
     UiTextCache(float logicalFontSize, float pixelScale) {
-        this(new Font(Font.SANS_SERIF, Font.PLAIN,
-                Math.max(1, Math.round(logicalFontSize * pixelScale))), pixelScale);
-    }
-
-    private UiTextCache(Font font, float pixelScale) {
         this.pixelScale = pixelScale;
-        this.font = font;
+        font = new Font(Font.SANS_SERIF, Font.PLAIN,
+                Math.max(1, Math.round(logicalFontSize * pixelScale)));
         BufferedImage metricsImage = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
         Graphics2D graphics = metricsImage.createGraphics();
         try {
