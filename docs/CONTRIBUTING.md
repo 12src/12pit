@@ -1,5 +1,7 @@
 # Contributing to 12pit
 
+This guide focuses on code contributions. For translations, see the [translation guide](TRANSLATING.md).
+
 ## Start contributing
 
 Fixing bugs, documentation, tests, maintenance, or adding new features are all welcome contributions. Describe the changes and reasons in the pull request description.

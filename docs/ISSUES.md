@@ -8,17 +8,15 @@ In case of a bug, state expected behavior, actual results, and a way to reproduc
 
 In case of a feature request or an enhancement, describe the problem that should be solved, and the desired outcome. Short examples are helpful, but the implementation does not have to be described. Questions and preliminary thoughts are also fine.
 
-Labels do not have to be applied to an issue. Maintainers can add or modify labels as they get better understanding of an issue.
-
 ## Triage
 
 During investigating an issue, maintainers can add the following labels: https://github.com/12src/12pit/labels/needs%20triage, https://github.com/12src/12pit/labels/needs%20info, or https://github.com/12src/12pit/labels/needs%20reproduction.
 
-The following labels are used for an open question about the product or the technology: https://github.com/12src/12pit/labels/needs%20decision or https://github.com/12src/12pit/labels/discussion. Usage-related questions should have the https://github.com/12src/12pit/labels/question label. The https://github.com/12src/12pit/labels/invalid label is used for issues based on false assumptions or not related to the project.
+The https://github.com/12src/12pit/labels/needs%20decision label is used when a product or technical decision is needed before work starts, while https://github.com/12src/12pit/labels/discussion is used for discussion issues. If an issue is a question, it should have the https://github.com/12src/12pit/labels/question label. The https://github.com/12src/12pit/labels/invalid label is used for issues based on false assumptions or not related to the project.
 
-Once an issue is confirmed (reproducible problem or accepted request), apply the https://github.com/12src/12pit/labels/confirmed label to the issue and then classify the issue according to type, area, priority, and environment. Use https://github.com/12src/12pit/labels/needs%20verification in case of suggested changes until someone verifies those changes in the game or the corresponding environment.
+Once an issue is confirmed (reproducible problem or accepted request), apply the https://github.com/12src/12pit/labels/confirmed label to the issue and then classify the issue according to type, area, priority, and environment.
 
-Some issues are closed after providing an answer or discussing it. Other issues can be closed with the following labels: https://github.com/12src/12pit/labels/duplicate, https://github.com/12src/12pit/labels/cannot%20reproduce, https://github.com/12src/12pit/labels/upstream, or https://github.com/12src/12pit/labels/wontfix.
+Most issues are closed (as completed) along with one or more merged pull requests. Some issues are closed once answered or discussed. Other issues are closed with the following labels: https://github.com/12src/12pit/labels/duplicate, https://github.com/12src/12pit/labels/cannot%20reproduce, https://github.com/12src/12pit/labels/upstream, or https://github.com/12src/12pit/labels/wontfix.
 
 ## Labels
 
@@ -38,4 +36,4 @@ Additionally, an issue can be https://github.com/12src/12pit/labels/blocked or h
 
 ## Pick an Issue
 
-The https://github.com/12src/12pit/labels/help%20wanted label means that contributions from the community are welcome. Find an open issue labeled https://github.com/12src/12pit/labels/confirmed. For a small initial contribution, find the https://github.com/12src/12pit/labels/good%20first%20issue label. Make sure that no one claimed it yet and follow the [contributing guide](CONTRIBUTING.md).
+The https://github.com/12src/12pit/labels/help%20wanted label means that contributions from the community are welcome. You must find an open issue labeled https://github.com/12src/12pit/labels/confirmed to work on. For a small initial contribution, look for the https://github.com/12src/12pit/labels/good%20first%20issue label. Make sure that no one has claimed it yet and follow the [contributing guide](CONTRIBUTING.md).

@@ -1,15 +1,17 @@
 # 12pit
 
+English | [简体中文](docs/zh-CN/README.md)
+
 > [!WARNING]
 > 12pit is being developed and is currently not playable.
 
 12pit is an open-source mod for The Pit on Minecraft 1.8.9 using the Forge modding platform. It is meant to be lightweight.
 
-You can join our Discord [here](https://discord.gg/e9PRKMUenc) and help us develop in the `#developer` channel.
+You can join our Discord [here](https://discord.gg/e9PRKMUenc) and seek help or discuss development related matters on the `#developer` channel.
 
 ## Requirements
 
-JDK 21 should be used to run Gradle. Project has a Java 8 toolchain configured for running Minecraft client. Gradle will find or download it automatically.
+Use JDK 21 to run Gradle. Compiling the mod requires a Java 8 toolchain. Gradle will find or download it automatically. The Minecraft client also runs on Java 8.
 
 Node.js and npm are required for `assemble` and `runClient` because of the bundled web interface that those tasks build. Java tests require it as well. Node.js 24 is used in CI.
 
@@ -44,12 +46,13 @@ Install the recommended extensions if prompted. `Ctrl+Shift+B` runs `assemble` t
 - [Architecture](docs/ARCHITECTURE.md)
 - [Implementation](docs/IMPLEMENTATION.md)
 - [Contributing](docs/CONTRIBUTING.md)
+- [Translating](docs/TRANSLATING.md)
 - [Issues](docs/ISSUES.md)
 - [Running, testing, and debugging](docs/DEBUGGING.md)
 
 ## Third-Party Notices
 
-12pit includes the following third-party components.
+12pit includes the following third-party components:
 
 - [SpongePowered Mixin](https://github.com/SpongePowered/Mixin), MIT. License text: [MIXIN-MIT.txt](src/main/resources/META-INF/third-party-licenses/MIXIN-MIT.txt).
 - [Vue](https://vuejs.org/), MIT. License text: [VUE-MIT.txt](src/main/resources/META-INF/third-party-licenses/VUE-MIT.txt).

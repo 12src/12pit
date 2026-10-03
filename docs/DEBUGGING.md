@@ -2,19 +2,19 @@
 
 ## Setup
 
-As per [README requirements](../README.md#requirements), the versions of JDK and Node.js are listed. The different Java versions are used by Gradle and Minecraft client: JDK 21 for Gradle and Java 8 toolchain for the client.
+The [README requirements](../README.md#requirements) list the required JDK and Node.js versions. Gradle runs on JDK 21. Compiling the mod requires a Java 8 toolchain. The client also runs on Java 8.
 
 In IntelliJ IDEA, open the repository as Gradle project and configure JDK 21 for Gradle. In VS Code, install the recommended extensions. `Ctrl+Shift+B` will run `assemble`.
 
 ## Run the development client
 
-From the repository root on Windows, run:
+On Windows, run:
 
 ```powershell
 .\gradlew.bat runClient
 ```
 
-From the repository root on Linux or macOS, run:
+On Linux/macOS, run:
 
 ```sh
 ./gradlew runClient
@@ -48,7 +48,7 @@ Replace `<game-port>` with the port from the log. The frontend does not have the
 
 ## Run checks
 
-From the repository root on Windows, run the following commands. From the repository root on Linux or macOS, use `./gradlew` instead of `./gradlew.bat`.
+On Windows, run the following commands from the repository root. On Linux or macOS, use `./gradlew` instead of `./gradlew.bat`.
 
 ```powershell
 .\gradlew.bat check
@@ -63,7 +63,7 @@ The formatting commands just check the files. They don't modify the files. Insta
 
 ## Troubleshooting
 
-In case of Gradle sync or toolchain error, make sure that Gradle uses JDK 21 and finds/download the Java 8.
+If Gradle sync fails or reports a toolchain error, check that Gradle uses JDK 21 and can find or download the Java 8 toolchain.
 
 In case the Vite page is opened, but the requests fail, make sure that the game is launched and the `WEB_UI_TARGET` matches the current address of the game. If the Web UI fails to launch, look for the "Web UI is unavailable" message in the game log.
 
@@ -73,4 +73,4 @@ The saved data is in `12pit/` directory in the Minecraft game directory. Profile
 
 Create a backup copy of these files before changing them in order to diagnose a load error. Do not delete the saved data in order to reset a temporary session issue.
 
-[DevAuth](https://github.com/DJtheRedstoner/DevAuth) is provided in the development environment. To test with an authenticated account, enable the `devauth.enabled` JVM property and follow the [DevAuth configuration guide](https://github.com/DJtheRedstoner/DevAuth#configuration). You don't need DevAuth to build the jar.
+[DevAuth](https://github.com/DJtheRedstoner/DevAuth) is provided in the development environment. To test with an authenticated account, enable the `devauth.enabled` JVM property and follow the [DevAuth configuration guide](https://github.com/DJtheRedstoner/DevAuth#configuration).
