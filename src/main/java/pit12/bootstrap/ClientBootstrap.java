@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.minecraft.client.Minecraft;
+import pit12.feature.eventlist.EventListConfig;
+import pit12.feature.eventlist.EventListFeature;
 import pit12.feature.gamma.GammaBinding;
 import pit12.feature.gamma.GammaConfig;
 import pit12.feature.gamma.GammaFeature;
@@ -77,6 +79,7 @@ public final class ClientBootstrap {
         CommandRegistry commands = new CommandRegistry(client, ForgeCommandAdapter::register);
         WebUiConfig webUiConfig = new WebUiConfig();
         PlayerListConfig playerListConfig = new PlayerListConfig();
+        EventListConfig eventListConfig = new EventListConfig();
         PlayerEspConfig playerEspConfig = new PlayerEspConfig();
         ItemEspConfig itemEspConfig = new ItemEspConfig();
         TooltipConfig tooltipConfig = new TooltipConfig();
@@ -86,6 +89,7 @@ public final class ClientBootstrap {
         SwapConfig swapConfig = new SwapConfig();
         configs.register(webUiConfig);
         configs.register(playerListConfig);
+        configs.register(eventListConfig);
         configs.register(playerEspConfig);
         configs.register(itemEspConfig);
         configs.register(tooltipConfig);
@@ -116,6 +120,7 @@ public final class ClientBootstrap {
         components.add(pitContext);
         components.add(new PlayerListFeature(configs, playerListConfig, playerEquipment, pitContext,
                 hudRegistry, relations, presence));
+        components.add(new EventListFeature(configs, eventListConfig, hudRegistry));
         components
                 .add(new PlayerEspFeature(configs, playerEspConfig, session, presence, relations));
         components.add(new ItemEspFeature(configs, itemEspConfig, session));
