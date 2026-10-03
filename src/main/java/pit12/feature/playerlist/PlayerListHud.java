@@ -23,7 +23,6 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -31,10 +30,9 @@ import net.minecraft.util.ResourceLocation;
 import pit12.Pit12;
 import pit12.runtime.config.HudConfig;
 import pit12.runtime.hud.HudElement;
-import pit12.shared.rendering.UiRenderer;
+import pit12.runtime.hud.HudRenderer;
 
 final class PlayerListHud implements HudElement {
-    private static final float FONT_SIZE = 8.0F;
     private static final int GAP = 10;
     private static final int EDGE_PADDING = 5;
     private static final int ARROW_SIZE = 8;
@@ -48,8 +46,7 @@ final class PlayerListHud implements HudElement {
     private final PlayerListConfig config;
     private final HudConfig hudConfig;
     private final Minecraft minecraft;
-    private final FontRenderer vanillaFont;
-    private final UiRenderer renderer;
+    private final HudRenderer renderer;
     private PlayerListSnapshot snapshot = PlayerListSnapshot.empty();
     private int nameWidth;
     private int leggingsWidth;
@@ -61,6 +58,7 @@ final class PlayerListHud implements HudElement {
     private int width;
     private int height;
     private float pixelScale = Float.NaN;
+    private boolean monospaceFont;
     private double renderLocalX;
     private double renderLocalZ;
     private double renderForwardX;
@@ -70,18 +68,15 @@ final class PlayerListHud implements HudElement {
     private boolean renderDirectionReady;
     private boolean sampleLayout;
 
-    PlayerListHud(PlayerListConfig config) {
+    PlayerListHud(PlayerListConfig config, HudRenderer renderer) {
         this.config = config;
         hudConfig = config.hud();
         minecraft = Minecraft.getMinecraft();
-        vanillaFont = minecraft.fontRendererObj;
-        renderer = new UiRenderer(minecraft,
-                new ResourceLocation(Pit12.MOD_ID, "fonts/montserrat-regular.otf"));
+        this.renderer = renderer;
     }
 
     void snapshot(PlayerListSnapshot snapshot) {
         this.snapshot = snapshot;
-        lineHeight = fontHeight() + 2;
         recalculateLayout();
     }
 
@@ -113,12 +108,14 @@ final class PlayerListHud implements HudElement {
     @Override
     public void resize(float pixelScale) {
         float normalizedScale = Math.max(0.01F, pixelScale);
-        if (Float.compare(this.pixelScale, normalizedScale) == 0) {
+        boolean monospaceFont = hudConfig.useMonospaceFont().get();
+        if (Float.compare(this.pixelScale, normalizedScale) == 0
+                && this.monospaceFont == monospaceFont) {
             return;
         }
         this.pixelScale = normalizedScale;
+        this.monospaceFont = monospaceFont;
         renderer.resize(normalizedScale);
-        lineHeight = fontHeight() + 2;
         recalculateLayout();
     }
 
@@ -160,7 +157,7 @@ final class PlayerListHud implements HudElement {
                 y += lineHeight;
             }
             if (config.showGroupName()) {
-                text(group.displayName(), EDGE_PADDING, y, 0xFFF0F0F0);
+                renderer.text(group.displayName(), EDGE_PADDING, y, 0xFFF0F0F0, hudConfig);
                 y += lineHeight;
             }
             for (PlayerListEntry entry : entries) {
@@ -173,7 +170,7 @@ final class PlayerListHud implements HudElement {
 
     private void renderEntry(PlayerListEntry entry, int y, float partialTicks) {
         int x = EDGE_PADDING;
-        text(entry.name(), x, y, 0xFFF0F0F0);
+        renderer.text(entry.name(), x, y, 0xFFF0F0F0, hudConfig);
         x += nameWidth + GAP;
         if (config.showLeggings()) {
             renderOptional(entry.leggingsText(), x, y);
@@ -185,24 +182,26 @@ final class PlayerListHud implements HudElement {
         }
         if (config.showDistance()) {
             if (entry.spawn()) {
-                text(SPAWN_TEXT, x, y, MUTED_COLOR);
+                renderer.text(SPAWN_TEXT, x, y, MUTED_COLOR, hudConfig);
             } else {
                 String text = entry.distanceText();
-                text(text, x + distanceWidth - textWidth(text), y,
-                        entry.distanceKnown() ? distanceColor(entry.distance()) : MUTED_COLOR);
+                renderer.text(text, x + distanceWidth - renderer.textWidth(text, hudConfig), y,
+                        entry.distanceKnown() ? distanceColor(entry.distance()) : MUTED_COLOR,
+                        hudConfig);
             }
             x += distanceWidth + directionGap;
         }
         if (config.showDirection()) {
             if (entry.spawn() && !config.showDistance()) {
-                text(SPAWN_TEXT, x, y, MUTED_COLOR);
+                renderer.text(SPAWN_TEXT, x, y, MUTED_COLOR, hudConfig);
             } else if (!entry.spawn() && entry.directionKnown()) {
                 renderer.texture(ARROW_TEXTURE, x + (directionWidth - ARROW_SIZE) / 2,
                         y + (lineHeight - ARROW_SIZE) / 2, ARROW_SIZE, ARROW_SIZE,
                         entry.distanceKnown() ? distanceColor(entry.distance()) : MUTED_COLOR,
                         interpolatedDirection(entry, partialTicks));
             } else if (!entry.spawn()) {
-                text("?", x + (directionWidth - textWidth("?")) / 2, y, MUTED_COLOR);
+                renderer.text("?", x + (directionWidth - renderer.textWidth("?", hudConfig)) / 2, y,
+                        MUTED_COLOR, hudConfig);
             }
         }
     }
@@ -267,7 +266,7 @@ final class PlayerListHud implements HudElement {
 
     private void renderOptional(String text, int x, int y) {
         if (text != null && !text.isEmpty()) {
-            text(text, x, y, 0xFFD8D8D8);
+            renderer.text(text, x, y, 0xFFD8D8D8, hudConfig);
         }
     }
 
@@ -281,32 +280,47 @@ final class PlayerListHud implements HudElement {
         leggingsWidth = 0;
         heldItemWidth = 0;
         distanceWidth = 0;
+        int fontHeight = renderer.fontHeight("", hudConfig);
         directionWidth = config.showDirection() ? ARROW_SIZE : 0;
-        directionGap = Math.max(1, textWidth(" "));
+        directionGap = Math.max(1, renderer.textWidth(" ", hudConfig));
         for (List<PlayerListEntry> entries : content.entries().values()) {
             for (PlayerListEntry entry : entries) {
-                nameWidth = Math.max(nameWidth, textWidth(entry.name()));
+                nameWidth = Math.max(nameWidth, renderer.textWidth(entry.name(), hudConfig));
+                fontHeight = Math.max(fontHeight, renderer.fontHeight(entry.name(), hudConfig));
                 if (config.showLeggings() && entry.leggingsText() != null) {
-                    leggingsWidth = Math.max(leggingsWidth, textWidth(entry.leggingsText()));
+                    leggingsWidth = Math.max(leggingsWidth,
+                            renderer.textWidth(entry.leggingsText(), hudConfig));
+                    fontHeight = Math.max(fontHeight,
+                            renderer.fontHeight(entry.leggingsText(), hudConfig));
                 }
                 if (config.showHeldItem() && entry.heldItemText() != null) {
-                    heldItemWidth = Math.max(heldItemWidth, textWidth(entry.heldItemText()));
+                    heldItemWidth = Math.max(heldItemWidth,
+                            renderer.textWidth(entry.heldItemText(), hudConfig));
+                    fontHeight = Math.max(fontHeight,
+                            renderer.fontHeight(entry.heldItemText(), hudConfig));
                 }
                 if (config.showDistance()) {
-                    distanceWidth = Math.max(distanceWidth, textWidth(entry.distanceText()));
+                    String text = entry.spawn() ? SPAWN_TEXT : entry.distanceText();
+                    distanceWidth = Math.max(distanceWidth, renderer.textWidth(text, hudConfig));
+                    fontHeight = Math.max(fontHeight, renderer.fontHeight(text, hudConfig));
                 }
                 if (config.showDirection() && !config.showDistance() && entry.spawn()) {
-                    directionWidth = Math.max(directionWidth, textWidth(SPAWN_TEXT));
+                    directionWidth =
+                            Math.max(directionWidth, renderer.textWidth(SPAWN_TEXT, hudConfig));
                 }
             }
         }
         if (config.showGroupName()) {
             for (PlayerListGroup group : PlayerListGroup.values()) {
                 if (!content.entries(group).isEmpty()) {
-                    nameWidth = Math.max(nameWidth, textWidth(group.displayName()));
+                    nameWidth =
+                            Math.max(nameWidth, renderer.textWidth(group.displayName(), hudConfig));
+                    fontHeight = Math.max(fontHeight,
+                            renderer.fontHeight(group.displayName(), hudConfig));
                 }
             }
         }
+        lineHeight = fontHeight + 2;
         width = EDGE_PADDING + nameWidth;
         if (config.showLeggings()) {
             width += GAP + leggingsWidth;
@@ -337,28 +351,6 @@ final class PlayerListHud implements HudElement {
             }
         }
         height = Math.max(lineHeight, height);
-    }
-
-    private void text(String text, int x, int y, int color) {
-        boolean shadow = hudConfig.textShadow().get();
-        if (!config.useVanillaFont()) {
-            renderer.text(text, x, y, FONT_SIZE, color, shadow);
-            return;
-        }
-        if (shadow) {
-            vanillaFont.drawStringWithShadow(text, x, y, color);
-        } else {
-            vanillaFont.drawString(text, x, y, color, false);
-        }
-    }
-
-    private int textWidth(String text) {
-        return config.useVanillaFont() ? vanillaFont.getStringWidth(text)
-                : renderer.textWidth(text, FONT_SIZE);
-    }
-
-    private int fontHeight() {
-        return config.useVanillaFont() ? vanillaFont.FONT_HEIGHT : renderer.fontHeight(FONT_SIZE);
     }
 
     private static int distanceColor(float distance) {

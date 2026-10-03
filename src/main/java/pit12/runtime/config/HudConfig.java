@@ -20,14 +20,16 @@ package pit12.runtime.config;
 
 public final class HudConfig {
     private final BooleanSetting textShadow;
+    private final BooleanSetting useMonospaceFont;
     private final IntegerSetting anchor;
     private final IntegerSetting offsetX;
     private final IntegerSetting offsetY;
     private final IntegerSetting scale;
 
-    HudConfig(BooleanSetting textShadow, IntegerSetting anchor, IntegerSetting offsetX,
-            IntegerSetting offsetY, IntegerSetting scale) {
+    HudConfig(BooleanSetting textShadow, BooleanSetting useMonospaceFont, IntegerSetting anchor,
+            IntegerSetting offsetX, IntegerSetting offsetY, IntegerSetting scale) {
         this.textShadow = textShadow;
+        this.useMonospaceFont = useMonospaceFont;
         this.anchor = anchor;
         this.offsetX = offsetX;
         this.offsetY = offsetY;
@@ -36,6 +38,10 @@ public final class HudConfig {
 
     public BooleanSetting textShadow() {
         return textShadow;
+    }
+
+    public BooleanSetting useMonospaceFont() {
+        return useMonospaceFont;
     }
 
     public IntegerSetting scale() {

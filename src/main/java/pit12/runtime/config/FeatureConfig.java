@@ -127,6 +127,9 @@ public abstract class FeatureConfig {
         String prefix = id + ".";
         BooleanSetting textShadow = new BooleanSetting(prefix + "text_shadow", "Text shadow",
                 "Draws a shadow behind text in the " + displayName + ".", defaultTextShadow);
+        BooleanSetting useMonospaceFont = new BooleanSetting(prefix + "use_monospace_font",
+                "Use monospace font",
+                "Uses the bundled Monocraft font for text in the " + displayName + ".", false);
         IntegerSetting anchor = new IntegerSetting(prefix + "anchor", "Anchor", "",
                 defaultAnchor.id(), HudAnchor.TOP_LEFT.id(), HudAnchor.BOTTOM_RIGHT.id());
         IntegerSetting offsetX = new IntegerSetting(prefix + "offset_x", "Horizontal offset", "",
@@ -135,11 +138,12 @@ public abstract class FeatureConfig {
                 defaultOffsetY, -32768, 32767);
         IntegerSetting scale = new IntegerSetting(prefix + "scale", "Scale", "", 100, 25, 300);
         register(textShadow, ConfigOption.Kind.BOOLEAN);
+        register(useMonospaceFont, ConfigOption.Kind.BOOLEAN);
         register(anchor, null);
         register(offsetX, null);
         register(offsetY, null);
         register(scale, null);
-        return new HudConfig(textShadow, anchor, offsetX, offsetY, scale);
+        return new HudConfig(textShadow, useMonospaceFont, anchor, offsetX, offsetY, scale);
     }
 
     private <T> void register(Setting<T> setting, ConfigOption.Kind optionKind) {

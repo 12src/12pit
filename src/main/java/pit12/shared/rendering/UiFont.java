@@ -24,7 +24,10 @@ import java.awt.Font;
 import java.awt.FontFormatException;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
+import java.awt.Rectangle;
 import java.awt.RenderingHints;
+import java.awt.font.FontRenderContext;
+import java.awt.font.GlyphVector;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
@@ -37,7 +40,6 @@ import net.minecraft.util.ResourceLocation;
 import org.lwjgl.opengl.GL11;
 
 final class UiFont {
-    private static final int ATLAS_SIZE = 512;
     private static final int FIRST_CHARACTER = 32;
     private static final int LAST_CHARACTER = 255;
     private final Glyph[] glyphs = new Glyph[LAST_CHARACTER + 1];
@@ -51,41 +53,69 @@ final class UiFont {
                 }
             };
     private final DynamicTexture texture;
+    private final int atlasSize;
     private final int height;
+    private final int boldOffset;
 
     UiFont(Minecraft minecraft, ResourceLocation fontLocation, float logicalFontSize,
             float pixelScale) {
-        float fontSize = Math.max(1.0F, Math.round(logicalFontSize * pixelScale));
+        float fontSize = Math.max(1.0F, logicalFontSize * pixelScale);
         Font font = loadFont(minecraft, fontLocation, fontSize);
-        BufferedImage atlas =
-                new BufferedImage(ATLAS_SIZE, ATLAS_SIZE, BufferedImage.TYPE_INT_ARGB);
-        Graphics2D graphics = atlas.createGraphics();
-        graphics.setComposite(AlphaComposite.Src);
-        graphics.setFont(font);
-        graphics.setColor(Color.WHITE);
-        graphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
-                RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-        graphics.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS,
-                RenderingHints.VALUE_FRACTIONALMETRICS_ON);
-        FontMetrics metrics = graphics.getFontMetrics();
+        boldOffset = Math.max(1, Math.round(pixelScale));
+        BufferedImage metricsImage = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D metricsGraphics = graphics(metricsImage, font);
+        FontMetrics metrics;
+        FontRenderContext context;
+        try {
+            metrics = metricsGraphics.getFontMetrics();
+            context = metricsGraphics.getFontRenderContext();
+        } finally {
+            metricsGraphics.dispose();
+            metricsImage.flush();
+        }
         int lineHeight = metrics.getHeight();
-        int cellHeight = lineHeight + 2;
+        GlyphVector[] vectors = new GlyphVector[LAST_CHARACTER + 1];
+        Rectangle[] bounds = new Rectangle[LAST_CHARACTER + 1];
+        int cellHeight = 2;
+        int maxCellWidth = 2;
+        for (int codePoint = FIRST_CHARACTER; codePoint <= LAST_CHARACTER; codePoint++) {
+            char character = (char) codePoint;
+            if (!font.canDisplay(character)) {
+                continue;
+            }
+            GlyphVector vector = font.createGlyphVector(context, Character.toString(character));
+            Rectangle pixelBounds = vector.getPixelBounds(context, 0.0F, metrics.getAscent());
+            vectors[codePoint] = vector;
+            bounds[codePoint] = pixelBounds;
+            maxCellWidth = Math.max(maxCellWidth, pixelBounds.width + 2);
+            cellHeight = Math.max(cellHeight, pixelBounds.height + 2);
+        }
+        int size = 512;
+        while ((size - 2) / maxCellWidth * ((size - 2) / cellHeight) < LAST_CHARACTER
+                - FIRST_CHARACTER + 1) {
+            size *= 2;
+        }
+        atlasSize = size;
+        BufferedImage atlas = new BufferedImage(atlasSize, atlasSize, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D graphics = graphics(atlas, font);
         int cursorX = 1;
         int cursorY = 1;
         for (int codePoint = FIRST_CHARACTER; codePoint <= LAST_CHARACTER; codePoint++) {
-            char character = (char) codePoint;
-            int advance = Math.max(1, metrics.charWidth(character));
-            int cellWidth = advance + 3;
-            if (cursorX + cellWidth >= ATLAS_SIZE) {
+            GlyphVector vector = vectors[codePoint];
+            if (vector == null) {
+                continue;
+            }
+            Rectangle pixelBounds = bounds[codePoint];
+            int cellWidth = pixelBounds.width + 2;
+            if (cursorX + cellWidth >= atlasSize) {
                 cursorX = 1;
                 cursorY += cellHeight;
             }
-            if (cursorY + cellHeight >= ATLAS_SIZE) {
-                break;
-            }
-            graphics.drawString(Character.toString(character), cursorX + 1,
-                    cursorY + metrics.getAscent() + 1);
-            glyphs[codePoint] = new Glyph(cursorX, cursorY + 1, cellWidth, lineHeight, advance);
+            graphics.drawGlyphVector(vector, cursorX + 1 - pixelBounds.x,
+                    cursorY + 1 + metrics.getAscent() - pixelBounds.y);
+            glyphs[codePoint] =
+                    new Glyph(cursorX + 1, cursorY + 1, pixelBounds.width, pixelBounds.height,
+                            pixelBounds.x, pixelBounds.y, vector.getGlyphMetrics(0).getAdvanceX());
             cursorX += cellWidth;
         }
         height = lineHeight;
@@ -97,8 +127,8 @@ final class UiFont {
             atlas.flush();
         }
         GlStateManager.bindTexture(texture.getGlTextureId());
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
     }
 
     int width(String text) {
@@ -106,7 +136,7 @@ final class UiFont {
         if (cached != null) {
             return cached;
         }
-        int width = 0;
+        float width = 0.0F;
         boolean formatting = false;
         boolean bold = false;
         for (int index = 0; index < text.length(); index++) {
@@ -124,10 +154,11 @@ final class UiFont {
                 formatting = true;
                 continue;
             }
-            width += glyph(character).advance + (bold ? 1 : 0);
+            width += glyphs[character].advance + (bold ? boldOffset : 0);
         }
-        widthCache.put(text, width);
-        return width;
+        int pixelWidth = Math.round(width);
+        widthCache.put(text, pixelWidth);
+        return pixelWidth;
     }
 
     boolean canRender(String text) {
@@ -163,7 +194,7 @@ final class UiFont {
         setColor(currentColor);
         GL11.glBegin(GL11.GL_QUADS);
         try {
-            int cursorX = x;
+            float cursor = 0.0F;
             boolean formatting = false;
             for (int index = 0; index < text.length(); index++) {
                 char character = text.charAt(index);
@@ -185,30 +216,34 @@ final class UiFont {
                     formatting = true;
                     continue;
                 }
-                Glyph glyph = glyph(character);
-                float left = (glyph.x + 0.5F) / ATLAS_SIZE;
-                float top = (glyph.y + 0.5F) / ATLAS_SIZE;
-                float right = (glyph.x + glyph.width - 0.5F) / ATLAS_SIZE;
-                float bottom = (glyph.y + glyph.height - 0.5F) / ATLAS_SIZE;
+                Glyph glyph = glyphs[character];
+                // Keep fractional advances until placement so small scale errors do not add up along a line.
+                int cursorX = x + Math.round(cursor) + glyph.offsetX;
+                int glyphY = y + glyph.offsetY;
+                // Quad edges map to texel edges; pixel centers then sample texel centers without stretching.
+                float left = (float) glyph.x / atlasSize;
+                float top = (float) glyph.y / atlasSize;
+                float right = (float) (glyph.x + glyph.width) / atlasSize;
+                float bottom = (float) (glyph.y + glyph.height) / atlasSize;
                 GL11.glTexCoord2f(left, top);
-                GL11.glVertex2i(cursorX, y);
+                GL11.glVertex2i(cursorX, glyphY);
                 GL11.glTexCoord2f(left, bottom);
-                GL11.glVertex2i(cursorX, y + glyph.height);
+                GL11.glVertex2i(cursorX, glyphY + glyph.height);
                 GL11.glTexCoord2f(right, bottom);
-                GL11.glVertex2i(cursorX + glyph.width, y + glyph.height);
+                GL11.glVertex2i(cursorX + glyph.width, glyphY + glyph.height);
                 GL11.glTexCoord2f(right, top);
-                GL11.glVertex2i(cursorX + glyph.width, y);
+                GL11.glVertex2i(cursorX + glyph.width, glyphY);
                 if (bold) {
                     GL11.glTexCoord2f(left, top);
-                    GL11.glVertex2i(cursorX + 1, y);
+                    GL11.glVertex2i(cursorX + boldOffset, glyphY);
                     GL11.glTexCoord2f(left, bottom);
-                    GL11.glVertex2i(cursorX + 1, y + glyph.height);
+                    GL11.glVertex2i(cursorX + boldOffset, glyphY + glyph.height);
                     GL11.glTexCoord2f(right, bottom);
-                    GL11.glVertex2i(cursorX + glyph.width + 1, y + glyph.height);
+                    GL11.glVertex2i(cursorX + glyph.width + boldOffset, glyphY + glyph.height);
                     GL11.glTexCoord2f(right, top);
-                    GL11.glVertex2i(cursorX + glyph.width + 1, y);
+                    GL11.glVertex2i(cursorX + glyph.width + boldOffset, glyphY);
                 }
-                cursorX += glyph.advance + (bold ? 1 : 0);
+                cursor += glyph.advance + (bold ? boldOffset : 0);
             }
         } finally {
             try {
@@ -228,12 +263,16 @@ final class UiFont {
         texture.deleteGlTexture();
     }
 
-    private Glyph glyph(char character) {
-        Glyph glyph = character <= LAST_CHARACTER ? glyphs[character] : null;
-        if (glyph == null) {
-            glyph = glyphs['?'];
-        }
-        return glyph;
+    private static Graphics2D graphics(BufferedImage image, Font font) {
+        Graphics2D graphics = image.createGraphics();
+        graphics.setComposite(AlphaComposite.Src);
+        graphics.setFont(font);
+        graphics.setColor(Color.WHITE);
+        graphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
+                RenderingHints.VALUE_TEXT_ANTIALIAS_OFF);
+        graphics.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS,
+                RenderingHints.VALUE_FRACTIONALMETRICS_ON);
+        return graphics;
     }
 
     private static Font loadFont(Minecraft minecraft, ResourceLocation fontLocation,
@@ -251,13 +290,18 @@ final class UiFont {
         private final int y;
         private final int width;
         private final int height;
-        private final int advance;
+        private final int offsetX;
+        private final int offsetY;
+        private final float advance;
 
-        private Glyph(int x, int y, int width, int height, int advance) {
+        private Glyph(int x, int y, int width, int height, int offsetX, int offsetY,
+                float advance) {
             this.x = x;
             this.y = y;
             this.width = width;
             this.height = height;
+            this.offsetX = offsetX;
+            this.offsetY = offsetY;
             this.advance = advance;
         }
     }

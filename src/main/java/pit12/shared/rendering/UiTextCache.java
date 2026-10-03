@@ -36,52 +36,65 @@ import org.lwjgl.opengl.GL11;
 final class UiTextCache {
     private static final int MAX_ENTRIES = 128;
     private final float pixelScale;
-    private final Font font;
-    private final FontMetrics metrics;
+    private final Font[] fonts = new Font[2];
+    private final FontMetrics[] metrics = new FontMetrics[2];
     private final Map<String, TextureEntry> entries =
             new LinkedHashMap<String, TextureEntry>(MAX_ENTRIES, 0.75F, true);
 
     UiTextCache(float logicalFontSize, float pixelScale) {
         this.pixelScale = pixelScale;
-        font = new Font(Font.SANS_SERIF, Font.PLAIN,
+        fonts[0] = new Font(Font.SANS_SERIF, Font.PLAIN,
                 Math.max(1, Math.round(logicalFontSize * pixelScale)));
+        fonts[1] = fonts[0].deriveFont(Font.BOLD);
         BufferedImage metricsImage = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
         Graphics2D graphics = metricsImage.createGraphics();
         try {
-            graphics.setFont(font);
-            metrics = graphics.getFontMetrics();
+            graphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
+                    RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+            graphics.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS,
+                    RenderingHints.VALUE_FRACTIONALMETRICS_ON);
+            metrics[0] = graphics.getFontMetrics(fonts[0]);
+            metrics[1] = graphics.getFontMetrics(fonts[1]);
         } finally {
             graphics.dispose();
             metricsImage.flush();
         }
     }
 
-    boolean draw(String text, float x, float y, int color, boolean shadow) {
+    void draw(String text, float x, float y, int color, boolean shadow) {
         int runStart = 0;
         int cursor = 0;
         int currentColor = color;
+        boolean bold = false;
         for (int index = 0; index < text.length(); index++) {
-            if (text.charAt(index) != '\u00A7' || index + 1 >= text.length()) {
+            if (text.charAt(index) != '\u00A7') {
                 continue;
             }
             String run = text.substring(runStart, index);
-            if (!run.isEmpty() && !drawPlain(run, x + cursor, y, currentColor)) {
-                return false;
+            if (!run.isEmpty()) {
+                cursor += drawPlain(run, x + cursor / pixelScale, y, currentColor, bold);
             }
-            cursor += width(run);
-            currentColor = McFormatting.color(text.charAt(index + 1), color, currentColor, shadow);
+            if (index + 1 == text.length()) {
+                return;
+            }
+            char code = text.charAt(index + 1);
+            currentColor = McFormatting.color(code, color, currentColor, shadow);
+            if (McFormatting.isBold(code)) {
+                bold = true;
+            } else if (McFormatting.resetsStyle(code)) {
+                bold = false;
+            }
             index++;
             runStart = index + 1;
         }
         String run = text.substring(runStart);
-        return run.isEmpty() || drawPlain(run, x + cursor, y, currentColor);
+        if (!run.isEmpty()) {
+            drawPlain(run, x + cursor / pixelScale, y, currentColor, bold);
+        }
     }
 
-    private boolean drawPlain(String text, float x, float y, int color) {
-        TextureEntry entry = entry(text);
-        if (entry == null) {
-            return false;
-        }
+    private int drawPlain(String text, float x, float y, int color, boolean bold) {
+        TextureEntry entry = entry(text, bold);
         int pixelX = Math.round(x * pixelScale);
         int pixelY = Math.round(y * pixelScale);
         GlStateManager.pushMatrix();
@@ -97,18 +110,48 @@ final class UiTextCache {
                     0);
             GlStateManager.bindTexture(entry.texture.getGlTextureId());
             GlStateManager.color(red, green, blue, alpha);
-            Gui.drawModalRectWithCustomSizedTexture(pixelX, pixelY, 0.0F, 0.0F, entry.width,
+            Gui.drawModalRectWithCustomSizedTexture(pixelX - 1, pixelY - 1, 0.0F, 0.0F, entry.width,
                     entry.height, entry.width, entry.height);
         } finally {
             GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
             GlStateManager.popMatrix();
         }
-        return true;
+        return entry.advance;
     }
 
     int width(String text) {
-        TextureEntry entry = entry(text);
-        return entry == null ? -1 : (int) Math.ceil(entry.width / pixelScale);
+        int width = 0;
+        int runStart = 0;
+        boolean bold = false;
+        for (int index = 0; index < text.length(); index++) {
+            if (text.charAt(index) != '\u00A7') {
+                continue;
+            }
+            width += runWidth(text.substring(runStart, index), bold);
+            if (index + 1 == text.length()) {
+                return (int) Math.ceil(width / pixelScale);
+            }
+            char code = text.charAt(index + 1);
+            if (McFormatting.isBold(code)) {
+                bold = true;
+            } else if (McFormatting.resetsStyle(code)) {
+                bold = false;
+            }
+            index++;
+            runStart = index + 1;
+        }
+        return (int) Math.ceil((width + runWidth(text.substring(runStart), bold)) / pixelScale);
+    }
+
+    int height() {
+        return (int) Math
+                .ceil(Math.max(metrics[0].getHeight(), metrics[1].getHeight()) / pixelScale);
+    }
+
+    private int runWidth(String text, boolean bold) {
+        String plainText = text.replace('\n', ' ');
+        TextureEntry cached = entries.get(bold ? "\u00A7l" + plainText : plainText);
+        return cached == null ? metrics[bold ? 1 : 0].stringWidth(plainText) : cached.advance;
     }
 
     void close() {
@@ -118,17 +161,17 @@ final class UiTextCache {
         entries.clear();
     }
 
-    private TextureEntry entry(String text) {
-        String plainText = plainText(text);
-        TextureEntry cached = entries.get(plainText);
+    private TextureEntry entry(String text, boolean bold) {
+        String plainText = text.replace('\n', ' ');
+        String key = bold ? "\u00A7l" + plainText : plainText;
+        TextureEntry cached = entries.get(key);
         if (cached != null) {
             return cached;
         }
-        if (font.canDisplayUpTo(plainText) >= 0) {
-            return null;
-        }
-        int textWidth = Math.max(1, metrics.stringWidth(plainText));
-        int textHeight = Math.max(1, metrics.getHeight());
+        FontMetrics runMetrics = metrics[bold ? 1 : 0];
+        int advance = runMetrics.stringWidth(plainText);
+        int textWidth = Math.max(1, advance);
+        int textHeight = Math.max(1, runMetrics.getHeight());
         BufferedImage image =
                 new BufferedImage(textWidth + 2, textHeight + 2, BufferedImage.TYPE_INT_ARGB);
         Graphics2D graphics = image.createGraphics();
@@ -136,13 +179,13 @@ final class UiTextCache {
             graphics.setComposite(AlphaComposite.Clear);
             graphics.fillRect(0, 0, image.getWidth(), image.getHeight());
             graphics.setComposite(AlphaComposite.Src);
-            graphics.setFont(font);
+            graphics.setFont(fonts[bold ? 1 : 0]);
             graphics.setColor(Color.WHITE);
             graphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
                     RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
             graphics.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS,
                     RenderingHints.VALUE_FRACTIONALMETRICS_ON);
-            graphics.drawString(plainText, 1, metrics.getAscent() + 1);
+            graphics.drawString(plainText, 1, runMetrics.getAscent() + 1);
         } finally {
             graphics.dispose();
         }
@@ -152,8 +195,8 @@ final class UiTextCache {
         } finally {
             image.flush();
         }
-        TextureEntry created = new TextureEntry(texture, textWidth + 2, textHeight + 2);
-        entries.put(plainText, created);
+        TextureEntry created = new TextureEntry(texture, textWidth + 2, textHeight + 2, advance);
+        entries.put(key, created);
         trimOldest();
         return created;
     }
@@ -167,31 +210,17 @@ final class UiTextCache {
         }
     }
 
-    private static String plainText(String text) {
-        StringBuilder result = new StringBuilder(text.length());
-        boolean formatting = false;
-        for (int index = 0; index < text.length(); index++) {
-            char character = text.charAt(index);
-            if (formatting) {
-                formatting = false;
-            } else if (character == '\u00A7') {
-                formatting = true;
-            } else {
-                result.append(character == '\n' ? ' ' : character);
-            }
-        }
-        return result.toString();
-    }
-
     private static final class TextureEntry {
         private final DynamicTexture texture;
         private final int width;
         private final int height;
+        private final int advance;
 
-        private TextureEntry(DynamicTexture texture, int width, int height) {
+        private TextureEntry(DynamicTexture texture, int width, int height, int advance) {
             this.texture = texture;
             this.width = width;
             this.height = height;
+            this.advance = advance;
         }
     }
 }

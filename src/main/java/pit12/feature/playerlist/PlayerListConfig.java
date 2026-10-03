@@ -42,7 +42,6 @@ public final class PlayerListConfig extends FeatureConfig {
     private final BooleanSetting showRegularity;
     private final BooleanSetting showDark;
     private final BooleanSetting showBountyHunter;
-    private final BooleanSetting useVanillaFont;
     private final HudConfig hud;
 
     public PlayerListConfig() {
@@ -50,8 +49,6 @@ public final class PlayerListConfig extends FeatureConfig {
                 "Shows loaded player equipment and direction in a compact HUD.");
         subcategory("display", "Display");
         hud = hudConfig("player_list", "Player List", HudAnchor.TOP_LEFT, 6, 6, true);
-        useVanillaFont = booleanSetting("use_vanilla_font", "Use vanilla font",
-                "Uses Minecraft's font renderer for player list text.", true);
         enchantmentFormat = choiceSetting("enchantment_format", "Enchantment format",
                 "Controls how enchantment names and levels are shown.",
                 ENCHANTMENT_FORMAT_BOLD_LEVELS,
@@ -135,10 +132,6 @@ public final class PlayerListConfig extends FeatureConfig {
 
     public boolean showBountyHunter() {
         return showBountyHunter.get();
-    }
-
-    public boolean useVanillaFont() {
-        return useVanillaFont.get();
     }
 
     public HudConfig hud() {
