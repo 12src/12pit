@@ -115,6 +115,13 @@ public abstract class FeatureConfig {
 
     protected final HudConfig hudConfig(String id, String displayName, HudAnchor defaultAnchor,
             int defaultOffsetX, int defaultOffsetY, boolean defaultTextShadow) {
+        return hudConfig(id, displayName, defaultAnchor, defaultOffsetX, defaultOffsetY,
+                defaultTextShadow, false);
+    }
+
+    protected final HudConfig hudConfig(String id, String displayName, HudAnchor defaultAnchor,
+            int defaultOffsetX, int defaultOffsetY, boolean defaultTextShadow,
+            boolean exposePlacement) {
         String hudId = ConfigNames.requireStableId(id, "HUD id");
         String hudDisplayName = ConfigNames.requireText(displayName, "HUD display name");
         Objects.requireNonNull(defaultAnchor, "defaultAnchor");
@@ -127,16 +134,29 @@ public abstract class FeatureConfig {
                 "Draws a shadow behind text in the " + hudDisplayName + ".", defaultTextShadow);
         IntegerSetting anchor = new IntegerSetting(prefix + "anchor", "Anchor", "",
                 defaultAnchor.id(), HudAnchor.TOP_LEFT.id(), HudAnchor.BOTTOM_RIGHT.id());
-        IntegerSetting offsetX = new IntegerSetting(prefix + "offset_x", "Horizontal offset", "",
-                defaultOffsetX, -32768, 32767);
-        IntegerSetting offsetY = new IntegerSetting(prefix + "offset_y", "Vertical offset", "",
-                defaultOffsetY, -32768, 32767);
-        IntegerSetting scale = new IntegerSetting(prefix + "scale", "Scale", "", 100, 25, 300);
+        // A slider spanning the full integer range cannot place a HUD precisely, so the exposed
+        // range stays within screen sizes reachable at common GUI scales.
+        IntegerSetting offsetX;
+        IntegerSetting offsetY;
+        if (exposePlacement) {
+            offsetX = new IntegerSetting(prefix + "offset_x", "X",
+                    "Shifts the " + hudDisplayName + " horizontally.", defaultOffsetX, -2000, 2000);
+            offsetY = new IntegerSetting(prefix + "offset_y", "Y",
+                    "Shifts the " + hudDisplayName + " vertically.", defaultOffsetY, -2000, 2000);
+        } else {
+            offsetX =
+                    new IntegerSetting(prefix + "offset_x", "X", "", defaultOffsetX, -32768, 32767);
+            offsetY =
+                    new IntegerSetting(prefix + "offset_y", "Y", "", defaultOffsetY, -32768, 32767);
+        }
+        IntegerSetting scale = new IntegerSetting(prefix + "scale", "Scale",
+                "Scales the " + hudDisplayName + ".", 100, 25, 300);
+        ConfigOption.Kind placementKind = exposePlacement ? ConfigOption.Kind.NUMBER : null;
         register(textShadow, ConfigOption.Kind.BOOLEAN);
         register(anchor, null);
-        register(offsetX, null);
-        register(offsetY, null);
-        register(scale, null);
+        register(offsetX, placementKind);
+        register(offsetY, placementKind);
+        register(scale, placementKind);
         HudConfig hud =
                 new HudConfig(hudId, hudDisplayName, textShadow, anchor, offsetX, offsetY, scale);
         huds.add(hud);

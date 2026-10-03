@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.minecraft.client.Minecraft;
+import pit12.feature.events.EventsConfig;
+import pit12.feature.events.EventsFeature;
 import pit12.feature.hudeditor.HudEditorFeature;
 import pit12.feature.playerlist.PlayerListConfig;
 import pit12.feature.playerlist.PlayerListFeature;
@@ -70,11 +72,13 @@ public final class ClientBootstrap {
         TooltipConfig tooltipConfig = new TooltipConfig();
         AutoSprintConfig autoSprintConfig = new AutoSprintConfig();
         AutoQuickMathConfig autoQuickMathConfig = new AutoQuickMathConfig();
+        EventsConfig eventsConfig = new EventsConfig();
         configs.register(webUiConfig);
         configs.register(playerListConfig);
         configs.register(tooltipConfig);
         configs.register(autoSprintConfig);
         configs.register(autoQuickMathConfig);
+        configs.register(eventsConfig);
         configs.freeze();
         File profileDirectory = new File(Minecraft.getMinecraft().mcDataDir, "12pit/config");
         ProfilesFeature profiles = new ProfilesFeature(configs, profileDirectory.toPath());
@@ -99,6 +103,7 @@ public final class ClientBootstrap {
         components.add(new TooltipFeature(configs, tooltipConfig));
         components.add(new AutoSprintFeature(autoSprintConfig));
         components.add(new AutoQuickMathFeature(autoQuickMathConfig));
+        components.add(new EventsFeature(eventsConfig, configs, hudRegistry));
         components.add(hudEditor);
         components.add(new WebUiFeature(configs, profiles, relations, hudEditor, webUiConfig));
     }

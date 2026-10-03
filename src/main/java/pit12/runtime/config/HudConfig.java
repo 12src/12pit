@@ -74,9 +74,14 @@ public final class HudConfig {
 
     public void placement(HudPlacement placement) {
         Objects.requireNonNull(placement, "placement");
-        offsetX.set(Integer.valueOf(placement.offsetX()));
-        offsetY.set(Integer.valueOf(placement.offsetY()));
+        offsetX.set(Integer.valueOf(clampToRange(offsetX, placement.offsetX())));
+        offsetY.set(Integer.valueOf(clampToRange(offsetY, placement.offsetY())));
         // An anchor-change listener must not observe offsets from the previous placement.
         anchor.set(Integer.valueOf(placement.anchor().id()));
+    }
+
+    // Dragging on a very large screen at low GUI scale can exceed the slider range.
+    private static int clampToRange(IntegerSetting setting, int value) {
+        return (int) Math.max(setting.minimumValue(), Math.min(setting.maximumValue(), value));
     }
 }
