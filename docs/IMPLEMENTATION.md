@@ -56,7 +56,8 @@ public final class StatusConfig extends FeatureConfig {
     public StatusConfig() {
         super("status", "Status", new ConfigCategory("render", "Render", 100),
                 "Shows player status.");
-        subcategory("display", "Display");
+        subcategory("appearance", "Appearance");
+        subsubcategory("display", "Display");
         showNames = booleanSetting("show_names", "Show names",
                 "Shows player names.", true);
     }
@@ -67,7 +68,9 @@ public final class StatusConfig extends FeatureConfig {
 }
 ```
 
-`ConfigCategory` provides category id, display name and order number. Reuse the category for related features. `subcategory()` call groups settings after it. Settings are sorted in their definition order.
+`ConfigCategory` provides category id, display name and order number. Reuse the category for related features. The Features page shows category buttons and an All button. All shows category headings. Selecting a category shows its features without repeating the heading.
+
+`subcategory()` puts the following settings under a button at the top of the feature page. `subsubcategory()` groups settings within that page. Both levels are optional. Without `subcategory()`, groups appear directly on the feature page. Settings without a subsubcategory have no section heading. Settings defined before the first subcategory stay visible under every button. Starting a new subcategory clears the current subsubcategory. Settings and groups follow their definition order.
 
 The four-argument `FeatureConfig` constructor adds `enabled` setting with default value `true`. Constructor with `toggleable` parameter allows to not add `enabled` setting; in this case the feature always returns true when asked whether it is enabled. Constructor with `defaultEnabled` parameter chooses the initial value. Method `setEnabled` changes the setting, not the lifecycle.
 

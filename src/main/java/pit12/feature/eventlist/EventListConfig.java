@@ -59,7 +59,8 @@ public final class EventListConfig extends FeatureConfig {
                 0, new ChoiceSetting.Choice(0, "Countdown"),
                 new ChoiceSetting.Choice(1, "Local time (24-hour)"),
                 new ChoiceSetting.Choice(2, "Countdown and local time"));
-        subcategory("major_events", "Major events");
+        subcategory("filter", "Filter");
+        subsubcategory("major_events", "Major events");
         showMajorEvents = booleanSetting("show_major_events", "Show major events",
                 "Shows major events in the list.", true);
         for (EventType type : EventType.values()) {
@@ -68,7 +69,7 @@ public final class EventListConfig extends FeatureConfig {
                         "Shows " + type.displayName + " in the list.", true));
             }
         }
-        subcategory("minor_events", "Minor events");
+        subsubcategory("minor_events", "Minor events");
         showMinorEvents = booleanSetting("show_minor_events", "Show minor events",
                 "Shows minor events in the list.", true);
         for (EventType type : EventType.values()) {

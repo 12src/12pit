@@ -60,8 +60,6 @@ public final class SwapConfig extends FeatureConfig {
         subcategory("general", "General");
         rightClick = booleanSetting("right_click", "Right click swap",
                 "Right-click held armor to replace the armor in its slot.", true);
-        autoSwap = booleanSetting("auto_swap", "Automatic swap",
-                "Automatically swaps items when poisoned or at low health.", false);
         inventoryDisplay = choiceSetting("inventory_display", "Inventory visibility",
                 "Shows or hides the inventory during swaps.", 0,
                 new ChoiceSetting.Choice(0, "Hidden"), new ChoiceSetting.Choice(1, "Visible"));
@@ -94,7 +92,10 @@ public final class SwapConfig extends FeatureConfig {
                 "Shows item names and enchantments in binding and swap messages.", false);
         highlight = booleanSetting("highlight_bindings", "Show binding keys",
                 "Shows keys on bound items outside their target slots.", true);
-        subcategory("venom", "Venom");
+        subcategory("automatic_swap", "Automatic swap");
+        autoSwap = booleanSetting("auto_swap", "Automatic swap",
+                "Automatically swaps items when poisoned or at low health.", false);
+        subsubcategory("venom", "Venom");
         venomArmor = booleanSetting("venom_armor", "Swap diamond armor",
                 "Equips diamond leggings and boots when poisoned.", false);
         venomSpade = booleanSetting("venom_spade", "Swap Combat Spade",
@@ -103,7 +104,7 @@ public final class SwapConfig extends FeatureConfig {
                 "Skips poison swaps while wearing Combo Venom leggings.", false);
         spadeSlot = integerSliderSetting("spade_slot", "Combat Spade slot",
                 "Hotbar slot for the Combat Spade.", 1, 1, 9, 1);
-        subcategory("health", "Pod & Phoenix");
+        subsubcategory("health", "Pod & Phoenix");
         escapePod = booleanSetting("escape_pod", "Use Escape Pod",
                 "Equips Escape Pod leggings at or below their health threshold.", true);
         podThreshold = integerSliderSetting("pod_threshold", "Escape Pod threshold",

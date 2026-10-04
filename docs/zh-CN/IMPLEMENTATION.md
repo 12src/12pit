@@ -58,7 +58,8 @@ public final class StatusConfig extends FeatureConfig {
     public StatusConfig() {
         super("status", "Status", new ConfigCategory("render", "Render", 100),
                 "Shows player status.");
-        subcategory("display", "Display");
+        subcategory("appearance", "Appearance");
+        subsubcategory("display", "Display");
         showNames = booleanSetting("show_names", "Show names",
                 "Shows player names.", true);
     }
@@ -69,7 +70,9 @@ public final class StatusConfig extends FeatureConfig {
 }
 ```
 
-`ConfigCategory` 提供分类 ID、显示名称和顺序编号。相关功能复用同一分类。`subcategory()` 调用将其后的设置分组。设置按定义顺序排列。
+`ConfigCategory` 提供分类 ID、显示名称和顺序编号。相关功能复用同一分类。Features 页通过分类按钮和 All 按钮切换。All 显示分类标题。选中具体分类时，只显示该分类的功能，不重复显示标题。
+
+`subcategory()` 将其后的设置放到功能页顶部的切换按钮下。`subsubcategory()` 在页面内分组。两层都可省略。不调用 `subcategory()` 时，分组直接显示在功能页中。未设置 subsubcategory 的选项不显示分组标题。第一个 subcategory 之前的设置在切换按钮后仍然可见。开始新的 subcategory 会清除当前 subsubcategory。设置和分组按定义顺序排列。
 
 四参数的 `FeatureConfig` 构造器会添加默认值为 `true` 的 `enabled` 设置。带有 `toggleable` 参数的构造器允许不添加 `enabled` 设置；在这种情况下，查询功能是否启用时，它始终返回 true。带有 `defaultEnabled` 参数的构造器选择初始值。`setEnabled` 方法改变设置，而非生命周期。
 
