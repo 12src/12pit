@@ -78,7 +78,7 @@ The following helpers create settings and register their metadata in the feature
 - `keybindSetting` stores the key code from `0` to `255`. The feature is responsible for handling the input.
 - `colorSetting` stores RGB color as `0xRRGGBB`. `colorPickerSetting` stores ARGB color as `0xAARRGGBB`.
 - `choiceSetting` creates a choice with default id and `ChoiceSetting.Choice` instances with stable ids.
-- `hudConfig` adds anchor, offset, scale and text shadow settings to the HUD.
+- `hudConfig` adds anchor, offset, scale, text shadow and monospace font settings to the HUD.
 
 Feature ids are unique in the catalog. Ids of the settings and HUD configurations are unique in their feature. Id starts with a lowercase ASCII letter or digit; the rest can also be `.`, `-`, or `_`. Preserve saved ids while changing the display names. HUD configuration ids are prefixes like `status.offset_x`; do not create settings with ids conflicting with them.
 
@@ -142,7 +142,7 @@ Bootstrap provides [ForgeCommandAdapter](../src/main/java/pit12/platform/command
 hud = hudConfig("status", "Status", HudAnchor.TOP_LEFT, 6, 6, true);
 ```
 
-The helper defines the following settings: `status.anchor`, `status.offset_x`, `status.offset_y`, `status.scale`, and `status.text_shadow`. Scale is stored in percentages and defaults to `100`. The HUD editor controls placement and scale. Text shadow is exposed as a setting in Web UI. Profile feature saves all these values with the rest of feature's settings.
+The helper defines the following settings: `status.anchor`, `status.offset_x`, `status.offset_y`, `status.scale`, `status.text_shadow`, and `status.use_monospace_font`. Scale is stored in percentages and defaults to `100`. The HUD editor controls placement and scale. Text shadow and the monospace font switch are exposed as settings in Web UI. The font switch defaults to off and uses bundled Monocraft when enabled. Profile feature saves all these values with the rest of feature's settings.
 
 A [HudElement](../src/main/java/pit12/runtime/hud/HudElement.java) implementation should satisfy the following contract:
 
@@ -187,7 +187,7 @@ if (!hudRegistry.editing() && hud.enabled()) {
 
 Editing happens with `editing=true`. Provide preview content when live data is empty or when the HUD is disabled and ensure that the measured bounds match the content. An enabled HUD should be registered so it could be positioned in the editor.
 
-[UiRenderer](../src/main/java/pit12/shared/rendering/UiRenderer.java) provides the project text, rectangles and textures. Pass the element's pixel scale to its `resize`. Reuse it and keep a small set of font sizes; each size manages its own font resources. Call `close()` on it when its owner stops or releases those resources. It can create resources again after resizing. For custom UI outside of `HudRenderer`, use `begin()` from [UiRenderState](../src/main/java/pit12/shared/rendering/UiRenderState.java) together with `end()` in `finally` block. Restore the extra rendering state that your code modifies.
+[UiRenderer](../src/main/java/pit12/shared/rendering/UiRenderer.java) provides the project text, rectangles and textures. Use `HudRenderer.text`, `textWidth` and `fontHeight` with the HUD's config to draw and measure its text. Pass the element's pixel scale to its `resize`. Reuse it. Monocraft uses logical size `9` to match its pixel grid; system fallback text uses `8`. Custom glyphs use nearest-neighbor sampling and screen-pixel positions. Keep the render origin in integer GUI coordinates before applying HUD scale. Call `close()` on it when its owner stops or releases those resources. It can create resources again after resizing. For custom UI outside of `HudRenderer`, use `begin()` from [UiRenderState](../src/main/java/pit12/shared/rendering/UiRenderState.java) together with `end()` in `finally` block. Restore the extra rendering state that your code modifies.
 
 ## Game state
 

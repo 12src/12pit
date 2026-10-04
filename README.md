@@ -57,6 +57,6 @@ Install the recommended extensions if prompted. `Ctrl+Shift+B` runs `assemble` t
 - [SpongePowered Mixin](https://github.com/SpongePowered/Mixin), MIT. License text: [MIXIN-MIT.txt](src/main/resources/META-INF/third-party-licenses/MIXIN-MIT.txt).
 - [Vue](https://vuejs.org/), MIT. License text: [VUE-MIT.txt](src/main/resources/META-INF/third-party-licenses/VUE-MIT.txt).
 - [Lucide](https://lucide.dev/), ISC. License text: [LUCIDE-ISC.txt](src/main/resources/META-INF/third-party-licenses/LUCIDE-ISC.txt).
-- [Montserrat](https://github.com/JulietaUla/Montserrat), SIL Open Font License 1.1. Font: [montserrat-regular.otf](src/main/resources/assets/pit12/fonts/montserrat-regular.otf). License text: [MONTSERRAT-OFL.txt](src/main/resources/META-INF/third-party-licenses/MONTSERRAT-OFL.txt).
+- [Monocraft](https://github.com/IdreesInc/Monocraft), SIL Open Font License 1.1. Font: [monocraft.otf](src/main/resources/assets/pit12/fonts/monocraft.otf). License text: [MONOCRAFT-OFL.txt](src/main/resources/META-INF/third-party-licenses/MONOCRAFT-OFL.txt).
 
 12pit is licensed under [GPL-3.0-or-later](LICENSE).
