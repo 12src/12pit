@@ -1,4 +1,4 @@
-<!-- Source: README.md; Based on: f293ac9e7ef68fc0145c6c72f93b5c3f30dbf7c5 -->
+<!-- Source: README.md; Based on: 1b15345c60280a0b12bfd10879cb676379587d01 -->
 
 # 12pit
 
@@ -59,6 +59,6 @@
 - [SpongePowered Mixin](https://github.com/SpongePowered/Mixin)，MIT。许可证文本：[MIXIN-MIT.txt](../../src/main/resources/META-INF/third-party-licenses/MIXIN-MIT.txt)。
 - [Vue](https://vuejs.org/)，MIT。许可证文本：[VUE-MIT.txt](../../src/main/resources/META-INF/third-party-licenses/VUE-MIT.txt)。
 - [Lucide](https://lucide.dev/)，ISC。许可证文本：[LUCIDE-ISC.txt](../../src/main/resources/META-INF/third-party-licenses/LUCIDE-ISC.txt)。
-- [Montserrat](https://github.com/JulietaUla/Montserrat)，SIL Open Font License 1.1。字体：[montserrat-regular.otf](../../src/main/resources/assets/pit12/fonts/montserrat-regular.otf)。许可证文本：[MONTSERRAT-OFL.txt](../../src/main/resources/META-INF/third-party-licenses/MONTSERRAT-OFL.txt)。
+- [Monocraft](https://github.com/IdreesInc/Monocraft)，SIL Open Font License 1.1。字体：[monocraft.otf](../../src/main/resources/assets/pit12/fonts/monocraft.otf)。许可证文本：[MONOCRAFT-OFL.txt](../../src/main/resources/META-INF/third-party-licenses/MONOCRAFT-OFL.txt)。
 
 12pit 基于 [GPL-3.0-or-later](../../LICENSE) 协议开源。

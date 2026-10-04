@@ -1,4 +1,4 @@
-<!-- Source: docs/IMPLEMENTATION.md; Based on: 1cdbbfe0fc6343ec94633a6bbf3f70b454c5f936 -->
+<!-- Source: docs/IMPLEMENTATION.md; Based on: 1b15345c60280a0b12bfd10879cb676379587d01 -->
 
 # 12pit 实现
 
@@ -80,7 +80,7 @@ public final class StatusConfig extends FeatureConfig {
 - `keybindSetting` 存储从 `0` 到 `255` 的按键代码。功能负责处理输入。
 - `colorSetting` 将 RGB 颜色存储为 `0xRRGGBB`。`colorPickerSetting` 将 ARGB 颜色存储为 `0xAARRGGBB`。
 - `choiceSetting` 使用默认 ID 和具有稳定 ID 的 `ChoiceSetting.Choice` 实例创建选项设置。
-- `hudConfig` 为 HUD 添加锚点、偏移、缩放和文字阴影设置。
+- `hudConfig` 为 HUD 添加锚点、偏移、缩放、文字阴影和等宽字体设置。
 
 功能 ID 在目录中唯一。设置和 HUD 配置的 ID 在其功能中唯一。ID 以小写 ASCII 字母或数字开头；其余字符还可以是 `.`、`-` 或 `_`。改变显示名称时，保留已保存的 ID。HUD 配置 ID 是 `status.offset_x` 这样的前缀；不要创建 ID 与它们冲突的设置。
 
@@ -144,7 +144,7 @@ Bootstrap 通过注册表的 `Registrar` 提供 [ForgeCommandAdapter](../../src/
 hud = hudConfig("status", "Status", HudAnchor.TOP_LEFT, 6, 6, true);
 ```
 
-该辅助方法定义以下设置：`status.anchor`、`status.offset_x`、`status.offset_y`、`status.scale` 和 `status.text_shadow`。缩放以百分比存储，默认值为 `100`。HUD 编辑器控制位置和缩放。文字阴影作为 Web UI 中的设置提供。配置方案功能将这些值与功能的其他设置一起保存。
+该辅助方法定义以下设置：`status.anchor`、`status.offset_x`、`status.offset_y`、`status.scale`、`status.text_shadow` 和 `status.use_monospace_font`。缩放以百分比存储，默认值为 `100`。HUD 编辑器控制位置和缩放。文字阴影和等宽字体开关作为 Web UI 中的设置提供。字体开关默认关闭，开启后使用内置的 Monocraft。配置方案功能将这些值与功能的其他设置一起保存。
 
 [HudElement](../../src/main/java/pit12/runtime/hud/HudElement.java) 的实现应满足以下契约：
 
@@ -189,7 +189,7 @@ if (!hudRegistry.editing() && hud.enabled()) {
 
 编辑时 `editing=true`。当实时数据为空或 HUD 被禁用时，提供预览内容，并确保测量的边界与内容一致。启用的 HUD 应已注册，以便在编辑器中定位。
 
-[UiRenderer](../../src/main/java/pit12/shared/rendering/UiRenderer.java) 提供项目的文字、矩形和纹理。将元素的像素缩放传给它的 `resize`。复用它，并只保留少量字体大小；每种大小管理自己的字体资源。当其所有者停止或释放这些资源时，对它调用 `close()`。它可以在调整大小后再次创建资源。对于 `HudRenderer` 之外的自定义 UI，使用 [UiRenderState](../../src/main/java/pit12/shared/rendering/UiRenderState.java) 的 `begin()`，并在 `finally` 块中配合调用 `end()`。恢复代码额外修改的渲染状态。
+[UiRenderer](../../src/main/java/pit12/shared/rendering/UiRenderer.java) 提供项目的文字、矩形和纹理。使用 `HudRenderer.text`、`textWidth` 和 `fontHeight`，传入 HUD 配置来绘制和测量其文字。将元素的像素缩放传给它的 `resize`。复用它。Monocraft 使用逻辑字号 `9` 来匹配像素网格，系统回退字体使用 `8`。自定义字形采用最近邻采样，并对齐到屏幕像素。绘制原点使用整数 GUI 坐标，再应用 HUD 缩放。当其所有者停止或释放这些资源时，对它调用 `close()`。它可以在调整大小后再次创建资源。对于 `HudRenderer` 之外的自定义 UI，使用 [UiRenderState](../../src/main/java/pit12/shared/rendering/UiRenderState.java) 的 `begin()`，并在 `finally` 块中配合调用 `end()`。恢复代码额外修改的渲染状态。
 
 ## 游戏状态
 
