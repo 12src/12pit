@@ -28,6 +28,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.BiConsumer;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import net.minecraft.client.Minecraft;
@@ -37,13 +38,14 @@ import net.minecraft.client.gui.inventory.GuiInventory;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 import pit12.runtime.session.ClientSession;
+import pit12.shared.chat.ChatFeedback.Tone;
 
 final class SwapController {
     private final Minecraft minecraft;
     private final ClientSession session;
     private final SwapConfig config;
     private final BindingBook bindings;
-    private final Consumer<String> report;
+    private final BiConsumer<Tone, String> report;
     private final Runnable lockInput;
     private final Consumer<Boolean> releaseInput;
     private final Deque<Request> queue = new ArrayDeque<>();
@@ -63,7 +65,7 @@ final class SwapController {
     private int groupWorkspace;
 
     SwapController(Minecraft minecraft, ClientSession session, SwapConfig config,
-            BindingBook bindings, Consumer<String> report, Runnable lockInput,
+            BindingBook bindings, BiConsumer<Tone, String> report, Runnable lockInput,
             Consumer<Boolean> releaseInput) {
         this.minecraft = minecraft;
         this.session = session;
@@ -215,7 +217,8 @@ final class SwapController {
                     actions.removeFirst();
             }
         } catch (RuntimeException failure) {
-            report.accept(failure.getMessage() == null ? "Swap stopped" : failure.getMessage());
+            report.accept(Tone.ERROR,
+                    failure.getMessage() == null ? "Swap stopped" : failure.getMessage());
             cancel();
         }
     }
@@ -332,9 +335,9 @@ final class SwapController {
 
     private void reportGroup() {
         for (String problem : problems)
-            report.accept(problem);
+            report.accept(Tone.WARNING, problem);
         if (options.messages && !completed.isEmpty()) {
-            report.accept(options.details ? "Swapped: " + String.join(", ", completed)
+            report.accept(Tone.SUCCESS, options.details ? "Swapped: " + String.join(", ", completed)
                     : "Swapped " + completed.size() + " item(s)");
         }
     }
@@ -365,7 +368,7 @@ final class SwapController {
             try {
                 player.closeScreen();
             } catch (RuntimeException failure) {
-                report.accept("Inventory could not be closed");
+                report.accept(Tone.ERROR, "Inventory could not be closed");
             }
         }
         reset();

@@ -39,17 +39,17 @@ public final class PlayerEspConfig extends FeatureConfig {
     public PlayerEspConfig() {
         super("playeresp", "Player ESP", new ConfigCategory("render", "Render", 100),
                 "Shows colored boxes around loaded players through blocks.", true, false);
-        subcategory("friends", "Friends");
+        subsubcategory("friends", "Friends");
         showFriend = booleanSetting("show_friend", "Show friends", "Marks friends.", true);
         friendColor = colorPickerSetting("friend_color", "Friend color", "", 0xC000FF00);
-        subcategory("enemies", "Enemies");
+        subsubcategory("enemies", "Enemies");
         showEnemy = booleanSetting("show_enemy", "Show enemies", "Marks enemies.", true);
         enemyColor = colorPickerSetting("enemy_color", "Enemy color", "", 0xC0FF0000);
-        subcategory("other_players", "Other players");
+        subsubcategory("other_players", "Other players");
         showOther = booleanSetting("show_other", "Show other players",
                 "Marks players outside the friend and enemy lists.", false);
         otherColor = colorPickerSetting("other_color", "Other player color", "", 0xC0FFFFFF);
-        subcategory("distance_fade", "Distance fade");
+        subsubcategory("distance_fade", "Distance fade");
         distanceFade = booleanSetting("distance_fade", "Fade nearby players",
                 "Makes boxes fade out as players get closer.", true);
         fadeNearDistance = integerSliderSetting("fade_near_distance", "Hidden distance",

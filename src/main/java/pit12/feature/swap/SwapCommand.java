@@ -18,7 +18,7 @@
  */
 package pit12.feature.swap;
 
-import static pit12.runtime.command.CommandRegistry.reply;
+import static pit12.shared.chat.ChatFeedback.reply;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,6 +29,7 @@ import net.minecraft.command.ICommandSender;
 import org.lwjgl.input.Keyboard;
 import pit12.runtime.command.CommandNode;
 import pit12.runtime.item.PitEnchantment;
+import pit12.shared.chat.ChatFeedback.Tone;
 
 final class SwapCommand {
     private final Minecraft minecraft;
@@ -54,11 +55,11 @@ final class SwapCommand {
                 .child(operation("clear", "Clear swap bindings", (sender, args) -> {
                     bindings.clear();
                     if (config.bindingMessages.get())
-                        reply(sender, "Cleared swap bindings");
+                        reply(sender, Tone.SUCCESS, "Cleared swap bindings");
                 })).child(operation("status", "Show automatic swap state", this::status))
                 .child(operation("reset", "Reset automatic swap state", (sender, args) -> {
                     automatic.manualReset();
-                    reply(sender, "Reset automatic swap state");
+                    reply(sender, Tone.SUCCESS, "Reset automatic swap state");
                 })).build();
     }
 
@@ -69,7 +70,7 @@ final class SwapCommand {
                 handler.execute(sender, args);
             } catch (IllegalArgumentException failure) {
                 // Binding operations use IllegalArgumentException for input and readiness failures.
-                reply(sender, failure.getMessage());
+                reply(sender, Tone.ERROR, failure.getMessage());
             }
         });
     }
@@ -91,7 +92,7 @@ final class SwapCommand {
                 SwapBinding.create(key(args[0]), minecraft.thePlayer.getHeldItem(), target);
         bindings.bind(binding);
         if (config.bindingMessages.get())
-            reply(sender,
+            reply(sender, Tone.SUCCESS,
                     "Bound " + (config.messageDetails.get() ? binding.display(true) + " to " : "")
                             + Keyboard.getKeyName(binding.key) + " (" + binding.targetName() + ")");
     }
@@ -106,23 +107,25 @@ final class SwapCommand {
         }
         int removed = bindings.unbind(args.length == 1 ? key(args[0]) : 0, held);
         if (removed == 0 || config.bindingMessages.get())
-            reply(sender,
+            reply(sender, removed == 0 ? Tone.WARNING : Tone.SUCCESS,
                     removed == 0 ? "No matching bindings" : "Removed " + removed + " binding(s)");
     }
 
     private void list(ICommandSender sender, String[] args) {
         if (bindings.readinessProblem() != null)
             throw new IllegalArgumentException(bindings.readinessProblem());
-        reply(sender, "Swap bindings: " + bindings.count());
+        reply(sender, Tone.INFO, "Swap bindings: " + bindings.count());
         for (SwapBinding entry : bindings.entries())
-            reply(sender, Keyboard.getKeyName(entry.key) + ": "
+            reply(sender, Tone.INFO, Keyboard.getKeyName(entry.key) + ": "
                     + entry.display(config.messageDetails.get()) + " -> " + entry.targetName());
     }
 
     private void status(ICommandSender sender, String[] args) {
-        reply(sender, "Automatic swap: " + (config.autoSwap.get() ? "enabled" : "disabled"));
-        reply(sender, "Escape Pod: " + state(PitEnchantment.Escape_Pod, config.escapePod.get()));
-        reply(sender, "Phoenix: " + state(PitEnchantment.Phoenix, config.phoenix.get()));
+        reply(sender, Tone.INFO,
+                "Automatic swap: " + (config.autoSwap.get() ? "enabled" : "disabled"));
+        reply(sender, Tone.INFO,
+                "Escape Pod: " + state(PitEnchantment.Escape_Pod, config.escapePod.get()));
+        reply(sender, Tone.INFO, "Phoenix: " + state(PitEnchantment.Phoenix, config.phoenix.get()));
     }
 
     private void requirePlayer() {

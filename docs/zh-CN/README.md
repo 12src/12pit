@@ -2,7 +2,7 @@
 
 # 12pit
 
-[English](../../README.md)
+[English](../../README.md) | 简体中文
 
 > [!WARNING]
 > 12pit 仍处于初始开发阶段。

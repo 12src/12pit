@@ -18,6 +18,8 @@
  */
 package pit12.runtime.command;
 
+import static pit12.shared.chat.ChatFeedback.reply;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -27,8 +29,7 @@ import java.util.Locale;
 import java.util.Set;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
-import net.minecraft.util.ChatComponentText;
-import net.minecraft.util.EnumChatFormatting;
+import pit12.shared.chat.ChatFeedback.Tone;
 import pit12.shared.concurrent.ClientThread;
 import pit12.shared.lifecycle.ClientLifecycle;
 
@@ -96,7 +97,7 @@ public final class CommandRegistry implements ClientLifecycle {
             throws CommandException {
         client.check();
         if (!started) {
-            reply(sender, "Commands are unavailable");
+            reply(sender, Tone.WARNING, "Commands are unavailable");
             return;
         }
         execute(command, sender, args, "/" + command.name);
@@ -124,11 +125,11 @@ public final class CommandRegistry implements ClientLifecycle {
             return;
         }
         if (command.handler == null) {
-            reply(sender, "Unknown command: " + args[0]);
+            reply(sender, Tone.ERROR, "Unknown command: " + args[0]);
             help(command, sender, path);
         } else if (args.length < command.minimumArguments
                 || args.length > command.maximumArguments) {
-            reply(sender, "Usage: " + path
+            reply(sender, Tone.WARNING, "Usage: " + path
                     + (command.arguments.isEmpty() ? "" : " " + command.arguments));
         } else {
             command.handler.execute(sender, args);
@@ -179,20 +180,16 @@ public final class CommandRegistry implements ClientLifecycle {
     }
 
     private static void help(CommandNode command, ICommandSender sender, String path) {
-        reply(sender, path + " - " + command.description);
+        reply(sender, Tone.INFO, path + " - " + command.description);
         for (CommandNode child : command.children) {
             if (child.canUse(sender)) {
-                reply(sender, usage(child, path + " " + child.name) + " - " + child.description);
+                reply(sender, Tone.INFO,
+                        usage(child, path + " " + child.name) + " - " + child.description);
             }
         }
         if (command.handler != null && !command.arguments.isEmpty()) {
-            reply(sender, path + " " + command.arguments + " - " + command.description);
+            reply(sender, Tone.INFO, path + " " + command.arguments + " - " + command.description);
         }
-    }
-
-    public static void reply(ICommandSender sender, String message) {
-        sender.addChatMessage(new ChatComponentText(
-                EnumChatFormatting.AQUA + "[12pit]" + EnumChatFormatting.RESET + " " + message));
     }
 
     @FunctionalInterface

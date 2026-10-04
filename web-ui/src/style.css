@@ -39,6 +39,12 @@
 * {
   box-sizing: border-box;
 }
+html {
+  scrollbar-width: none;
+}
+html::-webkit-scrollbar {
+  display: none;
+}
 body {
   margin: 0;
   color: var(--text);
@@ -193,7 +199,7 @@ main {
   padding: 64px 60px 100px;
   min-width: 0;
 }
-.page-view:is(
+:is(.page-view, .tab-view, .relation-list):is(
   .slide-up-enter-active,
   .slide-down-enter-active,
   .slide-left-enter-active,
@@ -203,7 +209,7 @@ main {
     opacity 0.18s ease-out,
     transform 0.18s cubic-bezier(0.2, 0.7, 0.2, 1);
 }
-.page-view:is(
+:is(.page-view, .tab-view, .relation-list):is(
   .slide-up-leave-active,
   .slide-down-leave-active,
   .slide-left-leave-active,
@@ -260,46 +266,86 @@ h1 {
   line-height: 1.25;
   font-weight: 650;
 }
-.heading p {
+.feature-description {
   margin: 8px 0 0;
   color: var(--muted);
 }
-.back {
-  display: inline-flex;
+.breadcrumbs {
+  min-width: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+.breadcrumbs ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.breadcrumbs li {
+  display: flex;
   align-items: center;
   gap: 8px;
-  min-height: 32px;
-  padding: 0 6px 0 0;
-  margin: 0 0 16px;
+  min-width: 0;
+}
+.breadcrumbs svg {
+  flex: none;
+  color: var(--faint);
+}
+.breadcrumbs button {
+  min-height: 28px;
+  padding: 4px 0;
   border: 0;
   border-radius: 4px;
   background: none;
-  color: var(--muted);
-  font-size: 12px;
+  color: inherit;
 }
-.back:hover {
+.breadcrumbs button:hover {
   color: var(--accent);
 }
-.master {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  white-space: nowrap;
-  font-size: 12px;
+.breadcrumbs h1 {
+  color: var(--text);
+  font: inherit;
   font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.category-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 22px;
+}
+.category-buttons button {
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--control-border);
+  border-radius: 5px;
+  background: var(--panel);
+  color: var(--text);
+  font-size: 12px;
+}
+.category-buttons button:hover {
+  background: var(--hover);
+}
+.category-buttons button[aria-pressed='true'] {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-text);
 }
 section {
   padding-top: 26px;
+}
+.feature-list {
+  padding-top: 16px;
+}
+.feature-list > section:first-child {
+  padding-top: 0;
 }
 h2 {
   margin: 0 0 10px;
   font-size: 15px;
   font-weight: 650;
-}
-.tools {
-  display: flex;
-  gap: 10px;
-  margin: 22px 0 4px;
 }
 .search {
   display: flex;
@@ -373,10 +419,6 @@ select:focus,
 .name-input:focus,
 .profile-create input:focus {
   border-color: var(--accent);
-}
-.tools select {
-  width: 155px;
-  height: 36px;
 }
 .feature-row {
   display: flex;
@@ -1387,17 +1429,6 @@ button.feature-link:hover strong {
 .relation-list {
   padding-top: 6px;
 }
-.relation-list:is(.slide-left-enter-active, .slide-right-enter-active) {
-  transition:
-    opacity 0.18s ease-out,
-    transform 0.18s cubic-bezier(0.2, 0.7, 0.2, 1);
-}
-.relation-list:is(.slide-left-leave-active, .slide-right-leave-active) {
-  pointer-events: none;
-  transition:
-    opacity 0.1s ease-in,
-    transform 0.1s ease-in;
-}
 .relation-list-heading,
 .relation-row {
   display: grid;
@@ -1586,19 +1617,9 @@ button.feature-link:hover strong {
   .heading-features .search {
     margin-left: 0;
   }
-  .master {
-    font-size: 0;
-  }
-  .tools {
-    flex-wrap: wrap;
-  }
   .search {
     flex-basis: 100%;
     max-width: none;
-  }
-  .tools select {
-    flex: 1;
-    width: 100%;
   }
   .row {
     grid-template-columns: minmax(0, 1fr);
@@ -1671,19 +1692,11 @@ button.feature-link:hover strong {
   .choice-options {
     animation: none;
   }
-  .page-view:is(
+  :is(.page-view, .tab-view, .relation-list):is(
     .slide-up-enter-active,
     .slide-up-leave-active,
     .slide-down-enter-active,
     .slide-down-leave-active,
-    .slide-left-enter-active,
-    .slide-left-leave-active,
-    .slide-right-enter-active,
-    .slide-right-leave-active
-  ) {
-    transition: none;
-  }
-  .relation-list:is(
     .slide-left-enter-active,
     .slide-left-leave-active,
     .slide-right-enter-active,

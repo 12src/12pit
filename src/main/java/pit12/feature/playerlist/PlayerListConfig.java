@@ -49,6 +49,7 @@ public final class PlayerListConfig extends FeatureConfig {
                 "Shows loaded player equipment and direction in a compact HUD.");
         subcategory("display", "Display");
         hud = hudConfig("player_list", "Player List", HudAnchor.TOP_LEFT, 6, 6, true);
+        subsubcategory("enchantments", "Enchantments");
         enchantmentFormat = choiceSetting("enchantment_format", "Enchantment format",
                 "Controls how enchantment names and levels are shown.",
                 ENCHANTMENT_FORMAT_BOLD_LEVELS,
@@ -59,11 +60,17 @@ public final class PlayerListConfig extends FeatureConfig {
                 new ChoiceSetting.Choice(ENCHANTMENT_FORMAT_HIDE_LEVEL_THREE,
                         "§4§lREG§7 / §6§lABS §f§l2"),
                 new ChoiceSetting.Choice(ENCHANTMENT_FORMAT_NAMES_ONLY, "§4§lREG§7 / §6§lABS"));
-        subcategory("enchantments", "Enchantments");
         showHeldItem = booleanSetting("show_held_item", "Show held item enchantments",
                 "Shows the held item's Pit enchantments.", false);
         showLeggings = booleanSetting("show_leggings", "Show leggings enchantments",
                 "Shows the leggings' Pit enchantments.", true);
+        subsubcategory("player_information", "Player information");
+        showDistance = booleanSetting("show_distance", "Show player distance",
+                "Shows the distance to each loaded player.", true);
+        showDirection = booleanSetting("show_direction", "Show player direction",
+                "Shows the continuous direction to each loaded player.", true);
+        showSpawn = booleanSetting("show_spawn", "Show spawn marker",
+                "Shows SPAWN instead of distance and direction for players in spawn.", true);
         subcategory("groups", "Groups");
         showGroupName = booleanSetting("show_group_name", "Show group names",
                 "Shows the name above each equipment group.", true);
@@ -77,13 +84,6 @@ public final class PlayerListConfig extends FeatureConfig {
                 true);
         showBountyHunter = booleanSetting("show_bounty_hunter", "Show Bounty Hunter group",
                 "Shows the Bounty Hunter equipment group.", false);
-        subcategory("player_information", "Player information");
-        showDistance = booleanSetting("show_distance", "Show player distance",
-                "Shows the distance to each loaded player.", true);
-        showDirection = booleanSetting("show_direction", "Show player direction",
-                "Shows the continuous direction to each loaded player.", true);
-        showSpawn = booleanSetting("show_spawn", "Show spawn marker",
-                "Shows SPAWN instead of distance and direction for players in spawn.", true);
     }
 
     public boolean showHeldItem() {

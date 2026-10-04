@@ -18,12 +18,12 @@
  */
 package pit12.runtime.config;
 
-public final class ConfigSubcategory {
+public final class ConfigGroup {
     private final String id;
     private final String displayName;
 
-    public ConfigSubcategory(String id, String displayName) {
-        this.id = ConfigNames.requireStableId(id, "subcategory id");
+    public ConfigGroup(String id, String displayName) {
+        this.id = ConfigNames.requireStableId(id, "config group id");
         this.displayName = displayName;
     }
 

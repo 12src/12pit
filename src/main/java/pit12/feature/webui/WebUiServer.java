@@ -456,14 +456,20 @@ final class WebUiServer {
                     new LinkedHashMap<String, Map<String, Object>>();
             for (ConfigOption<?> option : feature.options()) {
                 String sectionId =
-                        option.subcategory() == null ? "settings" : option.subcategory().id();
-                Map<String, Object> section = byId.get(sectionId);
+                        option.subsubcategory() == null ? null : option.subsubcategory().id();
+                String groupId = (option.subcategory() == null ? "" : option.subcategory().id())
+                        + "/" + (sectionId == null ? "" : sectionId);
+                Map<String, Object> section = byId.get(groupId);
                 if (section == null) {
                     section = object("id", sectionId, "name",
-                            option.subcategory() == null ? "Settings"
-                                    : option.subcategory().displayName(),
+                            option.subsubcategory() == null ? null
+                                    : option.subsubcategory().displayName(),
+                            "subcategory",
+                            option.subcategory() == null ? null
+                                    : object("id", option.subcategory().id(), "name",
+                                            option.subcategory().displayName()),
                             "options", new ArrayList<Object>());
-                    byId.put(sectionId, section);
+                    byId.put(groupId, section);
                     sections.add(section);
                 }
                 @SuppressWarnings("unchecked")

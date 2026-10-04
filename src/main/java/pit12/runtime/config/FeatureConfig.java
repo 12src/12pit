@@ -35,7 +35,8 @@ public abstract class FeatureConfig {
     private final List<Setting<?>> settingsView = Collections.unmodifiableList(settings);
     private final List<ConfigOption<?>> optionsView = Collections.unmodifiableList(options);
     private final Set<String> settingIds = new HashSet<String>();
-    private ConfigSubcategory currentSubcategory;
+    private ConfigGroup currentSubcategory;
+    private ConfigGroup currentSubsubcategory;
 
     protected FeatureConfig(String id, String displayName, ConfigCategory category,
             String description) {
@@ -119,7 +120,12 @@ public abstract class FeatureConfig {
     }
 
     protected final void subcategory(String id, String displayName) {
-        currentSubcategory = new ConfigSubcategory(id, displayName);
+        currentSubcategory = new ConfigGroup(id, displayName);
+        currentSubsubcategory = null;
+    }
+
+    protected final void subsubcategory(String id, String displayName) {
+        currentSubsubcategory = new ConfigGroup(id, displayName);
     }
 
     protected final HudConfig hudConfig(String id, String displayName, HudAnchor defaultAnchor,
@@ -153,7 +159,8 @@ public abstract class FeatureConfig {
         }
         settings.add(setting);
         if (optionKind != null) {
-            options.add(new ConfigOption<T>(setting, optionKind, currentSubcategory));
+            options.add(new ConfigOption<T>(setting, optionKind, currentSubcategory,
+                    currentSubsubcategory));
         }
     }
 

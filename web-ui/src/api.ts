@@ -37,7 +37,12 @@ export interface Feature {
   category: string
   toggleable: boolean
   enabled: boolean
-  sections: { id: string; name: string; options: Option[] }[]
+  sections: {
+    id?: string
+    name?: string
+    subcategory?: { id: string; name: string }
+    options: Option[]
+  }[]
 }
 
 export type RelationType = 'FRIEND' | 'ENEMY'

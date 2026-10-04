@@ -1,4 +1,4 @@
-<!-- Source: docs/IMPLEMENTATION.md; Based on: 1b15345c60280a0b12bfd10879cb676379587d01 -->
+<!-- Source: docs/IMPLEMENTATION.md; Based on: 0ad380b9e068a3bc57862ff0f7d698072678b35c -->
 
 # 12pit 实现
 
@@ -58,7 +58,8 @@ public final class StatusConfig extends FeatureConfig {
     public StatusConfig() {
         super("status", "Status", new ConfigCategory("render", "Render", 100),
                 "Shows player status.");
-        subcategory("display", "Display");
+        subcategory("appearance", "Appearance");
+        subsubcategory("display", "Display");
         showNames = booleanSetting("show_names", "Show names",
                 "Shows player names.", true);
     }
@@ -69,7 +70,9 @@ public final class StatusConfig extends FeatureConfig {
 }
 ```
 
-`ConfigCategory` 提供分类 ID、显示名称和顺序编号。相关功能复用同一分类。`subcategory()` 调用将其后的设置分组。设置按定义顺序排列。
+`ConfigCategory` 提供分类 ID、显示名称和顺序编号。相关功能复用同一分类。Features 页通过分类按钮和 All 按钮切换。All 显示分类标题。选中具体分类时，只显示该分类的功能，不重复显示标题。
+
+`subcategory()` 将其后的设置放到功能页顶部的切换按钮下。`subsubcategory()` 在页面内分组。两层都可省略。不调用 `subcategory()` 时，分组直接显示在功能页中。未设置 subsubcategory 的选项不显示分组标题。第一个 subcategory 之前的设置在切换按钮后仍然可见。开始新的 subcategory 会清除当前 subsubcategory。设置和分组按定义顺序排列。
 
 四参数的 `FeatureConfig` 构造器会添加默认值为 `true` 的 `enabled` 设置。带有 `toggleable` 参数的构造器允许不添加 `enabled` 设置；在这种情况下，查询功能是否启用时，它始终返回 true。带有 `defaultEnabled` 参数的构造器选择初始值。`setEnabled` 方法改变设置，而非生命周期。
 
@@ -120,7 +123,7 @@ private final ConfigChangeListener configListener = changes -> {
 CommandNode command = CommandNode.command("message", "Message commands")
         .child(CommandNode.command("send", "Show a message").aliases("say")
                 .arguments("<text>", 1, 1)
-                .executes((sender, args) -> CommandRegistry.reply(sender, args[0]))
+                .executes((sender, args) -> ChatFeedback.reply(sender, Tone.INFO, args[0]))
                 .suggests((sender, args) -> Arrays.asList("hello", "test")))
         .build();
 commands.register(command);
@@ -128,13 +131,19 @@ commands.register(command);
 
 使用 `register(command)` 使 `/12pit message` 可用。如果 `/message` 也应可用，改用 `register(command, true)`；两者会使用同一棵树。不要重复注册命令。名称和别名只能使用小写字母、数字、`-` 和 `_`；`12pit` 是保留的根名称。同级节点的名称和别名不得相同。
 
-`arguments(usage, minimum, maximum)` 描述显示给用户的参数用法和数量范围。默认没有参数。`executes` 接收一个 `ICommandSender` 和一个不包含已匹配命令路径的 `String` 参数数组。注册表检查参数数量；功能可以检查值、就绪状态和操作结果。`CommandRegistry.reply` 添加共享的聊天前缀。
+`arguments(usage, minimum, maximum)` 描述显示给用户的参数用法和数量范围。默认没有参数。`executes` 接收一个 `ICommandSender` 和一个不包含已匹配命令路径的 `String` 参数数组。注册表检查参数数量；功能可以检查值、就绪状态和操作结果。
 
 有子节点的节点是分组。没有参数时，它显示自动生成的帮助，即使存在处理器。带有处理器的叶节点在参数数量正确时执行处理器。子节点的名称或别名匹配不区分大小写，并覆盖分组的处理器。分组处理器可以接收额外的未匹配参数。添加单个 `help` 参数会显示分组帮助，除非存在显式的 `help` 子节点。
 
 `requires(Predicate<ICommandSender>)` 限制节点的使用。帮助和补全会隐藏发送者无法使用的子节点。补全回调接收命令路径之后的参数，包括当前单词。返回完整的补全建议集合；注册表按当前前缀过滤，不区分大小写，并去除重复项。返回 null 或空列表表示没有建议。
 
 Bootstrap 通过注册表的 `Registrar` 提供 [ForgeCommandAdapter](../../src/main/java/pit12/platform/command/ForgeCommandAdapter.java)。功能不手动注册 Forge 命令类。Forge 无法注销命令。`stop()` 禁止执行和补全，`start()` 会复用现有入口。首次启动后关闭注册。
+
+## 聊天回显
+
+本地聊天回显统一使用 [ChatFeedback](../../src/main/java/pit12/shared/chat/ChatFeedback.java)：`ChatFeedback.reply(sender, Tone.INFO, message)`。导入 `ChatFeedback.Tone`，按结果选择 `INFO`、`SUCCESS`、`WARNING` 或 `ERROR`。共享方法添加 `[12pit] »` 前缀，括号和分隔符为灰色，`12` 为亮青色加粗，`pit` 为深青色加粗。正文分别为白、绿、黄、红色。
+
+在客户端线程调用。命令之外的回显先检查本地玩家是否存在，再将它作为 sender 传入。功能只选择消息类型和文字，前缀与配色由共享方法维护。
 
 ## HUD
 

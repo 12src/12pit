@@ -19,7 +19,6 @@ along with 12pit. If not, see <https://www.gnu.org/licenses/>.
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import {
-  ArrowLeft,
   ArrowRight,
   Check,
   ChevronRight,
@@ -45,6 +44,7 @@ import {
   type State,
 } from './api'
 import FormattedText from './FormattedText.vue'
+import PageScrollbar from './PageScrollbar.vue'
 import RelationsPage from './RelationsPage.vue'
 import SettingRow from './SettingRow.vue'
 import TransferDialog from './TransferDialog.vue'
@@ -53,6 +53,7 @@ const state = ref<State | null>(null)
 const ready = ref(false)
 const page = ref<'features' | 'relations' | 'profiles' | 'settings'>('features')
 const selectedId = ref<string | null>(null)
+const selectedSubcategoryId = ref<string | null>(null)
 const search = ref('')
 const category = ref('all')
 const newName = ref('')
@@ -75,6 +76,8 @@ const pageKey = computed(() =>
     : page.value,
 )
 const pageTransition = ref('slide-down')
+const categoryTransition = ref('slide-left')
+const subcategoryTransition = ref('slide-left')
 let stream: EventSource | undefined
 let requestVersion = 0
 let refreshQueued = false
@@ -96,7 +99,25 @@ const settings = computed(() =>
 const current = computed(() =>
   features.value.find((feature) => feature.id === selectedId.value),
 )
+const subcategories = computed(() => {
+  const groups = new Map<string, { id: string; name: string }>()
+  for (const section of current.value?.sections ?? []) {
+    if (section.subcategory) {
+      groups.set(section.subcategory.id, section.subcategory)
+    }
+  }
+  return [...groups.values()]
+})
+const currentSections = computed(
+  () =>
+    current.value?.sections.filter(
+      (section) =>
+        !section.subcategory ||
+        section.subcategory.id === selectedSubcategoryId.value,
+    ) ?? [],
+)
 const categories = computed(() => [
+  ['all', 'All'],
   ...new Map(
     features.value.map((feature) => [feature.categoryId, feature.category]),
   ).entries(),
@@ -111,12 +132,16 @@ const visible = computed(() =>
   ),
 )
 const grouped = computed(() => {
-  const groups = new Map<string, Feature[]>()
-  visible.value.forEach((feature) => {
-    if (!groups.has(feature.category)) groups.set(feature.category, [])
-    groups.get(feature.category)!.push(feature)
-  })
-  return [...groups].map(([name, items]) => ({ name, items }))
+  const groups = new Map<string, { name: string; items: Feature[] }>()
+  for (const feature of visible.value) {
+    let group = groups.get(feature.categoryId)
+    if (!group) {
+      group = { name: feature.category, items: [] }
+      groups.set(feature.categoryId, group)
+    }
+    group.items.push(feature)
+  }
+  return [...groups]
 })
 const color = computed(
   () =>
@@ -419,6 +444,28 @@ function closeTransfer() {
 function openFeature(id: string) {
   pageTransition.value = 'slide-left'
   selectedId.value = id
+  selectedSubcategoryId.value = subcategories.value[0]?.id ?? null
+}
+
+function selectCategory(id: string) {
+  categoryTransition.value =
+    categories.value.findIndex(([value]) => value === id) >
+    categories.value.findIndex(([value]) => value === category.value)
+      ? 'slide-left'
+      : 'slide-right'
+  category.value = id
+}
+
+function selectSubcategory(id: string) {
+  subcategoryTransition.value =
+    subcategories.value.findIndex((group) => group.id === id) >
+    subcategories.value.findIndex(
+      (group) => group.id === selectedSubcategoryId.value,
+    )
+      ? 'slide-left'
+      : 'slide-right'
+  selectedSubcategoryId.value = id
+  cancelCapture()
 }
 
 function hasDetails(feature: Feature) {
@@ -660,7 +707,7 @@ onUnmounted(() => {
         </a>
       </div>
     </aside>
-    <main>
+    <main id="page-content">
       <div v-if="error" class="error-notice" role="alert">
         <span>{{ error }}</span>
         <button
@@ -698,109 +745,146 @@ onUnmounted(() => {
                     </button>
                   </div>
                 </div>
-                <div v-if="categories.length > 1" class="tools">
-                  <select v-model="category" aria-label="Category">
-                    <option value="all">All categories</option>
-                    <option
-                      v-for="[id, name] in categories"
-                      :key="id"
-                      :value="id"
-                    >
-                      {{ name }}
-                    </option>
-                  </select>
-                </div>
-                <section v-for="group in grouped" :key="group.name">
-                  <h2><FormattedText :text="group.name" /></h2>
-                  <div
-                    v-for="feature in group.items"
-                    :key="feature.id"
-                    class="feature-row"
+                <div
+                  class="category-buttons"
+                  role="group"
+                  aria-label="Category"
+                >
+                  <button
+                    v-for="[id, name] in categories"
+                    :key="id"
+                    type="button"
+                    :aria-pressed="category === id"
+                    @click="selectCategory(id)"
                   >
-                    <button
-                      v-if="hasDetails(feature)"
-                      class="feature-link"
-                      @click="openFeature(feature.id)"
-                    >
-                      <span
-                        ><strong><FormattedText :text="feature.name" /></strong
-                        ><small v-if="showDetails"
-                          ><FormattedText :text="feature.description" /></small
-                      ></span>
-                      <ChevronRight :size="16" />
-                    </button>
-                    <span v-else class="feature-link">
-                      <span
-                        ><strong><FormattedText :text="feature.name" /></strong
-                        ><small v-if="showDetails"
-                          ><FormattedText :text="feature.description" /></small
-                      ></span>
-                    </span>
-                    <button
-                      v-if="feature.toggleable"
-                      class="switch-button"
-                      type="button"
-                      role="switch"
-                      :aria-label="`Enable ${feature.name}`"
-                      :aria-checked="feature.enabled"
-                      @click="setting(feature.id, 'enabled', !feature.enabled)"
-                    >
-                      <span class="switch" :class="{ on: feature.enabled }" />
-                    </button>
-                  </div>
-                </section>
-                <p v-if="!visible.length" class="empty">
-                  No matching features.
-                </p>
-              </template>
-              <template v-else>
-                <button class="back" @click="backToFeatures">
-                  <ArrowLeft :size="15" />Features
-                </button>
-                <div class="heading">
-                  <div>
-                    <h1><FormattedText :text="current.name" /></h1>
-                    <p v-if="showDetails">
-                      <FormattedText :text="current.description" />
+                    <FormattedText :text="name" />
+                  </button>
+                </div>
+                <Transition :name="categoryTransition" mode="out-in">
+                  <div :key="category" class="tab-view feature-list">
+                    <section v-for="[id, group] in grouped" :key="id">
+                      <h2 v-if="category === 'all'">
+                        <FormattedText :text="group.name" />
+                      </h2>
+                      <div
+                        v-for="feature in group.items"
+                        :key="feature.id"
+                        class="feature-row"
+                      >
+                        <button
+                          v-if="hasDetails(feature)"
+                          class="feature-link"
+                          @click="openFeature(feature.id)"
+                        >
+                          <span
+                            ><strong
+                              ><FormattedText :text="feature.name" /></strong
+                            ><small v-if="showDetails"
+                              ><FormattedText
+                                :text="feature.description" /></small
+                          ></span>
+                          <ChevronRight :size="16" />
+                        </button>
+                        <span v-else class="feature-link">
+                          <span
+                            ><strong
+                              ><FormattedText :text="feature.name" /></strong
+                            ><small v-if="showDetails"
+                              ><FormattedText
+                                :text="feature.description" /></small
+                          ></span>
+                        </span>
+                        <button
+                          v-if="feature.toggleable"
+                          class="switch-button"
+                          type="button"
+                          role="switch"
+                          :aria-label="`Enable ${feature.name}`"
+                          :aria-checked="feature.enabled"
+                          @click="
+                            setting(feature.id, 'enabled', !feature.enabled)
+                          "
+                        >
+                          <span
+                            class="switch"
+                            :class="{ on: feature.enabled }"
+                          />
+                        </button>
+                      </div>
+                    </section>
+                    <p v-if="!visible.length" class="empty">
+                      No matching features.
                     </p>
                   </div>
-                  <div v-if="current.toggleable" class="master">
-                    Enabled
-                    <button
-                      class="switch-button"
-                      type="button"
-                      role="switch"
-                      :aria-label="`Enable ${current.name}`"
-                      :aria-checked="current.enabled"
-                      @click="setting(current.id, 'enabled', !current.enabled)"
-                    >
-                      <span class="switch" :class="{ on: current.enabled }" />
-                    </button>
-                  </div>
+                </Transition>
+              </template>
+              <template v-else>
+                <div
+                  class="breadcrumbs"
+                  role="navigation"
+                  aria-label="Breadcrumb"
+                >
+                  <ol>
+                    <li>
+                      <button type="button" @click="backToFeatures">
+                        Features
+                      </button>
+                    </li>
+                    <li>
+                      <ChevronRight :size="14" aria-hidden="true" />
+                      <h1 aria-current="page">
+                        <FormattedText :text="current.name" />
+                      </h1>
+                    </li>
+                  </ol>
                 </div>
-                <section v-for="section in current.sections" :key="section.id">
-                  <h2
-                    v-if="
-                      current.sections.length > 1 || section.id !== 'settings'
-                    "
+                <p v-if="showDetails" class="feature-description">
+                  <FormattedText :text="current.description" />
+                </p>
+                <div
+                  v-if="subcategories.length"
+                  class="category-buttons"
+                  role="group"
+                  aria-label="Subcategory"
+                >
+                  <button
+                    v-for="subcategory in subcategories"
+                    :key="subcategory.id"
+                    type="button"
+                    :aria-pressed="selectedSubcategoryId === subcategory.id"
+                    @click="selectSubcategory(subcategory.id)"
                   >
-                    <FormattedText :text="section.name" />
-                  </h2>
-                  <SettingRow
-                    v-for="option in section.options"
-                    :key="option.id"
-                    :option="option"
-                    :capturing="
-                      capturing?.featureId === current.id &&
-                      capturing?.settingId === option.id
-                    "
-                    :busy="pending"
-                    :show-details="showDetails"
-                    @change="(value) => setting(current!.id, option.id, value)"
-                    @capture="startCapture(current!.id, option.id)"
-                    @cancel="cancelCapture"
-                  />
-                </section>
+                    <FormattedText :text="subcategory.name" />
+                  </button>
+                </div>
+                <Transition :name="subcategoryTransition" mode="out-in">
+                  <div :key="selectedSubcategoryId ?? ''" class="tab-view">
+                    <section
+                      v-for="section in currentSections"
+                      :key="`${section.subcategory?.id ?? ''}/${section.id ?? ''}`"
+                    >
+                      <h2 v-if="section.name">
+                        <FormattedText :text="section.name" />
+                      </h2>
+                      <SettingRow
+                        v-for="option in section.options"
+                        :key="option.id"
+                        :option="option"
+                        :capturing="
+                          capturing?.featureId === current.id &&
+                          capturing?.settingId === option.id
+                        "
+                        :busy="pending"
+                        :show-details="showDetails"
+                        @change="
+                          (value) => setting(current!.id, option.id, value)
+                        "
+                        @capture="startCapture(current!.id, option.id)"
+                        @cancel="cancelCapture"
+                      />
+                    </section>
+                  </div>
+                </Transition>
               </template>
             </template>
             <RelationsPage
@@ -1050,6 +1134,7 @@ onUnmounted(() => {
     </main>
   </div>
   <div v-else class="disconnected" />
+  <PageScrollbar v-if="state && ready" />
   <TransferDialog
     v-if="state && transferMode"
     :mode="transferMode"
