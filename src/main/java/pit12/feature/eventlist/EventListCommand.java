@@ -18,7 +18,7 @@
  */
 package pit12.feature.eventlist;
 
-import static pit12.runtime.command.CommandRegistry.reply;
+import static pit12.shared.chat.ChatFeedback.reply;
 
 import java.time.Instant;
 import java.time.ZoneId;
@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Locale;
 import net.minecraft.command.ICommandSender;
 import pit12.runtime.command.CommandNode;
+import pit12.shared.chat.ChatFeedback.Tone;
 
 final class EventListCommand {
     private static final DateTimeFormatter TIME = DateTimeFormatter
@@ -55,20 +56,20 @@ final class EventListCommand {
         String name = String.join(" ", args);
         EventType type = EventType.fromName(name);
         if (type == null) {
-            reply(sender, "Unknown event: " + name);
+            reply(sender, Tone.ERROR, "Unknown event: " + name);
             return;
         }
         List<PitEvent> matching = feature.events(type);
-        reply(sender, type.displayName + " events (" + matching.size() + "):");
+        reply(sender, Tone.INFO, type.displayName + " events (" + matching.size() + "):");
         long now = System.currentTimeMillis();
         for (PitEvent event : matching) {
-            reply(sender,
+            reply(sender, Tone.INFO,
                     "  " + event.type.displayName + " - "
                             + TIME.format(Instant.ofEpochMilli(event.timestamp)) + " - "
                             + countdown(event, now));
         }
         if (matching.isEmpty()) {
-            reply(sender, "  No stored events");
+            reply(sender, Tone.INFO, "  No stored events");
         }
     }
 

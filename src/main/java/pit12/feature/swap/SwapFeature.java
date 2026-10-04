@@ -42,6 +42,8 @@ import pit12.runtime.item.PitEnchantment;
 import pit12.runtime.item.PitEnchantmentReader;
 import pit12.runtime.pit.PitContext;
 import pit12.runtime.session.ClientSession;
+import pit12.shared.chat.ChatFeedback;
+import pit12.shared.chat.ChatFeedback.Tone;
 import pit12.shared.concurrent.ClientThread;
 import pit12.shared.lifecycle.ClientLifecycle;
 
@@ -70,7 +72,7 @@ public final class SwapFeature implements ClientLifecycle, ConfigChangeListener,
         this.config = config;
         this.session = session;
         this.hookBinding = hookBinding;
-        bindings = new BindingBook(client, path, this::report);
+        bindings = new BindingBook(client, path, message -> report(Tone.ERROR, message));
         controller = new SwapController(minecraft, session, config, bindings, this::report,
                 this::lockInput, this::releaseInput);
         automatic = new AutoSwapController(minecraft, config, controller, pit);
@@ -291,8 +293,8 @@ public final class SwapFeature implements ClientLifecycle, ConfigChangeListener,
             event.setCanceled(true);
     }
 
-    private void report(String message) {
+    private void report(Tone tone, String message) {
         if (minecraft.thePlayer != null)
-            CommandRegistry.reply(minecraft.thePlayer, message);
+            ChatFeedback.reply(minecraft.thePlayer, tone, message);
     }
 }

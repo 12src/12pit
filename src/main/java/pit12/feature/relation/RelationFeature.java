@@ -37,7 +37,6 @@ import java.util.function.LongSupplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.minecraft.client.Minecraft;
-import net.minecraft.util.ChatComponentText;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
@@ -54,6 +53,8 @@ import pit12.feature.relation.storage.RelationStore;
 import pit12.runtime.command.CommandRegistry;
 import pit12.runtime.player.TabPresence;
 import pit12.runtime.player.TabPresenceListener;
+import pit12.shared.chat.ChatFeedback;
+import pit12.shared.chat.ChatFeedback.Tone;
 import pit12.shared.concurrent.ClientThread;
 import pit12.shared.event.Listeners;
 import pit12.shared.lifecycle.ClientLifecycle;
@@ -261,8 +262,7 @@ public final class RelationFeature implements ClientLifecycle, Relations, TabPre
         if (installAdapters && Minecraft.getMinecraft().thePlayer != null) {
             for (String problem : problems) {
                 if (!shownLookupProblems.contains(problem)) {
-                    Minecraft.getMinecraft().thePlayer
-                            .addChatMessage(new ChatComponentText("[12pit] " + problem));
+                    ChatFeedback.reply(Minecraft.getMinecraft().thePlayer, Tone.WARNING, problem);
                 }
             }
         }
@@ -446,8 +446,8 @@ public final class RelationFeature implements ClientLifecycle, Relations, TabPre
             LOGGER.log(Level.WARNING, "Failed to save relations to " + path, failure);
             dispatch(expected, () -> {
                 if (installAdapters && Minecraft.getMinecraft().thePlayer != null) {
-                    Minecraft.getMinecraft().thePlayer.addChatMessage(
-                            new ChatComponentText("[12pit] Relations could not be saved"));
+                    ChatFeedback.reply(Minecraft.getMinecraft().thePlayer, Tone.ERROR,
+                            "Relations could not be saved");
                 }
             });
         }

@@ -121,7 +121,7 @@ Here's a tree with a group, child, alias, required argument, a handler and compl
 CommandNode command = CommandNode.command("message", "Message commands")
         .child(CommandNode.command("send", "Show a message").aliases("say")
                 .arguments("<text>", 1, 1)
-                .executes((sender, args) -> CommandRegistry.reply(sender, args[0]))
+                .executes((sender, args) -> ChatFeedback.reply(sender, Tone.INFO, args[0]))
                 .suggests((sender, args) -> Arrays.asList("hello", "test")))
         .build();
 commands.register(command);
@@ -129,13 +129,19 @@ commands.register(command);
 
 Use `register(command)` to make `/12pit message` available. If `/message` is supposed to be available too, use `register(command, true)` instead; both will use the same tree. Do not register a command twice. Names and aliases use only lowercase letters, digits, `-` and `_`; `12pit` is reserved as a root name. Names and aliases of siblings mustn't coincide.
 
-`arguments(usage, minimum, maximum)` describes the argument display usage and number range. Default is no arguments. `executes` gets an `ICommandSender` and an array of `String` arguments without the matched command path. Registry checks the argument number; feature can check the values, readiness and result of the action. `CommandRegistry.reply` adds the shared chat prefix.
+`arguments(usage, minimum, maximum)` describes the argument display usage and number range. Default is no arguments. `executes` gets an `ICommandSender` and an array of `String` arguments without the matched command path. Registry checks the argument number; feature can check the values, readiness and result of the action.
 
 A node with children is a group. Without arguments it displays auto-generated help, even if there's a handler. Leaf with a handler executes it, if the argument number is correct. Child's name or alias matches case-insensitively and overrides group's handler. Group handler can accept extra unmatched arguments. Adding a single `help` argument will show group help unless there's an explicit `help` child.
 
 `requires(Predicate<ICommandSender>)` restricts use of a node. Help and completion hide children that cannot be used by the sender. Suggestion callback gets the arguments after the command path, including the current word. Return the complete set of suggestions; the registry filters it by the current prefix case-insensitively and removes duplicates. Returning null or empty list results in no suggestions.
 
 Bootstrap provides [ForgeCommandAdapter](../src/main/java/pit12/platform/command/ForgeCommandAdapter.java) through the `Registrar` of the registry. Features don't register Forge command classes manually. There's no way to unregister commands in Forge. `stop()` disallows execution and completion and `start()` will reuse existing entry points. Registration is closed after the first start.
+
+## Chat feedback
+
+To send a message to the local player use [ChatFeedback](../src/main/java/pit12/shared/chat/ChatFeedback.java) and call `ChatFeedback.reply(sender, ChatFeedback.Tone.INFO, message)`. The tone should be `INFO`, `SUCCESS`, `WARNING` or `ERROR`, depending on the outcome. The shared utility will include `[12pit] »` prefix with gray brackets, bold aqua `12` and bold dark aqua `pit` followed by gray separator. Colors of the body text are white, green, yellow and red.
+
+It is called from the client thread. In case of messages not related to a command, ensure that there is a local player before calling and sending him/her the message.
 
 ## HUD
 

@@ -18,7 +18,7 @@
  */
 package pit12.feature.relation;
 
-import static pit12.runtime.command.CommandRegistry.reply;
+import static pit12.shared.chat.ChatFeedback.reply;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,6 +28,8 @@ import pit12.feature.relation.api.Relation;
 import pit12.feature.relation.api.RelationEntry;
 import pit12.runtime.command.CommandNode;
 import pit12.runtime.player.TabPresence;
+import pit12.shared.chat.ChatFeedback.Tone;
+import pit12.shared.result.OperationResult;
 
 final class RelationCommand {
     private final RelationFeature feature;
@@ -61,9 +63,9 @@ final class RelationCommand {
         if (!ready(sender))
             return;
         List<RelationEntry> entries = feature.entries(relation);
-        reply(sender, relation.name() + " (" + entries.size() + "):");
+        reply(sender, Tone.INFO, relation.name() + " (" + entries.size() + "):");
         for (RelationEntry entry : entries) {
-            reply(sender,
+            reply(sender, Tone.INFO,
                     "  " + entry.name() + (entry.playerId() == null ? " (UUID "
                             + feature.resolutionOf(entry.name()).name().toLowerCase(Locale.ROOT)
                             + ")" : ""));
@@ -71,15 +73,17 @@ final class RelationCommand {
     }
 
     private void change(ICommandSender sender, String operation, String player) {
-        if (ready(sender))
-            reply(sender, feature.change(relation, operation, player).message());
+        if (ready(sender)) {
+            OperationResult<Void> result = feature.change(relation, operation, player);
+            reply(sender, result.succeeded() ? Tone.SUCCESS : Tone.ERROR, result.message());
+        }
     }
 
     private boolean ready(ICommandSender sender) {
         String problem = feature.readinessProblem();
         if (problem == null)
             return true;
-        reply(sender, problem);
+        reply(sender, Tone.WARNING, problem);
         return false;
     }
 
