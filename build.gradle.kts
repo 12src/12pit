@@ -87,6 +87,9 @@ sourceSets.main {
 
 tasks.compileJava { dependsOn(generateBuildConfig) }
 
+// Layout checks read comments that are absent from compiled classes.
+tasks.test { inputs.file("src/main/java/pit12/bootstrap/ClientBootstrap.java") }
+
 repositories {
     mavenCentral()
     maven("https://repo.spongepowered.org/maven/")

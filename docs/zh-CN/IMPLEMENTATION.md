@@ -1,4 +1,4 @@
-<!-- Source: docs/IMPLEMENTATION.md; Based on: 0ad380b9e068a3bc57862ff0f7d698072678b35c -->
+<!-- Source: docs/IMPLEMENTATION.md; Based on: b78579987d1f0f99ffec24bc15c5ace785f696cb -->
 
 # 12pit 实现
 
@@ -8,7 +8,9 @@
 
 `ClientLifecycle` 提供初始化资源的 `start()` 和释放资源的 `stop()`。管理资源的组件实现此接口。不管理资源的辅助工具不应实现它。
 
-`ClientBootstrap` 创建组件，并通过构造器注入为它们提供依赖。添加生命周期组件的提供者后，将组件添加到此对象的 `components` 字段。Bootstrap 按列表中的顺序启动组件，并按相反顺序停止它们。对象在构造器中定义和初始化；监听器和工作线程应放在 `start()` 中。
+`ClientBootstrap` 在构造器中创建共享 runtime 组件。每个功能有一个私有的 `register...` 方法，负责按需创建和注册配置、创建功能并加入 `components`。依赖通过参数传入。只有后续装配方法需要使用时，才返回功能的 API。
+
+构造器分为共享 runtime、功能提供方和其余功能三段。runtime 保留内联创建。功能调用和方法声明先按 `ConfigCategory.displayOrder()` 分组，再按方法名 A–Z 排列。没有配置的功能放在最前面的 `Category: No config` 段。两处使用一致的组别和分类注释。依赖先后优先于分类和名称顺序。Bootstrap 按列表顺序启动组件，并按逆序停止。装配方法只创建和注册对象；监听器和工作线程放在 `start()` 中。
 
 Bootstrap 注册组件并调用其 `start()` 方法。如果 `start()` 引发异常，Bootstrap 会停止此组件和之前已启动的所有组件。`stop()` 应在任何情况下释放资源，包括仅完成部分初始化或被调用多次的情况。如果某个组件在 `stop()` 中抛出异常，该异常会被记录，但其他所有组件仍会停止。
 
@@ -87,14 +89,17 @@ public final class StatusConfig extends FeatureConfig {
 
 功能 ID 在目录中唯一。设置和 HUD 配置的 ID 在其功能中唯一。ID 以小写 ASCII 字母或数字开头；其余字符还可以是 `.`、`-` 或 `_`。改变显示名称时，保留已保存的 ID。HUD 配置 ID 是 `status.offset_x` 这样的前缀；不要创建 ID 与它们冲突的设置。
 
-`ConfigCatalog` 在 Bootstrap 中注册所有配置对象。在现有的 `freeze()` 调用之前添加新注册，并向其使用者提供同一个配置对象：
+在 Bootstrap 中该功能的 `register...` 方法内注册配置，再将同一个对象传给功能：
 
 ```java
-StatusConfig statusConfig = new StatusConfig();
-configs.register(statusConfig);
+private void registerTooltip(ConfigCatalog configs) {
+    TooltipConfig config = new TooltipConfig();
+    configs.register(config);
+    components.add(new TooltipFeature(configs, config));
+}
 ```
 
-所有设置都应在注册前定义。注册会将它们的读写操作绑定到目录的客户端线程。`freeze()` 阻止后续功能注册，但不阻止修改其设置。配置方案在启动时记录设置结构。Web UI 读取目录和设置元数据，因此普通设置不需要单独的页面或保存逻辑。
+所有设置都应在注册前定义。注册会将它们的读写操作绑定到目录的客户端线程。Bootstrap 构造器在所有功能装配方法返回后统一调用一次 `configs.freeze()`。这会阻止新的配置注册，但仍允许修改设置。配置方案在 `start()` 中记录设置结构，此时目录已冻结。Web UI 读取目录和设置元数据，因此普通设置不需要单独的页面或保存逻辑。
 
 使用设置的 `get()` 和 `set()` 方法访问其实时值。`set()` 校验值，并在值发生变化时发送通知。`Setting` 的子类在初始化 `requireValue` 使用的字段后校验默认值。
 

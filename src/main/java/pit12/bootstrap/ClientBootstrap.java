@@ -19,6 +19,7 @@
 package pit12.bootstrap;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -30,6 +31,7 @@ import pit12.feature.gamma.GammaBinding;
 import pit12.feature.gamma.GammaConfig;
 import pit12.feature.gamma.GammaFeature;
 import pit12.feature.hudeditor.HudEditorFeature;
+import pit12.feature.hudeditor.api.HudEditor;
 import pit12.feature.itemesp.ItemEspConfig;
 import pit12.feature.itemesp.ItemEspFeature;
 import pit12.feature.playeresp.PlayerEspConfig;
@@ -37,14 +39,18 @@ import pit12.feature.playeresp.PlayerEspFeature;
 import pit12.feature.playerlist.PlayerListConfig;
 import pit12.feature.playerlist.PlayerListFeature;
 import pit12.feature.profile.ProfilesFeature;
+import pit12.feature.profile.api.Profiles;
 import pit12.feature.quickmath.AutoQuickMathConfig;
 import pit12.feature.quickmath.AutoQuickMathFeature;
 import pit12.feature.relation.RelationFeature;
+import pit12.feature.relation.api.RelationLookup;
+import pit12.feature.relation.api.Relations;
 import pit12.feature.sprint.AutoSprintConfig;
 import pit12.feature.sprint.AutoSprintFeature;
 import pit12.feature.swap.SwapConfig;
 import pit12.feature.swap.SwapFeature;
 import pit12.feature.swap.SwapHooksBinding;
+import pit12.feature.swap.api.SwapBindings;
 import pit12.feature.tooltip.TooltipConfig;
 import pit12.feature.tooltip.TooltipFeature;
 import pit12.feature.webui.WebUiConfig;
@@ -53,8 +59,11 @@ import pit12.platform.command.ForgeCommandAdapter;
 import pit12.runtime.command.CommandRegistry;
 import pit12.runtime.config.ConfigCatalog;
 import pit12.runtime.hud.HudRegistry;
+import pit12.runtime.pit.PitContext;
 import pit12.runtime.pit.PitContextTracker;
+import pit12.runtime.player.PlayerEquipmentAccess;
 import pit12.runtime.player.PlayerEquipmentTracker;
+import pit12.runtime.player.TabPresence;
 import pit12.runtime.player.TabPresenceTracker;
 import pit12.runtime.session.ClientSession;
 import pit12.shared.concurrent.ClientThread;
@@ -70,69 +79,148 @@ public final class ClientBootstrap {
     private boolean started;
 
     public ClientBootstrap() {
+        // Shared runtime
         Minecraft minecraft = Minecraft.getMinecraft();
         client = new ClientThread(minecraft::isCallingFromMinecraftThread,
                 task -> minecraft.addScheduledTask(task));
         ConfigCatalog configs = new ConfigCatalog(client);
         shutdown = (ClientShutdownBinding) minecraft;
         ClientSession session = new ClientSession(minecraft, client);
-        CommandRegistry commands = new CommandRegistry(client, ForgeCommandAdapter::register);
-        WebUiConfig webUiConfig = new WebUiConfig();
-        PlayerListConfig playerListConfig = new PlayerListConfig();
-        EventListConfig eventListConfig = new EventListConfig();
-        PlayerEspConfig playerEspConfig = new PlayerEspConfig();
-        ItemEspConfig itemEspConfig = new ItemEspConfig();
-        TooltipConfig tooltipConfig = new TooltipConfig();
-        GammaConfig gammaConfig = new GammaConfig();
-        AutoSprintConfig autoSprintConfig = new AutoSprintConfig();
-        AutoQuickMathConfig autoQuickMathConfig = new AutoQuickMathConfig();
-        SwapConfig swapConfig = new SwapConfig();
-        configs.register(webUiConfig);
-        configs.register(playerListConfig);
-        configs.register(eventListConfig);
-        configs.register(playerEspConfig);
-        configs.register(itemEspConfig);
-        configs.register(tooltipConfig);
-        configs.register(gammaConfig);
-        configs.register(autoSprintConfig);
-        configs.register(autoQuickMathConfig);
-        configs.register(swapConfig);
-        configs.freeze();
-        ProfilesFeature profiles = new ProfilesFeature(configs,
-                new File(minecraft.mcDataDir, "12pit/config").toPath());
-        PlayerEquipmentTracker playerEquipment = new PlayerEquipmentTracker(session);
-        TabPresenceTracker presence = new TabPresenceTracker(session);
-        RelationFeature relations = new RelationFeature(presence,
-                new File(minecraft.mcDataDir, "12pit/relations.json").toPath(), client, commands);
-        PitContextTracker pitContext = new PitContextTracker(session);
-        HudRegistry hudRegistry = new HudRegistry(client);
-        HudEditorFeature hudEditor = new HudEditorFeature(hudRegistry, commands);
-        SwapFeature swap = new SwapFeature(minecraft, client, configs, swapConfig, session,
-                pitContext, commands,
-                new File(minecraft.mcDataDir, "12pit/swap-bindings.json").toPath(),
-                (SwapHooksBinding) minecraft);
         components.add(session);
+        CommandRegistry commands = new CommandRegistry(client, ForgeCommandAdapter::register);
         components.add(commands);
-        components.add(profiles);
-        components.add(playerEquipment);
-        components.add(presence);
-        components.add(relations);
+        PitContextTracker pitContext = new PitContextTracker(session);
         components.add(pitContext);
-        components.add(new PlayerListFeature(configs, playerListConfig, playerEquipment, pitContext,
-                hudRegistry, relations, presence));
-        components.add(new EventListFeature(configs, eventListConfig, hudRegistry, commands));
-        components
-                .add(new PlayerEspFeature(configs, playerEspConfig, session, presence, relations));
-        components.add(new ItemEspFeature(configs, itemEspConfig, session));
-        components.add(new TooltipFeature(configs, tooltipConfig));
-        components.add(
-                new GammaFeature(configs, gammaConfig, (GammaBinding) minecraft.entityRenderer));
-        components.add(new AutoSprintFeature(autoSprintConfig));
-        components.add(new AutoQuickMathFeature(autoQuickMathConfig));
+        PlayerEquipmentTracker playerEquipment = new PlayerEquipmentTracker(session);
+        components.add(playerEquipment);
+        TabPresenceTracker presence = new TabPresenceTracker(session);
+        components.add(presence);
+        HudRegistry hudRegistry = new HudRegistry(client);
+        // Feature providers
+        // Category: No config
+        HudEditor hudEditor = registerHudEditor(hudRegistry, commands);
+        Profiles profiles =
+                registerProfiles(configs, new File(minecraft.mcDataDir, "12pit/config").toPath());
+        Relations relations = registerRelations(presence,
+                new File(minecraft.mcDataDir, "12pit/relations.json").toPath(), client, commands);
+        // Category: Player
+        SwapBindings swapBindings = registerSwap(minecraft, client, configs, session, pitContext,
+                commands, new File(minecraft.mcDataDir, "12pit/swap-bindings.json").toPath(),
+                (SwapHooksBinding) minecraft);
+        // Features
+        // Category: Player
+        registerAutoSprint(configs);
+        // Category: Utility
+        registerAutoQuickMath(configs);
+        // Category: Render
+        registerEventList(configs, hudRegistry, commands);
+        registerGamma(configs, (GammaBinding) minecraft.entityRenderer);
+        registerItemEsp(configs, session);
+        registerPlayerEsp(configs, session, presence, relations);
+        registerPlayerList(configs, playerEquipment, pitContext, hudRegistry, relations, presence);
+        registerTooltip(configs);
+        // Category: Interface
+        registerWebUi(configs, profiles, relations, hudEditor, swapBindings);
+        configs.freeze();
+    }
+
+    // Feature providers
+    // Category: No config
+    private HudEditor registerHudEditor(HudRegistry hudRegistry, CommandRegistry commands) {
+        HudEditorFeature hudEditor = new HudEditorFeature(hudRegistry, commands);
         components.add(hudEditor);
+        return hudEditor;
+    }
+
+    private Profiles registerProfiles(ConfigCatalog configs, Path directory) {
+        ProfilesFeature profiles = new ProfilesFeature(configs, directory);
+        components.add(profiles);
+        return profiles;
+    }
+
+    private Relations registerRelations(TabPresence presence, Path path, ClientThread client,
+            CommandRegistry commands) {
+        RelationFeature relations = new RelationFeature(presence, path, client, commands);
+        components.add(relations);
+        return relations;
+    }
+
+    // Category: Player
+    private SwapBindings registerSwap(Minecraft minecraft, ClientThread client,
+            ConfigCatalog configs, ClientSession session, PitContext pitContext,
+            CommandRegistry commands, Path path, SwapHooksBinding binding) {
+        SwapConfig config = new SwapConfig();
+        configs.register(config);
+        SwapFeature swap = new SwapFeature(minecraft, client, configs, config, session, pitContext,
+                commands, path, binding);
         components.add(swap);
-        components.add(new WebUiFeature(configs, profiles, relations, hudEditor, swap.bindings(),
-                webUiConfig));
+        return swap.bindings();
+    }
+
+    // Features
+    // Category: Player
+    private void registerAutoSprint(ConfigCatalog configs) {
+        AutoSprintConfig config = new AutoSprintConfig();
+        configs.register(config);
+        components.add(new AutoSprintFeature(config));
+    }
+
+    // Category: Utility
+    private void registerAutoQuickMath(ConfigCatalog configs) {
+        AutoQuickMathConfig config = new AutoQuickMathConfig();
+        configs.register(config);
+        components.add(new AutoQuickMathFeature(config));
+    }
+
+    // Category: Render
+    private void registerEventList(ConfigCatalog configs, HudRegistry hudRegistry,
+            CommandRegistry commands) {
+        EventListConfig config = new EventListConfig();
+        configs.register(config);
+        components.add(new EventListFeature(configs, config, hudRegistry, commands));
+    }
+
+    private void registerGamma(ConfigCatalog configs, GammaBinding binding) {
+        GammaConfig config = new GammaConfig();
+        configs.register(config);
+        components.add(new GammaFeature(configs, config, binding));
+    }
+
+    private void registerItemEsp(ConfigCatalog configs, ClientSession session) {
+        ItemEspConfig config = new ItemEspConfig();
+        configs.register(config);
+        components.add(new ItemEspFeature(configs, config, session));
+    }
+
+    private void registerPlayerEsp(ConfigCatalog configs, ClientSession session,
+            TabPresence presence, RelationLookup relations) {
+        PlayerEspConfig config = new PlayerEspConfig();
+        configs.register(config);
+        components.add(new PlayerEspFeature(configs, config, session, presence, relations));
+    }
+
+    private void registerPlayerList(ConfigCatalog configs, PlayerEquipmentAccess playerEquipment,
+            PitContext pitContext, HudRegistry hudRegistry, RelationLookup relations,
+            TabPresence presence) {
+        PlayerListConfig config = new PlayerListConfig();
+        configs.register(config);
+        components.add(new PlayerListFeature(configs, config, playerEquipment, pitContext,
+                hudRegistry, relations, presence));
+    }
+
+    private void registerTooltip(ConfigCatalog configs) {
+        TooltipConfig config = new TooltipConfig();
+        configs.register(config);
+        components.add(new TooltipFeature(configs, config));
+    }
+
+    // Category: Interface
+    private void registerWebUi(ConfigCatalog configs, Profiles profiles, Relations relations,
+            HudEditor hudEditor, SwapBindings swapBindings) {
+        WebUiConfig config = new WebUiConfig();
+        configs.register(config);
+        components.add(
+                new WebUiFeature(configs, profiles, relations, hudEditor, swapBindings, config));
     }
 
     public void start() {
