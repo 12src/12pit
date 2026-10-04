@@ -51,7 +51,7 @@ final class AutoSwapController {
     private Pending pending;
     private PitEnchantment activeType;
     private ItemIdentity activePants;
-    private ItemIdentity originalPants;
+    private ItemStack originalPants;
     private boolean canRestore;
 
     AutoSwapController(Minecraft minecraft, SwapConfig config, SwapController swaps,
@@ -218,7 +218,7 @@ final class AutoSwapController {
         SwapController.Target target = new SwapController.Target(source,
                 player.inventoryContainer.getSlot(source).getStack(), 0);
         ItemIdentity wornIdentity = ItemIdentity.read(worn);
-        ItemIdentity previous = canRestore ? originalPants : wornIdentity;
+        ItemStack previous = canRestore ? originalPants : worn == null ? null : worn.copy();
         if (swaps.enqueueAutomatic(Collections.singletonList(target),
                 () -> canSwap(player) && !player.isPotionActive(Potion.poison) && eligible(type)
                         && (wornIdentity == null ? leggings() == null
@@ -278,19 +278,36 @@ final class AutoSwapController {
             }
             return;
         }
-        for (int index = 0; index < 36; index++) {
-            ItemStack stack = player.inventory.getStackInSlot(index);
-            if (!originalPants.matches(stack))
-                continue;
-            SwapController.Target target = new SwapController.Target(guiSlot(index), stack, 0);
-            if (swaps.enqueueAutomatic(Collections.singletonList(target), this::readyToRestore)) {
-                pending = new Pending(activeType, activePants, originalPants, true);
-                automaticPending = true;
-            }
+        ItemStack expected = originalPants;
+        int source = findOriginalPants(expected);
+        int originalLives = lives(originalPants);
+        if (source < 0 && originalLives >= 0) {
+            expected = originalPants.copy();
+            expected.getTagCompound().getCompoundTag("ExtraAttributes").setInteger("Lives",
+                    originalLives - 1);
+            source = findOriginalPants(expected);
+        }
+        if (source < 0) {
+            // A manual move or missing original must never cause us to restore a different item.
+            clearActive();
             return;
         }
-        // A manual move or missing original must never cause us to restore a different item.
-        clearActive();
+        ItemStack restored = expected;
+        SwapController.Target target = new SwapController.Target(source, restored, 0);
+        if (swaps.enqueueAutomatic(Collections.singletonList(target),
+                () -> readyToRestore() && ItemStack.areItemStacksEqual(restored,
+                        player.inventoryContainer.getSlot(target.source).getStack()))) {
+            pending = new Pending(activeType, activePants, restored, true);
+            automaticPending = true;
+        }
+    }
+
+    private int findOriginalPants(ItemStack expected) {
+        for (int index = 0; index < 36; index++) {
+            if (ItemStack.areItemStacksEqual(expected, player.inventory.getStackInSlot(index)))
+                return guiSlot(index);
+        }
+        return -1;
     }
 
     private boolean readyToRestore() {
@@ -303,8 +320,7 @@ final class AutoSwapController {
         if (pending == null)
             return;
         if (pending.restoring) {
-            if (pending.previous == null ? leggings() == null
-                    : pending.previous.matches(leggings()))
+            if (ItemStack.areItemStacksEqual(pending.previous, leggings()))
                 clearActive();
             else
                 retryAt = tick + 10;
@@ -397,11 +413,10 @@ final class AutoSwapController {
     private static final class Pending {
         final PitEnchantment type;
         final ItemIdentity equipped;
-        final ItemIdentity previous;
+        final ItemStack previous;
         final boolean restoring;
 
-        Pending(PitEnchantment type, ItemIdentity equipped, ItemIdentity previous,
-                boolean restoring) {
+        Pending(PitEnchantment type, ItemIdentity equipped, ItemStack previous, boolean restoring) {
             this.type = type;
             this.equipped = equipped;
             this.previous = previous;
