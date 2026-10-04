@@ -26,7 +26,7 @@ public final class AutoQuickMathConfig extends FeatureConfig {
     private final DoubleSetting delay;
 
     public AutoQuickMathConfig() {
-        super("auto_quick_math", "Auto Quick Math", new ConfigCategory("pit", "Pit", 75),
+        super("auto_quick_math", "Auto Quick Math", new ConfigCategory("utility", "Utility", 75),
                 "Solves the QUICK MATHS! expression and answers in chat automatically.");
         delay = doubleSliderSetting("delay", "Answer delay",
                 "Waits this many seconds before sending the answer.", 1.0, 0.0, 5.0, 0.1);

@@ -6,7 +6,9 @@ This file contains information about project classes and the rules for using the
 
 `ClientLifecycle` has `start()` which initializes the resources and `stop()` which releases them. Components that manage some resources implement this interface. There should be no implementation in the helper with no managed resources.
 
-`ClientBootstrap` creates the components and provides them with their dependencies through constructor injections. Add lifecycle components to the `components` field of this object after adding their providers. Bootstrap will start the components in the order specified in the list and stop them in reverse order. Objects are defined and initialized in constructors; listeners and workers should be in `start()`.
+Components are created by `ClientBootstrap` in the constructor. There is a private `register...` method for each feature which creates and registers its config if required, builds the feature, and registers it in `components`. Pass required dependencies as arguments. Return only the API of the feature if subsequent registration methods require it.
+
+Divide the constructor in three parts: shared runtime, feature providers, and other features. Create shared runtime within the constructor itself. Call feature methods and declare them sorted in order of `ConfigCategory.displayOrder()` followed by alphabetical order of their names. Sort the features without configuration in the group `Category: No config`. The same comment should be used in both groups and categories. Prioritize dependencies over category and name. Bootstrap initializes components in list order and stops them in reverse order. Registration methods only create and register objects, not listeners and workers, which should be done in `start()`.
 
 Bootstrap registers the component and calls its `start()` method. If `start()` causes an exception, then Bootstrap will stop this component and all components that were started before it. `stop()` should release resources in any case, including partial initialization and even if it was called multiple times. An exception thrown by one of the components in `stop()` will be logged but all the others will be stopped.
 
@@ -85,14 +87,17 @@ The following helpers create settings and register their metadata in the feature
 
 Feature ids are unique in the catalog. Ids of the settings and HUD configurations are unique in their feature. Id starts with a lowercase ASCII letter or digit; the rest can also be `.`, `-`, or `_`. Preserve saved ids while changing the display names. HUD configuration ids are prefixes like `status.offset_x`; do not create settings with ids conflicting with them.
 
-`ConfigCatalog` registers all config objects in Bootstrap. Add the new registration before existing `freeze()` call and provide the same config object to its consumers:
+Register this config in the register method of the feature in Bootstrap, then pass the same config to the feature:
 
 ```java
-StatusConfig statusConfig = new StatusConfig();
-configs.register(statusConfig);
+private void registerTooltip(ConfigCatalog configs) {
+    TooltipConfig config = new TooltipConfig();
+    configs.register(config);
+    components.add(new TooltipFeature(configs, config));
+}
 ```
 
-All settings should be defined before registration. Registration will bind their read/write operations to the client thread of the catalog. `freeze()` prevents future registrations of the feature but does not prevent changing its settings. Profiles record the setting schema at startup time. Web UI reads the catalog and metadata of settings, so normal settings do not require separate page or saving.
+Register all the settings prior to registration. Registering connects read/write operation of those settings to the client thread of the catalog. Once all the feature registration methods have been invoked, the constructor of Bootstrap invokes `configs.freeze()` only once. This disallows new configurations but allows changing the existing settings. Profiles will capture the schema of the settings in `start()` after freezing the catalog. Web UI reads the catalog and setting metadata, so no extra pages needed for that.
 
 Use `get()` and `set()` methods of a setting for its live value. `set()` validates the value and sends the notification if it changed. The subclasses of `Setting` validate default value after initializing fields used by `requireValue`.
 

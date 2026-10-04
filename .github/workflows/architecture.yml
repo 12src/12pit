@@ -35,4 +35,4 @@ jobs:
       - name: Check architecture
         run: |
           chmod +x gradlew
-          ./gradlew test --tests pit12.architecture.ArchitectureTest --no-daemon --console=plain
+          ./gradlew test --tests 'pit12.architecture.*' --no-daemon --console=plain
