@@ -18,19 +18,12 @@
  */
 package pit12.runtime.pit;
 
-import java.util.Objects;
-
 public final class PitSnapshot {
-    private static final PitSnapshot INITIAL = new PitSnapshot(PitMap.UNKNOWN, 0L);
     private final PitMap map;
     private final long revision;
 
-    public static PitSnapshot initial() {
-        return INITIAL;
-    }
-
     public PitSnapshot(PitMap map, long revision) {
-        this.map = Objects.requireNonNull(map, "map");
+        this.map = map;
         this.revision = revision;
     }
 

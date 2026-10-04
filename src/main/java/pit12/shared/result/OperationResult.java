@@ -42,8 +42,6 @@ public final class OperationResult<T> {
     }
 
     public static <T> OperationResult<T> failure(Status status, String message) {
-        if (status == Status.SUCCESS)
-            throw new IllegalArgumentException("Failure requires a failure status");
         return new OperationResult<>(status, message, null);
     }
 

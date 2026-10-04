@@ -72,7 +72,7 @@ public final class PlayerListFeature implements ClientLifecycle, PlayerEquipment
         this.presence = presence;
         this.hudRegistry = hudRegistry;
         builder = new PlayerListBuilder(minecraft, equipment, pitContext, config, relations);
-        hud = new PlayerListHud(config);
+        hud = new PlayerListHud(config, hudRenderer);
     }
 
     @Override
@@ -132,12 +132,12 @@ public final class PlayerListFeature implements ClientLifecycle, PlayerEquipment
     }
 
     @Override
-    public void onPlayerEquipmentChanged(java.util.UUID playerId, int changedSlots, long revision) {
+    public void onPlayerEquipmentChanged(UUID playerId, int changedSlots, long revision) {
         snapshotDirty = true;
     }
 
     @Override
-    public void onPlayerEquipmentRemoved(java.util.UUID playerId) {
+    public void onPlayerEquipmentRemoved(UUID playerId) {
         snapshotDirty = true;
     }
 
@@ -195,7 +195,6 @@ public final class PlayerListFeature implements ClientLifecycle, PlayerEquipment
                 || changes.affects("playerlist", "show_regularity")
                 || changes.affects("playerlist", "show_dark")
                 || changes.affects("playerlist", "show_bounty_hunter")
-                || changes.affects("playerlist", "use_vanilla_font")
                 || changes.affects("playerlist", "player_list.text_shadow")
                 || changes.affects("playerlist", "player_list.scale")
                 || changes.affects("playerlist", "player_list.anchor")

@@ -18,16 +18,14 @@
  */
 package pit12.runtime.config;
 
-import java.util.Objects;
-
-public final class ConfigCategory implements Comparable<ConfigCategory> {
+public final class ConfigCategory {
     private final String id;
     private final String displayName;
     private final int displayOrder;
 
     public ConfigCategory(String id, String displayName, int displayOrder) {
         this.id = ConfigNames.requireStableId(id, "category id");
-        this.displayName = ConfigNames.requireText(displayName, "category display name");
+        this.displayName = displayName;
         this.displayOrder = displayOrder;
     }
 
@@ -41,28 +39,5 @@ public final class ConfigCategory implements Comparable<ConfigCategory> {
 
     public int displayOrder() {
         return displayOrder;
-    }
-
-    @Override
-    public int compareTo(ConfigCategory other) {
-        int orderComparison = Integer.compare(displayOrder, other.displayOrder);
-        return orderComparison != 0 ? orderComparison : id.compareTo(other.id);
-    }
-
-    @Override
-    public boolean equals(Object other) {
-        if (this == other) {
-            return true;
-        }
-        if (!(other instanceof ConfigCategory)) {
-            return false;
-        }
-        ConfigCategory category = (ConfigCategory) other;
-        return id.equals(category.id);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id);
     }
 }

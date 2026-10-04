@@ -21,8 +21,10 @@ package pit12.runtime.config;
 final class ConfigNames {
     private ConfigNames() {}
 
-    static String requireStableId(String value, String label) {
-        String id = requireText(value, label);
+    static String requireStableId(String id, String label) {
+        if (id.isEmpty()) {
+            throw new IllegalArgumentException(label + " must not be blank");
+        }
         for (int index = 0; index < id.length(); index++) {
             char character = id.charAt(index);
             boolean valid = character >= 'a' && character <= 'z'
@@ -30,27 +32,9 @@ final class ConfigNames {
                     || index > 0 && (character == '-' || character == '_' || character == '.');
             if (!valid) {
                 throw new IllegalArgumentException(label
-                        + " must use lowercase ASCII letters, digits, '.', '-' or '_': " + value);
+                        + " must use lowercase ASCII letters, digits, '.', '-' or '_': " + id);
             }
         }
         return id;
-    }
-
-    static String requireText(String value, String label) {
-        if (value == null) {
-            throw new NullPointerException(label);
-        }
-        String text = value.trim();
-        if (text.isEmpty()) {
-            throw new IllegalArgumentException(label + " must not be blank");
-        }
-        return text;
-    }
-
-    static String requireDescription(String value) {
-        if (value == null) {
-            throw new NullPointerException("description");
-        }
-        return value.trim();
     }
 }

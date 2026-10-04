@@ -34,7 +34,7 @@ public final class PitContextTracker implements ClientLifecycle, PitContext {
     private final ClientSession session;
     private final Runnable sessionChanged = this::onSessionChanged;
     private WorldClient boundWorld;
-    private PitSnapshot snapshot = PitSnapshot.initial();
+    private PitSnapshot snapshot = new PitSnapshot(PitMap.UNKNOWN, 0L);
     private long revision;
     private boolean detectionComplete;
     private boolean started;
@@ -58,13 +58,11 @@ public final class PitContextTracker implements ClientLifecycle, PitContext {
     @Override
     public void stop() {
         session.checkThread();
-        if (!started) {
-            reset();
-            return;
+        if (started) {
+            started = false;
+            session.removeListener(sessionChanged);
+            MinecraftForge.EVENT_BUS.unregister(this);
         }
-        started = false;
-        session.removeListener(sessionChanged);
-        MinecraftForge.EVENT_BUS.unregister(this);
         reset();
     }
 

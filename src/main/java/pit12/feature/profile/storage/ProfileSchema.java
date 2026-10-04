@@ -18,7 +18,6 @@
  */
 package pit12.feature.profile.storage;
 
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import pit12.runtime.config.ConfigCatalog;
@@ -41,9 +40,9 @@ public final class ProfileSchema {
             for (Setting<?> setting : feature.settings()) {
                 settings.put(setting.id(), setting.storageType());
             }
-            features.put(feature.id(), Collections.unmodifiableMap(settings));
+            features.put(feature.id(), settings);
         }
-        return new ProfileSchema(Collections.unmodifiableMap(features));
+        return new ProfileSchema(features);
     }
 
     public Map<String, Map<String, Setting.StorageType>> features() {

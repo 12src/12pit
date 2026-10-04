@@ -18,8 +18,6 @@
  */
 package pit12.shared.rendering;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.minecraft.client.Minecraft;
@@ -29,16 +27,15 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.util.ResourceLocation;
 import org.lwjgl.opengl.GL11;
 
-/**
- * 2D UI renderer with persistent per-size font resources. Each distinct font size allocates its own glyph atlas and
- * text caches; callers must use a small, fixed set of sizes.
- */
-public final class UiRenderer {
+public class UiRenderer {
     private static final Logger LOGGER = Logger.getLogger(UiRenderer.class.getName());
     private final Minecraft minecraft;
     private final FontRenderer fallbackFont;
     private final ResourceLocation fontLocation;
-    private final Map<Float, FontResources> fonts = new HashMap<Float, FontResources>();
+    private UiFont font;
+    private UiTextCache systemText;
+    private boolean fontAttempted;
+    private boolean systemAttempted;
     private float pixelScale = Float.NaN;
 
     public UiRenderer(Minecraft minecraft, ResourceLocation fontLocation) {
@@ -84,15 +81,20 @@ public final class UiRenderer {
         }
     }
 
-    public void text(String text, int x, int y, float fontSize, int color) {
-        text(text, x, y, fontSize, color, false);
-    }
-
-    public void text(String text, int x, int y, float fontSize, int color, boolean shadow) {
-        if (shadow) {
-            drawText(text, x + 1, y + 1, fontSize, shadowColor(color), true);
+    public void text(String text, int x, int y, int color, boolean shadow, boolean useCustomFont) {
+        FontBackend backend = fontBackend(text, useCustomFont);
+        if (backend == FontBackend.VANILLA) {
+            fallbackFont.drawString(text, x, y, color, shadow);
+            return;
         }
-        drawText(text, x, y, fontSize, color, false);
+        if (backend == FontBackend.CUSTOM) {
+            drawCustomText(text, x, y, color, shadow);
+            return;
+        }
+        if (shadow) {
+            systemText.draw(text, x + 1, y + 1, McFormatting.shadowColor(color), true);
+        }
+        systemText.draw(text, x, y, color, false);
     }
 
     public void texture(ResourceLocation texture, int x, int y, int width, int height, int color,
@@ -124,22 +126,26 @@ public final class UiRenderer {
         }
     }
 
-    public int textWidth(String text, float fontSize) {
-        FontResources resources = fontResources(fontSize);
-        if (resources != null && resources.font != null && resources.font.canRender(text)) {
-            return (int) Math.ceil(resources.font.width(text) / pixelScale);
+    public int textWidth(String text, boolean useCustomFont) {
+        switch (fontBackend(text, useCustomFont)) {
+            case CUSTOM:
+                return (int) Math.ceil(font.width(text) / pixelScale);
+            case SYSTEM:
+                return systemText.width(text);
+            default:
+                return fallbackFont.getStringWidth(text);
         }
-        int width = resources == null || resources.systemText == null ? -1
-                : resources.systemText.width(text);
-        return width >= 0 ? width : fallbackFont.getStringWidth(text);
     }
 
-    public int fontHeight(float fontSize) {
-        FontResources resources = fontResources(fontSize);
-        if (resources == null || resources.font == null) {
-            return fallbackFont.FONT_HEIGHT;
+    public int fontHeight(String text, boolean useCustomFont) {
+        switch (fontBackend(text, useCustomFont)) {
+            case CUSTOM:
+                return (int) Math.ceil(font.height() / pixelScale);
+            case SYSTEM:
+                return systemText.height();
+            default:
+                return fallbackFont.FONT_HEIGHT;
         }
-        return (int) Math.ceil(resources.font.height() / pixelScale);
     }
 
     public void close() {
@@ -147,17 +153,37 @@ public final class UiRenderer {
         pixelScale = Float.NaN;
     }
 
-    private void drawText(String text, int x, int y, float fontSize, int color, boolean shadow) {
-        FontResources resources = fontResources(fontSize);
-        if (resources != null && resources.font != null && resources.font.canRender(text)) {
-            draw(resources.font, text, x, y, color, shadow);
-        } else if (resources == null || resources.systemText == null
-                || !resources.systemText.draw(text, x, y, color, shadow)) {
-            fallbackFont.drawString(text, x, y, color, false);
+    private FontBackend fontBackend(String text, boolean useCustomFont) {
+        if (Float.isNaN(pixelScale)) {
+            return FontBackend.VANILLA;
         }
+        if (useCustomFont) {
+            UiFont font = font();
+            if (font != null && font.canRender(text)) {
+                return FontBackend.CUSTOM;
+            }
+        }
+        boolean formatting = false;
+        boolean vanilla = true;
+        for (int index = 0; index < text.length(); index++) {
+            char character = text.charAt(index);
+            if (formatting) {
+                formatting = false;
+            } else if (character == '\u00A7') {
+                formatting = true;
+            } else if (fallbackFont.getCharWidth(character) <= 0) {
+                vanilla = false;
+                break;
+            }
+        }
+        // Minecraft reports zero width for missing glyphs; drawString does not report them.
+        if (vanilla || systemText() == null) {
+            return FontBackend.VANILLA;
+        }
+        return FontBackend.SYSTEM;
     }
 
-    private void draw(UiFont font, String text, float x, float y, int color, boolean shadow) {
+    private void drawCustomText(String text, int x, int y, int color, boolean shadow) {
         float inverseScale = 1.0F / pixelScale;
         int pixelX = Math.round(x * pixelScale);
         int pixelY = Math.round(y * pixelScale);
@@ -165,41 +191,33 @@ public final class UiRenderer {
         GlStateManager.pushMatrix();
         GlStateManager.scale(inverseScale, inverseScale, 1.0F);
         try {
-            font.draw(text, pixelX, pixelY, color, shadow);
+            if (shadow) {
+                int offset = Math.max(1, Math.round(pixelScale));
+                font.draw(text, pixelX + offset, pixelY + offset, McFormatting.shadowColor(color),
+                        true);
+            }
+            font.draw(text, pixelX, pixelY, color, false);
         } finally {
             GlStateManager.popMatrix();
         }
     }
 
-    private FontResources fontResources(float fontSize) {
-        if (!(fontSize > 0.0F) || Float.isInfinite(fontSize)) {
-            throw new IllegalArgumentException("fontSize must be finite and greater than zero");
-        }
-        if (Float.isNaN(pixelScale)) {
-            return null;
-        }
-        Float key = Float.valueOf(fontSize);
-        FontResources cached = fonts.get(key);
-        if (cached != null) {
-            return cached;
-        }
-        int boundTexture = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
-        try {
-            FontResources created = new FontResources(fontSize);
-            fonts.put(key, created);
-            return created;
-        } finally {
-            GlStateManager.bindTexture(boundTexture);
-        }
-    }
-
     private void releaseFonts() {
+        fontAttempted = false;
+        systemAttempted = false;
+        if (font == null && systemText == null) {
+            return;
+        }
         int boundTexture = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
         try {
-            for (FontResources resources : fonts.values()) {
-                resources.close();
+            if (font != null) {
+                font.close();
+                font = null;
             }
-            fonts.clear();
+            if (systemText != null) {
+                systemText.close();
+                systemText = null;
+            }
         } finally {
             GlStateManager.bindTexture(boundTexture);
         }
@@ -210,45 +228,42 @@ public final class UiRenderer {
                 : Math.round(coordinate * pixelScale) / pixelScale;
     }
 
-    private UiTextCache prepareSystemFont(float fontSize) {
-        try {
-            return new UiTextCache(fontSize, pixelScale);
-        } catch (RuntimeException failure) {
-            LOGGER.log(Level.WARNING, "Unable to prepare system fallback UI font", failure);
-            return null;
-        }
-    }
-
     private static void color(int color) {
         GlStateManager.color((color >>> 16 & 0xFF) / 255.0F, (color >>> 8 & 0xFF) / 255.0F,
                 (color & 0xFF) / 255.0F, (color >>> 24 & 0xFF) / 255.0F);
     }
 
-    private static int shadowColor(int color) {
-        return McFormatting.shadowColor(color);
+    private UiFont font() {
+        if (fontAttempted) {
+            return font;
+        }
+        fontAttempted = true;
+        int boundTexture = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
+        try {
+            // Monocraft has nine design cells per em, so size nine keeps its grid aligned at integer scales.
+            font = new UiFont(minecraft, fontLocation, 9.0F, pixelScale);
+        } catch (RuntimeException failure) {
+            LOGGER.log(Level.WARNING, "Unable to prepare UI font", failure);
+        } finally {
+            GlStateManager.bindTexture(boundTexture);
+        }
+        return font;
     }
 
-    private final class FontResources {
-        private UiFont font;
-        private final UiTextCache systemText;
-
-        private FontResources(float fontSize) {
-            try {
-                font = new UiFont(minecraft, fontLocation, fontSize, pixelScale);
-            } catch (RuntimeException failure) {
-                LOGGER.log(Level.WARNING, "Unable to prepare UI font", failure);
-            }
-            systemText = prepareSystemFont(fontSize);
+    private UiTextCache systemText() {
+        if (systemAttempted) {
+            return systemText;
         }
-
-        private void close() {
-            if (font != null) {
-                font.close();
-                font = null;
-            }
-            if (systemText != null) {
-                systemText.close();
-            }
+        systemAttempted = true;
+        try {
+            systemText = new UiTextCache(8.0F, pixelScale);
+        } catch (RuntimeException failure) {
+            LOGGER.log(Level.WARNING, "Unable to prepare system UI font", failure);
         }
+        return systemText;
+    }
+
+    private enum FontBackend {
+        CUSTOM, VANILLA, SYSTEM
     }
 }

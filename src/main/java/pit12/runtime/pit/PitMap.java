@@ -43,22 +43,12 @@ public enum PitMap {
     }
 
     public boolean matchesSurface(IBlockState state) {
-        return this != UNKNOWN && state != null && state.getBlock() == surfaceBlock
+        return this != UNKNOWN && state.getBlock() == surfaceBlock
                 && surfaceBlock.getMetaFromState(state) == surfaceMetadata;
     }
 
     public int spawnY() {
         return spawnY;
-    }
-
-    /** Returns UNKNOWN when the surface block does not identify one of the known maps. */
-    public static PitMap fromSurface(IBlockState surface) {
-        for (PitMap map : values()) {
-            if (map.matchesSurface(surface)) {
-                return map;
-            }
-        }
-        return UNKNOWN;
     }
 
     SpawnState spawnStateAt(double x, double y, double z) {

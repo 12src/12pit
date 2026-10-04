@@ -21,59 +21,46 @@ package pit12.runtime.command;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import net.minecraft.command.CommandBase;
+import java.util.Set;
 import net.minecraft.command.CommandException;
-import net.minecraft.command.ICommand;
 import net.minecraft.command.ICommandSender;
-import net.minecraft.util.BlockPos;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumChatFormatting;
-import net.minecraftforge.client.ClientCommandHandler;
 import pit12.shared.concurrent.ClientThread;
 import pit12.shared.lifecycle.ClientLifecycle;
 
-public final class CommandRegistry extends CommandBase implements ClientLifecycle {
+public final class CommandRegistry implements ClientLifecycle {
     private final ClientThread client;
-    private final Map<String, ICommand> commands = new LinkedHashMap<>();
-    private final List<ICommand> standaloneCommands = new ArrayList<>();
-    private boolean registered;
+    private final Registrar registrar;
+    private final CommandNode.Builder rootBuilder = CommandNode.command("12pit", "12pit commands");
+    private final List<CommandNode> entryPoints = new ArrayList<>();
+    private CommandNode root;
+    private int installed;
     private boolean started;
 
-    public CommandRegistry(ClientThread client) {
-        this.client = Objects.requireNonNull(client, "client");
+    public CommandRegistry(ClientThread client, Registrar registrar) {
+        this.client = client;
+        this.registrar = registrar;
     }
 
-    public void register(ICommand command) {
+    public void register(CommandNode command) {
         register(command, false);
     }
 
-    public void register(ICommand command, boolean standalone) {
+    public void register(CommandNode command, boolean standalone) {
         client.check();
-        if (registered) {
+        if (root != null) {
             throw new IllegalStateException("Commands must be registered before startup");
         }
-        Objects.requireNonNull(command, "command");
-        List<String> names = new ArrayList<>();
-        names.add(command.getCommandName());
-        names.addAll(command.getCommandAliases());
-        for (String name : names) {
-            if (name == null || !name.matches("[a-z0-9_-]+") || getCommandName().equals(name)) {
-                throw new IllegalArgumentException("Invalid command name: " + name);
-            }
-            if (commands.containsKey(name)) {
-                throw new IllegalArgumentException("Duplicate command name: " + name);
-            }
+        if ("12pit".equals(command.name) || command.aliases.contains("12pit")) {
+            throw new IllegalArgumentException("The command name 12pit is reserved");
         }
-        for (String name : names) {
-            commands.put(name, command);
-        }
+        rootBuilder.child(command);
         if (standalone) {
-            standaloneCommands.add(command);
+            entryPoints.add(command);
         }
     }
 
@@ -83,13 +70,14 @@ public final class CommandRegistry extends CommandBase implements ClientLifecycl
         if (started) {
             return;
         }
-        if (!registered) {
-            // Forge has no command unregister API, so keep registrations across restarts.
-            ClientCommandHandler.instance.registerCommand(this);
-            for (ICommand command : standaloneCommands) {
-                ClientCommandHandler.instance.registerCommand(command);
-            }
-            registered = true;
+        if (root == null) {
+            root = rootBuilder.build();
+            entryPoints.add(0, root);
+        }
+        // Forge cannot unregister commands. Reuse installed entry points after a restart or partial startup.
+        while (installed < entryPoints.size()) {
+            registrar.register(this, entryPoints.get(installed));
+            installed++;
         }
         started = true;
     }
@@ -100,75 +88,115 @@ public final class CommandRegistry extends CommandBase implements ClientLifecycl
         started = false;
     }
 
-    @Override
-    public String getCommandName() {
-        return "12pit";
+    public String usage(CommandNode command) {
+        return usage(command, "/" + command.name);
     }
 
-    @Override
-    public String getCommandUsage(ICommandSender sender) {
-        return "/12pit <" + String.join("|", commands.keySet()) + ">";
-    }
-
-    @Override
-    public int getRequiredPermissionLevel() {
-        return 0;
-    }
-
-    @Override
-    public void processCommand(ICommandSender sender, String[] args) throws CommandException {
+    public void execute(CommandNode command, ICommandSender sender, String[] args)
+            throws CommandException {
         client.check();
         if (!started) {
             reply(sender, "Commands are unavailable");
             return;
         }
-        ICommand command = args.length == 0 ? null : commands.get(args[0].toLowerCase(Locale.ROOT));
-        if (command == null) {
-            reply(sender, getCommandUsage(sender));
-            return;
-        }
-        if (!command.canCommandSenderUseCommand(sender)) {
+        execute(command, sender, args, "/" + command.name);
+    }
+
+    private void execute(CommandNode command, ICommandSender sender, String[] args, String path)
+            throws CommandException {
+        if (!command.canUse(sender)) {
             throw new CommandException("commands.generic.permission");
         }
-        command.processCommand(sender, Arrays.copyOfRange(args, 1, args.length));
+        if (args.length == 0 && (!command.children.isEmpty() || command.handler == null)) {
+            help(command, sender, path);
+            return;
+        }
+        if (args.length > 0) {
+            CommandNode child = command.childNames.get(args[0].toLowerCase(Locale.ROOT));
+            if (child != null) {
+                execute(child, sender, Arrays.copyOfRange(args, 1, args.length),
+                        path + " " + args[0]);
+                return;
+            }
+        }
+        if (!command.children.isEmpty() && args.length == 1 && "help".equalsIgnoreCase(args[0])) {
+            help(command, sender, path);
+            return;
+        }
+        if (command.handler == null) {
+            reply(sender, "Unknown command: " + args[0]);
+            help(command, sender, path);
+        } else if (args.length < command.minimumArguments
+                || args.length > command.maximumArguments) {
+            reply(sender, "Usage: " + path
+                    + (command.arguments.isEmpty() ? "" : " " + command.arguments));
+        } else {
+            command.handler.execute(sender, args);
+        }
     }
 
-    @Override
-    public List<String> addTabCompletionOptions(ICommandSender sender, String[] args,
-            BlockPos position) {
+    public List<String> complete(CommandNode command, ICommandSender sender, String[] args) {
         client.check();
-        if (!started || args.length == 0) {
+        if (!started || args.length == 0 || !command.canUse(sender)) {
             return Collections.emptyList();
         }
+        if (args.length > 1) {
+            CommandNode child = command.childNames.get(args[0].toLowerCase(Locale.ROOT));
+            if (child != null) {
+                return complete(child, sender, Arrays.copyOfRange(args, 1, args.length));
+            }
+        }
+        Set<String> options = new LinkedHashSet<>();
         if (args.length == 1) {
-            List<String> options = new ArrayList<>();
-            for (Map.Entry<String, ICommand> entry : commands.entrySet()) {
-                if (entry.getValue().canCommandSenderUseCommand(sender)) {
-                    options.add(entry.getKey());
+            for (CommandNode child : command.children) {
+                if (child.canUse(sender)) {
+                    options.add(child.name);
+                    options.addAll(child.aliases);
                 }
             }
-            return getListOfStringsMatchingLastWord(args, options);
         }
-        ICommand command = commands.get(args[0].toLowerCase(Locale.ROOT));
-        if (command == null || !command.canCommandSenderUseCommand(sender)) {
-            return Collections.emptyList();
+        if (command.suggestions != null && args.length <= command.maximumArguments) {
+            List<String> suggestions = command.suggestions.suggest(sender, args);
+            if (suggestions != null) {
+                options.addAll(suggestions);
+            }
         }
-        return command.addTabCompletionOptions(sender, Arrays.copyOfRange(args, 1, args.length),
-                position);
+        List<String> matches = new ArrayList<>();
+        String prefix = args[args.length - 1];
+        for (String option : options) {
+            if (option != null && option.regionMatches(true, 0, prefix, 0, prefix.length())) {
+                matches.add(option);
+            }
+        }
+        return matches;
     }
 
-    @Override
-    public boolean isUsernameIndex(String[] args, int index) {
-        if (args.length < 2 || index < 1) {
-            return false;
+    private static String usage(CommandNode command, String path) {
+        if (!command.children.isEmpty()) {
+            return path + " <command>";
         }
-        ICommand command = commands.get(args[0].toLowerCase(Locale.ROOT));
-        return command != null
-                && command.isUsernameIndex(Arrays.copyOfRange(args, 1, args.length), index - 1);
+        return path + (command.arguments.isEmpty() ? "" : " " + command.arguments);
     }
 
-    private static void reply(ICommandSender sender, String message) {
+    private static void help(CommandNode command, ICommandSender sender, String path) {
+        reply(sender, path + " - " + command.description);
+        for (CommandNode child : command.children) {
+            if (child.canUse(sender)) {
+                reply(sender, usage(child, path + " " + child.name) + " - " + child.description);
+            }
+        }
+        if (command.handler != null && !command.arguments.isEmpty()) {
+            reply(sender, path + " " + command.arguments + " - " + command.description);
+        }
+    }
+
+    public static void reply(ICommandSender sender, String message) {
         sender.addChatMessage(new ChatComponentText(
                 EnumChatFormatting.AQUA + "[12pit]" + EnumChatFormatting.RESET + " " + message));
+    }
+
+    @FunctionalInterface
+    public interface Registrar {
+        void register(CommandRegistry registry, CommandNode command);
     }
 }

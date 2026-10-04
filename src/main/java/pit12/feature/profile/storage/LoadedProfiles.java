@@ -18,8 +18,6 @@
  */
 package pit12.feature.profile.storage;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -31,9 +29,9 @@ public final class LoadedProfiles {
 
     public LoadedProfiles(List<StoredProfile> profiles, UUID activeProfileId,
             List<ProfileLoadProblem> problems, boolean storageAvailable) {
-        this.profiles = Collections.unmodifiableList(new ArrayList<StoredProfile>(profiles));
+        this.profiles = profiles;
         this.activeProfileId = activeProfileId;
-        this.problems = Collections.unmodifiableList(new ArrayList<ProfileLoadProblem>(problems));
+        this.problems = problems;
         this.storageAvailable = storageAvailable;
     }
 

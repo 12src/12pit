@@ -18,11 +18,9 @@
  */
 package pit12.runtime.config;
 
-import java.util.Objects;
-
 public final class ConfigOption<T> {
     public enum Kind {
-        BOOLEAN, NUMBER, CHOICE, COLOR, KEYBIND
+        BOOLEAN, NUMBER, CHOICE, COLOR, COLOR_PICKER, KEYBIND
     }
 
     private final Setting<T> setting;
@@ -30,13 +28,9 @@ public final class ConfigOption<T> {
     private final ConfigSubcategory subcategory;
 
     ConfigOption(Setting<T> setting, Kind kind, ConfigSubcategory subcategory) {
-        this.setting = Objects.requireNonNull(setting, "setting");
-        this.kind = Objects.requireNonNull(kind, "kind");
+        this.setting = setting;
+        this.kind = kind;
         this.subcategory = subcategory;
-        if (!isCompatible(setting, kind)) {
-            throw new IllegalArgumentException(
-                    "Setting " + setting.id() + " is incompatible with option kind " + kind);
-        }
     }
 
     public Setting<T> setting() {
@@ -49,22 +43,5 @@ public final class ConfigOption<T> {
 
     public ConfigSubcategory subcategory() {
         return subcategory;
-    }
-
-    private static boolean isCompatible(Setting<?> setting, Kind kind) {
-        switch (kind) {
-            case BOOLEAN:
-                return setting instanceof BooleanSetting;
-            case NUMBER:
-                return setting instanceof NumberSetting<?> && ((NumberSetting<?>) setting)
-                        .minimumValue() < ((NumberSetting<?>) setting).maximumValue();
-            case CHOICE:
-                return setting instanceof ChoiceSetting;
-            case COLOR:
-            case KEYBIND:
-                return setting instanceof IntegerSetting;
-            default:
-                return false;
-        }
     }
 }

@@ -18,20 +18,18 @@
  */
 package pit12.feature.relation;
 
+import static pit12.runtime.command.CommandRegistry.reply;
+
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
-import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
-import net.minecraft.util.BlockPos;
-import net.minecraft.util.ChatComponentText;
-import net.minecraft.util.EnumChatFormatting;
 import pit12.feature.relation.api.Relation;
 import pit12.feature.relation.api.RelationEntry;
+import pit12.runtime.command.CommandNode;
 import pit12.runtime.player.TabPresence;
 
-final class RelationCommand extends CommandBase {
+final class RelationCommand {
     private final RelationFeature feature;
     private final TabPresence presence;
     private final Relation relation;
@@ -42,81 +40,55 @@ final class RelationCommand extends CommandBase {
         this.relation = relation;
     }
 
-    @Override
-    public String getCommandName() {
-        return relation.name().toLowerCase(Locale.ROOT);
+    CommandNode definition() {
+        String name = relation.name().toLowerCase(Locale.ROOT);
+        return CommandNode.command(name, "Manage " + name + " relations")
+                .arguments("<player>", 1, 1)
+                .executes((sender, args) -> change(sender, "toggle", args[0]))
+                .suggests((sender, args) -> playerNames(true))
+                .child(CommandNode.command("list", "Show " + name + " relations")
+                        .executes(this::list))
+                .child(CommandNode.command("add", "Add a player").arguments("<player>", 1, 1)
+                        .executes((sender, args) -> change(sender, "add", args[0]))
+                        .suggests((sender, args) -> new ArrayList<>(presence.players().values())))
+                .child(CommandNode.command("remove", "Remove a player").arguments("<player>", 1, 1)
+                        .executes((sender, args) -> change(sender, "remove", args[0]))
+                        .suggests((sender, args) -> playerNames(false)))
+                .build();
     }
 
-    @Override
-    public String getCommandUsage(ICommandSender sender) {
-        return "/12pit " + getCommandName() + " [list|add|remove|player]";
-    }
-
-    @Override
-    public int getRequiredPermissionLevel() {
-        return 0;
-    }
-
-    @Override
-    public void processCommand(ICommandSender sender, String[] args) {
-        String problem = feature.readinessProblem();
-        if (problem != null) {
-            reply(sender, problem);
+    private void list(ICommandSender sender, String[] args) {
+        if (!ready(sender))
             return;
-        }
-        if (args.length == 0 || args.length == 1 && "list".equalsIgnoreCase(args[0])) {
-            List<RelationEntry> entries = feature.entries(relation);
-            reply(sender, relation.name() + " (" + entries.size() + "):");
-            for (RelationEntry entry : entries) {
-                reply(sender,
-                        "  " + entry.name() + (entry.playerId() == null ? " (UUID "
-                                + feature.resolutionOf(entry.name()).name().toLowerCase(Locale.ROOT)
-                                + ")" : ""));
-            }
-            return;
-        }
-        if (args.length == 1 && !"add".equalsIgnoreCase(args[0])
-                && !"remove".equalsIgnoreCase(args[0])) {
-            reply(sender, feature.change(relation, "toggle", args[0]).message());
-            return;
-        }
-        if (args.length == 2
-                && ("add".equalsIgnoreCase(args[0]) || "remove".equalsIgnoreCase(args[0]))) {
+        List<RelationEntry> entries = feature.entries(relation);
+        reply(sender, relation.name() + " (" + entries.size() + "):");
+        for (RelationEntry entry : entries) {
             reply(sender,
-                    feature.change(relation, args[0].toLowerCase(Locale.ROOT), args[1]).message());
-            return;
+                    "  " + entry.name() + (entry.playerId() == null ? " (UUID "
+                            + feature.resolutionOf(entry.name()).name().toLowerCase(Locale.ROOT)
+                            + ")" : ""));
         }
-        reply(sender, getCommandUsage(sender));
     }
 
-    @Override
-    public List<String> addTabCompletionOptions(ICommandSender sender, String[] args,
-            BlockPos position) {
-        if (args.length == 1) {
-            List<String> options = new ArrayList<String>(Arrays.asList("list", "add", "remove"));
-            options.addAll(presence.players().values());
-            for (RelationEntry entry : feature.entries(relation)) {
-                options.add(entry.name());
-            }
-            return getListOfStringsMatchingLastWord(args, options);
-        }
-        if (args.length == 2
-                && ("add".equalsIgnoreCase(args[0]) || "remove".equalsIgnoreCase(args[0]))) {
-            List<String> options = new ArrayList<String>();
-            if ("remove".equalsIgnoreCase(args[0])) {
-                for (RelationEntry entry : feature.entries(relation)) {
-                    options.add(entry.name());
-                }
-            } else {
-                options.addAll(presence.players().values());
-            }
-            return getListOfStringsMatchingLastWord(args, options);
-        }
-        return null;
+    private void change(ICommandSender sender, String operation, String player) {
+        if (ready(sender))
+            reply(sender, feature.change(relation, operation, player).message());
     }
 
-    private static void reply(ICommandSender sender, String message) {
-        sender.addChatMessage(new ChatComponentText(
-                EnumChatFormatting.AQUA + "[12pit]" + EnumChatFormatting.RESET + " " + message));
+    private boolean ready(ICommandSender sender) {
+        String problem = feature.readinessProblem();
+        if (problem == null)
+            return true;
+        reply(sender, problem);
+        return false;
+    }
+
+    private List<String> playerNames(boolean includeTab) {
+        List<String> names = new ArrayList<>();
+        if (includeTab)
+            names.addAll(presence.players().values());
+        for (RelationEntry entry : feature.entries(relation))
+            names.add(entry.name());
+        return names;
     }
 }

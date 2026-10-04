@@ -18,38 +18,26 @@
  */
 package pit12.feature.playerlist;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
 public final class PlayerListSnapshot {
-    private static final PlayerListSnapshot EMPTY = new PlayerListSnapshot(
-            Collections.<PlayerListGroup, List<PlayerListEntry>>emptyMap(), 0);
+    private static final PlayerListSnapshot EMPTY =
+            new PlayerListSnapshot(Collections.<PlayerListGroup, List<PlayerListEntry>>emptyMap());
     private final Map<PlayerListGroup, List<PlayerListEntry>> entries;
-    private final int playerCount;
 
-    private PlayerListSnapshot(Map<PlayerListGroup, List<PlayerListEntry>> entries,
-            int playerCount) {
+    private PlayerListSnapshot(Map<PlayerListGroup, List<PlayerListEntry>> entries) {
         this.entries = entries;
-        this.playerCount = playerCount;
     }
 
     public static PlayerListSnapshot empty() {
         return EMPTY;
     }
 
-    static PlayerListSnapshot create(Map<PlayerListGroup, List<PlayerListEntry>> entries,
-            int playerCount) {
-        EnumMap<PlayerListGroup, List<PlayerListEntry>> copy =
-                new EnumMap<PlayerListGroup, List<PlayerListEntry>>(PlayerListGroup.class);
-        for (Map.Entry<PlayerListGroup, List<PlayerListEntry>> entry : entries.entrySet()) {
-            copy.put(entry.getKey(),
-                    Collections.unmodifiableList(new ArrayList<PlayerListEntry>(entry.getValue())));
-        }
-        return copy.isEmpty() ? EMPTY
-                : new PlayerListSnapshot(Collections.unmodifiableMap(copy), playerCount);
+    /** The snapshot takes ownership of the map and its lists. */
+    static PlayerListSnapshot create(Map<PlayerListGroup, List<PlayerListEntry>> entries) {
+        return entries.isEmpty() ? EMPTY : new PlayerListSnapshot(entries);
     }
 
     public Map<PlayerListGroup, List<PlayerListEntry>> entries() {
@@ -61,11 +49,7 @@ public final class PlayerListSnapshot {
         return groupEntries == null ? Collections.<PlayerListEntry>emptyList() : groupEntries;
     }
 
-    public int playerCount() {
-        return playerCount;
-    }
-
     public boolean isEmpty() {
-        return playerCount == 0;
+        return entries.isEmpty();
     }
 }

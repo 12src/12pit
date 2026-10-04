@@ -116,7 +116,7 @@ final class McFormatting {
 
     static int color(char code, int baseColor, int currentColor, boolean shadow) {
         int result = color(code, baseColor, currentColor);
-        return shadow && isColor(code) ? shadowColor(result) : result;
+        return shadow && isColor(Character.toLowerCase(code)) ? shadowColor(result) : result;
     }
 
     static boolean isBold(char code) {

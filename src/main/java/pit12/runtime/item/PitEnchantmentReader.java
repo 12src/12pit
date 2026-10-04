@@ -52,9 +52,6 @@ public final class PitEnchantmentReader {
     }
 
     public static int levelOf(ItemStack stack, PitEnchantment enchantment) {
-        if (enchantment == null) {
-            return 0;
-        }
         NBTTagList enchantments = customEnchantments(stack);
         if (enchantments == null) {
             return 0;

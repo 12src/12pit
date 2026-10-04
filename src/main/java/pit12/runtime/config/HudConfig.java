@@ -18,38 +18,30 @@
  */
 package pit12.runtime.config;
 
-import java.util.Objects;
-
 public final class HudConfig {
-    private final String id;
-    private final String displayName;
     private final BooleanSetting textShadow;
+    private final BooleanSetting useMonospaceFont;
     private final IntegerSetting anchor;
     private final IntegerSetting offsetX;
     private final IntegerSetting offsetY;
     private final IntegerSetting scale;
 
-    HudConfig(String id, String displayName, BooleanSetting textShadow, IntegerSetting anchor,
+    HudConfig(BooleanSetting textShadow, BooleanSetting useMonospaceFont, IntegerSetting anchor,
             IntegerSetting offsetX, IntegerSetting offsetY, IntegerSetting scale) {
-        this.id = id;
-        this.displayName = displayName;
         this.textShadow = textShadow;
+        this.useMonospaceFont = useMonospaceFont;
         this.anchor = anchor;
         this.offsetX = offsetX;
         this.offsetY = offsetY;
         this.scale = scale;
     }
 
-    public String id() {
-        return id;
-    }
-
-    public String displayName() {
-        return displayName;
-    }
-
     public BooleanSetting textShadow() {
         return textShadow;
+    }
+
+    public BooleanSetting useMonospaceFont() {
+        return useMonospaceFont;
     }
 
     public IntegerSetting scale() {
@@ -57,26 +49,25 @@ public final class HudConfig {
     }
 
     public float scaleFactor() {
-        return scale.get().intValue() / 100.0F;
+        return scale.get() / 100.0F;
     }
 
     public int resolveX(int screenWidth, int elementWidth) {
-        HudAnchor currentAnchor = HudAnchor.fromId(anchor.get().intValue());
+        HudAnchor currentAnchor = HudAnchor.fromId(anchor.get());
         return currentAnchor.screenX(screenWidth) - currentAnchor.elementX(elementWidth)
-                + offsetX.get().intValue();
+                + offsetX.get();
     }
 
     public int resolveY(int screenHeight, int elementHeight) {
-        HudAnchor currentAnchor = HudAnchor.fromId(anchor.get().intValue());
+        HudAnchor currentAnchor = HudAnchor.fromId(anchor.get());
         return currentAnchor.screenY(screenHeight) - currentAnchor.elementY(elementHeight)
-                + offsetY.get().intValue();
+                + offsetY.get();
     }
 
     public void placement(HudPlacement placement) {
-        Objects.requireNonNull(placement, "placement");
-        offsetX.set(Integer.valueOf(placement.offsetX()));
-        offsetY.set(Integer.valueOf(placement.offsetY()));
+        offsetX.set(placement.offsetX());
+        offsetY.set(placement.offsetY());
         // An anchor-change listener must not observe offsets from the previous placement.
-        anchor.set(Integer.valueOf(placement.anchor().id()));
+        anchor.set(placement.anchor().id());
     }
 }

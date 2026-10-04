@@ -20,7 +20,6 @@ package pit12.runtime.session;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.network.NetHandlerPlayClient;
@@ -69,7 +68,7 @@ public final class ClientSession implements ClientLifecycle {
 
     public void addListener(Runnable listener) {
         client.check();
-        if (!listeners.contains(Objects.requireNonNull(listener, "listener")))
+        if (!listeners.contains(listener))
             listeners.add(listener);
     }
 

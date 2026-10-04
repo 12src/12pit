@@ -74,7 +74,7 @@ public final class AutoQuickMathFeature implements ClientLifecycle {
         if (!matcher.matches()) {
             return;
         }
-        String expression = matcher.group(1).trim();
+        String expression = matcher.group(1);
         try {
             long answer = QuickMathExpression.evaluate(expression);
             pendingAnswer = String.valueOf(answer);

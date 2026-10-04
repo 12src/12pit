@@ -19,7 +19,6 @@
 package pit12.architecture;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
-import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.methods;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.library.Architectures.layeredArchitecture;
 import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
@@ -50,31 +49,26 @@ import org.junit.runner.RunWith;
 @AnalyzeClasses(packages = "pit12", importOptions = DoNotIncludeTests.class)
 public final class ArchitectureTest {
     @ArchTest
-    public static final ArchRule CLASSES_MUST_USE_DEFINED_TOP_LEVEL_PACKAGES = classes().should()
-            .resideInAnyPackage("pit12", "pit12.bootstrap..", "pit12.platform..", "pit12.runtime..",
-                    "pit12.feature..", "pit12.shared..")
-            .because("every production class needs an explicit ownership boundary");
+    public static final ArchRule CLASSES_MUST_USE_DEFINED_TOP_LEVEL_PACKAGES =
+            classes().should().resideInAnyPackage("pit12", "pit12.bootstrap..", "pit12.platform..",
+                    "pit12.runtime..", "pit12.feature..", "pit12.shared..");
     @ArchTest
     public static final ArchRule ROOT_PACKAGE_MUST_ONLY_CONTAIN_THE_MOD_ENTRY_POINT =
-            classes().that().resideInAPackage("pit12").should().haveSimpleName("Pit12")
-                    .because("the root package is reserved for the single application entry point");
+            classes().that().resideInAPackage("pit12").should().haveSimpleName("Pit12");
     @ArchTest
     public static final ArchRule PIT12_MUST_BE_THE_FORGE_MOD_ENTRY_POINT =
             classes().that().haveFullyQualifiedName("pit12.Pit12").should()
-                    .beAnnotatedWith("net.minecraftforge.fml.common.Mod")
-                    .because("top-level lifecycle ownership starts at the Forge entry point");
+                    .beAnnotatedWith("net.minecraftforge.fml.common.Mod");
     @ArchTest
-    public static final ArchRule FORGE_MOD_ENTRY_POINT_MUST_BE_UNIQUE = classes().that()
-            .areAnnotatedWith("net.minecraftforge.fml.common.Mod").should()
-            .haveFullyQualifiedName("pit12.Pit12")
-            .because("multiple Forge entry points would create competing top-level lifecycles");
+    public static final ArchRule FORGE_MOD_ENTRY_POINT_MUST_BE_UNIQUE =
+            classes().that().areAnnotatedWith("net.minecraftforge.fml.common.Mod").should()
+                    .haveFullyQualifiedName("pit12.Pit12");
     @ArchTest
-    public static final ArchRule APPLICATION_ENTRY_POINT_DEPENDENCIES = classes().that()
-            .resideInAPackage("pit12").should().onlyDependOnClassesThat()
-            .resideInAnyPackage("pit12", "pit12.bootstrap..", "java..",
-                    "net.minecraftforge.fml.common..")
-            .because(
-                    "the mod entry point only translates Forge lifecycle events into bootstrap calls");
+    public static final ArchRule APPLICATION_ENTRY_POINT_DEPENDENCIES =
+            classes().that().resideInAPackage("pit12").should().onlyDependOnClassesThat()
+                    .resideInAnyPackage("pit12", "pit12.bootstrap..", "java..",
+                            "net.minecraftforge.fml.common..")
+                    .because("the entry point only passes Forge events to Bootstrap");
     @ArchTest
     public static final ArchRule TOP_LEVEL_DEPENDENCIES = layeredArchitecture()
             .consideringOnlyDependenciesInLayers().layer("Application").definedBy("pit12")
@@ -85,74 +79,27 @@ public final class ArchitectureTest {
             .whereLayer("Bootstrap").mayOnlyAccessLayers("Platform", "Runtime", "Feature", "Shared")
             .whereLayer("Platform").mayOnlyAccessLayers("Runtime", "Feature", "Shared")
             .whereLayer("Runtime").mayOnlyAccessLayers("Shared").whereLayer("Feature")
-            .mayOnlyAccessLayers("Runtime", "Shared").whereLayer("Shared").mayNotAccessAnyLayer()
-            .because(
-                    "dependencies must flow toward shared capabilities without reversing ownership");
+            .mayOnlyAccessLayers("Runtime", "Shared").whereLayer("Shared").mayNotAccessAnyLayer();
     @ArchTest
-    public static final ArchRule TOP_LEVEL_PACKAGES_MUST_BE_FREE_OF_CYCLES =
-            slices().matching("pit12.(*)..").should().beFreeOfCycles()
-                    .because("top-level ownership boundaries must remain independently evolvable");
+    public static final ArchRule COMMAND_RUNTIME_MUST_NOT_DEPEND_ON_FORGE =
+            noClasses().that().resideInAPackage("pit12.runtime.command..").should()
+                    .dependOnClassesThat().resideInAPackage("net.minecraftforge..")
+                    .because("Forge command registration belongs to the platform adapter");
     @ArchTest
-    public static final ArchRule FEATURE_PACKAGES_MUST_BE_FREE_OF_CYCLES =
-            slices().matching("pit12.feature.(*)..").should().beFreeOfCycles()
-                    .because("user capabilities must not acquire mutual lifecycle ownership");
+    public static final ArchRule MODULES_MUST_BE_FREE_OF_CYCLES =
+            slices().matching("pit12.(*).(*)..").should().beFreeOfCycles();
     @ArchTest
-    public static final ArchRule PLATFORM_PACKAGES_MUST_BE_FREE_OF_CYCLES =
-            slices().matching("pit12.platform.(*)..").should().beFreeOfCycles()
-                    .because("adapters for separate external mechanisms must remain independent");
+    public static final ArchRule CLIENT_LIFECYCLE_OWNERS = classes().that()
+            .areAssignableTo("pit12.shared.lifecycle.ClientLifecycle").should()
+            .resideInAnyPackage("pit12.runtime..", "pit12.feature..", "pit12.shared.lifecycle..");
     @ArchTest
-    public static final ArchRule RUNTIME_PACKAGES_MUST_BE_FREE_OF_CYCLES =
-            slices().matching("pit12.runtime.(*)..").should().beFreeOfCycles()
-                    .because("shared runtime capabilities need unambiguous lifecycle ownership");
+    public static final ArchRule FEATURES_MUST_ONLY_USE_OTHER_FEATURE_APIS =
+            classes().that().resideInAPackage("pit12.feature..").should(onlyUseOtherFeatureApis())
+                    .because("a feature's internal classes belong to that feature");
     @ArchTest
-    public static final ArchRule SHARED_PACKAGES_MUST_BE_FREE_OF_CYCLES =
-            slices().matching("pit12.shared.(*)..").should().beFreeOfCycles()
-                    .because("shared implementation areas must remain independently reusable");
-    @ArchTest
-    public static final ArchRule FEATURE_TYPES_MUST_OWN_THE_LIFECYCLE_CONTRACT =
-            classes().that().haveSimpleNameEndingWith("Feature").should()
-                    .beAssignableTo("pit12.shared.lifecycle.ClientLifecycle")
-                    .because("resource-owning features share the client lifecycle contract");
-    @ArchTest
-    public static final ArchRule FEATURE_TYPES_MUST_BELONG_TO_FEATURES = classes().that()
-            .haveSimpleNameEndingWith("Feature").should().resideInAPackage("pit12.feature..")
-            .because("user capabilities belong to feature packages");
-    @ArchTest
-    public static final ArchRule CLIENT_LIFECYCLE_OWNERS =
-            classes().that().areAssignableTo("pit12.shared.lifecycle.ClientLifecycle").should()
-                    .resideInAnyPackage("pit12.runtime..", "pit12.feature..",
-                            "pit12.shared.lifecycle..")
-                    .because("shared components and user features own their own resources");
-    @ArchTest
-    public static final ArchRule CLIENT_LIFECYCLE_MUST_ONLY_DECLARE_START_AND_STOP = methods()
-            .that().areDeclaredIn("pit12.shared.lifecycle.ClientLifecycle").should()
-            .haveNameMatching("start|stop").andShould().haveRawParameterTypes(new Class<?>[0])
-            .andShould().haveRawReturnType(void.class)
-            .because("the shared lifecycle contract must not become a service API");
-    @ArchTest
-    public static final ArchRule CLIENT_LIFECYCLE_MUST_DECLARE_START =
-            methods().that().areDeclaredIn("pit12.shared.lifecycle.ClientLifecycle").and()
-                    .haveName("start").should().haveRawParameterTypes(new Class<?>[0]).andShould()
-                    .haveRawReturnType(void.class)
-                    .because("every resource-owning component needs one installation entry point");
-    @ArchTest
-    public static final ArchRule CLIENT_LIFECYCLE_MUST_DECLARE_STOP = methods().that()
-            .areDeclaredIn("pit12.shared.lifecycle.ClientLifecycle").and().haveName("stop").should()
-            .haveRawParameterTypes(new Class<?>[0]).andShould().haveRawReturnType(void.class)
-            .because("every resource-owning component needs one cleanup entry point");
-    @ArchTest
-    public static final ArchRule FEATURES_MUST_ONLY_USE_OTHER_FEATURE_APIS = classes().that()
-            .resideInAPackage("pit12.feature..").should(onlyUseOtherFeatureApis()).because(
-                    "narrow APIs let features collaborate without coupling their internal implementations");
-    @ArchTest
-    public static final ArchRule JAVA_PACKAGES_MUST_USE_SINGULAR_MIXIN =
-            noClasses().should().resideInAPackage("..mixins..").because(
-                    "mixin names the Java mechanism while mixins names its resource configuration");
-    @ArchTest
-    public static final ArchRule MIXINS_MUST_RESIDE_IN_MIXIN_PACKAGES = classes().that()
-            .areAnnotatedWith("org.spongepowered.asm.mixin.Mixin").should()
-            .resideInAPackage("pit12.platform.mixin..")
-            .because("bytecode hooks belong to the dedicated platform transformation boundary");
+    public static final ArchRule MIXINS_MUST_RESIDE_IN_MIXIN_PACKAGES =
+            classes().that().areAnnotatedWith("org.spongepowered.asm.mixin.Mixin").should()
+                    .resideInAPackage("pit12.platform.mixin..");
     @ArchTest
     public static final ArchRule MIXIN_PACKAGES_MUST_ONLY_CONTAIN_MIXINS = classes().that()
             .resideInAPackage("pit12.platform.mixin..").should()

@@ -19,10 +19,6 @@
 package pit12.feature.hudeditor;
 
 import java.util.List;
-import java.util.Objects;
-import net.minecraft.client.Minecraft;
-import net.minecraft.util.ResourceLocation;
-import pit12.Pit12;
 import pit12.runtime.config.HudPlacement;
 import pit12.runtime.config.IntegerSetting;
 import pit12.runtime.hud.HudBounds;
@@ -30,13 +26,11 @@ import pit12.runtime.hud.HudElement;
 import pit12.runtime.hud.HudRegistry;
 import pit12.runtime.hud.HudRenderer;
 import pit12.shared.rendering.UiRenderState;
-import pit12.shared.rendering.UiRenderer;
 
 final class HudEditorController {
     private final HudRegistry registry;
-    private final UiRenderer renderer;
+    private final HudRenderer renderer = new HudRenderer();
     private final UiRenderState renderState = new UiRenderState();
-    private final HudRenderer hudRenderer = new HudRenderer();
     private HudElement selected;
     private HudElement dragging;
     private int screenWidth;
@@ -48,10 +42,7 @@ final class HudEditorController {
     private int dragOffsetY;
 
     HudEditorController(HudRegistry registry) {
-        this.registry = Objects.requireNonNull(registry, "registry");
-        Minecraft minecraft = Minecraft.getMinecraft();
-        renderer = new UiRenderer(minecraft,
-                new ResourceLocation(Pit12.MOD_ID, "fonts/montserrat-regular.otf"));
+        this.registry = registry;
     }
 
     void resize(int screenWidth, int screenHeight, float pixelScale) {
@@ -66,7 +57,7 @@ final class HudEditorController {
     }
 
     void close() {
-        cancelDrag();
+        dragging = null;
         registry.setEditing(false);
     }
 
@@ -80,11 +71,7 @@ final class HudEditorController {
         renderState.begin();
         try {
             renderer.rect(0, 0, screenWidth, screenHeight, 0x26000000);
-            List<HudElement> elements = registry.elements();
-            if (elements.isEmpty()) {
-                return;
-            }
-            for (HudElement element : elements) {
+            for (HudElement element : registry.elements()) {
                 if (element != selected) {
                     renderElement(element, mouseX, mouseY, partialTicks);
                 }
@@ -146,16 +133,12 @@ final class HudEditorController {
     void mouseWheel(int delta) {
         // A mid-drag scale change invalidates the stored drag offsets, so the wheel only
         // applies once the element is released.
-        if (selected == null || delta == 0 || dragging != null) {
+        if (selected == null || dragging != null) {
             return;
         }
         IntegerSetting scale = selected.config().scale();
-        int next = scale.get().intValue() + Integer.signum(delta) * 5;
-        scale.set(Integer.valueOf(clamp(next, scale.minimum(), scale.maximum())));
-    }
-
-    void cancelDrag() {
-        dragging = null;
+        int next = scale.get() + Integer.signum(delta) * 5;
+        scale.set(clamp(next, scale.minimum(), scale.maximum()));
     }
 
     void dispose() {
@@ -192,18 +175,18 @@ final class HudEditorController {
         int height = bounds.height;
         int x = bounds.x;
         int y = bounds.y;
-        hudRenderer.render(element, bounds, partialTicks, true);
+        renderer.render(element, bounds, partialTicks, true);
         boolean hovered = contains(mouseX, mouseY, x, y, width, height);
         int color = element == selected ? 0xFF26CEAA : hovered ? 0xFFD1D1D1 : 0x80909090;
         outline(x, y, width, height, color);
         if (element == selected || hovered) {
             String label = element.displayName() + "  " + element.config().scale().get() + "%";
             int labelX =
-                    clamp(x, 1, Math.max(1, screenWidth - renderer.textWidth(label, 8.0F) - 1));
-            int fontHeight = renderer.fontHeight(8.0F);
+                    clamp(x, 1, Math.max(1, screenWidth - renderer.textWidth(label, false) - 1));
+            int fontHeight = renderer.fontHeight(label, false);
             int labelY = clamp(y >= fontHeight + 3 ? y - fontHeight - 2 : y + height + 2, 1,
                     Math.max(1, screenHeight - fontHeight - 1));
-            renderer.text(label, labelX, labelY, 8.0F, 0xFFF0F0F0, true);
+            renderer.text(label, labelX, labelY, 0xFFF0F0F0, true, false);
         }
     }
 

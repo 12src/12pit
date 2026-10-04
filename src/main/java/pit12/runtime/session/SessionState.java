@@ -50,7 +50,7 @@ final class SessionState<C, W> {
     }
 
     boolean disconnect(C expected) {
-        if (expected == null || expected != connection) {
+        if (expected != connection) {
             return false;
         }
         disconnected = expected;
@@ -59,7 +59,7 @@ final class SessionState<C, W> {
     }
 
     boolean unload(W expected) {
-        if (expected == null || expected != world) {
+        if (expected != world) {
             return false;
         }
         unloaded = expected;

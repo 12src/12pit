@@ -24,7 +24,7 @@ public final class ConfigSubcategory {
 
     public ConfigSubcategory(String id, String displayName) {
         this.id = ConfigNames.requireStableId(id, "subcategory id");
-        this.displayName = ConfigNames.requireText(displayName, "subcategory display name");
+        this.displayName = displayName;
     }
 
     public String id() {

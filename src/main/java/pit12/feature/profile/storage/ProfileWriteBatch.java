@@ -19,7 +19,6 @@
 package pit12.feature.profile.storage;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -31,7 +30,7 @@ public final class ProfileWriteBatch {
 
     public ProfileWriteBatch(List<StoredProfile> profiles, UUID activeProfileId, boolean stateDirty,
             long stateRevision) {
-        this.profiles = Collections.unmodifiableList(new ArrayList<StoredProfile>(profiles));
+        this.profiles = profiles;
         this.activeProfileId = activeProfileId;
         this.stateDirty = stateDirty;
         this.stateRevision = stateRevision;

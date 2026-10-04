@@ -20,7 +20,7 @@ export interface Option {
   id: string
   name: string
   description: string
-  kind: 'BOOLEAN' | 'NUMBER' | 'CHOICE' | 'COLOR' | 'KEYBIND'
+  kind: 'BOOLEAN' | 'NUMBER' | 'CHOICE' | 'COLOR' | 'COLOR_PICKER' | 'KEYBIND'
   value: boolean | number
   min?: number
   max?: number
@@ -72,6 +72,10 @@ export interface State {
     problem: string | null
     entries: RelationEntry[]
   }
+  swapBindings: {
+    problem: string | null
+    count: number
+  }
 }
 
 export interface RelationConflict {
@@ -87,6 +91,7 @@ export interface TransferPreview {
   relations: Partial<Record<RelationType, number>>
   conflicts: RelationConflict[]
   fingerprint: string
+  swapBindings: boolean
 }
 
 async function request<T = State>(path: string, body?: object): Promise<T> {
@@ -121,10 +126,15 @@ export const changeRelations = (
     entries,
   })
 
-export const exportData = (profiles: string[], relations: RelationType[]) =>
+export const exportData = (
+  profiles: string[],
+  relations: RelationType[],
+  swapBindings: boolean,
+) =>
   request<Record<string, unknown>>('/api/transfer/export', {
     profiles,
     relations,
+    swapBindings,
   })
 export const previewData = (data: object) =>
   request<TransferPreview>('/api/transfer/preview', { data })
@@ -135,6 +145,7 @@ export const applyData = (
   mode: 'merge' | 'replace',
   resolutions: Record<string, 'local' | 'imported'>,
   fingerprint: string,
+  swapBindings: boolean,
 ) =>
   request<State>('/api/transfer/apply', {
     data,
@@ -143,4 +154,5 @@ export const applyData = (
     mode,
     resolutions,
     fingerprint,
+    swapBindings,
   })

@@ -162,6 +162,31 @@ nav button:hover:not(.active) {
 nav button.active {
   color: var(--text);
 }
+.community-links {
+  display: flex;
+  flex: none;
+  justify-content: center;
+  gap: 6px;
+  padding: 13px 12px;
+  border-top: 1px solid var(--line);
+}
+.community-links a {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 5px;
+  color: var(--muted);
+  text-decoration: none;
+  transition:
+    color 0.18s ease,
+    background-color 0.18s ease;
+}
+.community-links a:hover,
+.community-links a:focus-visible {
+  background: var(--hover);
+  color: var(--text);
+}
 main {
   width: min(100%, 1040px);
   margin: 0 auto;
@@ -847,6 +872,9 @@ button.feature-link:hover strong {
   align-items: center;
   min-height: 42px;
 }
+.transfer-leaf {
+  padding-left: 31px;
+}
 .transfer-expand {
   display: grid;
   place-items: center;
@@ -1485,18 +1513,30 @@ button.feature-link:hover strong {
     display: block;
   }
   .sidebar {
-    position: static;
+    position: relative;
     height: auto;
     border: 0;
     border-bottom: 1px solid var(--line);
   }
   .brand {
+    justify-content: flex-start;
     height: 54px;
-    padding: 0 20px;
+    padding: 0 100px 0 20px;
     border: 0;
   }
   .brand-name {
     font-size: 23px;
+  }
+  .brand-version {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .community-links {
+    position: absolute;
+    top: 9px;
+    right: 14px;
+    padding: 0;
+    border: 0;
   }
   nav {
     display: flex;
@@ -1662,6 +1702,7 @@ button.feature-link:hover strong {
   }
   .nav-indicator,
   nav button,
+  .community-links a,
   .feature-row,
   .row,
   .profile-row,

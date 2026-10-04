@@ -20,7 +20,6 @@ package pit12.runtime.item;
 
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.NoSuchElementException;
 import net.minecraft.util.EnumChatFormatting;
 
 public final class PitEnchantments implements Iterable<PitEnchantments.Entry> {
@@ -43,21 +42,9 @@ public final class PitEnchantments implements Iterable<PitEnchantments.Entry> {
         return EMPTY;
     }
 
-    public boolean isEmpty() {
-        return entries.length == 0;
-    }
-
-    public int size() {
-        return entries.length;
-    }
-
-    public Entry get(int index) {
-        return entries[index];
-    }
-
     /** Returns null when this result contains no known enchantments. */
     public String formatDisplayNames() {
-        return formatDisplayNames(false);
+        return formatDisplayNames(false, true, false);
     }
 
     /** Returns null when this result contains no known enchantments. */
@@ -77,39 +64,16 @@ public final class PitEnchantments implements Iterable<PitEnchantments.Entry> {
 
     // Enchanted items normally have at most three entries, so linear scans remain cheap.
     public boolean contains(PitEnchantment enchantment) {
-        return levelOf(enchantment) > 0;
-    }
-
-    public int levelOf(PitEnchantment enchantment) {
+        // Unknown entries have a null enchantment, so null must not match them.
         if (enchantment == null) {
-            return 0;
+            return false;
         }
         for (Entry entry : entries) {
             if (entry.enchantment == enchantment) {
-                return entry.level;
+                return true;
             }
         }
-        return 0;
-    }
-
-    public boolean containsKey(String key) {
-        return levelOfKey(key) > 0;
-    }
-
-    public int levelOfKey(String key) {
-        if (key == null) {
-            return 0;
-        }
-        for (Entry entry : entries) {
-            if (key.equals(entry.key)) {
-                return entry.level;
-            }
-        }
-        return 0;
-    }
-
-    private String formatDisplayNames(boolean bold) {
-        return formatDisplayNames(bold, true, false);
+        return false;
     }
 
     private String formatDisplayNames(boolean bold, boolean showLevels, boolean hideLevelThree) {
@@ -153,7 +117,7 @@ public final class PitEnchantments implements Iterable<PitEnchantments.Entry> {
 
     @Override
     public Iterator<Entry> iterator() {
-        return new EntryIterator(entries);
+        return Arrays.asList(entries).iterator();
     }
 
     public static final class Entry {
@@ -171,42 +135,8 @@ public final class PitEnchantments implements Iterable<PitEnchantments.Entry> {
             return key;
         }
 
-        public PitEnchantment getEnchantment() {
-            return enchantment;
-        }
-
-        public boolean isKnown() {
-            return enchantment != null;
-        }
-
         public int getLevel() {
             return level;
-        }
-    }
-    private static final class EntryIterator implements Iterator<Entry> {
-        private final Entry[] entries;
-        private int index;
-
-        private EntryIterator(Entry[] entries) {
-            this.entries = entries;
-        }
-
-        @Override
-        public boolean hasNext() {
-            return index < entries.length;
-        }
-
-        @Override
-        public Entry next() {
-            if (!hasNext()) {
-                throw new NoSuchElementException();
-            }
-            return entries[index++];
-        }
-
-        @Override
-        public void remove() {
-            throw new UnsupportedOperationException("Pit enchantments are immutable");
         }
     }
 }

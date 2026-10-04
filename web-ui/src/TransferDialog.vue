@@ -71,6 +71,14 @@ const selectedRelations = ref<RelationType[]>(
 )
 const expandedProfiles = ref(false)
 const expandedRelations = ref(true)
+const selectedSwap = ref(
+  props.mode === 'export' && !props.state.swapBindings.problem,
+)
+const availableSwap = computed(() =>
+  props.mode === 'export'
+    ? !props.state.swapBindings.problem
+    : !!preview.value?.swapBindings,
+)
 const relationMode = ref<'merge' | 'replace'>('merge')
 const fileData = ref<Record<string, unknown> | null>(null)
 const preview = ref<TransferPreview | null>(null)
@@ -90,7 +98,9 @@ const selectedConflicts = computed(() =>
 const canSubmit = computed(
   () =>
     !busy.value &&
-    (selectedProfiles.value.length > 0 || selectedRelations.value.length > 0) &&
+    (selectedProfiles.value.length > 0 ||
+      selectedRelations.value.length > 0 ||
+      (selectedSwap.value && availableSwap.value)) &&
     (props.mode === 'export' || !!preview.value),
 )
 
@@ -161,6 +171,7 @@ async function refreshPreview() {
     selectedRelations.value = relationTypes.filter((type) =>
       Object.hasOwn(result.relations, type),
     )
+    selectedSwap.value = result.swapBindings
     resolutions.value = Object.fromEntries(
       result.conflicts.map((row) => [row.id, 'local' as const]),
     )
@@ -181,6 +192,7 @@ async function submit() {
       const result = await exportData(
         selectedProfiles.value,
         selectedRelations.value,
+        selectedSwap.value && availableSwap.value,
       )
       const url = URL.createObjectURL(
         new Blob([JSON.stringify(result, null, 2)], {
@@ -203,6 +215,7 @@ async function submit() {
         relationMode.value,
         resolutions.value,
         preview.value.fingerprint,
+        selectedSwap.value && availableSwap.value,
       )
       emit('imported', next)
     }
@@ -408,6 +421,16 @@ function onKeydown(event: KeyboardEvent) {
             <span v-if="!availableRelations.length" class="transfer-empty"
               >No relations</span
             >
+          </div>
+          <div class="transfer-parent transfer-leaf">
+            <label>
+              <input
+                v-model="selectedSwap"
+                type="checkbox"
+                :disabled="busy || !availableSwap"
+              />
+              Swap bindings
+            </label>
           </div>
         </div>
 
