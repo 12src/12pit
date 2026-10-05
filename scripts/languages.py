@@ -18,7 +18,6 @@ WEB_STRING = r'''(?:"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')'''
 def write_changed(path, content):
     if path.exists() and path.read_text(encoding="utf-8") == content:
         return
-    path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(content, encoding="utf-8", newline="\n")
 
 
@@ -55,7 +54,10 @@ def read_pairs(path):
         source = decode_line(source_line, path, number)
         if index == len(lines):
             raise ValueError(f"{path}:{number}: missing translation line")
-        target = decode_line(lines[index], path, index + 1)
+        target_line = lines[index]
+        if target_line != "=" and not target_line.startswith("= "):
+            raise ValueError(f"{path}:{index + 1}: translation line must be '=' or start with '= '")
+        target = decode_line(target_line[2:], path, index + 1)
         index += 1
         if source in pairs:
             raise ValueError(f"{path}:{number}: duplicate source: {source}")
@@ -135,15 +137,9 @@ def sync(found, entry):
     previous = read_pairs(path) if path.exists() else {}
     lines = []
     for source, locations in found.items():
+        target = previous.get(source, "")
         lines.extend(["// " + ", ".join(locations), encode_line(source),
-                      encode_line(previous.get(source, "")), ""])
-    removed = {source: target for source, target in previous.items() if source not in found and target}
-    if removed:
-        archive = path.with_suffix(".obsolete.txt")
-        saved = read_pairs(archive) if archive.exists() else {}
-        saved.update(removed)
-        write_changed(archive, "".join(encode_line(source) + "\n" + encode_line(target) + "\n\n"
-                                     for source, target in saved.items()))
+                      "= " + encode_line(target) if target else "=", ""])
     write_changed(path, "\n".join(lines) + "\n")
     return len(found.keys() - previous.keys()), len(previous.keys() - found.keys())
 
@@ -171,9 +167,9 @@ def status(found, entries):
         missing = len(found.keys() - pairs.keys())
         stale = len(pairs.keys() - found.keys())
         if not path.exists():
-            notes.append(f"{locale}: file missing; run sync --language {locale}")
+            notes.append(f"{locale}: file missing")
         elif missing or stale:
-            notes.append(f"{locale}: {missing} missing, {stale} obsolete; run sync --language {locale}")
+            notes.append(f"{locale}: {missing} missing, {stale} obsolete")
 
     width = max(len("Language"), *(len(row[0]) for row in rows))
     count_width = max(len("Translated"), len(f"{total}/{total}"))
@@ -191,8 +187,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
     add = commands.add_parser("add", help="Add a language")
-    add.add_argument("language", help="Language tag, for example fr-FR")
-    add.add_argument("--name", required=True, help="Native name, for example Français")
+    add.add_argument("language", help="Language tag, for example nl-NL")
+    add.add_argument("--name", required=True, help="Native name, for example Nederlands")
     for name, help_text in (("sync", "Update source text"), ("status", "Show translation progress")):
         command = commands.add_parser(name, help=help_text)
         command.add_argument("--language", help="Limit to one language")
