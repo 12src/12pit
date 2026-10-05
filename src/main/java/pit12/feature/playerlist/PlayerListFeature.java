@@ -35,6 +35,7 @@ import pit12.runtime.config.ConfigChangeListener;
 import pit12.runtime.config.ConfigChangeSet;
 import pit12.runtime.hud.HudRegistry;
 import pit12.runtime.hud.HudRenderer;
+import pit12.runtime.languages.Languages;
 import pit12.runtime.pit.PitContext;
 import pit12.runtime.player.PlayerEquipmentAccess;
 import pit12.runtime.player.PlayerEquipmentListener;
@@ -53,6 +54,8 @@ public final class PlayerListFeature implements ClientLifecycle, PlayerEquipment
     private final TabPresence presence;
     private final PlayerListBuilder builder;
     private final PlayerListHud hud;
+    private final Languages language;
+    private final Runnable languageListener;
     private final HudRegistry hudRegistry;
     private final HudRenderer hudRenderer = new HudRenderer();
     private PlayerListSnapshot snapshot = PlayerListSnapshot.empty();
@@ -64,7 +67,8 @@ public final class PlayerListFeature implements ClientLifecycle, PlayerEquipment
 
     public PlayerListFeature(ConfigCatalog configs, PlayerListConfig config,
             PlayerEquipmentAccess equipment, PitContext pitContext, HudRegistry hudRegistry,
-            RelationLookup relations, TabPresence presence) {
+            RelationLookup relations, TabPresence presence, Languages language) {
+        this.language = language;
         this.configs = configs;
         this.config = config;
         this.equipment = equipment;
@@ -73,6 +77,7 @@ public final class PlayerListFeature implements ClientLifecycle, PlayerEquipment
         this.hudRegistry = hudRegistry;
         builder = new PlayerListBuilder(minecraft, equipment, pitContext, config, relations);
         hud = new PlayerListHud(config, hudRenderer);
+        languageListener = () -> hud.localize(language);
     }
 
     @Override
@@ -81,6 +86,7 @@ public final class PlayerListFeature implements ClientLifecycle, PlayerEquipment
             return;
         }
         started = true;
+        language.addListener(languageListener);
         hudRegistry.register(hud);
         configs.addListener(this);
         if (config.enabled()) {
@@ -95,6 +101,7 @@ public final class PlayerListFeature implements ClientLifecycle, PlayerEquipment
         }
         started = false;
         configs.removeListener(this);
+        language.removeListener(languageListener);
         deactivate();
         hudRegistry.unregister(hud);
         hud.close();
@@ -175,6 +182,9 @@ public final class PlayerListFeature implements ClientLifecycle, PlayerEquipment
     public void onConfigChanged(ConfigChangeSet changes) {
         if (!started) {
             return;
+        }
+        if (changes.affects("playerlist", config.hud().translateText().id())) {
+            hud.localize(language);
         }
         if (changes.affects("playerlist", "enabled")) {
             if (config.enabled() && !active) {

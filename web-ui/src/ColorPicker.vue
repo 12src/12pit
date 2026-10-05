@@ -17,6 +17,7 @@ You should have received a copy of the GNU General Public License
 along with 12pit. If not, see <https://www.gnu.org/licenses/>.
 -->
 <script setup lang="ts">
+import { t } from './languages'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { ChevronDown } from '@lucide/vue'
 import { fromArgb, parseColor, toArgb, toHex, toHsva, toRgba } from './color'
@@ -202,7 +203,7 @@ onUnmounted(() => document.removeEventListener('pointerdown', closeOutside))
         ref="area"
         class="color-area"
         role="group"
-        aria-label="Saturation and brightness"
+        :aria-label="t('Saturation and brightness')"
         :style="{ '--picked-hue': `hsl(${draft.h}, 100%, 50%)` }"
         @pointerdown.prevent="startPointer"
         @pointermove="movePointer"
@@ -217,7 +218,7 @@ onUnmounted(() => document.removeEventListener('pointerdown', closeOutside))
         <input
           class="color-area-input"
           type="range"
-          aria-label="Saturation"
+          :aria-label="t('Saturation')"
           min="0"
           max="100"
           step="1"
@@ -229,7 +230,7 @@ onUnmounted(() => document.removeEventListener('pointerdown', closeOutside))
         <input
           class="color-area-input"
           type="range"
-          aria-label="Brightness"
+          :aria-label="t('Brightness')"
           min="0"
           max="100"
           step="1"
@@ -240,11 +241,11 @@ onUnmounted(() => document.removeEventListener('pointerdown', closeOutside))
         />
       </div>
       <label class="color-slider-label">
-        <span>Hue</span>
+        <span>{{ t('Hue') }}</span>
         <input
           class="color-slider color-hue"
           type="range"
-          aria-label="Hue"
+          :aria-label="t('Hue')"
           min="0"
           max="359"
           step="1"
@@ -255,11 +256,11 @@ onUnmounted(() => document.removeEventListener('pointerdown', closeOutside))
         />
       </label>
       <label class="color-slider-label">
-        <span>Opacity</span>
+        <span>{{ t('Opacity') }}</span>
         <input
           class="color-slider color-alpha"
           type="range"
-          aria-label="Opacity"
+          :aria-label="t('Opacity')"
           min="0"
           max="255"
           step="1"
@@ -271,7 +272,7 @@ onUnmounted(() => document.removeEventListener('pointerdown', closeOutside))
           @change="publish"
         />
       </label>
-      <div class="color-formats" role="group" aria-label="Color format">
+      <div class="color-formats" role="group" :aria-label="t('Color format')">
         <button
           v-for="name in ['Hex', 'RGBA', 'HSLA'] as const"
           :key="name"
@@ -298,9 +299,9 @@ onUnmounted(() => document.removeEventListener('pointerdown', closeOutside))
         @keydown.enter.prevent="textInput?.blur()"
         @keydown.esc.prevent.stop="resetText"
       />
-      <span v-if="invalid" class="color-error" role="alert"
-        >Enter a valid Hex, RGBA or HSLA color.</span
-      >
+      <span v-if="invalid" class="color-error" role="alert">{{
+        t('Enter a valid Hex, RGBA or HSLA color.')
+      }}</span>
     </div>
   </details>
 </template>

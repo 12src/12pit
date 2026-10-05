@@ -33,19 +33,28 @@ import pit12.feature.profile.api.Profiles;
 import pit12.feature.relation.api.Relations;
 import pit12.feature.swap.api.SwapBindings;
 import pit12.runtime.config.ConfigCatalog;
+import pit12.runtime.config.ConfigChangeListener;
+import pit12.runtime.config.ConfigChangeSet;
+import pit12.runtime.languages.Languages;
 import pit12.shared.lifecycle.ClientLifecycle;
 
-public final class WebUiFeature implements ClientLifecycle {
+public final class WebUiFeature implements ClientLifecycle, ConfigChangeListener {
     private static final Logger LOGGER = Logger.getLogger(WebUiFeature.class.getName());
     private final Minecraft minecraft = Minecraft.getMinecraft();
     private final WebUiConfig config;
+    private final ConfigCatalog catalog;
+    private final Languages language;
     private final WebUiServer server;
     private boolean started;
 
     public WebUiFeature(ConfigCatalog catalog, Profiles profiles, Relations relations,
-            HudEditor hudEditor, SwapBindings swapBindings, WebUiConfig config) {
+            HudEditor hudEditor, SwapBindings swapBindings, WebUiConfig config,
+            Languages language) {
+        this.catalog = catalog;
+        this.language = language;
         this.config = config;
-        server = new WebUiServer(minecraft, catalog, profiles, relations, hudEditor, swapBindings);
+        server = new WebUiServer(minecraft, catalog, profiles, relations, hudEditor, swapBindings,
+                language);
     }
 
     @Override
@@ -53,6 +62,8 @@ public final class WebUiFeature implements ClientLifecycle {
         if (started) {
             return;
         }
+        language.select(config.language().get());
+        catalog.addListener(this);
         try {
             server.start();
         } catch (IOException failure) {
@@ -71,6 +82,14 @@ public final class WebUiFeature implements ClientLifecycle {
             started = false;
         }
         server.stop();
+        catalog.removeListener(this);
+    }
+
+    @Override
+    public void onConfigChanged(ConfigChangeSet changes) {
+        if (changes.affects("webui", "language")) {
+            language.select(config.language().get());
+        }
     }
 
     @SubscribeEvent

@@ -18,6 +18,7 @@
  */
 package pit12.feature.eventlist;
 
+import static pit12.runtime.languages.Languages.source;
 import static pit12.shared.chat.ChatFeedback.reply;
 
 import java.time.Instant;
@@ -28,19 +29,22 @@ import java.util.List;
 import java.util.Locale;
 import net.minecraft.command.ICommandSender;
 import pit12.runtime.command.CommandNode;
+import pit12.runtime.languages.Languages;
 import pit12.shared.chat.ChatFeedback.Tone;
 
 final class EventListCommand {
     private static final DateTimeFormatter TIME = DateTimeFormatter
             .ofPattern("yyyy-MM-dd HH:mm:ss", Locale.ROOT).withZone(ZoneId.systemDefault());
     private final EventListFeature feature;
+    private final Languages language;
 
-    EventListCommand(EventListFeature feature) {
+    EventListCommand(EventListFeature feature, Languages language) {
+        this.language = language;
         this.feature = feature;
     }
 
     CommandNode definition() {
-        return CommandNode.command("event", "Show stored events").aliases("events")
+        return CommandNode.command("event", source("Show stored events")).aliases("events")
                 .arguments("<event>", 1, 2).executes(this::list).suggests((sender, args) -> {
                     List<String> names = new ArrayList<>();
                     if (args.length == 1) {
@@ -56,20 +60,21 @@ final class EventListCommand {
         String name = String.join(" ", args);
         EventType type = EventType.fromName(name);
         if (type == null) {
-            reply(sender, Tone.ERROR, "Unknown event: " + name);
+            reply(sender, Tone.ERROR, language.format("Unknown event: {0}", name));
             return;
         }
         List<PitEvent> matching = feature.events(type);
-        reply(sender, Tone.INFO, type.displayName + " events (" + matching.size() + "):");
+        reply(sender, Tone.INFO, language.format("{0} events ({1}):",
+                language.translate(type.displayName), matching.size()));
         long now = System.currentTimeMillis();
         for (PitEvent event : matching) {
             reply(sender, Tone.INFO,
-                    "  " + event.type.displayName + " - "
+                    "  " + language.translate(event.type.displayName) + " - "
                             + TIME.format(Instant.ofEpochMilli(event.timestamp)) + " - "
                             + countdown(event, now));
         }
         if (matching.isEmpty()) {
-            reply(sender, Tone.INFO, "  No stored events");
+            reply(sender, Tone.INFO, language.translate("  No stored events"));
         }
     }
 

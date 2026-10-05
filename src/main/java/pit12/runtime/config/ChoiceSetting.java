@@ -22,14 +22,17 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import pit12.runtime.languages.Languages;
 
 public final class ChoiceSetting extends Setting<Integer> {
     public static final class Choice {
         private final int value;
-        private final String displayName;
+        private final String originalDisplayName;
+        private String displayName;
 
         public Choice(int value, String displayName) {
             this.value = value;
+            originalDisplayName = displayName;
             this.displayName = displayName;
         }
 
@@ -55,6 +58,14 @@ public final class ChoiceSetting extends Setting<Integer> {
         }
         this.choices = Arrays.asList(choices);
         requireValue(defaultValue);
+    }
+
+    @Override
+    void localize(Languages language) {
+        super.localize(language);
+        for (Choice choice : choices) {
+            choice.displayName = language.translate(choice.originalDisplayName);
+        }
     }
 
     public List<Choice> choices() {

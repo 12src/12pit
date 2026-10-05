@@ -31,6 +31,7 @@ import pit12.Pit12;
 import pit12.runtime.config.HudConfig;
 import pit12.runtime.hud.HudElement;
 import pit12.runtime.hud.HudRenderer;
+import pit12.runtime.languages.Languages;
 
 final class PlayerListHud implements HudElement {
     private static final int GAP = 10;
@@ -47,6 +48,7 @@ final class PlayerListHud implements HudElement {
     private final HudConfig hudConfig;
     private final Minecraft minecraft;
     private final HudRenderer renderer;
+    private final String[] groupNames = new String[PlayerListGroup.values().length];
     private PlayerListSnapshot snapshot = PlayerListSnapshot.empty();
     private int nameWidth;
     private int leggingsWidth;
@@ -75,6 +77,17 @@ final class PlayerListHud implements HudElement {
         this.renderer = renderer;
     }
 
+    void localize(Languages language) {
+        boolean translate = hudConfig.translateText().get();
+        for (PlayerListGroup group : PlayerListGroup.values()) {
+            groupNames[group.ordinal()] =
+                    group == PlayerListGroup.FRIEND || group == PlayerListGroup.ENEMY
+                            ? language.translate(group.displayName(), translate)
+                            : group.displayName();
+        }
+        recalculateLayout(sampleLayout ? SAMPLE : snapshot);
+    }
+
     void snapshot(PlayerListSnapshot snapshot) {
         this.snapshot = snapshot;
         recalculateLayout();
@@ -92,7 +105,7 @@ final class PlayerListHud implements HudElement {
 
     @Override
     public String displayName() {
-        return "Player List";
+        return config.displayName();
     }
 
     @Override
@@ -157,7 +170,7 @@ final class PlayerListHud implements HudElement {
                 y += lineHeight;
             }
             if (config.showGroupName()) {
-                renderer.text(group.displayName(), EDGE_PADDING, y, 0xFFF0F0F0, hudConfig);
+                renderer.text(groupNames[group.ordinal()], EDGE_PADDING, y, 0xFFF0F0F0, hudConfig);
                 y += lineHeight;
             }
             for (PlayerListEntry entry : entries) {
@@ -313,10 +326,10 @@ final class PlayerListHud implements HudElement {
         if (config.showGroupName()) {
             for (PlayerListGroup group : PlayerListGroup.values()) {
                 if (!content.entries(group).isEmpty()) {
-                    nameWidth =
-                            Math.max(nameWidth, renderer.textWidth(group.displayName(), hudConfig));
+                    nameWidth = Math.max(nameWidth,
+                            renderer.textWidth(groupNames[group.ordinal()], hudConfig));
                     fontHeight = Math.max(fontHeight,
-                            renderer.fontHeight(group.displayName(), hudConfig));
+                            renderer.fontHeight(groupNames[group.ordinal()], hudConfig));
                 }
             }
         }

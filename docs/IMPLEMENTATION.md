@@ -52,16 +52,18 @@ Disk I/O, HTTP requests, expensive computations are done on owned workers with a
 `FeatureConfig` represents the settings of a feature and their Web UI metadata. Settings are defined in its subclass constructor:
 
 ```java
+import static pit12.runtime.languages.Languages.source;
+
 public final class StatusConfig extends FeatureConfig {
     private final BooleanSetting showNames;
 
     public StatusConfig() {
-        super("status", "Status", new ConfigCategory("render", "Render", 100),
-                "Shows player status.");
-        subcategory("appearance", "Appearance");
-        subsubcategory("display", "Display");
-        showNames = booleanSetting("show_names", "Show names",
-                "Shows player names.", true);
+        super("status", source("Status"), new ConfigCategory("render", source("Render"), 100),
+                source("Shows player status."));
+        subcategory("appearance", source("Appearance"));
+        subsubcategory("display", source("Display"));
+        showNames = booleanSetting("show_names", source("Show names"),
+                source("Shows player names."), true);
     }
 
     public boolean showNames() {
@@ -123,8 +125,8 @@ private final ConfigChangeListener configListener = changes -> {
 Here's a tree with a group, child, alias, required argument, a handler and completion candidates:
 
 ```java
-CommandNode command = CommandNode.command("message", "Message commands")
-        .child(CommandNode.command("send", "Show a message").aliases("say")
+CommandNode command = CommandNode.command("message", source("Message commands"))
+        .child(CommandNode.command("send", source("Show a message")).aliases("say")
                 .arguments("<text>", 1, 1)
                 .executes((sender, args) -> ChatFeedback.reply(sender, Tone.INFO, args[0]))
                 .suggests((sender, args) -> Arrays.asList("hello", "test")))
@@ -148,15 +150,37 @@ To send a message to the local player use [ChatFeedback](../src/main/java/pit12/
 
 It is called from the client thread. In case of messages not related to a command, ensure that there is a local player before calling and sending him/her the message.
 
+## Languages
+
+Bootstrap uses one [Languages](../src/main/java/pit12/runtime/languages/Languages.java) instance and passes it to its consumers. `WebUiConfig` stores the selected language along with other settings. Language names and stable setting values are defined in `src/main/resources/assets/pit12/languages/languages.json`. Each translation catalog is loaded from its respective TXT resource on first use and cached.
+
+Import the static `source(...)` method as shown in the config example for names, descriptions, choice labels, enum labels, and command descriptions. It will return the English text unmodified and mark it for the script. Config classes store the original text and its translated version separately. Bootstrap updates those values via `ConfigCatalog.localize(language)` whenever language is changed. Command registry translates command descriptions when displaying help. Do not modify saved IDs, command names, and aliases.
+
+Inject `Languages` via the constructor for messages to be generated at runtime. Use `translate(...)` for messages that do not depend on parameters and `format(...)` for messages that do:
+
+```java
+ChatFeedback.reply(sender, Tone.WARNING, language.translate("No matching bindings"));
+ChatFeedback.reply(sender, Tone.SUCCESS,
+        language.format("Bound {0} to {1}", itemName, keyName));
+```
+
+Pass an English literal as the first argument to `format(...)` and `translate(...)`. Dynamic values go to the subsequent arguments. `{0}` corresponds to the first value, `{1}` to the second, and so on. Translations may reorder parameters. Translation is performed once when preparing display text and passed to the renderer or chat feedback helper. Absent or empty translation is equivalent to English. `translate(...)` will just return the original text in English; `format(...)` will still substitute its parameters.
+
+To update cached HUD text, hold a language listener, register it in `start()` and unregister in `stop()`. `addListener(...)` will immediately call the listener and again after every language change. Update both the cached text and its measured layout at the same time. Prepare dynamic texts while updating the display snapshot. Render callback receives prepared text. Language switch and listener registration/removal occur on the client thread.
+
+Frontend components import `t` from `./languages` and call `t('Settings')` or `t('Remove {0} players', count)`. Application will follow the server state language, load catalogs once, and update display text when language changes.
+
+After any addition or modification of marked source text, execute `python scripts/languages.py sync` from the root directory of the repository. Script will find Java `source(...)`, `translate(...)`, and numbered `format(...)` calls and frontend `t(...)` calls. It will parse literals and literal concatenations but not variables storing strings. Translations will be preserved and newly added entries will be left empty. `python scripts/languages.py status` will show translation progress and file problems. These actions are manual; build process just packages resources. See [Contributing translations](TRANSLATING.md) for editing and adding a language.
+
 ## HUD
 
 [HudConfig](../src/main/java/pit12/runtime/config/HudConfig.java) stores settings related to HUD's placement and scale. Define it with `hudConfig` in FeatureConfig subclass' constructor and retain the result:
 
 ```java
-hud = hudConfig("status", "Status", HudAnchor.TOP_LEFT, 6, 6, true);
+hud = hudConfig("status", source("Status"), HudAnchor.TOP_LEFT, 6, 6, true);
 ```
 
-The helper defines the following settings: `status.anchor`, `status.offset_x`, `status.offset_y`, `status.scale`, `status.text_shadow`, and `status.use_monospace_font`. Scale is stored in percentages and defaults to `100`. The HUD editor controls placement and scale. Text shadow and the monospace font switch are exposed as settings in Web UI. The font switch defaults to off and uses bundled Monocraft when enabled. Profile feature saves all these values with the rest of feature's settings.
+The helper defines the following settings: `status.anchor`, `status.offset_x`, `status.offset_y`, `status.scale`, `status.text_shadow`, `status.use_monospace_font`, and `status.translate_text`. Scale is stored in percentages and defaults to `100`. The HUD editor controls placement and scale. Text shadow, font, and translation switches are exposed as settings in Web UI. The font switch defaults to off and uses bundled Monocraft when enabled. The translation switch defaults to on; use `language.translate(text, hud.translateText().get())` when preparing HUD text and refresh cached text and layout when it changes. Profile feature saves all these values with the rest of feature's settings.
 
 A [HudElement](../src/main/java/pit12/runtime/hud/HudElement.java) implementation should satisfy the following contract:
 

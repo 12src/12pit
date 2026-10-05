@@ -22,6 +22,7 @@ import java.util.Collections;
 import pit12.runtime.config.HudConfig;
 import pit12.runtime.hud.HudElement;
 import pit12.runtime.hud.HudRenderer;
+import pit12.runtime.languages.Languages;
 
 final class EventListHud implements HudElement {
     private static final int PADDING = 4;
@@ -29,6 +30,8 @@ final class EventListHud implements HudElement {
     private final EventListConfig config;
     private final HudConfig hudConfig;
     private final HudRenderer renderer;
+    private final Languages language;
+    private final String[] eventNames = new String[EventType.values().length];
     private EventListSnapshot snapshot;
     private EventListSnapshot content;
     private float pixelScale = Float.NaN;
@@ -41,12 +44,21 @@ final class EventListHud implements HudElement {
     private int width;
     private int height;
 
-    EventListHud(EventListConfig config, HudRenderer renderer) {
+    EventListHud(EventListConfig config, HudRenderer renderer, Languages language) {
+        this.language = language;
         this.config = config;
         hudConfig = config.hud();
         this.renderer = renderer;
         snapshot = EventListSnapshot.build(Collections.emptyList(), config,
-                System.currentTimeMillis(), "", true);
+                System.currentTimeMillis(), "", true, language);
+    }
+
+    void localize() {
+        boolean translate = hudConfig.translateText().get();
+        for (EventType type : EventType.values()) {
+            eventNames[type.ordinal()] = language.translate(type.displayName, translate);
+        }
+        dirty = true;
     }
 
     void snapshot(EventListSnapshot snapshot) {
@@ -67,7 +79,7 @@ final class EventListHud implements HudElement {
 
     @Override
     public String displayName() {
-        return "Event List";
+        return config.displayName();
     }
 
     @Override
@@ -100,7 +112,7 @@ final class EventListHud implements HudElement {
         if (!dirty && sample == sampleLayout) {
             return;
         }
-        content = sample ? EventListSnapshot.sample(config) : snapshot;
+        content = sample ? EventListSnapshot.sample(config, language) : snapshot;
         sampleLayout = sample;
         dirty = false;
         int fontHeight = Math.max(renderer.fontHeight(content.dayName, hudConfig),
@@ -117,9 +129,11 @@ final class EventListHud implements HudElement {
                 iconWidth = Math.max(iconWidth, renderer.textWidth(icon, false));
                 fontHeight = Math.max(fontHeight, renderer.fontHeight(icon, false));
             }
-            nameWidth = Math.max(nameWidth, renderer.textWidth(row.type.displayName, hudConfig));
+            nameWidth = Math.max(nameWidth,
+                    renderer.textWidth(eventNames[row.type.ordinal()], hudConfig));
             timeWidth = Math.max(timeWidth, renderer.textWidth(row.time, hudConfig));
-            fontHeight = Math.max(fontHeight, renderer.fontHeight(row.type.displayName, hudConfig));
+            fontHeight = Math.max(fontHeight,
+                    renderer.fontHeight(eventNames[row.type.ordinal()], hudConfig));
             fontHeight = Math.max(fontHeight, renderer.fontHeight(row.time, hudConfig));
         }
         lineHeight = Math.max(fontHeight, renderer.fontHeight(content.message, hudConfig)) + 2;
@@ -164,7 +178,7 @@ final class EventListHud implements HudElement {
                                 : row.major ? 0xFFFFAA00 : 0xFF55FFFF;
                 icon(eventIcon(row), y, color);
             }
-            renderer.text(row.type.displayName, nameX, y,
+            renderer.text(eventNames[row.type.ordinal()], nameX, y,
                     config.showColors() ? 0xFF000000 | row.type.color : 0xFFFFFFFF, hudConfig);
             renderer.text(row.time, width - PADDING - renderer.textWidth(row.time, hudConfig), y,
                     0xFFFFFFFF, hudConfig);

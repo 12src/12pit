@@ -18,6 +18,8 @@
  */
 package pit12.feature.swap;
 
+import static pit12.runtime.languages.Languages.source;
+
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -46,7 +48,7 @@ final class BindingBook implements SwapBindings {
     private final Consumer<String> report;
     private ExecutorService worker;
     private boolean loading = true;
-    private String problem = "Swap bindings are loading";
+    private String problem = source("Swap bindings are loading");
     private long revision;
 
     BindingBook(ClientThread client, Path path, Consumer<String> report) {
@@ -60,7 +62,7 @@ final class BindingBook implements SwapBindings {
         if (worker != null)
             return;
         loading = true;
-        problem = "Swap bindings are loading";
+        problem = source("Swap bindings are loading");
         ExecutorService started = Executors.newSingleThreadExecutor(task -> {
             Thread thread = new Thread(task, "12pit-swap-bindings");
             thread.setDaemon(true);
@@ -86,7 +88,8 @@ final class BindingBook implements SwapBindings {
                     if (worker != started)
                         return;
                     loading = false;
-                    problem = "Swap bindings could not be loaded; import a file or use /swap clear";
+                    problem = source(
+                            "Swap bindings could not be loaded; import a file or use /swap clear");
                     report.accept(problem);
                     changed();
                 });
@@ -108,7 +111,7 @@ final class BindingBook implements SwapBindings {
             stopped.shutdownNow();
             Thread.currentThread().interrupt();
         }
-        problem = "Swap bindings are unavailable";
+        problem = source("Swap bindings are unavailable");
         loading = false;
     }
 
@@ -183,7 +186,7 @@ final class BindingBook implements SwapBindings {
                 LOGGER.log(Level.WARNING, "Cannot save swap bindings", failure);
                 client.execute(() -> {
                     if (worker == writer)
-                        report.accept("Swap bindings could not be saved");
+                        report.accept(source("Swap bindings could not be saved"));
                 });
             }
         });

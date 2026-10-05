@@ -37,11 +37,13 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.inventory.GuiInventory;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
+import pit12.runtime.languages.Languages;
 import pit12.runtime.session.ClientSession;
 import pit12.shared.chat.ChatFeedback.Tone;
 
 final class SwapController {
     private final Minecraft minecraft;
+    private final Languages language;
     private final ClientSession session;
     private final SwapConfig config;
     private final BindingBook bindings;
@@ -66,7 +68,8 @@ final class SwapController {
 
     SwapController(Minecraft minecraft, ClientSession session, SwapConfig config,
             BindingBook bindings, BiConsumer<Tone, String> report, Runnable lockInput,
-            Consumer<Boolean> releaseInput) {
+            Consumer<Boolean> releaseInput, Languages language) {
+        this.language = language;
         this.minecraft = minecraft;
         this.session = session;
         this.config = config;
@@ -202,7 +205,8 @@ final class SwapController {
                     if (options == null)
                         return;
                     if (!owns(minecraft.currentScreen) || !acceptsInput()) {
-                        throw new IllegalStateException("Inventory did not open; swap stopped");
+                        throw new IllegalStateException(
+                                language.translate("Inventory did not open; swap stopped"));
                     }
                     lastClickTick = tick;
                 }
@@ -218,7 +222,8 @@ final class SwapController {
             }
         } catch (RuntimeException failure) {
             report.accept(Tone.ERROR,
-                    failure.getMessage() == null ? "Swap stopped" : failure.getMessage());
+                    failure.getMessage() == null ? language.translate("Swap stopped")
+                            : failure.getMessage());
             cancel();
         }
     }
@@ -268,7 +273,7 @@ final class SwapController {
                 continue;
             }
             if (!locations.containsKey(binding.identity)) {
-                problems.add("Missing item: " + binding.name);
+                problems.add(language.format("Missing item: {0}", binding.name));
             } else if (!selected.containsKey(binding.guiTarget())) {
                 selected.put(binding.guiTarget(), binding);
             }
@@ -324,7 +329,7 @@ final class SwapController {
     private void click(int slot, int button, int mode) {
         if (!owns(minecraft.currentScreen) || player.openContainer != player.inventoryContainer
                 || player.inventory.getItemStack() != null) {
-            throw new IllegalStateException("Inventory changed; swap stopped");
+            throw new IllegalStateException(language.translate("Inventory changed; swap stopped"));
         }
         minecraft.playerController.windowClick(player.inventoryContainer.windowId, slot, button,
                 mode, player);
@@ -337,8 +342,9 @@ final class SwapController {
         for (String problem : problems)
             report.accept(Tone.WARNING, problem);
         if (options.messages && !completed.isEmpty()) {
-            report.accept(Tone.SUCCESS, options.details ? "Swapped: " + String.join(", ", completed)
-                    : "Swapped " + completed.size() + " item(s)");
+            report.accept(Tone.SUCCESS,
+                    options.details ? language.format("Swapped: {0}", String.join(", ", completed))
+                            : language.format("Swapped {0} item(s)", completed.size()));
         }
     }
 
@@ -368,7 +374,7 @@ final class SwapController {
             try {
                 player.closeScreen();
             } catch (RuntimeException failure) {
-                report.accept(Tone.ERROR, "Inventory could not be closed");
+                report.accept(Tone.ERROR, language.translate("Inventory could not be closed"));
             }
         }
         reset();
@@ -424,20 +430,23 @@ final class SwapController {
                     if (stack(unequipSlot) == null)
                         completed.add(name);
                     else
-                        problems.add("Armor could not be moved to the inventory");
+                        problems.add(
+                                language.translate("Armor could not be moved to the inventory"));
                 } else if (armor != null)
-                    problems.add("Not enough inventory space to unequip armor");
+                    problems.add(language.translate("Not enough inventory space to unequip armor"));
                 done = true;
                 return;
             }
             if (stage == 1) {
                 if (!binding.identity.matches(stack(36 + work))
                         || !ItemStack.areItemStacksEqual(stack(source), originalWorkspace)) {
-                    throw new IllegalStateException("Transfer slot changed; swap stopped");
+                    throw new IllegalStateException(
+                            language.translate("Transfer slot changed; swap stopped"));
                 }
                 swap(binding.guiTarget(), work);
                 if (!binding.identity.matches(stack(binding.guiTarget()))) {
-                    throw new IllegalStateException("Armor could not be equipped");
+                    throw new IllegalStateException(
+                            language.translate("Armor could not be equipped"));
                 }
                 expectedWorkspace = copy(stack(36 + work));
                 stage = 2;
@@ -447,7 +456,8 @@ final class SwapController {
             }
             if (stage == 2) {
                 if (!restorable())
-                    throw new IllegalStateException("Transfer slot changed; swap stopped");
+                    throw new IllegalStateException(
+                            language.translate("Transfer slot changed; swap stopped"));
                 swap(source, work);
                 complete();
                 return;
@@ -455,14 +465,14 @@ final class SwapController {
             if (source < 5 || !binding.identity.matches(stack(source)))
                 source = find(binding.identity);
             if (source < 0) {
-                problems.add("Missing item: " + binding.name);
+                problems.add(language.format("Missing item: {0}", binding.name));
                 done = true;
                 return;
             }
             if (binding.equipment) {
                 if (!player.inventoryContainer.getSlot(binding.guiTarget())
                         .isItemValid(stack(source))) {
-                    problems.add("Item does not fit: " + binding.name);
+                    problems.add(language.format("Item does not fit: {0}", binding.name));
                     done = true;
                 } else if (source >= 36) {
                     swap(binding.guiTarget(), source - 36);
@@ -479,7 +489,8 @@ final class SwapController {
                 ItemStack targetItem = stack(binding.guiTarget());
                 if (source < 9 && targetItem != null && !sourceSlot.isItemValid(targetItem)
                         && player.inventory.getFirstEmptyStack() < 0) {
-                    problems.add("Not enough inventory space for " + binding.name);
+                    problems.add(
+                            language.format("Not enough inventory space for {0}", binding.name));
                     done = true;
                 } else {
                     swap(source, binding.target - 1);
@@ -508,7 +519,8 @@ final class SwapController {
 
         private void verifyAndComplete() {
             if (!binding.identity.matches(stack(binding.guiTarget()))) {
-                throw new IllegalStateException("Item could not be swapped: " + binding.name);
+                throw new IllegalStateException(
+                        language.format("Item could not be swapped: {0}", binding.name));
             }
             complete();
         }

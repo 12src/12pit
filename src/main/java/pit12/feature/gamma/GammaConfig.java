@@ -18,6 +18,8 @@
  */
 package pit12.feature.gamma;
 
+import static pit12.runtime.languages.Languages.source;
+
 import pit12.runtime.config.ConfigCategory;
 import pit12.runtime.config.FeatureConfig;
 import pit12.runtime.config.IntegerSetting;
@@ -26,10 +28,10 @@ public final class GammaConfig extends FeatureConfig {
     private final IntegerSetting gamma;
 
     public GammaConfig() {
-        super("gamma", "Gamma", new ConfigCategory("render", "Render", 100),
-                "Adjusts world brightness with a custom gamma value.");
-        gamma = integerSliderSetting("gamma", "Gamma value",
-                "Controls brightness. Minecraft's normal range is 0 to 1.", 100, 0, 100, 1);
+        super("gamma", source("Gamma"), new ConfigCategory("render", source("Render"), 100),
+                source("Adjusts world brightness with a custom gamma value."));
+        gamma = integerSliderSetting("gamma", source("Gamma value"),
+                source("Controls brightness. Minecraft's normal range is 0 to 1."), 100, 0, 100, 1);
     }
 
     public float gamma() {

@@ -17,6 +17,7 @@ You should have received a copy of the GNU General Public License
 along with 12pit. If not, see <https://www.gnu.org/licenses/>.
 -->
 <script setup lang="ts">
+import { t } from './languages'
 import { computed, ref, watch } from 'vue'
 import { Check, ChevronDown } from '@lucide/vue'
 import type { Option } from './api'
@@ -141,9 +142,9 @@ function menuKeydown(event: KeyboardEvent) {
   }
 }
 function keyLabel(value: string) {
-  if (value === 'RSHIFT') return 'Right Shift'
-  if (value === 'LSHIFT') return 'Left Shift'
-  return value === 'NONE' ? 'Unbound' : value
+  if (value === 'RSHIFT') return t('Right Shift')
+  if (value === 'LSHIFT') return t('Left Shift')
+  return value === 'NONE' ? t('Unbound') : value
 }
 </script>
 
@@ -185,7 +186,7 @@ function keyLabel(value: string) {
             ref="numericInput"
             class="number-input"
             type="number"
-            :aria-label="`${option.name} value`"
+            :aria-label="t('Value for {0}', option.name)"
             :min="option.min"
             :max="option.max"
             :step="option.step"
@@ -243,7 +244,7 @@ function keyLabel(value: string) {
           :disabled="busy"
           :class="{ selected: option.value === rgb }"
           :style="{ '--color': `#${rgb.toString(16).padStart(6, '0')}` }"
-          :aria-label="`Color #${rgb.toString(16).padStart(6, '0')}`"
+          :aria-label="t('Color #{0}', rgb.toString(16).padStart(6, '0'))"
           :title="`#${rgb.toString(16).padStart(6, '0')}`"
           :aria-pressed="option.value === rgb"
           @click="emit('change', rgb)"
@@ -265,11 +266,13 @@ function keyLabel(value: string) {
         :class="{ capturing }"
         :disabled="busy"
         :aria-label="
-          capturing ? `Cancel ${option.name} capture` : `Change ${option.name}`
+          capturing
+            ? t('Cancel capture for {0}', option.name)
+            : t('Change {0}', option.name)
         "
         @click="capturing ? emit('cancel') : emit('capture')"
       >
-        {{ capturing ? 'Press a key' : keyLabel(option.keyName ?? 'NONE') }}
+        {{ capturing ? t('Press a key') : keyLabel(option.keyName ?? 'NONE') }}
       </button>
     </div>
   </div>

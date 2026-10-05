@@ -72,6 +72,7 @@ import pit12.runtime.config.ConfigOption;
 import pit12.runtime.config.FeatureConfig;
 import pit12.runtime.config.NumberSetting;
 import pit12.runtime.config.Setting;
+import pit12.runtime.languages.Languages;
 import pit12.shared.result.OperationResult;
 
 final class WebUiServer {
@@ -83,6 +84,7 @@ final class WebUiServer {
     private static final byte[] UPDATE = "data: update\n\n".getBytes(StandardCharsets.UTF_8);
     private static final byte[] HEARTBEAT = ": keep-alive\n\n".getBytes(StandardCharsets.UTF_8);
     private final Minecraft minecraft;
+    private final Languages language;
     private final ConfigCatalog catalog;
     private final Profiles profiles;
     private final Relations relations;
@@ -97,7 +99,8 @@ final class WebUiServer {
     private ExecutorService executor;
 
     WebUiServer(Minecraft minecraft, ConfigCatalog catalog, Profiles profiles, Relations relations,
-            HudEditor hudEditor, SwapBindings swapBindings) {
+            HudEditor hudEditor, SwapBindings swapBindings, Languages language) {
+        this.language = language;
         this.minecraft = minecraft;
         this.catalog = catalog;
         this.profiles = profiles;
@@ -125,6 +128,7 @@ final class WebUiServer {
         created.start();
         server = created;
         catalog.addListener(configListener);
+        language.addListener(changeListener);
         profiles.addListener(changeListener);
         relations.addChangeListener(changeListener);
         swapBindings.addChangeListener(changeListener);
@@ -132,6 +136,7 @@ final class WebUiServer {
 
     void stop() {
         catalog.removeListener(configListener);
+        language.removeListener(changeListener);
         profiles.removeListener(changeListener);
         relations.removeChangeListener(changeListener);
         swapBindings.removeChangeListener(changeListener);
@@ -187,6 +192,11 @@ final class WebUiServer {
         }
         if ("GET".equals(exchange.getRequestMethod()) && "/api/state".equals(path)) {
             sendJson(exchange, 200, onClient(this::state));
+            return;
+        }
+        if ("GET".equals(exchange.getRequestMethod()) && path.startsWith("/api/languages/")) {
+            String locale = path.substring("/api/languages/".length());
+            sendJson(exchange, 200, onClient(() -> language.texts(locale)));
             return;
         }
         if (!"POST".equals(exchange.getRequestMethod()) || !"/api/setting".equals(path)
@@ -494,7 +504,8 @@ final class WebUiServer {
                         entry.name(), "relation", type.name()));
             }
         }
-        return object("version", BUILD_LABEL, "features", features, "relations",
+        return object("version", BUILD_LABEL, "language", language.locale(), "features", features,
+                "relations",
                 object("problem", relations.readinessProblem(), "lookupProblems",
                         relations.lookupProblems(), "entries", relationEntries),
                 "swapBindings",

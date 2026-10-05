@@ -18,6 +18,8 @@
  */
 package pit12.feature.autofish;
 
+import static pit12.runtime.languages.Languages.source;
+
 import pit12.runtime.config.BooleanSetting;
 import pit12.runtime.config.ConfigCategory;
 import pit12.runtime.config.FeatureConfig;
@@ -33,24 +35,25 @@ public final class AutoFishConfig extends FeatureConfig {
     final IntegerSetting missHookChance;
 
     public AutoFishConfig() {
-        super("autofish", "Auto Fish", new ConfigCategory("utility", "Utility", 75),
-                "Reels in when a fish bites and can cast again.", true, false);
-        subsubcategory("general", "General");
-        autoRecast = booleanSetting("auto_recast", "Auto recast",
-                "Casts once after Auto Fish reels in.", true);
-        reelDelayMin = integerSliderSetting("reel_delay_min", "Reel delay min",
-                "Shortest wait before reeling in, in ticks.", 2, 0, 20, 1);
-        reelDelayMax = integerSliderSetting("reel_delay_max", "Reel delay max",
-                "Longest wait before reeling in, in ticks.", 4, 0, 20, 1);
-        castDelayMin = integerSliderSetting("cast_delay_min", "Recast delay min",
-                "Shortest wait before casting again, in ticks.", 15, 0, 20, 1);
-        castDelayMax = integerSliderSetting("cast_delay_max", "Recast delay max",
-                "Longest wait before casting again, in ticks.", 20, 0, 20, 1);
-        subsubcategory("hook_chances", "Hook chances");
-        emptyHookChance = integerSliderSetting("empty_hook_chance", "Empty hook chance",
-                "Percent chance of waiting for the float to recover before reeling in.", 0, 0, 100,
-                1);
-        missHookChance = integerSliderSetting("miss_hook_chance", "Miss hook chance",
-                "Percent chance of ignoring a bite and waiting for the next one.", 0, 0, 100, 1);
+        super("autofish", source("Auto Fish"), new ConfigCategory("utility", source("Utility"), 75),
+                source("Reels in when a fish bites and can cast again."), true, false);
+        subsubcategory("general", source("General"));
+        autoRecast = booleanSetting("auto_recast", source("Auto recast"),
+                source("Casts once after Auto Fish reels in."), true);
+        reelDelayMin = integerSliderSetting("reel_delay_min", source("Reel delay min"),
+                source("Shortest wait before reeling in, in ticks."), 2, 0, 20, 1);
+        reelDelayMax = integerSliderSetting("reel_delay_max", source("Reel delay max"),
+                source("Longest wait before reeling in, in ticks."), 4, 0, 20, 1);
+        castDelayMin = integerSliderSetting("cast_delay_min", source("Recast delay min"),
+                source("Shortest wait before casting again, in ticks."), 15, 0, 20, 1);
+        castDelayMax = integerSliderSetting("cast_delay_max", source("Recast delay max"),
+                source("Longest wait before casting again, in ticks."), 20, 0, 20, 1);
+        subsubcategory("hook_chances", source("Hook chances"));
+        emptyHookChance = integerSliderSetting("empty_hook_chance", source("Empty hook chance"),
+                source("Percent chance of waiting for the float to recover before reeling in."), 0,
+                0, 100, 1);
+        missHookChance = integerSliderSetting("miss_hook_chance", source("Miss hook chance"),
+                source("Percent chance of ignoring a bite and waiting for the next one."), 0, 0,
+                100, 1);
     }
 }

@@ -28,6 +28,7 @@ import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import pit12.runtime.languages.Languages;
 import pit12.shared.concurrent.ClientThread;
 
 public final class ConfigCatalog {
@@ -64,6 +65,13 @@ public final class ConfigCatalog {
         }
         features.add(feature);
         featuresById.put(feature.id(), feature);
+    }
+
+    public void localize(Languages language) {
+        client.check();
+        for (FeatureConfig feature : features) {
+            feature.localize(language);
+        }
     }
 
     public void freeze() {

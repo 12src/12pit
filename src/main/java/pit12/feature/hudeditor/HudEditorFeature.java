@@ -18,6 +18,8 @@
  */
 package pit12.feature.hudeditor;
 
+import static pit12.runtime.languages.Languages.source;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiChat;
 import net.minecraftforge.common.MinecraftForge;
@@ -40,7 +42,7 @@ public final class HudEditorFeature implements ClientLifecycle, HudEditor {
     public HudEditorFeature(HudRegistry registry, CommandRegistry commands) {
         this.registry = registry;
         controller = new HudEditorController(registry);
-        commands.register(CommandNode.command("hudeditor", "Open the HUD editor")
+        commands.register(CommandNode.command("hudeditor", source("Open the HUD editor"))
                 .executes((sender, args) -> requestOpen()).build(), true);
     }
 
