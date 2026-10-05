@@ -18,17 +18,22 @@
  */
 package pit12.runtime.config;
 
+import static pit12.runtime.languages.Languages.source;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import pit12.runtime.languages.Languages;
 
 public abstract class FeatureConfig {
     private final String id;
-    private final String displayName;
+    private final String originalDisplayName;
+    private String displayName;
     private final ConfigCategory category;
-    private final String description;
+    private final String originalDescription;
+    private String description;
     private final BooleanSetting enabled;
     private final List<Setting<?>> settings = new ArrayList<Setting<?>>();
     private final List<ConfigOption<?>> options = new ArrayList<ConfigOption<?>>();
@@ -51,13 +56,15 @@ public abstract class FeatureConfig {
     protected FeatureConfig(String id, String displayName, ConfigCategory category,
             String description, boolean toggleable, boolean defaultEnabled) {
         this.id = ConfigNames.requireStableId(id, "feature id");
+        originalDisplayName = displayName;
         this.displayName = displayName;
         this.category = category;
+        originalDescription = description;
         this.description = description;
         enabled =
                 toggleable
-                        ? new BooleanSetting("enabled", "Enabled",
-                                "Enables " + this.displayName + ".", defaultEnabled)
+                        ? new BooleanSetting("enabled", source("Enabled"),
+                                source("Turns this feature on."), defaultEnabled)
                         : null;
         if (enabled != null) {
             register(enabled, null);
@@ -131,25 +138,32 @@ public abstract class FeatureConfig {
     protected final HudConfig hudConfig(String id, String displayName, HudAnchor defaultAnchor,
             int defaultOffsetX, int defaultOffsetY, boolean defaultTextShadow) {
         String prefix = id + ".";
-        BooleanSetting textShadow = new BooleanSetting(prefix + "text_shadow", "Text shadow",
-                "Draws a shadow behind text in the " + displayName + ".", defaultTextShadow);
-        BooleanSetting useMonospaceFont = new BooleanSetting(prefix + "use_monospace_font",
-                "Use monospace font",
-                "Uses the bundled Monocraft font for text in the " + displayName + ".", false);
-        IntegerSetting anchor = new IntegerSetting(prefix + "anchor", "Anchor", "",
+        BooleanSetting textShadow =
+                new BooleanSetting(prefix + "text_shadow", source("Text shadow"),
+                        source("Draws a shadow behind HUD text."), defaultTextShadow);
+        BooleanSetting useMonospaceFont =
+                new BooleanSetting(prefix + "use_monospace_font", source("Use monospace font"),
+                        source("Uses the bundled Monocraft font for HUD text."), false);
+        BooleanSetting translateText =
+                new BooleanSetting(prefix + "translate_text", source("Translate text"),
+                        source("Translates HUD text into the selected language."), true);
+        IntegerSetting anchor = new IntegerSetting(prefix + "anchor", source("Anchor"), "",
                 defaultAnchor.id(), HudAnchor.TOP_LEFT.id(), HudAnchor.BOTTOM_RIGHT.id());
-        IntegerSetting offsetX = new IntegerSetting(prefix + "offset_x", "Horizontal offset", "",
-                defaultOffsetX, -32768, 32767);
-        IntegerSetting offsetY = new IntegerSetting(prefix + "offset_y", "Vertical offset", "",
-                defaultOffsetY, -32768, 32767);
-        IntegerSetting scale = new IntegerSetting(prefix + "scale", "Scale", "", 100, 25, 300);
+        IntegerSetting offsetX = new IntegerSetting(prefix + "offset_x",
+                source("Horizontal offset"), "", defaultOffsetX, -32768, 32767);
+        IntegerSetting offsetY = new IntegerSetting(prefix + "offset_y", source("Vertical offset"),
+                "", defaultOffsetY, -32768, 32767);
+        IntegerSetting scale =
+                new IntegerSetting(prefix + "scale", source("Scale"), "", 100, 25, 300);
         register(textShadow, ConfigOption.Kind.BOOLEAN);
         register(useMonospaceFont, ConfigOption.Kind.BOOLEAN);
+        register(translateText, ConfigOption.Kind.BOOLEAN);
         register(anchor, null);
         register(offsetX, null);
         register(offsetY, null);
         register(scale, null);
-        return new HudConfig(textShadow, useMonospaceFont, anchor, offsetX, offsetY, scale);
+        return new HudConfig(textShadow, useMonospaceFont, translateText, anchor, offsetX, offsetY,
+                scale);
     }
 
     private <T> void register(Setting<T> setting, ConfigOption.Kind optionKind) {
@@ -161,6 +175,23 @@ public abstract class FeatureConfig {
         if (optionKind != null) {
             options.add(new ConfigOption<T>(setting, optionKind, currentSubcategory,
                     currentSubsubcategory));
+        }
+    }
+
+    void localize(Languages language) {
+        displayName = language.translate(originalDisplayName);
+        description = language.translate(originalDescription);
+        category.localize(language);
+        for (Setting<?> setting : settings) {
+            setting.localize(language);
+        }
+        for (ConfigOption<?> option : options) {
+            if (option.subcategory() != null) {
+                option.subcategory().localize(language);
+            }
+            if (option.subsubcategory() != null) {
+                option.subsubcategory().localize(language);
+            }
         }
     }
 

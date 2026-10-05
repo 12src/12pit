@@ -18,6 +18,8 @@
  */
 package pit12.feature.itemesp;
 
+import static pit12.runtime.languages.Languages.source;
+
 import pit12.runtime.config.BooleanSetting;
 import pit12.runtime.config.ColorSetting;
 import pit12.runtime.config.ConfigCategory;
@@ -30,16 +32,18 @@ public final class ItemEspConfig extends FeatureConfig {
     private final ColorSetting goldColor;
 
     public ItemEspConfig() {
-        super("itemesp", "Item ESP", new ConfigCategory("render", "Render", 100),
-                "Shows dropped raffle tickets and gold ingots through blocks.", true, false);
-        subsubcategory("raffle_tickets", "Raffle tickets");
-        showRaffle = booleanSetting("show_raffle", "Show raffle tickets",
-                "Marks dropped name tags.", true);
-        raffleColor = colorPickerSetting("raffle_color", "Raffle ticket color", "", 0x80FF8000);
-        subsubcategory("gold_ingots", "Gold ingots");
-        showGold =
-                booleanSetting("show_gold", "Show gold ingots", "Marks dropped gold ingots.", true);
-        goldColor = colorPickerSetting("gold_color", "Gold ingot color", "", 0x80FFD700);
+        super("itemesp", source("Item ESP"), new ConfigCategory("render", source("Render"), 100),
+                source("Shows dropped raffle tickets and gold ingots through blocks."), true,
+                false);
+        subsubcategory("raffle_tickets", source("Raffle tickets"));
+        showRaffle = booleanSetting("show_raffle", source("Show raffle tickets"),
+                source("Marks dropped name tags."), true);
+        raffleColor =
+                colorPickerSetting("raffle_color", source("Raffle ticket color"), "", 0x80FF8000);
+        subsubcategory("gold_ingots", source("Gold ingots"));
+        showGold = booleanSetting("show_gold", source("Show gold ingots"),
+                source("Marks dropped gold ingots."), true);
+        goldColor = colorPickerSetting("gold_color", source("Gold ingot color"), "", 0x80FFD700);
     }
 
     public boolean hasTargets() {

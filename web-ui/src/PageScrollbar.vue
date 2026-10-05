@@ -17,6 +17,7 @@ You should have received a copy of the GNU General Public License
 along with 12pit. If not, see <https://www.gnu.org/licenses/>.
 -->
 <script setup lang="ts">
+import { t } from './languages'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 const viewportHeight = ref(document.documentElement.clientHeight)
@@ -132,7 +133,7 @@ onUnmounted(() => {
     :class="{ dragging }"
     role="scrollbar"
     tabindex="0"
-    aria-label="Page scroll"
+    :aria-label="t('Page scroll')"
     aria-controls="page-content"
     aria-orientation="vertical"
     :aria-valuemin="0"

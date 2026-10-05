@@ -34,6 +34,7 @@ import org.junit.rules.TemporaryFolder;
 import pit12.feature.relation.api.IdentityLookupState;
 import pit12.feature.relation.api.Relation;
 import pit12.feature.relation.storage.RelationStore;
+import pit12.runtime.languages.Languages;
 import pit12.shared.concurrent.ClientThread;
 
 public final class RelationLookupPersistenceTest {
@@ -48,7 +49,7 @@ public final class RelationLookupPersistenceTest {
                         + "{\"name\":\"PendingPlayer\",\"relation\":\"FRIEND\"}]}")
                         .getBytes(StandardCharsets.UTF_8));
         RelationStore store = new RelationStore(path);
-        RelationBook book = new RelationBook();
+        RelationBook book = new RelationBook(new Languages(ClientThread.current()));
         book.replace(store.load());
         UUID id = UUID.fromString("00000000-0000-0000-0000-000000000001");
         List<Runnable> tasks = new ArrayList<>();
@@ -79,7 +80,7 @@ public final class RelationLookupPersistenceTest {
                         + "{\"name\":\"PendingPlayer\",\"relation\":\"ENEMY\"}]}")
                         .getBytes(StandardCharsets.UTF_8));
         RelationStore store = new RelationStore(path);
-        RelationBook book = new RelationBook();
+        RelationBook book = new RelationBook(new Languages(ClientThread.current()));
         book.replace(store.load());
         UUID id = UUID.fromString("00000000-0000-0000-0000-000000000001");
         assertTrue(book.observe(id, "PendingPlayer"));

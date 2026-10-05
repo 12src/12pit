@@ -17,6 +17,7 @@ You should have received a copy of the GNU General Public License
 along with 12pit. If not, see <https://www.gnu.org/licenses/>.
 -->
 <script setup lang="ts">
+import { t, setLanguage } from './languages'
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import {
   ArrowRight,
@@ -117,7 +118,7 @@ const currentSections = computed(
     ) ?? [],
 )
 const categories = computed(() => [
-  ['all', 'All'],
+  ['all', t('All')],
   ...new Map(
     features.value.map((feature) => [feature.categoryId, feature.category]),
   ).entries(),
@@ -194,6 +195,9 @@ function applySetting(next: State, edit: SettingEdit) {
 
 function displayState(next: State) {
   for (const edit of pendingSettings.values()) applySetting(next, edit)
+  void setLanguage(next.language).catch((cause) => {
+    error.value = message(cause)
+  })
   state.value = next
 }
 
@@ -217,7 +221,7 @@ async function refresh(clearError = true) {
 }
 
 function message(cause: unknown) {
-  return cause instanceof Error ? cause.message : 'Request failed'
+  return cause instanceof Error ? cause.message : t('Request failed')
 }
 
 function serverChanged() {
@@ -532,7 +536,7 @@ function onKey(event: KeyboardEvent) {
   }
   const name = keyName(event.code)
   if (!name) {
-    error.value = 'This key cannot be bound'
+    error.value = t('This key cannot be bound')
     cancelCapture()
     return
   }
@@ -632,28 +636,31 @@ onUnmounted(() => {
           }}</small></span
         >
       </div>
-      <nav aria-label="Pages" :style="{ '--indicator-top': navIndicatorTop }">
+      <nav
+        :aria-label="t('Pages')"
+        :style="{ '--indicator-top': navIndicatorTop }"
+      >
         <span class="nav-indicator" aria-hidden="true" />
         <button
           :class="{ active: page === 'features' }"
           :aria-current="page === 'features' ? 'page' : undefined"
           @click="selectPage('features')"
         >
-          Features
+          {{ t('Features') }}
         </button>
         <button
           :class="{ active: page === 'profiles' }"
           :aria-current="page === 'profiles' ? 'page' : undefined"
           @click="selectPage('profiles')"
         >
-          Profiles
+          {{ t('Profiles') }}
         </button>
         <button
           :class="{ active: page === 'relations' }"
           :aria-current="page === 'relations' ? 'page' : undefined"
           @click="selectPage('relations')"
         >
-          Relations
+          {{ t('Relations') }}
         </button>
         <button
           class="nav-settings"
@@ -661,7 +668,7 @@ onUnmounted(() => {
           :aria-current="page === 'settings' ? 'page' : undefined"
           @click="selectPage('settings')"
         >
-          Settings
+          {{ t('Settings') }}
         </button>
       </nav>
       <div class="community-links">
@@ -713,8 +720,8 @@ onUnmounted(() => {
         <button
           class="notice-close"
           type="button"
-          aria-label="Dismiss error"
-          title="Dismiss error"
+          :aria-label="t('Dismiss error')"
+          :title="t('Dismiss error')"
           @click="error = ''"
         >
           <X :size="15" />
@@ -726,19 +733,19 @@ onUnmounted(() => {
             <template v-if="page === 'features'">
               <template v-if="!current">
                 <div class="heading heading-features">
-                  <h1>Features</h1>
+                  <h1>{{ t('Features') }}</h1>
                   <div class="search">
                     <Search :size="15" /><input
                       v-model="search"
                       type="search"
-                      placeholder="Search features"
-                      aria-label="Search features"
+                      :placeholder="t('Search features')"
+                      :aria-label="t('Search features')"
                     />
                     <button
                       v-if="search"
                       type="button"
-                      aria-label="Clear search"
-                      title="Clear search"
+                      :aria-label="t('Clear search')"
+                      :title="t('Clear search')"
                       @click="clearSearch"
                     >
                       <X :size="14" />
@@ -748,7 +755,7 @@ onUnmounted(() => {
                 <div
                   class="category-buttons"
                   role="group"
-                  aria-label="Category"
+                  :aria-label="t('Category')"
                 >
                   <button
                     v-for="[id, name] in categories"
@@ -799,7 +806,7 @@ onUnmounted(() => {
                           class="switch-button"
                           type="button"
                           role="switch"
-                          :aria-label="`Enable ${feature.name}`"
+                          :aria-label="t('Enable {0}', feature.name)"
                           :aria-checked="feature.enabled"
                           @click="
                             setting(feature.id, 'enabled', !feature.enabled)
@@ -813,7 +820,7 @@ onUnmounted(() => {
                       </div>
                     </section>
                     <p v-if="!visible.length" class="empty">
-                      No matching features.
+                      {{ t('No matching features.') }}
                     </p>
                   </div>
                 </Transition>
@@ -822,12 +829,12 @@ onUnmounted(() => {
                 <div
                   class="breadcrumbs"
                   role="navigation"
-                  aria-label="Breadcrumb"
+                  :aria-label="t('Breadcrumb')"
                 >
                   <ol>
                     <li>
                       <button type="button" @click="backToFeatures">
-                        Features
+                        {{ t('Features') }}
                       </button>
                     </li>
                     <li>
@@ -845,7 +852,7 @@ onUnmounted(() => {
                   v-if="subcategories.length"
                   class="category-buttons"
                   role="group"
-                  aria-label="Subcategory"
+                  :aria-label="t('Subcategory')"
                 >
                   <button
                     v-for="subcategory in subcategories"
@@ -895,7 +902,7 @@ onUnmounted(() => {
             />
             <template v-else-if="page === 'settings'">
               <div class="heading heading-settings">
-                <h1>Settings</h1>
+                <h1>{{ t('Settings') }}</h1>
                 <div class="settings-transfer-actions">
                   <button
                     type="button"
@@ -903,7 +910,7 @@ onUnmounted(() => {
                     :disabled="pending || sendingSetting"
                     @click="mutate(openHudEditor)"
                   >
-                    <LayoutDashboard :size="15" />Edit HUD
+                    <LayoutDashboard :size="15" />{{ t('Edit HUD') }}
                   </button>
                   <button
                     type="button"
@@ -911,7 +918,7 @@ onUnmounted(() => {
                     :disabled="pending || sendingSetting"
                     @click="transferMode = 'export'"
                   >
-                    <Download :size="15" />Export
+                    <Download :size="15" />{{ t('Export') }}
                   </button>
                   <button
                     type="button"
@@ -919,7 +926,7 @@ onUnmounted(() => {
                     :disabled="pending || sendingSetting"
                     @click="transferMode = 'import'"
                   >
-                    <Upload :size="15" />Import
+                    <Upload :size="15" />{{ t('Import') }}
                   </button>
                 </div>
               </div>
@@ -944,7 +951,7 @@ onUnmounted(() => {
             </template>
             <template v-else>
               <div class="heading heading-profiles">
-                <h1>Profiles</h1>
+                <h1>{{ t('Profiles') }}</h1>
                 <form
                   class="profile-create"
                   :class="{ creating: showCreate }"
@@ -955,8 +962,8 @@ onUnmounted(() => {
                     <input
                       v-model="newName"
                       maxlength="48"
-                      placeholder="Profile name"
-                      aria-label="New profile name"
+                      :placeholder="t('Profile name')"
+                      :aria-label="t('New profile name')"
                       :disabled="
                         !showCreate || state.profiles.loadState === 'LOADING'
                       "
@@ -977,13 +984,13 @@ onUnmounted(() => {
                     @click="!showCreate && beginCreate()"
                   >
                     <Plus :size="15" />{{
-                      showCreate ? 'Create' : 'New profile'
+                      showCreate ? t('Create') : t('New profile')
                     }}
                   </button>
                 </form>
               </div>
               <p v-if="state.profiles.loadState === 'LOADING'" class="empty">
-                Loading profiles...
+                {{ t('Loading profiles...') }}
               </p>
               <template v-else>
                 <p
@@ -1010,7 +1017,7 @@ onUnmounted(() => {
                   >
                     <template v-if="deletingId === profile.id">
                       <span class="delete-question"
-                        >Delete
+                        >{{ t('Delete') }}
                         <strong><FormattedText :text="profile.name" /></strong
                         >?</span
                       >
@@ -1022,7 +1029,7 @@ onUnmounted(() => {
                           @click="cancelDelete(profile.id)"
                           @keydown.esc.prevent="cancelDelete(profile.id)"
                         >
-                          Cancel
+                          {{ t('Cancel') }}
                         </button>
                         <button
                           class="danger"
@@ -1031,7 +1038,7 @@ onUnmounted(() => {
                           @click="confirmDelete(profile.id)"
                           @keydown.esc.prevent="cancelDelete(profile.id)"
                         >
-                          Delete
+                          {{ t('Delete') }}
                         </button>
                       </div>
                     </template>
@@ -1040,7 +1047,7 @@ onUnmounted(() => {
                         v-model="editingName"
                         class="name-input"
                         maxlength="48"
-                        aria-label="Profile name"
+                        :aria-label="t('Profile name')"
                         :disabled="pending"
                         @keydown.enter.prevent="renameProfile"
                         @keydown.esc.prevent="cancelRename(profile.id)"
@@ -1049,16 +1056,16 @@ onUnmounted(() => {
                         <button
                           class="icon-button"
                           :disabled="pending || !editingName.trim()"
-                          aria-label="Save name"
-                          title="Save name"
+                          :aria-label="t('Save name')"
+                          :title="t('Save name')"
                           @click="renameProfile"
                         >
                           <Check :size="15" />
                         </button>
                         <button
                           class="icon-button"
-                          aria-label="Cancel rename"
-                          title="Cancel rename"
+                          :aria-label="t('Cancel rename')"
+                          :title="t('Cancel rename')"
                           @click="cancelRename(profile.id)"
                           @keydown.esc.prevent="cancelRename(profile.id)"
                         >
@@ -1071,7 +1078,7 @@ onUnmounted(() => {
                       <span
                         v-if="profile.id === state.profiles.activeId"
                         class="active-label"
-                        >Active</span
+                        >{{ t('Active') }}</span
                       >
                       <div class="profile-actions">
                         <button
@@ -1080,13 +1087,13 @@ onUnmounted(() => {
                           :disabled="pending"
                           @click="profileAction('switch', profile.id)"
                         >
-                          Switch<ArrowRight :size="14" />
+                          {{ t('Switch') }}<ArrowRight :size="14" />
                         </button>
                         <button
                           class="icon-button rename-button"
                           :disabled="pending"
-                          :aria-label="`Rename ${profile.name}`"
-                          :title="`Rename ${profile.name}`"
+                          :aria-label="t('Rename {0}', profile.name)"
+                          :title="t('Rename {0}', profile.name)"
                           @click="beginRename(profile.id, profile.name)"
                         >
                           <Pencil :size="15" />
@@ -1106,13 +1113,13 @@ onUnmounted(() => {
                             "
                             :aria-label="
                               profile.id === state.profiles.activeId
-                                ? 'Cannot delete active profile'
-                                : `Delete ${profile.name}`
+                                ? t('Cannot delete active profile')
+                                : t('Delete {0}', profile.name)
                             "
                             :title="
                               profile.id === state.profiles.activeId
                                 ? undefined
-                                : `Delete ${profile.name}`
+                                : t('Delete {0}', profile.name)
                             "
                             @click="beginDelete(profile.id)"
                           >
@@ -1124,7 +1131,7 @@ onUnmounted(() => {
                   </div>
                 </TransitionGroup>
                 <p v-if="!state.profiles.entries.length" class="empty">
-                  No profiles.
+                  {{ t('No profiles.') }}
                 </p>
               </template>
             </template>

@@ -51,6 +51,7 @@ import pit12.feature.relation.storage.RelationIoWorker;
 import pit12.feature.relation.storage.RelationStorage;
 import pit12.feature.relation.storage.RelationStore;
 import pit12.runtime.command.CommandRegistry;
+import pit12.runtime.languages.Languages;
 import pit12.runtime.player.TabPresence;
 import pit12.runtime.player.TabPresenceListener;
 import pit12.shared.chat.ChatFeedback;
@@ -70,7 +71,8 @@ public final class RelationFeature implements ClientLifecycle, Relations, TabPre
     private final IdentityResolver resolver;
     private final LongSupplier time;
     private final boolean installAdapters;
-    private final RelationBook book = new RelationBook();
+    private final RelationBook book;
+    private final Languages language;
     private final List<RelationListener> listeners = new ArrayList<>();
     private final List<Runnable> changeListeners = new ArrayList<>();
     private RelationIoWorker worker;
@@ -84,15 +86,20 @@ public final class RelationFeature implements ClientLifecycle, Relations, TabPre
     private List<String> shownLookupProblems = Collections.emptyList();
 
     public RelationFeature(TabPresence presence, Path path, ClientThread client,
-            CommandRegistry commands) {
+            CommandRegistry commands, Languages language) {
         this(presence, path, client, new RelationStore(path), new MojangProfileLookup()::lookup,
-                () -> System.nanoTime() / 1000000L, true);
-        commands.register(new RelationCommand(this, presence, Relation.FRIEND).definition());
-        commands.register(new RelationCommand(this, presence, Relation.ENEMY).definition());
+                () -> System.nanoTime() / 1000000L, true, language);
+        commands.register(
+                new RelationCommand(this, presence, Relation.FRIEND, language).definition());
+        commands.register(
+                new RelationCommand(this, presence, Relation.ENEMY, language).definition());
     }
 
     RelationFeature(TabPresence presence, Path path, ClientThread client, RelationStorage storage,
-            IdentityResolver resolver, LongSupplier time, boolean installAdapters) {
+            IdentityResolver resolver, LongSupplier time, boolean installAdapters,
+            Languages language) {
+        this.language = language;
+        book = new RelationBook(language);
         this.presence = presence;
         this.path = path;
         this.client = client;
@@ -192,11 +199,11 @@ public final class RelationFeature implements ClientLifecycle, Relations, TabPre
     public String readinessProblem() {
         switch (readiness()) {
             case UNAVAILABLE:
-                return "Relations are unavailable";
+                return language.translate("Relations are unavailable");
             case FAILED:
-                return "Relations could not be loaded: " + loadProblem;
+                return language.format("Relations could not be loaded: {0}", loadProblem);
             case LOADING:
-                return "Relations are still loading";
+                return language.translate("Relations are still loading");
             default:
                 return null;
         }
@@ -335,7 +342,8 @@ public final class RelationFeature implements ClientLifecycle, Relations, TabPre
         for (RelationEntry entry : entries) {
             if (entry.playerId() == null ? !pending.add(entry.name().toLowerCase(Locale.ROOT))
                     : !ids.add(entry.playerId())) {
-                return OperationResult.failure(Status.INVALID_VALUE, "Duplicate relation identity");
+                return OperationResult.failure(Status.INVALID_VALUE,
+                        language.translate("Duplicate relation identity"));
             }
         }
         List<RelationEntry> previous = book.entries();

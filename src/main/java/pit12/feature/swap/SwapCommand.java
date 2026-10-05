@@ -18,6 +18,7 @@
  */
 package pit12.feature.swap;
 
+import static pit12.runtime.languages.Languages.source;
 import static pit12.shared.chat.ChatFeedback.reply;
 
 import java.util.ArrayList;
@@ -29,6 +30,7 @@ import net.minecraft.command.ICommandSender;
 import org.lwjgl.input.Keyboard;
 import pit12.runtime.command.CommandNode;
 import pit12.runtime.item.PitEnchantment;
+import pit12.runtime.languages.Languages;
 import pit12.shared.chat.ChatFeedback.Tone;
 
 final class SwapCommand {
@@ -36,9 +38,11 @@ final class SwapCommand {
     private final BindingBook bindings;
     private final SwapConfig config;
     private final AutoSwapController automatic;
+    private final Languages language;
 
     SwapCommand(Minecraft minecraft, BindingBook bindings, SwapConfig config,
-            AutoSwapController automatic) {
+            AutoSwapController automatic, Languages language) {
+        this.language = language;
         this.minecraft = minecraft;
         this.bindings = bindings;
         this.config = config;
@@ -46,20 +50,20 @@ final class SwapCommand {
     }
 
     CommandNode definition() {
-        return CommandNode.command("swap", "Manage swap bindings")
-                .child(operation("bind", "Bind held armor or a hotbar item", this::bind)
+        return CommandNode.command("swap", source("Manage swap bindings"))
+                .child(operation("bind", source("Bind held armor or a hotbar item"), this::bind)
                         .arguments("<key> [slot]", 1, 2).suggests(this::bindSuggestions))
-                .child(operation("unbind", "Remove key or held item bindings", this::unbind)
+                .child(operation("unbind", source("Remove key or held item bindings"), this::unbind)
                         .arguments("[key]", 0, 1).suggests(this::unbindSuggestions))
-                .child(operation("list", "Show swap bindings", this::list))
-                .child(operation("clear", "Clear swap bindings", (sender, args) -> {
+                .child(operation("list", source("Show swap bindings"), this::list))
+                .child(operation("clear", source("Clear swap bindings"), (sender, args) -> {
                     bindings.clear();
                     if (config.bindingMessages.get())
-                        reply(sender, Tone.SUCCESS, "Cleared swap bindings");
-                })).child(operation("status", "Show automatic swap state", this::status))
-                .child(operation("reset", "Reset automatic swap state", (sender, args) -> {
+                        reply(sender, Tone.SUCCESS, language.translate("Cleared swap bindings"));
+                })).child(operation("status", source("Show automatic swap state"), this::status))
+                .child(operation("reset", source("Reset automatic swap state"), (sender, args) -> {
                     automatic.manualReset();
-                    reply(sender, Tone.SUCCESS, "Reset automatic swap state");
+                    reply(sender, Tone.SUCCESS, language.translate("Reset automatic swap state"));
                 })).build();
     }
 
@@ -70,7 +74,7 @@ final class SwapCommand {
                 handler.execute(sender, args);
             } catch (IllegalArgumentException failure) {
                 // Binding operations use IllegalArgumentException for input and readiness failures.
-                reply(sender, Tone.ERROR, failure.getMessage());
+                reply(sender, Tone.ERROR, language.translate(failure.getMessage()));
             }
         });
     }
@@ -82,10 +86,10 @@ final class SwapCommand {
             try {
                 target = Integer.parseInt(args[1]);
             } catch (NumberFormatException failure) {
-                throw new IllegalArgumentException("Hotbar slot must be from 1 to 9");
+                throw new IllegalArgumentException(source("Hotbar slot must be from 1 to 9"));
             }
             if (target < 1 || target > 9) {
-                throw new IllegalArgumentException("Hotbar slot must be from 1 to 9");
+                throw new IllegalArgumentException(source("Hotbar slot must be from 1 to 9"));
             }
         }
         SwapBinding binding =
@@ -93,8 +97,11 @@ final class SwapCommand {
         bindings.bind(binding);
         if (config.bindingMessages.get())
             reply(sender, Tone.SUCCESS,
-                    "Bound " + (config.messageDetails.get() ? binding.display(true) + " to " : "")
-                            + Keyboard.getKeyName(binding.key) + " (" + binding.targetName() + ")");
+                    config.messageDetails.get()
+                            ? language.format("Bound {0} to {1} ({2})", binding.display(true),
+                                    Keyboard.getKeyName(binding.key), binding.targetName())
+                            : language.format("Bound {0} ({1})", Keyboard.getKeyName(binding.key),
+                                    binding.targetName()));
     }
 
     private void unbind(ICommandSender sender, String[] args) {
@@ -103,18 +110,19 @@ final class SwapCommand {
             requirePlayer();
             held = ItemIdentity.read(minecraft.thePlayer.getHeldItem());
             if (held == null)
-                throw new IllegalArgumentException("Hold an item to unbind");
+                throw new IllegalArgumentException(source("Hold an item to unbind"));
         }
         int removed = bindings.unbind(args.length == 1 ? key(args[0]) : 0, held);
         if (removed == 0 || config.bindingMessages.get())
             reply(sender, removed == 0 ? Tone.WARNING : Tone.SUCCESS,
-                    removed == 0 ? "No matching bindings" : "Removed " + removed + " binding(s)");
+                    removed == 0 ? language.translate("No matching bindings")
+                            : language.format("Removed {0} binding(s)", removed));
     }
 
     private void list(ICommandSender sender, String[] args) {
         if (bindings.readinessProblem() != null)
             throw new IllegalArgumentException(bindings.readinessProblem());
-        reply(sender, Tone.INFO, "Swap bindings: " + bindings.count());
+        reply(sender, Tone.INFO, language.format("Swap bindings: {0}", bindings.count()));
         for (SwapBinding entry : bindings.entries())
             reply(sender, Tone.INFO, Keyboard.getKeyName(entry.key) + ": "
                     + entry.display(config.messageDetails.get()) + " -> " + entry.targetName());
@@ -122,31 +130,34 @@ final class SwapCommand {
 
     private void status(ICommandSender sender, String[] args) {
         reply(sender, Tone.INFO,
-                "Automatic swap: " + (config.autoSwap.get() ? "enabled" : "disabled"));
-        reply(sender, Tone.INFO,
-                "Escape Pod: " + state(PitEnchantment.Escape_Pod, config.escapePod.get()));
-        reply(sender, Tone.INFO, "Phoenix: " + state(PitEnchantment.Phoenix, config.phoenix.get()));
+                language.format("Automatic swap: {0}",
+                        config.autoSwap.get() ? language.translate("enabled")
+                                : language.translate("disabled")));
+        reply(sender, Tone.INFO, language.format("Escape Pod: {0}",
+                state(PitEnchantment.Escape_Pod, config.escapePod.get())));
+        reply(sender, Tone.INFO, language.format("Phoenix: {0}",
+                state(PitEnchantment.Phoenix, config.phoenix.get())));
     }
 
     private void requirePlayer() {
         if (minecraft.thePlayer == null)
-            throw new IllegalArgumentException("Join a world first");
+            throw new IllegalArgumentException(source("Join a world first"));
     }
 
     private String state(PitEnchantment type, boolean enabled) {
         if (!enabled)
-            return "disabled";
+            return language.translate("disabled");
         if (automatic.used(type))
-            return "used";
+            return language.translate("used");
         if (automatic.active(type))
-            return "equipped";
-        return "unused";
+            return language.translate("equipped");
+        return language.translate("unused");
     }
 
-    private static int key(String name) {
+    private int key(String name) {
         int code = Keyboard.getKeyIndex(name.toUpperCase(Locale.ROOT));
         if (code == Keyboard.KEY_NONE)
-            throw new IllegalArgumentException("Unknown keyboard key: " + name);
+            throw new IllegalArgumentException(language.format("Unknown keyboard key: {0}", name));
         return code;
     }
 

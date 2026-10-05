@@ -33,6 +33,7 @@ import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.util.IChatComponent;
 import org.junit.Test;
+import pit12.runtime.languages.Languages;
 import pit12.shared.concurrent.ClientThread;
 
 public final class CommandRegistryTest {
@@ -47,8 +48,8 @@ public final class CommandRegistryTest {
                         }
                         throw new UnsupportedOperationException(method.getName());
                     });
-    private final CommandRegistry registry =
-            new CommandRegistry(ClientThread.current(), (owner, command) -> installed.add(command));
+    private final CommandRegistry registry = new CommandRegistry(ClientThread.current(),
+            (owner, command) -> installed.add(command), new Languages(ClientThread.current()));
 
     @Test
     public void groupsShowHelpAndLeavesExecuteFromBothEntryPoints() throws Exception {
@@ -180,7 +181,7 @@ public final class CommandRegistryTest {
             attempts.add(command);
             if (attempts.size() == 2)
                 throw new IllegalStateException("Registration failed");
-        });
+        }, new Languages(ClientThread.current()));
         CommandNode action = CommandNode.command("action", "Run an action").build();
         partial.register(action, true);
         try {

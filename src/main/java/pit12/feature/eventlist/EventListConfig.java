@@ -18,6 +18,8 @@
  */
 package pit12.feature.eventlist;
 
+import static pit12.runtime.languages.Languages.source;
+
 import java.util.EnumMap;
 import java.util.Map;
 import pit12.runtime.config.BooleanSetting;
@@ -41,41 +43,45 @@ public final class EventListConfig extends FeatureConfig {
     private final Map<EventType, BooleanSetting> shownEvents = new EnumMap<>(EventType.class);
 
     public EventListConfig() {
-        super("eventlist", "Event List", new ConfigCategory("render", "Render", 100),
-                "Shows upcoming Pit events and their current stages.");
-        subcategory("display", "Display");
-        hud = hudConfig("event_list", "Event List", HudAnchor.TOP_RIGHT, -6, 6, true);
-        eventCount = integerSliderSetting("event_count", "Event count",
-                "Sets the number of event rows. The day and night row is separate.", 6, 1, 20, 1);
-        showDayNight = booleanSetting("show_day_night", "Show day and night",
-                "Shows the Pit day and night cycle above the events.", true);
-        showIcons = booleanSetting("show_icons", "Show status icons",
-                "Marks upcoming major and minor events, preparation, and active events.", true);
-        showColors = booleanSetting("show_colors", "Show event colors",
-                "Uses each event's color for its name.", true);
-        zeroPadding = booleanSetting("zero_padding", "Pad time with zeros",
-                "Shows two digits for each part of a countdown.", true);
-        timeFormat = choiceSetting("time_format", "Time format", "Sets how event times are shown.",
-                0, new ChoiceSetting.Choice(0, "Countdown"),
-                new ChoiceSetting.Choice(1, "Local time (24-hour)"),
-                new ChoiceSetting.Choice(2, "Countdown and local time"));
-        subcategory("filter", "Filter");
-        subsubcategory("major_events", "Major events");
-        showMajorEvents = booleanSetting("show_major_events", "Show major events",
-                "Shows major events in the list.", true);
+        super("eventlist", source("Event List"),
+                new ConfigCategory("render", source("Render"), 100),
+                source("Shows upcoming Pit events and their current stages."));
+        subcategory("display", source("Display"));
+        hud = hudConfig("event_list", source("Event List"), HudAnchor.TOP_RIGHT, -6, 6, true);
+        eventCount = integerSliderSetting("event_count", source("Event count"),
+                source("Sets the number of event rows. The day and night row is separate."), 6, 1,
+                20, 1);
+        showDayNight = booleanSetting("show_day_night", source("Show day and night"),
+                source("Shows the Pit day and night cycle above the events."), true);
+        showIcons = booleanSetting("show_icons", source("Show status icons"),
+                source("Marks upcoming major and minor events, preparation, and active events."),
+                true);
+        showColors = booleanSetting("show_colors", source("Show event colors"),
+                source("Uses each event's color for its name."), true);
+        zeroPadding = booleanSetting("zero_padding", source("Pad time with zeros"),
+                source("Shows two digits for each part of a countdown."), true);
+        timeFormat = choiceSetting("time_format", source("Time format"),
+                source("Sets how event times are shown."), 0,
+                new ChoiceSetting.Choice(0, source("Countdown")),
+                new ChoiceSetting.Choice(1, source("Local time (24-hour)")),
+                new ChoiceSetting.Choice(2, source("Countdown and local time")));
+        subcategory("filter", source("Filter"));
+        subsubcategory("major_events", source("Major events"));
+        showMajorEvents = booleanSetting("show_major_events", source("Show major events"),
+                source("Shows major events in the list."), true);
         for (EventType type : EventType.values()) {
             if (type.major) {
                 shownEvents.put(type, booleanSetting("show_" + type.id, type.displayName,
-                        "Shows " + type.displayName + " in the list.", true));
+                        source("Shows this event in the list."), true));
             }
         }
-        subsubcategory("minor_events", "Minor events");
-        showMinorEvents = booleanSetting("show_minor_events", "Show minor events",
-                "Shows minor events in the list.", true);
+        subsubcategory("minor_events", source("Minor events"));
+        showMinorEvents = booleanSetting("show_minor_events", source("Show minor events"),
+                source("Shows minor events in the list."), true);
         for (EventType type : EventType.values()) {
             if (!type.major) {
                 shownEvents.put(type, booleanSetting("show_" + type.id, type.displayName,
-                        "Shows " + type.displayName + " in the list.", true));
+                        source("Shows this event in the list."), true));
             }
         }
     }

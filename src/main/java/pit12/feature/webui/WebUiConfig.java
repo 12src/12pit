@@ -18,25 +18,38 @@
  */
 package pit12.feature.webui;
 
+import static pit12.runtime.languages.Languages.source;
+
 import org.lwjgl.input.Keyboard;
+import pit12.runtime.config.ChoiceSetting;
 import pit12.runtime.config.ConfigCategory;
 import pit12.runtime.config.FeatureConfig;
 import pit12.runtime.config.IntegerSetting;
+import pit12.runtime.languages.Languages;
 
 public final class WebUiConfig extends FeatureConfig {
     private final IntegerSetting keybind;
+    private final ChoiceSetting language;
 
-    public WebUiConfig() {
-        super("webui", "Settings", new ConfigCategory("interface", "Interface", Integer.MAX_VALUE),
-                "", false);
-        colorSetting("gui_color", "Accent color", "Controls the interface accent.", 0x7BADE2);
-        booleanSetting("show_details", "Show details",
-                "Shows descriptions for features and settings.", false);
-        keybind = keybindSetting("keybind", "Open Web UI key", "Opens the web interface.",
-                Keyboard.KEY_RSHIFT);
+    public WebUiConfig(Languages languages) {
+        super("webui", source("Settings"),
+                new ConfigCategory("interface", source("Interface"), Integer.MAX_VALUE), "", false);
+        language = choiceSetting("language", source("Language"),
+                source("Sets the language for the interface, commands, and HUD."), 0,
+                languages.choices());
+        colorSetting("gui_color", source("Accent color"), source("Controls the interface accent."),
+                0x7BADE2);
+        booleanSetting("show_details", source("Show details"),
+                source("Shows descriptions for features and settings."), false);
+        keybind = keybindSetting("keybind", source("Open Web UI key"),
+                source("Opens the web interface."), Keyboard.KEY_RSHIFT);
     }
 
     public IntegerSetting keybind() {
         return keybind;
+    }
+
+    public ChoiceSetting language() {
+        return language;
     }
 }

@@ -18,6 +18,8 @@
  */
 package pit12.feature.playerlist;
 
+import static pit12.runtime.languages.Languages.source;
+
 import pit12.runtime.config.BooleanSetting;
 import pit12.runtime.config.ChoiceSetting;
 import pit12.runtime.config.ConfigCategory;
@@ -45,13 +47,14 @@ public final class PlayerListConfig extends FeatureConfig {
     private final HudConfig hud;
 
     public PlayerListConfig() {
-        super("playerlist", "Player List", new ConfigCategory("render", "Render", 100),
-                "Shows loaded player equipment and direction in a compact HUD.");
-        subcategory("display", "Display");
-        hud = hudConfig("player_list", "Player List", HudAnchor.TOP_LEFT, 6, 6, true);
-        subsubcategory("enchantments", "Enchantments");
-        enchantmentFormat = choiceSetting("enchantment_format", "Enchantment format",
-                "Controls how enchantment names and levels are shown.",
+        super("playerlist", source("Player List"),
+                new ConfigCategory("render", source("Render"), 100),
+                source("Shows loaded player equipment and direction in a compact HUD."));
+        subcategory("display", source("Display"));
+        hud = hudConfig("player_list", source("Player List"), HudAnchor.TOP_LEFT, 6, 6, true);
+        subsubcategory("enchantments", source("Enchantments"));
+        enchantmentFormat = choiceSetting("enchantment_format", source("Enchantment format"),
+                source("Controls how enchantment names and levels are shown."),
                 ENCHANTMENT_FORMAT_BOLD_LEVELS,
                 new ChoiceSetting.Choice(ENCHANTMENT_FORMAT_BOLD_LEVELS,
                         "§4§lREG §f§l3§7 / §6§lABS §f§l2"),
@@ -59,31 +62,33 @@ public final class PlayerListConfig extends FeatureConfig {
                         "§4REG §f3§7 / §6ABS §f2"),
                 new ChoiceSetting.Choice(ENCHANTMENT_FORMAT_HIDE_LEVEL_THREE,
                         "§4§lREG§7 / §6§lABS §f§l2"),
-                new ChoiceSetting.Choice(ENCHANTMENT_FORMAT_NAMES_ONLY, "§4§lREG§7 / §6§lABS"));
-        showHeldItem = booleanSetting("show_held_item", "Show held item enchantments",
-                "Shows the held item's Pit enchantments.", false);
-        showLeggings = booleanSetting("show_leggings", "Show leggings enchantments",
-                "Shows the leggings' Pit enchantments.", true);
-        subsubcategory("player_information", "Player information");
-        showDistance = booleanSetting("show_distance", "Show player distance",
-                "Shows the distance to each loaded player.", true);
-        showDirection = booleanSetting("show_direction", "Show player direction",
-                "Shows the continuous direction to each loaded player.", true);
-        showSpawn = booleanSetting("show_spawn", "Show spawn marker",
-                "Shows SPAWN instead of distance and direction for players in spawn.", true);
-        subcategory("groups", "Groups");
-        showGroupName = booleanSetting("show_group_name", "Show group names",
-                "Shows the name above each equipment group.", true);
-        showFriend = booleanSetting("show_friend", "Show Friend group",
-                "Shows friends in the player list.", true);
-        showEnemy = booleanSetting("show_enemy", "Show Enemy group",
-                "Shows enemies in the player list.", true);
-        showRegularity = booleanSetting("show_regularity", "Show Regularity group",
-                "Shows the Regularity equipment group.", true);
-        showDark = booleanSetting("show_dark", "Show Dark group", "Shows the Dark equipment group.",
+                new ChoiceSetting.Choice(ENCHANTMENT_FORMAT_NAMES_ONLY,
+                        "§4§lREG§7 / §6§lABS"));
+        showHeldItem = booleanSetting("show_held_item", source("Show held item enchantments"),
+                source("Shows the held item's Pit enchantments."), false);
+        showLeggings = booleanSetting("show_leggings", source("Show leggings enchantments"),
+                source("Shows the leggings' Pit enchantments."), true);
+        subsubcategory("player_information", source("Player information"));
+        showDistance = booleanSetting("show_distance", source("Show player distance"),
+                source("Shows the distance to each loaded player."), true);
+        showDirection = booleanSetting("show_direction", source("Show player direction"),
+                source("Shows the continuous direction to each loaded player."), true);
+        showSpawn = booleanSetting("show_spawn", source("Show spawn marker"),
+                source("Shows SPAWN instead of distance and direction for players in spawn."),
                 true);
-        showBountyHunter = booleanSetting("show_bounty_hunter", "Show Bounty Hunter group",
-                "Shows the Bounty Hunter equipment group.", false);
+        subcategory("groups", source("Groups"));
+        showGroupName = booleanSetting("show_group_name", source("Show group names"),
+                source("Shows the name above each equipment group."), true);
+        showFriend = booleanSetting("show_friend", source("Show Friend group"),
+                source("Shows friends in the player list."), true);
+        showEnemy = booleanSetting("show_enemy", source("Show Enemy group"),
+                source("Shows enemies in the player list."), true);
+        showRegularity = booleanSetting("show_regularity", source("Show Regularity group"),
+                source("Shows the Regularity equipment group."), true);
+        showDark = booleanSetting("show_dark", source("Show Dark group"),
+                source("Shows the Dark equipment group."), true);
+        showBountyHunter = booleanSetting("show_bounty_hunter", source("Show Bounty Hunter group"),
+                source("Shows the Bounty Hunter equipment group."), false);
     }
 
     public boolean showHeldItem() {

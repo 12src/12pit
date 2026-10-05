@@ -18,6 +18,8 @@
  */
 package pit12.feature.swap;
 
+import static pit12.runtime.languages.Languages.source;
+
 import net.minecraft.item.ItemArmor;
 import net.minecraft.item.ItemStack;
 import org.lwjgl.input.Keyboard;
@@ -35,7 +37,7 @@ final class SwapBinding {
             String details) {
         if (key <= 0 || key >= Keyboard.KEYBOARD_SIZE || Keyboard.getKeyName(key) == null
                 || target < 1 || target > (equipment ? 4 : 9) || name.isEmpty()) {
-            throw new IllegalArgumentException("Invalid swap binding");
+            throw new IllegalArgumentException(source("Invalid swap binding"));
         }
         this.key = key;
         this.identity = identity;
@@ -47,15 +49,16 @@ final class SwapBinding {
 
     static SwapBinding create(int key, ItemStack stack, int hotbarTarget) {
         if (stack == null)
-            throw new IllegalArgumentException("Hold an item to bind");
+            throw new IllegalArgumentException(source("Hold an item to bind"));
         int armor = armorTarget(stack);
         if (hotbarTarget == 0 && armor == 0) {
-            throw new IllegalArgumentException("Hold armor or specify a hotbar slot from 1 to 9");
+            throw new IllegalArgumentException(
+                    source("Hold armor or specify a hotbar slot from 1 to 9"));
         }
         String details = PitEnchantmentReader.read(stack).formatDisplayNames();
         ItemIdentity identity = ItemIdentity.read(stack);
         if (identity == null)
-            throw new IllegalArgumentException("Held item could not be identified");
+            throw new IllegalArgumentException(source("Held item could not be identified"));
         String name = stack.getDisplayName();
         return new SwapBinding(key, identity, hotbarTarget == 0,
                 hotbarTarget == 0 ? armor : hotbarTarget, name.isEmpty() ? identity.item : name,

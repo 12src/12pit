@@ -18,6 +18,8 @@
  */
 package pit12.feature.swap;
 
+import static pit12.runtime.languages.Languages.source;
+
 import pit12.runtime.config.BooleanSetting;
 import pit12.runtime.config.ChoiceSetting;
 import pit12.runtime.config.ConfigCategory;
@@ -55,77 +57,82 @@ public final class SwapConfig extends FeatureConfig {
     final IntegerSetting pantsRestoreThreshold;
 
     public SwapConfig() {
-        super("swap", "Swap", new ConfigCategory("player", "Player", 50),
-                "Swaps armor and hotbar items manually, when poisoned or at low health.");
-        subcategory("general", "General");
-        rightClick = booleanSetting("right_click", "Right click swap",
-                "Right-click held armor to replace the armor in its slot.", true);
-        inventoryDisplay = choiceSetting("inventory_display", "Inventory visibility",
-                "Shows or hides the inventory during swaps.", 0,
-                new ChoiceSetting.Choice(0, "Hidden"), new ChoiceSetting.Choice(1, "Visible"));
-        openDelay = integerSliderSetting("open_delay", "Open delay",
-                "Ticks to wait after opening the inventory before the first click. Set to 0 for no wait.",
+        super("swap", source("Swap"), new ConfigCategory("player", source("Player"), 50),
+                source("Swaps armor and hotbar items manually, when poisoned or at low health."));
+        subcategory("general", source("General"));
+        rightClick = booleanSetting("right_click", source("Right click swap"),
+                source("Right-click held armor to replace the armor in its slot."), true);
+        inventoryDisplay = choiceSetting("inventory_display", source("Inventory visibility"),
+                source("Shows or hides the inventory during swaps."), 0,
+                new ChoiceSetting.Choice(0, source("Hidden")),
+                new ChoiceSetting.Choice(1, source("Visible")));
+        openDelay = integerSliderSetting("open_delay", source("Open delay"), source(
+                "Ticks to wait after opening the inventory before the first click. Set to 0 for no wait."),
                 2, 0, 10, 1);
-        swapDelay = integerSliderSetting("swap_delay", "Swap delay",
-                "Ticks between clicks for right click and automatic swaps.", 1, 0, 10, 1);
-        closeDelay = integerSliderSetting("close_delay", "Close delay",
-                "Ticks to wait after the last request finishes before closing the inventory.", 1, 0,
-                10, 1);
-        swapMessages = booleanSetting("swap_messages", "Swap messages",
-                "Shows a message after items are swapped or unequipped.", true);
-        workspace = integerSliderSetting("workspace_slot", "Transfer slot",
-                "Hotbar slot used to move armor from the inventory.", 1, 1, 9, 1);
-        restoreWorkspace = booleanSetting("restore_workspace", "Restore transfer slot",
-                "Restores the transfer slot's contents after moving armor. Slot bindings take priority.",
+        swapDelay = integerSliderSetting("swap_delay", source("Swap delay"),
+                source("Ticks between clicks for right click and automatic swaps."), 1, 0, 10, 1);
+        closeDelay = integerSliderSetting("close_delay", source("Close delay"), source(
+                "Ticks to wait after the last request finishes before closing the inventory."), 1,
+                0, 10, 1);
+        swapMessages = booleanSetting("swap_messages", source("Swap messages"),
+                source("Shows a message after items are swapped or unequipped."), true);
+        workspace = integerSliderSetting("workspace_slot", source("Transfer slot"),
+                source("Hotbar slot used to move armor from the inventory."), 1, 1, 9, 1);
+        restoreWorkspace = booleanSetting("restore_workspace", source("Restore transfer slot"),
+                source("Restores the transfer slot's contents after moving armor. Slot bindings take priority."),
                 true);
-        preferEmpty = booleanSetting("prefer_empty_hotbar", "Prefer empty hotbar slot",
-                "Uses the first empty hotbar slot as the transfer slot. Otherwise uses the selected transfer slot.",
+        preferEmpty = booleanSetting("prefer_empty_hotbar", source("Prefer empty hotbar slot"),
+                source("Uses the first empty hotbar slot as the transfer slot. Otherwise uses the selected transfer slot."),
                 true);
-        subcategory("bindings", "Bindings");
-        unequipKey = keybindSetting("unequip_all_key", "Unequip all",
-                "Moves worn armor into free inventory slots.", 0);
-        bindingDelay = integerSliderSetting("binding_delay", "Binding delay",
-                "Ticks between clicks for bindings and unequipping.", 1, 0, 10, 1);
-        bindingMessages = booleanSetting("binding_messages", "Binding messages",
-                "Shows messages when bindings are added, removed or cleared.", true);
-        messageDetails = booleanSetting("message_details", "Details",
-                "Shows item names and enchantments in binding and swap messages.", false);
-        highlight = booleanSetting("highlight_bindings", "Show binding keys",
-                "Shows keys on bound items outside their target slots.", true);
-        subcategory("automatic_swap", "Automatic swap");
-        autoSwap = booleanSetting("auto_swap", "Automatic swap",
-                "Automatically swaps items when poisoned or at low health.", false);
+        subcategory("bindings", source("Bindings"));
+        unequipKey = keybindSetting("unequip_all_key", source("Unequip all"),
+                source("Moves worn armor into free inventory slots."), 0);
+        bindingDelay = integerSliderSetting("binding_delay", source("Binding delay"),
+                source("Ticks between clicks for bindings and unequipping."), 1, 0, 10, 1);
+        bindingMessages = booleanSetting("binding_messages", source("Binding messages"),
+                source("Shows messages when bindings are added, removed or cleared."), true);
+        messageDetails = booleanSetting("message_details", source("Details"),
+                source("Shows item names and enchantments in binding and swap messages."), false);
+        highlight = booleanSetting("highlight_bindings", source("Show binding keys"),
+                source("Shows keys on bound items outside their target slots."), true);
+        subcategory("automatic_swap", source("Automatic swap"));
+        autoSwap = booleanSetting("auto_swap", source("Automatic swap"),
+                source("Automatically swaps items when poisoned or at low health."), false);
         subsubcategory("venom", "Venom");
-        venomArmor = booleanSetting("venom_armor", "Swap diamond armor",
-                "Equips diamond leggings and boots when poisoned.", false);
-        venomSpade = booleanSetting("venom_spade", "Swap Combat Spade",
-                "Moves a Combat Spade to the selected hotbar slot when poisoned.", false);
-        skipVenomPants = booleanSetting("skip_venom_pants", "Skip while wearing Venom",
-                "Skips poison swaps while wearing Combo Venom leggings.", false);
-        spadeSlot = integerSliderSetting("spade_slot", "Combat Spade slot",
-                "Hotbar slot for the Combat Spade.", 1, 1, 9, 1);
+        venomArmor = booleanSetting("venom_armor", source("Swap diamond armor"),
+                source("Equips diamond leggings and boots when poisoned."), false);
+        venomSpade = booleanSetting("venom_spade", source("Swap Combat Spade"),
+                source("Moves a Combat Spade to the selected hotbar slot when poisoned."), false);
+        skipVenomPants = booleanSetting("skip_venom_pants", source("Skip while wearing Venom"),
+                source("Skips poison swaps while wearing Combo Venom leggings."), false);
+        spadeSlot = integerSliderSetting("spade_slot", source("Combat Spade slot"),
+                source("Hotbar slot for the Combat Spade."), 1, 1, 9, 1);
         subsubcategory("health", "Pod & Phoenix");
-        escapePod = booleanSetting("escape_pod", "Use Escape Pod",
-                "Equips Escape Pod leggings at or below their health threshold.", true);
-        podThreshold = integerSliderSetting("pod_threshold", "Escape Pod threshold",
-                "Health points for Escape Pod swaps. Two points equal one heart.", 6, 0, 20, 1);
-        phoenix = booleanSetting("phoenix", "Use Phoenix",
-                "Equips Phoenix leggings at or below their health threshold.", true);
-        phoenixThreshold = integerSliderSetting("phoenix_threshold", "Phoenix threshold",
-                "Health points for Phoenix swaps. Two points equal one heart.", 6, 0, 20, 1);
-        pantsPriority = choiceSetting("pants_priority", "Prefer first",
-                "Chooses which unused enchantment to equip when both are available and eligible.",
+        escapePod = booleanSetting("escape_pod", source("Use Escape Pod"),
+                source("Equips Escape Pod leggings at or below their health threshold."), true);
+        podThreshold = integerSliderSetting("pod_threshold", source("Escape Pod threshold"),
+                source("Health points for Escape Pod swaps. Two points equal one heart."), 6, 0, 20,
+                1);
+        phoenix = booleanSetting("phoenix", source("Use Phoenix"),
+                source("Equips Phoenix leggings at or below their health threshold."), true);
+        phoenixThreshold = integerSliderSetting("phoenix_threshold", source("Phoenix threshold"),
+                source("Health points for Phoenix swaps. Two points equal one heart."), 6, 0, 20,
+                1);
+        pantsPriority = choiceSetting("pants_priority", source("Prefer first"), source(
+                "Chooses which unused enchantment to equip when both are available and eligible."),
                 0, new ChoiceSetting.Choice(0, "Escape Pod"),
                 new ChoiceSetting.Choice(1, "Phoenix"));
-        highLives = booleanSetting("phoenix_high_lives", "Prefer high Lives",
-                "Chooses Phoenix leggings with the most remaining Lives.", true);
-        restorePants = booleanSetting("restore_pants", "Restore leggings",
-                "Restores the leggings worn before an automatic health swap.", true);
-        pantsRestoreMode = choiceSetting("pants_restore_mode", "Restore mode",
-                "Restores leggings after health recovers or the equipped enchantment triggers.", 0,
-                new ChoiceSetting.Choice(0, "Health"), new ChoiceSetting.Choice(1, "Used"));
-        pantsRestoreThreshold = integerSliderSetting("pants_restore_threshold", "Restore threshold",
-                "Health points needed to restore leggings in Health mode. Health must also exceed the trigger threshold.",
+        highLives = booleanSetting("phoenix_high_lives", source("Prefer high Lives"),
+                source("Chooses Phoenix leggings with the most remaining Lives."), true);
+        restorePants = booleanSetting("restore_pants", source("Restore leggings"),
+                source("Restores the leggings worn before an automatic health swap."), true);
+        pantsRestoreMode = choiceSetting("pants_restore_mode", source("Restore mode"), source(
+                "Restores leggings after health recovers or the equipped enchantment triggers."), 0,
+                new ChoiceSetting.Choice(0, source("Health")),
+                new ChoiceSetting.Choice(1, source("Used")));
+        pantsRestoreThreshold = integerSliderSetting("pants_restore_threshold",
+                source("Restore threshold"),
+                source("Health points needed to restore leggings in Health mode. Health must also exceed the trigger threshold."),
                 6, 0, 20, 1);
     }
 

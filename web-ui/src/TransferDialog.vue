@@ -17,6 +17,7 @@ You should have received a copy of the GNU General Public License
 along with 12pit. If not, see <https://www.gnu.org/licenses/>.
 -->
 <script setup lang="ts">
+import { t } from './languages'
 import { computed, nextTick, onMounted, ref } from 'vue'
 import {
   ChevronDown,
@@ -140,20 +141,20 @@ async function readFile(event: Event) {
   filename.value = ''
   error.value = ''
   if (file.size > 3 * 1024 * 1024) {
-    error.value = 'File is too large'
+    error.value = t('File is too large')
     return
   }
   busy.value = true
   try {
     const parsed: unknown = JSON.parse(await file.text())
     if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-      throw new Error('File must be a JSON object')
+      throw new Error(t('File must be a JSON object'))
     }
     fileData.value = parsed as Record<string, unknown>
     filename.value = file.name
     await refreshPreview()
   } catch (cause) {
-    error.value = cause instanceof Error ? cause.message : 'Cannot read file'
+    error.value = cause instanceof Error ? cause.message : t('Cannot read file')
   } finally {
     busy.value = false
     if (fileInput.value) fileInput.value.value = ''
@@ -177,7 +178,8 @@ async function refreshPreview() {
     )
   } catch (cause) {
     preview.value = null
-    error.value = cause instanceof Error ? cause.message : 'Cannot preview file'
+    error.value =
+      cause instanceof Error ? cause.message : t('Cannot preview file')
   } finally {
     busy.value = false
   }
@@ -220,21 +222,21 @@ async function submit() {
       emit('imported', next)
     }
   } catch (cause) {
-    error.value = cause instanceof Error ? cause.message : 'Transfer failed'
+    error.value = cause instanceof Error ? cause.message : t('Transfer failed')
   } finally {
     busy.value = false
   }
 }
 
 function detail(entry: RelationEntry) {
-  return `${entry.name}, ${entry.relation === 'FRIEND' ? 'Friend' : 'Enemy'}${entry.uuid ? `, ${entry.uuid}` : ''}`
+  return `${entry.name}, ${entry.relation === 'FRIEND' ? t('Friend') : t('Enemy')}${entry.uuid ? `, ${entry.uuid}` : ''}`
 }
 
 function conflictLabel(row: RelationConflict) {
   return {
-    group: 'Different group',
-    identity: 'Different UUID',
-    name: 'Different name',
+    group: t('Different group'),
+    identity: t('Different UUID'),
+    name: t('Different name'),
   }[row.kind]
 }
 
@@ -270,17 +272,17 @@ function onKeydown(event: KeyboardEvent) {
       :class="{ 'has-conflicts': selectedConflicts.length > 0 }"
       role="dialog"
       aria-modal="true"
-      :aria-label="mode === 'export' ? 'Export data' : 'Import data'"
+      :aria-label="mode === 'export' ? t('Export data') : t('Import data')"
       tabindex="-1"
       @keydown="onKeydown"
     >
       <header class="transfer-header">
-        <h2>{{ mode === 'export' ? 'Export data' : 'Import data' }}</h2>
+        <h2>{{ mode === 'export' ? t('Export data') : t('Import data') }}</h2>
         <button
           class="icon-button"
           type="button"
-          aria-label="Close"
-          title="Close"
+          :aria-label="t('Close')"
+          :title="t('Close')"
           :disabled="busy"
           @click="emit('close')"
         >
@@ -307,15 +309,15 @@ function onKeydown(event: KeyboardEvent) {
             :disabled="busy"
             @click="fileInput?.click()"
           >
-            Choose file
+            {{ t('Choose file') }}
           </button>
           <span v-if="filename">{{ filename }}</span>
           <button
             v-if="fileData"
             type="button"
             class="icon-button"
-            aria-label="Refresh preview"
-            title="Refresh preview"
+            :aria-label="t('Refresh preview')"
+            :title="t('Refresh preview')"
             :disabled="busy"
             @click="refreshPreview"
           >
@@ -329,7 +331,7 @@ function onKeydown(event: KeyboardEvent) {
               type="button"
               class="transfer-expand"
               :aria-expanded="expandedProfiles"
-              aria-label="Toggle profiles"
+              :aria-label="t('Toggle profiles')"
               @click="expandedProfiles = !expandedProfiles"
             >
               <ChevronDown v-if="expandedProfiles" :size="16" />
@@ -348,9 +350,8 @@ function onKeydown(event: KeyboardEvent) {
                 "
                 :disabled="!availableProfiles.length || busy"
                 @change="toggleProfiles"
-              />
-              Profiles
-              <span
+              />{{ t('Profiles')
+              }}<span
                 >{{ selectedProfiles.length }}/{{
                   availableProfiles.length
                 }}</span
@@ -367,9 +368,9 @@ function onKeydown(event: KeyboardEvent) {
               />
               {{ profile.name }}
             </label>
-            <span v-if="!availableProfiles.length" class="transfer-empty"
-              >No profiles</span
-            >
+            <span v-if="!availableProfiles.length" class="transfer-empty">{{
+              t('No profiles')
+            }}</span>
           </div>
 
           <div class="transfer-parent">
@@ -377,7 +378,7 @@ function onKeydown(event: KeyboardEvent) {
               type="button"
               class="transfer-expand"
               :aria-expanded="expandedRelations"
-              aria-label="Toggle relations"
+              :aria-label="t('Toggle relations')"
               @click="expandedRelations = !expandedRelations"
             >
               <ChevronDown v-if="expandedRelations" :size="16" />
@@ -396,9 +397,8 @@ function onKeydown(event: KeyboardEvent) {
                 "
                 :disabled="!availableRelations.length || busy"
                 @change="toggleRelations"
-              />
-              Relations
-              <span
+              />{{ t('Relations')
+              }}<span
                 >{{ selectedRelations.length }}/{{
                   availableRelations.length
                 }}</span
@@ -413,14 +413,14 @@ function onKeydown(event: KeyboardEvent) {
                 :disabled="busy"
                 @change="changeRelation(type)"
               />
-              {{ type === 'FRIEND' ? 'Friends' : 'Enemies' }}
+              {{ type === 'FRIEND' ? t('Friends') : t('Enemies') }}
               <span v-if="mode === 'import'">{{
                 preview?.relations[type]
               }}</span>
             </label>
-            <span v-if="!availableRelations.length" class="transfer-empty"
-              >No relations</span
-            >
+            <span v-if="!availableRelations.length" class="transfer-empty">{{
+              t('No relations')
+            }}</span>
           </div>
           <div class="transfer-parent transfer-leaf">
             <label>
@@ -428,9 +428,8 @@ function onKeydown(event: KeyboardEvent) {
                 v-model="selectedSwap"
                 type="checkbox"
                 :disabled="busy || !availableSwap"
-              />
-              Swap bindings
-            </label>
+              />{{ t('Swap bindings') }}</label
+            >
           </div>
         </div>
 
@@ -440,7 +439,7 @@ function onKeydown(event: KeyboardEvent) {
           <div
             class="transfer-mode"
             role="group"
-            aria-label="Relation import mode"
+            :aria-label="t('Relation import mode')"
           >
             <button
               type="button"
@@ -449,7 +448,7 @@ function onKeydown(event: KeyboardEvent) {
               :disabled="busy"
               @click="relationMode = 'merge'"
             >
-              Merge
+              {{ t('Merge') }}
             </button>
             <button
               type="button"
@@ -458,14 +457,14 @@ function onKeydown(event: KeyboardEvent) {
               :disabled="busy"
               @click="relationMode = 'replace'"
             >
-              Replace
+              {{ t('Replace') }}
             </button>
           </div>
 
           <section v-if="selectedConflicts.length" class="transfer-conflicts">
             <div class="transfer-conflict-heading">
               <h3>
-                Conflicts <span>{{ selectedConflicts.length }}</span>
+                {{ t('Conflicts') }}<span>{{ selectedConflicts.length }}</span>
               </h3>
               <div>
                 <button
@@ -477,7 +476,7 @@ function onKeydown(event: KeyboardEvent) {
                     )
                   "
                 >
-                  Keep local for all
+                  {{ t('Keep local for all') }}
                 </button>
                 <button
                   type="button"
@@ -488,7 +487,7 @@ function onKeydown(event: KeyboardEvent) {
                     )
                   "
                 >
-                  Use file for all
+                  {{ t('Use file for all') }}
                 </button>
               </div>
             </div>
@@ -500,12 +499,14 @@ function onKeydown(event: KeyboardEvent) {
               >
                 <strong>{{ row.incoming.name }}</strong>
                 <span class="transfer-kind">{{ conflictLabel(row) }}</span>
-                <small>Local: {{ row.local.map(detail).join('; ') }}</small>
-                <small>File: {{ detail(row.incoming) }}</small>
+                <small>{{
+                  t('Local: {0}', row.local.map(detail).join('; '))
+                }}</small>
+                <small>{{ t('File: {0}', detail(row.incoming)) }}</small>
                 <div
                   class="transfer-choice"
                   role="group"
-                  :aria-label="`Resolve ${row.incoming.name}`"
+                  :aria-label="t('Resolve {0}', row.incoming.name)"
                 >
                   <button
                     type="button"
@@ -514,7 +515,7 @@ function onKeydown(event: KeyboardEvent) {
                     :disabled="busy"
                     @click="resolutions[row.id] = 'local'"
                   >
-                    Keep local
+                    {{ t('Keep local') }}
                   </button>
                   <button
                     type="button"
@@ -523,7 +524,7 @@ function onKeydown(event: KeyboardEvent) {
                     :disabled="busy"
                     @click="resolutions[row.id] = 'imported'"
                   >
-                    Use file
+                    {{ t('Use file') }}
                   </button>
                 </div>
               </div>
@@ -540,7 +541,7 @@ function onKeydown(event: KeyboardEvent) {
           :disabled="busy"
           @click="emit('close')"
         >
-          Cancel
+          {{ t('Cancel') }}
         </button>
         <button
           type="button"
@@ -550,7 +551,13 @@ function onKeydown(event: KeyboardEvent) {
         >
           <Download v-if="mode === 'export'" :size="15" />
           <Upload v-else :size="15" />
-          {{ busy ? 'Working...' : mode === 'export' ? 'Export' : 'Import' }}
+          {{
+            busy
+              ? t('Working...')
+              : mode === 'export'
+                ? t('Export')
+                : t('Import')
+          }}
         </button>
       </footer>
     </div>

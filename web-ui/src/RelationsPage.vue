@@ -17,6 +17,7 @@ You should have received a copy of the GNU General Public License
 along with 12pit. If not, see <https://www.gnu.org/licenses/>.
 -->
 <script setup lang="ts">
+import { t } from './languages'
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { Plus, Search, Trash2, X } from '@lucide/vue'
 import type {
@@ -87,11 +88,11 @@ const parsed = computed(() => {
     const name = part.trim()
     if (!name) continue
     if (!/^[A-Za-z0-9_]{1,48}$/.test(name)) {
-      skipped.push({ name, message: 'Invalid player name' })
+      skipped.push({ name, message: t('Invalid player name') })
     } else if (seen.has(name.toLowerCase())) {
-      skipped.push({ name, message: 'Duplicate entry skipped' })
+      skipped.push({ name, message: t('Duplicate entry skipped') })
     } else if (existing.has(name.toLowerCase())) {
-      skipped.push({ name, message: 'Already on this list' })
+      skipped.push({ name, message: t('Already on this list') })
       seen.add(name.toLowerCase())
     } else {
       names.push(name)
@@ -101,7 +102,9 @@ const parsed = computed(() => {
   return { names, skipped }
 })
 const invalid = computed(() =>
-  parsed.value.skipped.filter((item) => item.message === 'Invalid player name'),
+  parsed.value.skipped.filter(
+    (item) => item.message === t('Invalid player name'),
+  ),
 )
 
 function entryKey(entry: RelationEntry) {
@@ -254,7 +257,7 @@ async function removeEntry(entry: RelationEntry) {
 
 <template>
   <div class="heading heading-relations">
-    <h1>Relations</h1>
+    <h1>{{ t('Relations') }}</h1>
   </div>
 
   <div class="relation-toolbar">
@@ -262,7 +265,7 @@ async function removeEntry(entry: RelationEntry) {
       class="relation-tabs"
       :class="{ enemy: relation === 'ENEMY' }"
       role="group"
-      aria-label="Relation type"
+      :aria-label="t('Relation type')"
     >
       <button
         v-for="type in relationTypes"
@@ -273,7 +276,7 @@ async function removeEntry(entry: RelationEntry) {
         :disabled="busy"
         @click="switchRelation(type)"
       >
-        {{ type === 'FRIEND' ? 'Friends' : 'Enemies' }}
+        {{ type === 'FRIEND' ? t('Friends') : t('Enemies') }}
         <span>{{
           relations.entries.filter((item) => item.relation === type).length
         }}</span>
@@ -285,14 +288,14 @@ async function removeEntry(entry: RelationEntry) {
         <input
           v-model="search"
           type="search"
-          placeholder="Search MC ID or UUID"
-          aria-label="Search MC ID or UUID"
+          :placeholder="t('Search MC ID or UUID')"
+          :aria-label="t('Search MC ID or UUID')"
         />
         <button
           v-if="search"
           type="button"
-          aria-label="Clear search"
-          title="Clear search"
+          :aria-label="t('Clear search')"
+          :title="t('Clear search')"
           @click="search = ''"
         >
           <X :size="14" />
@@ -308,18 +311,18 @@ async function removeEntry(entry: RelationEntry) {
           @click="toggleAdd"
         >
           <X v-if="addOpen" :size="15" /><Plus v-else :size="15" />{{
-            addOpen ? 'Close' : 'Add players'
+            addOpen ? t('Close') : t('Add players')
           }}
         </button>
         <template v-else>
-          <span class="relation-selected-count"
-            >{{ selectedEntries.length }} selected</span
-          >
+          <span class="relation-selected-count">{{
+            t('{0} selected', selectedEntries.length)
+          }}</span>
           <button
             class="icon-button"
             type="button"
-            aria-label="Clear selection"
-            title="Clear selection"
+            :aria-label="t('Clear selection')"
+            :title="t('Clear selection')"
             :disabled="busy"
             @click="selected = []"
           >
@@ -331,25 +334,29 @@ async function removeEntry(entry: RelationEntry) {
               type="button"
               :disabled="busy || selectedEntries.length > 100"
               :aria-expanded="confirmingDelete"
-              :aria-label="`Remove ${selectedEntries.length} selected players`"
+              :aria-label="
+                t('Remove {0} selected players', selectedEntries.length)
+              "
               :title="
                 selectedEntries.length > 100
-                  ? 'Select at most 100 players'
-                  : 'Remove selected players'
+                  ? t('Select at most 100 players')
+                  : t('Remove selected players')
               "
               @click="confirmingDelete = !confirmingDelete"
             >
               <Trash2 :size="15" />
             </button>
             <div v-if="confirmingDelete" class="relation-popover">
-              <p>Remove {{ selectedEntries.length }} selected players?</p>
+              <p>
+                {{ t('Remove {0} selected players?', selectedEntries.length) }}
+              </p>
               <div class="relation-popover-actions">
                 <button
                   class="secondary"
                   type="button"
                   @click="confirmingDelete = false"
                 >
-                  Cancel
+                  {{ t('Cancel') }}
                 </button>
                 <button
                   class="danger"
@@ -357,7 +364,7 @@ async function removeEntry(entry: RelationEntry) {
                   :disabled="busy"
                   @click="removeSelected"
                 >
-                  Remove
+                  {{ t('Remove') }}
                 </button>
               </div>
             </div>
@@ -376,35 +383,35 @@ async function removeEntry(entry: RelationEntry) {
         <div class="relation-form-inner">
           <form class="relation-add" @submit.prevent="add">
             <label for="relation-names">
-              Add {{ relation === 'FRIEND' ? 'friends' : 'enemies' }}
+              {{ relation === 'FRIEND' ? t('Add friends') : t('Add enemies') }}
             </label>
             <textarea
               id="relation-names"
               ref="nameInput"
               v-model="input"
-              placeholder="MC IDs, separated by commas or new lines"
+              :placeholder="t('MC IDs, separated by commas or new lines')"
               rows="5"
               :disabled="busy"
               @keydown.esc.prevent="addOpen = false"
             />
             <p v-if="invalid.length" class="relation-validation">
-              Invalid MC ID{{ invalid.length === 1 ? '' : 's' }}:
+              {{ t('Invalid MC IDs:') }}
               {{
                 invalid
                   .slice(0, 3)
                   .map((item) => item.name)
                   .join(', ')
               }}{{
-                invalid.length > 3 ? ` and ${invalid.length - 3} more` : ''
+                invalid.length > 3 ? t(' and {0} more', invalid.length - 3) : ''
               }}
             </p>
             <p v-if="parsed.names.length > 100" class="relation-validation">
-              Add at most 100 players at a time.
+              {{ t('Add at most 100 players at a time.') }}
             </p>
             <div class="relation-add-actions">
-              <span v-if="input.trim()"
-                >{{ parsed.names.length }} ready to add</span
-              >
+              <span v-if="input.trim()">{{
+                t('{0} ready to add', parsed.names.length)
+              }}</span>
               <button
                 class="primary"
                 type="submit"
@@ -414,10 +421,10 @@ async function removeEntry(entry: RelationEntry) {
               >
                 <Plus :size="15" />{{
                   parsed.names.length === 1
-                    ? 'Add player'
+                    ? t('Add player')
                     : parsed.names.length
-                      ? `Add ${parsed.names.length} players`
-                      : 'Add players'
+                      ? t('Add {0} players', parsed.names.length)
+                      : t('Add players')
                 }}
               </button>
             </div>
@@ -426,14 +433,14 @@ async function removeEntry(entry: RelationEntry) {
       </div>
     </Transition>
     <div v-if="issues.length" class="relation-issues" role="alert">
-      <strong>Some players could not be updated.</strong>
+      <strong>{{ t('Some players could not be updated.') }}</strong>
       <p v-for="(item, index) in issues" :key="index">
         {{ item.name }}: {{ item.message }}
       </p>
       <button
         type="button"
-        aria-label="Dismiss errors"
-        title="Dismiss errors"
+        :aria-label="t('Dismiss errors')"
+        :title="t('Dismiss errors')"
         @click="issues = []"
       >
         <X :size="15" />
@@ -449,13 +456,13 @@ async function removeEntry(entry: RelationEntry) {
             :disabled="!visible.length || busy"
             :aria-label="
               allVisibleSelected
-                ? 'Deselect visible players'
-                : 'Select visible players'
+                ? t('Deselect visible players')
+                : t('Select visible players')
             "
             @change="toggleVisible"
           />
-          <span class="relation-name-heading">MC ID</span>
-          <span class="relation-uuid-heading">UUID</span>
+          <span class="relation-name-heading">{{ t('MC ID') }}</span>
+          <span class="relation-uuid-heading">{{ t('UUID') }}</span>
         </div>
         <div
           v-for="entry in visible"
@@ -468,12 +475,12 @@ async function removeEntry(entry: RelationEntry) {
             type="checkbox"
             :value="entryKey(entry)"
             :disabled="busy"
-            :aria-label="`Select ${entry.name}`"
+            :aria-label="t('Select {0}', entry.name)"
             @change="clearConfirmation"
           />
           <strong>{{ entry.name }}</strong>
           <span class="relation-uuid" :class="{ pending: !entry.uuid }">
-            {{ entry.uuid ?? 'Not yet known' }}
+            {{ entry.uuid ?? t('Not yet known') }}
           </span>
           <button
             class="icon-button delete-button"
@@ -482,13 +489,13 @@ async function removeEntry(entry: RelationEntry) {
             :aria-expanded="deletingKey === entryKey(entry)"
             :aria-label="
               deletingKey === entryKey(entry)
-                ? `Cancel removal of ${entry.name}`
-                : `Remove ${entry.name}`
+                ? t('Cancel removal of {0}', entry.name)
+                : t('Remove {0}', entry.name)
             "
             :title="
               deletingKey === entryKey(entry)
-                ? 'Cancel removal'
-                : `Remove ${entry.name}`
+                ? t('Cancel removal')
+                : t('Remove {0}', entry.name)
             "
             @click="toggleDelete(entry)"
           >
@@ -498,7 +505,7 @@ async function removeEntry(entry: RelationEntry) {
             v-if="deletingKey === entryKey(entry)"
             class="relation-popover relation-row-popover"
           >
-            <p>Remove {{ entry.name }}?</p>
+            <p>{{ t('Remove {0}?', entry.name) }}</p>
             <div class="relation-popover-actions">
               <button
                 class="secondary"
@@ -506,7 +513,7 @@ async function removeEntry(entry: RelationEntry) {
                 :disabled="busy"
                 @click="deletingKey = null"
               >
-                Cancel
+                {{ t('Cancel') }}
               </button>
               <button
                 class="danger"
@@ -514,7 +521,7 @@ async function removeEntry(entry: RelationEntry) {
                 :disabled="busy"
                 @click="removeEntry(entry)"
               >
-                Remove
+                {{ t('Remove') }}
               </button>
             </div>
           </div>
@@ -522,8 +529,10 @@ async function removeEntry(entry: RelationEntry) {
         <p v-if="!visible.length" class="empty">
           {{
             search
-              ? 'No matching players.'
-              : `No ${relation === 'FRIEND' ? 'friends' : 'enemies'} yet.`
+              ? t('No matching players.')
+              : relation === 'FRIEND'
+                ? t('No friends yet.')
+                : t('No enemies yet.')
           }}
         </p>
       </section>

@@ -26,6 +26,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import pit12.runtime.languages.Languages;
 
 final class EventListSnapshot {
     private static final DateTimeFormatter CLOCK =
@@ -43,8 +44,9 @@ final class EventListSnapshot {
     }
 
     static EventListSnapshot build(List<PitEvent> events, EventListConfig config, long now,
-            String emptyMessage, boolean filtering) {
+            String emptyMessage, boolean filtering, Languages language) {
         List<Row> rows = new ArrayList<>();
+        boolean translate = config.hud().translateText().get();
         boolean hasEvents = false;
         for (PitEvent event : events) {
             PitEvent.Phase phase = event.phase(now);
@@ -57,8 +59,8 @@ final class EventListSnapshot {
             }
             long deadline = phase == PitEvent.Phase.FUTURE ? event.timestamp
                     : phase == PitEvent.Phase.PREPARING ? event.startsAt : event.endsAt;
-            String time =
-                    formatTime(deadline, now, config.timeFormat(), config.zeroPadding(), phase);
+            String time = formatTime(deadline, now, config.timeFormat(), config.zeroPadding(),
+                    phase, language, translate);
             rows.add(new Row(event.type, phase, event.major, time));
             if (rows.size() == config.eventCount()) {
                 break;
@@ -67,14 +69,21 @@ final class EventListSnapshot {
         // Matches the tracker's ten-second offset for the Pit day cycle.
         long cycle = Math.floorMod(now / 1000L + 10L, 2160L);
         boolean day = cycle < 1440L;
-        return new EventListSnapshot(rows, config.showDayNight() ? (day ? "Day" : "Night") : "",
+        return new EventListSnapshot(rows,
+                config.showDayNight()
+                        ? (day ? language.translate("Day", translate)
+                                : language.translate("Night", translate))
+                        : "",
                 config.showDayNight()
                         ? formatDuration((day ? 1440L : 2160L) - cycle, config.zeroPadding())
                         : "",
-                rows.isEmpty() ? (hasEvents ? "No events match the filters" : emptyMessage) : "");
+                rows.isEmpty()
+                        ? (hasEvents ? language.translate("No events match the filters", translate)
+                                : emptyMessage)
+                        : "");
     }
 
-    static EventListSnapshot sample(EventListConfig config) {
+    static EventListSnapshot sample(EventListConfig config, Languages language) {
         long now = System.currentTimeMillis();
         return build(
                 Arrays.asList(new PitEvent(EventType.BLOCKHEAD, now - 240_000L, true),
@@ -83,16 +92,17 @@ final class EventListSnapshot {
                         new PitEvent(EventType.DRAGON_EGG, now + 150_000L, false),
                         new PitEvent(EventType.SPIRE, now + 540_000L, true),
                         new PitEvent(EventType.DOUBLE_REWARDS, now + 780_000L, false)),
-                config, now, "", false);
+                config, now, "", false, language);
     }
 
     private static String formatTime(long deadline, long now, int format, boolean padding,
-            PitEvent.Phase phase) {
+            PitEvent.Phase phase, Languages language, boolean translate) {
         if (format == 1) {
             return CLOCK.format(Instant.ofEpochMilli(deadline));
         }
-        String relative = phase == PitEvent.Phase.PREPARING ? "Preparing"
-                : phase == PitEvent.Phase.ACTIVE ? "Active"
+        String relative = phase == PitEvent.Phase.PREPARING
+                ? language.translate("Preparing", translate)
+                : phase == PitEvent.Phase.ACTIVE ? language.translate("Active", translate)
                         : formatDuration(Math.max(0L, deadline - now + 999L) / 1000L, padding);
         return format == 2 ? relative + " (" + CLOCK.format(Instant.ofEpochMilli(deadline)) + ")"
                 : relative;

@@ -18,6 +18,8 @@
  */
 package pit12.feature.playeresp;
 
+import static pit12.runtime.languages.Languages.source;
+
 import pit12.feature.relation.api.Relation;
 import pit12.runtime.config.BooleanSetting;
 import pit12.runtime.config.ColorSetting;
@@ -37,25 +39,29 @@ public final class PlayerEspConfig extends FeatureConfig {
     private final IntegerSetting fadeFarDistance;
 
     public PlayerEspConfig() {
-        super("playeresp", "Player ESP", new ConfigCategory("render", "Render", 100),
-                "Shows colored boxes around loaded players through blocks.", true, false);
-        subsubcategory("friends", "Friends");
-        showFriend = booleanSetting("show_friend", "Show friends", "Marks friends.", true);
-        friendColor = colorPickerSetting("friend_color", "Friend color", "", 0xC000FF00);
-        subsubcategory("enemies", "Enemies");
-        showEnemy = booleanSetting("show_enemy", "Show enemies", "Marks enemies.", true);
-        enemyColor = colorPickerSetting("enemy_color", "Enemy color", "", 0xC0FF0000);
-        subsubcategory("other_players", "Other players");
-        showOther = booleanSetting("show_other", "Show other players",
-                "Marks players outside the friend and enemy lists.", false);
-        otherColor = colorPickerSetting("other_color", "Other player color", "", 0xC0FFFFFF);
-        subsubcategory("distance_fade", "Distance fade");
-        distanceFade = booleanSetting("distance_fade", "Fade nearby players",
-                "Makes boxes fade out as players get closer.", true);
-        fadeNearDistance = integerSliderSetting("fade_near_distance", "Hidden distance",
-                "Hides boxes at or below the smaller distance.", 5, 0, 20, 1);
-        fadeFarDistance = integerSliderSetting("fade_far_distance", "Full color distance",
-                "Uses full color at or above the larger distance.", 10, 0, 20, 1);
+        super("playeresp", source("Player ESP"),
+                new ConfigCategory("render", source("Render"), 100),
+                source("Shows colored boxes around loaded players through blocks."), true, false);
+        subsubcategory("friends", source("Friends"));
+        showFriend = booleanSetting("show_friend", source("Show friends"), source("Marks friends."),
+                true);
+        friendColor = colorPickerSetting("friend_color", source("Friend color"), "", 0xC000FF00);
+        subsubcategory("enemies", source("Enemies"));
+        showEnemy = booleanSetting("show_enemy", source("Show enemies"), source("Marks enemies."),
+                true);
+        enemyColor = colorPickerSetting("enemy_color", source("Enemy color"), "", 0xC0FF0000);
+        subsubcategory("other_players", source("Other players"));
+        showOther = booleanSetting("show_other", source("Show other players"),
+                source("Marks players outside the friend and enemy lists."), false);
+        otherColor =
+                colorPickerSetting("other_color", source("Other player color"), "", 0xC0FFFFFF);
+        subsubcategory("distance_fade", source("Distance fade"));
+        distanceFade = booleanSetting("distance_fade", source("Fade nearby players"),
+                source("Makes boxes fade out as players get closer."), true);
+        fadeNearDistance = integerSliderSetting("fade_near_distance", source("Hidden distance"),
+                source("Hides boxes at or below the smaller distance."), 5, 0, 20, 1);
+        fadeFarDistance = integerSliderSetting("fade_far_distance", source("Full color distance"),
+                source("Uses full color at or above the larger distance."), 10, 0, 20, 1);
     }
 
     public boolean hasTargets() {

@@ -61,6 +61,7 @@ import pit12.platform.command.ForgeCommandAdapter;
 import pit12.runtime.command.CommandRegistry;
 import pit12.runtime.config.ConfigCatalog;
 import pit12.runtime.hud.HudRegistry;
+import pit12.runtime.languages.Languages;
 import pit12.runtime.pit.PitContext;
 import pit12.runtime.pit.PitContextTracker;
 import pit12.runtime.player.PlayerEquipmentAccess;
@@ -78,6 +79,7 @@ public final class ClientBootstrap {
     private final List<ClientLifecycle> components = new ArrayList<ClientLifecycle>();
     private final List<ClientLifecycle> startedComponents = new ArrayList<ClientLifecycle>();
     private final ClientThread client;
+    private final Languages language;
     private final ClientShutdownBinding shutdown;
     private boolean started;
 
@@ -86,11 +88,13 @@ public final class ClientBootstrap {
         Minecraft minecraft = Minecraft.getMinecraft();
         client = new ClientThread(minecraft::isCallingFromMinecraftThread,
                 task -> minecraft.addScheduledTask(task));
+        language = new Languages(client);
         ConfigCatalog configs = new ConfigCatalog(client);
         shutdown = (ClientShutdownBinding) minecraft;
         ClientSession session = new ClientSession(minecraft, client);
         components.add(session);
-        CommandRegistry commands = new CommandRegistry(client, ForgeCommandAdapter::register);
+        CommandRegistry commands =
+                new CommandRegistry(client, ForgeCommandAdapter::register, language);
         components.add(commands);
         PitContextTracker pitContext = new PitContextTracker(session);
         components.add(pitContext);
@@ -126,6 +130,7 @@ public final class ClientBootstrap {
         // Category: Interface
         registerWebUi(configs, profiles, relations, hudEditor, swapBindings);
         configs.freeze();
+        language.addListener(() -> configs.localize(language));
     }
 
     // Feature providers
@@ -144,7 +149,7 @@ public final class ClientBootstrap {
 
     private Relations registerRelations(TabPresence presence, Path path, ClientThread client,
             CommandRegistry commands) {
-        RelationFeature relations = new RelationFeature(presence, path, client, commands);
+        RelationFeature relations = new RelationFeature(presence, path, client, commands, language);
         components.add(relations);
         return relations;
     }
@@ -156,7 +161,7 @@ public final class ClientBootstrap {
         SwapConfig config = new SwapConfig();
         configs.register(config);
         SwapFeature swap = new SwapFeature(minecraft, client, configs, config, session, pitContext,
-                commands, path, binding);
+                commands, path, binding, language);
         components.add(swap);
         return swap.bindings();
     }
@@ -188,7 +193,7 @@ public final class ClientBootstrap {
             CommandRegistry commands) {
         EventListConfig config = new EventListConfig();
         configs.register(config);
-        components.add(new EventListFeature(configs, config, hudRegistry, commands));
+        components.add(new EventListFeature(configs, config, hudRegistry, commands, language));
     }
 
     private void registerGamma(ConfigCatalog configs, GammaBinding binding) {
@@ -216,7 +221,7 @@ public final class ClientBootstrap {
         PlayerListConfig config = new PlayerListConfig();
         configs.register(config);
         components.add(new PlayerListFeature(configs, config, playerEquipment, pitContext,
-                hudRegistry, relations, presence));
+                hudRegistry, relations, presence, language));
     }
 
     private void registerTooltip(ConfigCatalog configs) {
@@ -228,10 +233,10 @@ public final class ClientBootstrap {
     // Category: Interface
     private void registerWebUi(ConfigCatalog configs, Profiles profiles, Relations relations,
             HudEditor hudEditor, SwapBindings swapBindings) {
-        WebUiConfig config = new WebUiConfig();
+        WebUiConfig config = new WebUiConfig(language);
         configs.register(config);
-        components.add(
-                new WebUiFeature(configs, profiles, relations, hudEditor, swapBindings, config));
+        components.add(new WebUiFeature(configs, profiles, relations, hudEditor, swapBindings,
+                config, language));
     }
 
     public void start() {
