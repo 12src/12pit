@@ -1,4 +1,4 @@
-<!-- Source: docs/IMPLEMENTATION.md; Based on: b78579987d1f0f99ffec24bc15c5ace785f696cb -->
+<!-- Source: docs/IMPLEMENTATION.md; Based on: 5306c0d49b3ab6dd3c265e892f723d3cb92a81a2 -->
 
 # 12pit 实现
 
@@ -54,16 +54,18 @@ public void stop() {
 `FeatureConfig` 表示功能的设置及其 Web UI 元数据。在其子类构造器中定义设置：
 
 ```java
+import static pit12.runtime.languages.Languages.source;
+
 public final class StatusConfig extends FeatureConfig {
     private final BooleanSetting showNames;
 
     public StatusConfig() {
-        super("status", "Status", new ConfigCategory("render", "Render", 100),
-                "Shows player status.");
-        subcategory("appearance", "Appearance");
-        subsubcategory("display", "Display");
-        showNames = booleanSetting("show_names", "Show names",
-                "Shows player names.", true);
+        super("status", source("Status"), new ConfigCategory("render", source("Render"), 100),
+                source("Shows player status."));
+        subcategory("appearance", source("Appearance"));
+        subsubcategory("display", source("Display"));
+        showNames = booleanSetting("show_names", source("Show names"),
+                source("Shows player names."), true);
     }
 
     public boolean showNames() {
@@ -125,8 +127,8 @@ private final ConfigChangeListener configListener = changes -> {
 以下命令树包含分组、子节点、别名、必需参数、处理器和补全候选项：
 
 ```java
-CommandNode command = CommandNode.command("message", "Message commands")
-        .child(CommandNode.command("send", "Show a message").aliases("say")
+CommandNode command = CommandNode.command("message", source("Message commands"))
+        .child(CommandNode.command("send", source("Show a message")).aliases("say")
                 .arguments("<text>", 1, 1)
                 .executes((sender, args) -> ChatFeedback.reply(sender, Tone.INFO, args[0]))
                 .suggests((sender, args) -> Arrays.asList("hello", "test")))
@@ -150,15 +152,37 @@ Bootstrap 通过注册表的 `Registrar` 提供 [ForgeCommandAdapter](../../src/
 
 在客户端线程调用。命令之外的回显先检查本地玩家是否存在，再将它作为 sender 传入。功能只选择消息类型和文字，前缀与配色由共享方法维护。
 
+## 语言
+
+Bootstrap 创建一个 [Languages](../../src/main/java/pit12/runtime/languages/Languages.java) 实例，并传给使用它的组件。`WebUiConfig` 将所选语言与其他设置一起保存。语言名称和稳定的设置值来自 `src/main/resources/assets/pit12/languages/languages.json`。每份译文首次使用时从 TXT 资源读取，随后缓存。
+
+名称、说明、选项标签、枚举标签和命令说明使用配置示例中的静态 `source(...)` 导入。它直接返回英文原文，并标记供脚本提取。配置类保留原文和翻译后的显示值。语言变化时，Bootstrap 通过 `ConfigCatalog.localize(language)` 更新显示值。`CommandRegistry` 在显示帮助时翻译命令说明。保留已保存的 ID、命令名称和别名。
+
+运行时准备消息的组件通过构造器接收 `Languages`。固定文字使用 `translate(...)`，带参数的文字使用 `format(...)`：
+
+```java
+ChatFeedback.reply(sender, Tone.WARNING, language.translate("No matching bindings"));
+ChatFeedback.reply(sender, Tone.SUCCESS,
+        language.format("Bound {0} to {1}", itemName, keyName));
+```
+
+第一个参数使用完整的英文字符串字面量，动态值放在后续参数中。`{0}` 对应第一个值，`{1}` 对应第二个值，以此类推。译文可以调整参数顺序。准备显示文字时翻译一次，再将结果交给渲染器或聊天回显方法。缺失或空译文使用英文。英文模式下，`translate(...)` 直接返回原文；`format(...)` 仍会填入参数。
+
+HUD 缓存文字时，保留语言监听器，在 `start()` 中注册，在 `stop()` 中注销。`addListener(...)` 注册时立即调用监听器，此后在每次语言变化时调用。一起更新文字缓存和测量后的布局。动态文字在更新显示快照时准备，渲染回调读取准备好的文字。在客户端线程切换语言、注册或注销监听器。
+
+前端组件从 `./languages` 导入 `t`，调用 `t('Settings')` 或 `t('Remove {0} players', count)`。应用跟随服务器状态中的语言，每份译文只获取一次，并在语言变化时更新显示文字。
+
+新增或修改已标记的原文后，在仓库根目录运行 `python scripts/languages.py sync`。脚本提取 Java 的 `source(...)`、`translate(...)`、带编号参数的 `format(...)`，以及前端的 `t(...)`。它读取字面量和字面量拼接，不追踪变量中的值。同步会保留已有译文，新条目留空。`python scripts/languages.py status` 显示翻译进度和文件问题。这些命令手动运行，构建只打包资源。编辑或添加语言时，参阅[贡献翻译](TRANSLATING.md)。
+
 ## HUD
 
 [HudConfig](../../src/main/java/pit12/runtime/config/HudConfig.java) 存储 HUD 位置和缩放相关设置。在 FeatureConfig 子类的构造器中使用 `hudConfig` 定义它，并保留结果：
 
 ```java
-hud = hudConfig("status", "Status", HudAnchor.TOP_LEFT, 6, 6, true);
+hud = hudConfig("status", source("Status"), HudAnchor.TOP_LEFT, 6, 6, true);
 ```
 
-该辅助方法定义以下设置：`status.anchor`、`status.offset_x`、`status.offset_y`、`status.scale`、`status.text_shadow` 和 `status.use_monospace_font`。缩放以百分比存储，默认值为 `100`。HUD 编辑器控制位置和缩放。文字阴影和等宽字体开关作为 Web UI 中的设置提供。字体开关默认关闭，开启后使用内置的 Monocraft。配置方案功能将这些值与功能的其他设置一起保存。
+该辅助方法定义以下设置：`status.anchor`、`status.offset_x`、`status.offset_y`、`status.scale`、`status.text_shadow`、`status.use_monospace_font` 和 `status.translate_text`。缩放以百分比存储，默认值为 `100`。HUD 编辑器控制位置和缩放。文字阴影、字体和翻译开关作为 Web UI 中的设置提供。字体开关默认关闭，开启后使用内置的 Monocraft。翻译开关默认开启；准备 HUD 文字时使用 `language.translate(text, hud.translateText().get())`，切换后更新文字缓存和布局。配置方案功能将这些值与功能的其他设置一起保存。
 
 [HudElement](../../src/main/java/pit12/runtime/hud/HudElement.java) 的实现应满足以下契约：
 
