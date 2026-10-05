@@ -18,6 +18,7 @@
  */
 package pit12.runtime.command;
 
+import static pit12.runtime.languages.Languages.source;
 import static pit12.shared.chat.ChatFeedback.reply;
 
 import java.util.ArrayList;
@@ -29,20 +30,24 @@ import java.util.Locale;
 import java.util.Set;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
+import pit12.runtime.languages.Languages;
 import pit12.shared.chat.ChatFeedback.Tone;
 import pit12.shared.concurrent.ClientThread;
 import pit12.shared.lifecycle.ClientLifecycle;
 
 public final class CommandRegistry implements ClientLifecycle {
     private final ClientThread client;
+    private final Languages language;
     private final Registrar registrar;
-    private final CommandNode.Builder rootBuilder = CommandNode.command("12pit", "12pit commands");
+    private final CommandNode.Builder rootBuilder =
+            CommandNode.command("12pit", source("12pit commands"));
     private final List<CommandNode> entryPoints = new ArrayList<>();
     private CommandNode root;
     private int installed;
     private boolean started;
 
-    public CommandRegistry(ClientThread client, Registrar registrar) {
+    public CommandRegistry(ClientThread client, Registrar registrar, Languages language) {
+        this.language = language;
         this.client = client;
         this.registrar = registrar;
     }
@@ -97,7 +102,7 @@ public final class CommandRegistry implements ClientLifecycle {
             throws CommandException {
         client.check();
         if (!started) {
-            reply(sender, Tone.WARNING, "Commands are unavailable");
+            reply(sender, Tone.WARNING, language.translate("Commands are unavailable"));
             return;
         }
         execute(command, sender, args, "/" + command.name);
@@ -125,12 +130,12 @@ public final class CommandRegistry implements ClientLifecycle {
             return;
         }
         if (command.handler == null) {
-            reply(sender, Tone.ERROR, "Unknown command: " + args[0]);
+            reply(sender, Tone.ERROR, language.format("Unknown command: {0}", args[0]));
             help(command, sender, path);
         } else if (args.length < command.minimumArguments
                 || args.length > command.maximumArguments) {
-            reply(sender, Tone.WARNING, "Usage: " + path
-                    + (command.arguments.isEmpty() ? "" : " " + command.arguments));
+            reply(sender, Tone.WARNING, language.format("Usage: {0}",
+                    path + (command.arguments.isEmpty() ? "" : " " + command.arguments)));
         } else {
             command.handler.execute(sender, args);
         }
@@ -179,16 +184,17 @@ public final class CommandRegistry implements ClientLifecycle {
         return path + (command.arguments.isEmpty() ? "" : " " + command.arguments);
     }
 
-    private static void help(CommandNode command, ICommandSender sender, String path) {
-        reply(sender, Tone.INFO, path + " - " + command.description);
+    private void help(CommandNode command, ICommandSender sender, String path) {
+        reply(sender, Tone.INFO, path + " - " + language.translate(command.description));
         for (CommandNode child : command.children) {
             if (child.canUse(sender)) {
-                reply(sender, Tone.INFO,
-                        usage(child, path + " " + child.name) + " - " + child.description);
+                reply(sender, Tone.INFO, usage(child, path + " " + child.name) + " - "
+                        + language.translate(child.description));
             }
         }
         if (command.handler != null && !command.arguments.isEmpty()) {
-            reply(sender, Tone.INFO, path + " " + command.arguments + " - " + command.description);
+            reply(sender, Tone.INFO, path + " " + command.arguments + " - "
+                    + language.translate(command.description));
         }
     }
 

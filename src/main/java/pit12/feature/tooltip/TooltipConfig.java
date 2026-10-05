@@ -18,6 +18,8 @@
  */
 package pit12.feature.tooltip;
 
+import static pit12.runtime.languages.Languages.source;
+
 import pit12.runtime.config.BooleanSetting;
 import pit12.runtime.config.ConfigCategory;
 import pit12.runtime.config.FeatureConfig;
@@ -28,13 +30,14 @@ public final class TooltipConfig extends FeatureConfig {
     private final IntegerSetting upwardOffset;
 
     public TooltipConfig() {
-        super("tooltip", "Held Item Tooltip", new ConfigCategory("render", "Render", 100),
-                "Customizes the held item tooltip above the hotbar.");
-        showEnchantments =
-                booleanSetting("show_enchantments", "Show enchantments instead of item name",
-                        "Replaces the held item name with known Pit enchantments.", true);
-        upwardOffset = integerSliderSetting("upward_offset", "Move tooltip upward",
-                "Moves the held item tooltip upward by this many pixels.", 0, 0, 30, 1);
+        super("tooltip", source("Held Item Tooltip"),
+                new ConfigCategory("render", source("Render"), 100),
+                source("Customizes the held item tooltip above the hotbar."));
+        showEnchantments = booleanSetting("show_enchantments",
+                source("Show enchantments instead of item name"),
+                source("Replaces the held item name with known Pit enchantments."), true);
+        upwardOffset = integerSliderSetting("upward_offset", source("Move tooltip upward"),
+                source("Moves the held item tooltip upward by this many pixels."), 0, 0, 30, 1);
     }
 
     public boolean showEnchantments() {

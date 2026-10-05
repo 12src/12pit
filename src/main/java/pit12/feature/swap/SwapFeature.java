@@ -40,6 +40,7 @@ import pit12.runtime.config.ConfigChangeListener;
 import pit12.runtime.config.ConfigChangeSet;
 import pit12.runtime.item.PitEnchantment;
 import pit12.runtime.item.PitEnchantmentReader;
+import pit12.runtime.languages.Languages;
 import pit12.runtime.pit.PitContext;
 import pit12.runtime.session.ClientSession;
 import pit12.shared.chat.ChatFeedback;
@@ -66,18 +67,20 @@ public final class SwapFeature implements ClientLifecycle, ConfigChangeListener,
 
     public SwapFeature(Minecraft minecraft, ClientThread client, ConfigCatalog configs,
             SwapConfig config, ClientSession session, PitContext pit, CommandRegistry commands,
-            Path path, SwapHooksBinding hookBinding) {
+            Path path, SwapHooksBinding hookBinding, Languages language) {
         this.minecraft = minecraft;
         this.configs = configs;
         this.config = config;
         this.session = session;
         this.hookBinding = hookBinding;
-        bindings = new BindingBook(client, path, message -> report(Tone.ERROR, message));
+        bindings = new BindingBook(client, path,
+                message -> report(Tone.ERROR, language.translate(message)));
         controller = new SwapController(minecraft, session, config, bindings, this::report,
-                this::lockInput, this::releaseInput);
+                this::lockInput, this::releaseInput, language);
         automatic = new AutoSwapController(minecraft, config, controller, pit);
         overlay = new SwapOverlay(minecraft, bindings, config);
-        commands.register(new SwapCommand(minecraft, bindings, config, automatic).definition(),
+        commands.register(
+                new SwapCommand(minecraft, bindings, config, automatic, language).definition(),
                 true);
     }
 

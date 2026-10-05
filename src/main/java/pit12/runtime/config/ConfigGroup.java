@@ -18,13 +18,21 @@
  */
 package pit12.runtime.config;
 
+import pit12.runtime.languages.Languages;
+
 public final class ConfigGroup {
     private final String id;
-    private final String displayName;
+    private final String originalDisplayName;
+    private String displayName;
 
     public ConfigGroup(String id, String displayName) {
         this.id = ConfigNames.requireStableId(id, "config group id");
+        originalDisplayName = displayName;
         this.displayName = displayName;
+    }
+
+    void localize(Languages language) {
+        displayName = language.translate(originalDisplayName);
     }
 
     public String id() {

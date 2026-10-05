@@ -18,9 +18,11 @@
  */
 package pit12.feature.playerlist;
 
+import static pit12.runtime.languages.Languages.source;
+
 public enum PlayerListGroup {
-    FRIEND("§a§lFriend"),
-    ENEMY("§c§lEnemy"),
+    FRIEND(source("§a§lFriend")),
+    ENEMY(source("§c§lEnemy")),
     REGULARITY("§4§lREG"),
     DARK("§d§lDARK"),
     BOUNTY_HUNTER("§6§lBounty Hunter");

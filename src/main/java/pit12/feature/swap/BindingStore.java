@@ -18,6 +18,8 @@
  */
 package pit12.feature.swap;
 
+import static pit12.runtime.languages.Languages.source;
+
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -77,29 +79,29 @@ final class BindingStore {
     static List<SwapBinding> decode(String text) {
         JsonElement parsed = new JsonParser().parse(text);
         if (!parsed.isJsonObject()) {
-            throw new IllegalArgumentException("Swap bindings must be an object");
+            throw new IllegalArgumentException(source("Swap bindings must be an object"));
         }
         JsonObject root = parsed.getAsJsonObject();
         if (integer(root, "schemaVersion") != 1) {
-            throw new IllegalArgumentException("Unsupported swap binding version");
+            throw new IllegalArgumentException(source("Unsupported swap binding version"));
         }
         JsonElement entries = root.get("bindings");
         if (entries == null || !entries.isJsonArray()) {
-            throw new IllegalArgumentException("Expected swap binding list");
+            throw new IllegalArgumentException(source("Expected swap binding list"));
         }
         List<SwapBinding> result = new ArrayList<>();
         Set<ItemIdentity> identities = new HashSet<>();
         for (JsonElement value : entries.getAsJsonArray()) {
             if (!value.isJsonObject())
-                throw new IllegalArgumentException("Invalid swap binding");
+                throw new IllegalArgumentException(source("Invalid swap binding"));
             JsonObject entry = value.getAsJsonObject();
             String type = string(entry, "type");
             if (!"EQUIPMENT".equals(type) && !"SLOT".equals(type)) {
-                throw new IllegalArgumentException("Unknown swap binding type");
+                throw new IllegalArgumentException(source("Unknown swap binding type"));
             }
             JsonElement identityValue = entry.get("identity");
             if (identityValue == null || !identityValue.isJsonObject()) {
-                throw new IllegalArgumentException("Expected item identity");
+                throw new IllegalArgumentException(source("Expected item identity"));
             }
             JsonObject identityData = identityValue.getAsJsonObject();
             ItemIdentity identity =
@@ -107,7 +109,7 @@ final class BindingStore {
                             ItemIdentity.Kind.valueOf(string(identityData, "kind")),
                             string(identityData, "value"));
             if (!identities.add(identity))
-                throw new IllegalArgumentException("Duplicate bound item");
+                throw new IllegalArgumentException(source("Duplicate bound item"));
             result.add(new SwapBinding(integer(entry, "key"), identity, "EQUIPMENT".equals(type),
                     integer(entry, "target"), string(entry, "name"), string(entry, "details")));
         }

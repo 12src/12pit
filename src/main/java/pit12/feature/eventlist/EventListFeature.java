@@ -40,6 +40,7 @@ import pit12.runtime.config.ConfigChangeSet;
 import pit12.runtime.config.Setting;
 import pit12.runtime.hud.HudRegistry;
 import pit12.runtime.hud.HudRenderer;
+import pit12.runtime.languages.Languages;
 import pit12.shared.concurrent.ClientThread;
 import pit12.shared.lifecycle.ClientLifecycle;
 
@@ -50,6 +51,8 @@ public final class EventListFeature implements ClientLifecycle, ConfigChangeList
     private final EventListConfig config;
     private final HudRegistry hudRegistry;
     private final EventListHud hud;
+    private final Languages language;
+    private final Runnable languageListener;
     private final HudRenderer hudRenderer = new HudRenderer();
     private final EventFeedClient feed = new EventFeedClient();
     private final List<PitEvent> events = new ArrayList<>();
@@ -66,13 +69,18 @@ public final class EventListFeature implements ClientLifecycle, ConfigChangeList
     private boolean active;
 
     public EventListFeature(ConfigCatalog configs, EventListConfig config, HudRegistry hudRegistry,
-            CommandRegistry commands) {
+            CommandRegistry commands, Languages language) {
+        this.language = language;
         this.configs = configs;
         client = configs.clientThread();
         this.config = config;
         this.hudRegistry = hudRegistry;
-        hud = new EventListHud(config, hudRenderer);
-        commands.register(new EventListCommand(this).definition());
+        hud = new EventListHud(config, hudRenderer, language);
+        commands.register(new EventListCommand(this, language).definition());
+        languageListener = () -> {
+            hud.localize();
+            rebuild(System.currentTimeMillis());
+        };
     }
 
     List<PitEvent> events(EventType type) {
@@ -92,6 +100,7 @@ public final class EventListFeature implements ClientLifecycle, ConfigChangeList
             return;
         }
         started = true;
+        language.addListener(languageListener);
         hudRegistry.register(hud);
         configs.addListener(this);
         if (config.enabled()) {
@@ -107,6 +116,7 @@ public final class EventListFeature implements ClientLifecycle, ConfigChangeList
         }
         started = false;
         configs.removeListener(this);
+        language.removeListener(languageListener);
         deactivate();
         hudRegistry.unregister(hud);
     }
@@ -135,7 +145,8 @@ public final class EventListFeature implements ClientLifecycle, ConfigChangeList
         failed = false;
         retryDelay = 60_000L;
         displayedSecond = Long.MIN_VALUE;
-        hud.snapshot(EventListSnapshot.build(events, config, System.currentTimeMillis(), "", true));
+        hud.snapshot(EventListSnapshot.build(events, config, System.currentTimeMillis(), "", true,
+                language));
         hud.close();
     }
 
@@ -143,6 +154,9 @@ public final class EventListFeature implements ClientLifecycle, ConfigChangeList
     public void onConfigChanged(ConfigChangeSet changes) {
         if (!started) {
             return;
+        }
+        if (changes.affects("eventlist", config.hud().translateText().id())) {
+            hud.localize();
         }
         for (Setting<?> setting : config.settings()) {
             if (changes.affects("eventlist", setting.id())) {
@@ -233,9 +247,11 @@ public final class EventListFeature implements ClientLifecycle, ConfigChangeList
     }
 
     private void rebuild(long now) {
-        String message = failed ? "Could not load events"
-                : loaded ? "Event schedule has ended" : "Loading events\u2026";
-        hud.snapshot(EventListSnapshot.build(events, config, now, message, true));
+        boolean translate = config.hud().translateText().get();
+        String message = failed ? language.translate("Could not load events", translate)
+                : loaded ? language.translate("Event schedule has ended", translate)
+                        : language.translate("Loading events\u2026", translate);
+        hud.snapshot(EventListSnapshot.build(events, config, now, message, true, language));
         displayedSecond = now / 1000L;
     }
 

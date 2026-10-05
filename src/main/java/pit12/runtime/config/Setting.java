@@ -20,6 +20,7 @@ package pit12.runtime.config;
 
 import java.util.Objects;
 import java.util.function.Consumer;
+import pit12.runtime.languages.Languages;
 
 public abstract class Setting<T> {
     public enum StorageType {
@@ -27,8 +28,10 @@ public abstract class Setting<T> {
     }
 
     private final String id;
-    private final String displayName;
-    private final String description;
+    private final String originalDisplayName;
+    private String displayName;
+    private final String originalDescription;
+    private String description;
     private final T defaultValue;
     private final StorageType storageType;
     private T value;
@@ -41,11 +44,18 @@ public abstract class Setting<T> {
     protected Setting(String id, String displayName, String description, T defaultValue,
             StorageType storageType) {
         this.id = ConfigNames.requireStableId(id, "setting id");
+        originalDisplayName = displayName;
         this.displayName = displayName;
+        originalDescription = description;
         this.description = description;
         this.defaultValue = defaultValue;
         this.storageType = storageType;
         value = defaultValue;
+    }
+
+    void localize(Languages language) {
+        displayName = language.translate(originalDisplayName);
+        description = language.translate(originalDescription);
     }
 
     public final String id() {

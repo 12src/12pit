@@ -1,0 +1,4 @@
+[
+  { "value": 0, "locale": "en-US", "name": "English" },
+  { "value": 1, "locale": "zh-CN", "name": "简体中文" }
+]

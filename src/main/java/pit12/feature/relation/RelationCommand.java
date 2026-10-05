@@ -18,15 +18,18 @@
  */
 package pit12.feature.relation;
 
+import static pit12.runtime.languages.Languages.source;
 import static pit12.shared.chat.ChatFeedback.reply;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import net.minecraft.command.ICommandSender;
+import pit12.feature.relation.api.IdentityLookupState;
 import pit12.feature.relation.api.Relation;
 import pit12.feature.relation.api.RelationEntry;
 import pit12.runtime.command.CommandNode;
+import pit12.runtime.languages.Languages;
 import pit12.runtime.player.TabPresence;
 import pit12.shared.chat.ChatFeedback.Tone;
 import pit12.shared.result.OperationResult;
@@ -35,8 +38,11 @@ final class RelationCommand {
     private final RelationFeature feature;
     private final TabPresence presence;
     private final Relation relation;
+    private final Languages language;
 
-    RelationCommand(RelationFeature feature, TabPresence presence, Relation relation) {
+    RelationCommand(RelationFeature feature, TabPresence presence, Relation relation,
+            Languages language) {
+        this.language = language;
         this.feature = feature;
         this.presence = presence;
         this.relation = relation;
@@ -44,16 +50,23 @@ final class RelationCommand {
 
     CommandNode definition() {
         String name = relation.name().toLowerCase(Locale.ROOT);
-        return CommandNode.command(name, "Manage " + name + " relations")
+        return CommandNode
+                .command(name,
+                        relation == Relation.FRIEND ? source("Manage friend relations")
+                                : source("Manage enemy relations"))
                 .arguments("<player>", 1, 1)
                 .executes((sender, args) -> change(sender, "toggle", args[0]))
                 .suggests((sender, args) -> playerNames(true))
-                .child(CommandNode.command("list", "Show " + name + " relations")
+                .child(CommandNode.command("list",
+                        relation == Relation.FRIEND ? source("Show friend relations")
+                                : source("Show enemy relations"))
                         .executes(this::list))
-                .child(CommandNode.command("add", "Add a player").arguments("<player>", 1, 1)
+                .child(CommandNode.command("add", source("Add a player"))
+                        .arguments("<player>", 1, 1)
                         .executes((sender, args) -> change(sender, "add", args[0]))
                         .suggests((sender, args) -> new ArrayList<>(presence.players().values())))
-                .child(CommandNode.command("remove", "Remove a player").arguments("<player>", 1, 1)
+                .child(CommandNode.command("remove", source("Remove a player"))
+                        .arguments("<player>", 1, 1)
                         .executes((sender, args) -> change(sender, "remove", args[0]))
                         .suggests((sender, args) -> playerNames(false)))
                 .build();
@@ -63,12 +76,18 @@ final class RelationCommand {
         if (!ready(sender))
             return;
         List<RelationEntry> entries = feature.entries(relation);
-        reply(sender, Tone.INFO, relation.name() + " (" + entries.size() + "):");
+        reply(sender, Tone.INFO,
+                language.format("{0} ({1}):",
+                        relation == Relation.FRIEND ? language.translate("Friends")
+                                : language.translate("Enemies"),
+                        entries.size()));
         for (RelationEntry entry : entries) {
             reply(sender, Tone.INFO,
-                    "  " + entry.name() + (entry.playerId() == null ? " (UUID "
-                            + feature.resolutionOf(entry.name()).name().toLowerCase(Locale.ROOT)
-                            + ")" : ""));
+                    "  " + entry.name()
+                            + (entry.playerId() == null
+                                    ? language.format(" (UUID {0})",
+                                            lookupStatus(feature.resolutionOf(entry.name())))
+                                    : ""));
         }
     }
 
@@ -85,6 +104,25 @@ final class RelationCommand {
             return true;
         reply(sender, Tone.WARNING, problem);
         return false;
+    }
+
+    private String lookupStatus(IdentityLookupState state) {
+        switch (state) {
+            case WAITING:
+                return language.translate("waiting");
+            case RESOLVING:
+                return language.translate("resolving");
+            case RETRYING:
+                return language.translate("retrying");
+            case NOT_FOUND:
+                return language.translate("not_found");
+            case FAILED:
+                return language.translate("failed");
+            case CONFIRMED:
+                return language.translate("confirmed");
+            default:
+                return language.translate("unknown");
+        }
     }
 
     private List<String> playerNames(boolean includeTab) {

@@ -18,15 +18,23 @@
  */
 package pit12.runtime.config;
 
+import pit12.runtime.languages.Languages;
+
 public final class ConfigCategory {
     private final String id;
-    private final String displayName;
+    private final String originalDisplayName;
+    private String displayName;
     private final int displayOrder;
 
     public ConfigCategory(String id, String displayName, int displayOrder) {
         this.id = ConfigNames.requireStableId(id, "category id");
+        originalDisplayName = displayName;
         this.displayName = displayName;
         this.displayOrder = displayOrder;
+    }
+
+    void localize(Languages language) {
+        displayName = language.translate(originalDisplayName);
     }
 
     public String id() {
