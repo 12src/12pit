@@ -76,23 +76,23 @@ Percent chance of ignoring a bite and waiting for the next one.
 
 // src/main/java/pit12/feature/eventlist/EventListCommand.java:47
 Show stored events
-显示已保存的事件
+显示已保存的活动
 
 // src/main/java/pit12/feature/eventlist/EventListCommand.java:63
 Unknown event: {0}
-未知事件：{0}
+未知活动：{0}
 
 // src/main/java/pit12/feature/eventlist/EventListCommand.java:67
 {0} events ({1}):
-{0}事件（{1}）：
+{0}活动（{1}）：
 
 // src/main/java/pit12/feature/eventlist/EventListCommand.java:77
   No stored events
-  没有已保存的事件
+  没有已保存的活动
 
 // src/main/java/pit12/feature/eventlist/EventListConfig.java:46, src/main/java/pit12/feature/eventlist/EventListConfig.java:50
 Event List
-事件列表
+活动列表
 
 // src/main/java/pit12/feature/eventlist/EventListConfig.java:47, src/main/java/pit12/feature/gamma/GammaConfig.java:31, src/main/java/pit12/feature/itemesp/ItemEspConfig.java:35, src/main/java/pit12/feature/playeresp/PlayerEspConfig.java:43, src/main/java/pit12/feature/playerlist/PlayerListConfig.java:51, src/main/java/pit12/feature/tooltip/TooltipConfig.java:34
 Render
@@ -100,7 +100,7 @@ Render
 
 // src/main/java/pit12/feature/eventlist/EventListConfig.java:48
 Shows upcoming Pit events and their current stages.
-显示即将发生的 Pit 事件及其当前阶段。
+显示即将发生的 Pit 活动及其当前阶段。
 
 // src/main/java/pit12/feature/eventlist/EventListConfig.java:49, src/main/java/pit12/feature/playerlist/PlayerListConfig.java:53
 Display
@@ -108,11 +108,11 @@ Display
 
 // src/main/java/pit12/feature/eventlist/EventListConfig.java:51
 Event count
-事件数量
+活动数量
 
 // src/main/java/pit12/feature/eventlist/EventListConfig.java:52
 Sets the number of event rows. The day and night row is separate.
-设置事件行数，昼夜信息单独显示。
+设置活动行数，昼夜信息单独显示。
 
 // src/main/java/pit12/feature/eventlist/EventListConfig.java:54
 Show day and night
@@ -120,7 +120,7 @@ Show day and night
 
 // src/main/java/pit12/feature/eventlist/EventListConfig.java:55
 Shows the Pit day and night cycle above the events.
-在事件上方显示 Pit 的昼夜周期。
+在活动列表上方显示 Pit 的昼夜周期。
 
 // src/main/java/pit12/feature/eventlist/EventListConfig.java:56
 Show status icons
@@ -128,15 +128,15 @@ Show status icons
 
 // src/main/java/pit12/feature/eventlist/EventListConfig.java:57
 Marks upcoming major and minor events, preparation, and active events.
-标记即将发生的重大和小型事件，以及准备和进行中的事件。
+标记即将发生的重大和小型活动，以及准备和进行中的活动。
 
 // src/main/java/pit12/feature/eventlist/EventListConfig.java:59
 Show event colors
-显示事件颜色
+显示活动颜色
 
 // src/main/java/pit12/feature/eventlist/EventListConfig.java:60
 Uses each event's color for its name.
-用事件对应的颜色显示名称。
+用活动对应的颜色显示名称。
 
 // src/main/java/pit12/feature/eventlist/EventListConfig.java:61
 Pad time with zeros
@@ -152,7 +152,7 @@ Time format
 
 // src/main/java/pit12/feature/eventlist/EventListConfig.java:64
 Sets how event times are shown.
-设置事件时间的显示方式。
+设置活动时间的显示方式。
 
 // src/main/java/pit12/feature/eventlist/EventListConfig.java:65
 Countdown
@@ -172,43 +172,43 @@ Filter
 
 // src/main/java/pit12/feature/eventlist/EventListConfig.java:69
 Major events
-重大事件
+重大活动
 
 // src/main/java/pit12/feature/eventlist/EventListConfig.java:70
 Show major events
-显示重大事件
+显示重大活动
 
 // src/main/java/pit12/feature/eventlist/EventListConfig.java:71
 Shows major events in the list.
-在列表中显示重大事件。
+在列表中显示重大活动。
 
 // src/main/java/pit12/feature/eventlist/EventListConfig.java:75, src/main/java/pit12/feature/eventlist/EventListConfig.java:84
 Shows this event in the list.
-在列表中显示此事件。
+在列表中显示此活动。
 
 // src/main/java/pit12/feature/eventlist/EventListConfig.java:78
 Minor events
-小型事件
+小型活动
 
 // src/main/java/pit12/feature/eventlist/EventListConfig.java:79
 Show minor events
-显示小型事件
+显示小型活动
 
 // src/main/java/pit12/feature/eventlist/EventListConfig.java:80
 Shows minor events in the list.
-在列表中显示小型事件。
+在列表中显示小型活动。
 
 // src/main/java/pit12/feature/eventlist/EventListFeature.java:247
 Could not load events
-无法加载事件
+无法加载活动
 
 // src/main/java/pit12/feature/eventlist/EventListFeature.java:248
 Event schedule has ended
-事件日程已结束
+活动日程已结束
 
 // src/main/java/pit12/feature/eventlist/EventListFeature.java:249
 Loading events…
-正在加载事件…
+正在加载活动…
 
 // src/main/java/pit12/feature/eventlist/EventListSnapshot.java:73
 Day
@@ -220,7 +220,7 @@ Night
 
 // src/main/java/pit12/feature/eventlist/EventListSnapshot.java:79
 No events match the filters
-没有符合筛选条件的事件
+没有符合筛选条件的活动
 
 // src/main/java/pit12/feature/eventlist/EventListSnapshot.java:101
 Preparing
@@ -304,7 +304,7 @@ Auction
 
 // src/main/java/pit12/feature/gamma/GammaConfig.java:31
 Gamma
-伽马
+伽马覆写
 
 // src/main/java/pit12/feature/gamma/GammaConfig.java:32
 Adjusts world brightness with a custom gamma value.
