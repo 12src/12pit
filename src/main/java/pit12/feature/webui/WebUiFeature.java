@@ -44,6 +44,7 @@ public final class WebUiFeature implements ClientLifecycle, ConfigChangeListener
     private final WebUiConfig config;
     private final ConfigCatalog catalog;
     private final Languages language;
+    private final HudEditor hudEditor;
     private final WebUiServer server;
     private boolean started;
 
@@ -53,8 +54,8 @@ public final class WebUiFeature implements ClientLifecycle, ConfigChangeListener
         this.catalog = catalog;
         this.language = language;
         this.config = config;
-        server = new WebUiServer(minecraft, catalog, profiles, relations, hudEditor, swapBindings,
-                language);
+        this.hudEditor = hudEditor;
+        server = new WebUiServer(minecraft, catalog, profiles, relations, swapBindings, language);
     }
 
     @Override
@@ -94,10 +95,21 @@ public final class WebUiFeature implements ClientLifecycle, ConfigChangeListener
 
     @SubscribeEvent
     public void onKeyInput(InputEvent.KeyInputEvent ignoredEvent) {
-        int key = config.keybind().get().intValue();
+        int key = config.keybind().get();
         if (key == Keyboard.KEY_NONE || minecraft.currentScreen != null
                 || !Keyboard.getEventKeyState() || Keyboard.isRepeatEvent()
                 || Keyboard.getEventKey() != key) {
+            return;
+        }
+        if (config.keybindAction().get() == 1) {
+            hudEditor.open();
+        } else {
+            open();
+        }
+    }
+
+    public void open() {
+        if (!started) {
             return;
         }
         URI address = server.address();

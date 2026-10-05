@@ -55,7 +55,6 @@ import java.util.concurrent.TimeUnit;
 import net.minecraft.client.Minecraft;
 import org.lwjgl.input.Keyboard;
 import pit12.bootstrap.BuildConfig;
-import pit12.feature.hudeditor.api.HudEditor;
 import pit12.feature.profile.api.ProfileCreateSession;
 import pit12.feature.profile.api.ProfileMutationResult;
 import pit12.feature.profile.api.ProfileSummary;
@@ -88,7 +87,6 @@ final class WebUiServer {
     private final ConfigCatalog catalog;
     private final Profiles profiles;
     private final Relations relations;
-    private final HudEditor hudEditor;
     private final SwapBindings swapBindings;
     private final SettingsTransfer transfer;
     private final Gson gson = new Gson();
@@ -99,13 +97,12 @@ final class WebUiServer {
     private ExecutorService executor;
 
     WebUiServer(Minecraft minecraft, ConfigCatalog catalog, Profiles profiles, Relations relations,
-            HudEditor hudEditor, SwapBindings swapBindings, Languages language) {
+            SwapBindings swapBindings, Languages language) {
         this.language = language;
         this.minecraft = minecraft;
         this.catalog = catalog;
         this.profiles = profiles;
         this.relations = relations;
-        this.hudEditor = hudEditor;
         this.swapBindings = swapBindings;
         transfer = new SettingsTransfer(profiles, relations, swapBindings);
     }
@@ -202,7 +199,7 @@ final class WebUiServer {
         if (!"POST".equals(exchange.getRequestMethod()) || !"/api/setting".equals(path)
                 && !"/api/profile".equals(path) && !"/api/relation".equals(path)
                 && !"/api/transfer/export".equals(path) && !"/api/transfer/preview".equals(path)
-                && !"/api/transfer/apply".equals(path) && !"/api/hud-editor".equals(path)) {
+                && !"/api/transfer/apply".equals(path)) {
             sendJson(exchange, 404, object("error", "Unknown endpoint"));
             return;
         }
@@ -226,10 +223,6 @@ final class WebUiServer {
         }
         JsonObject request = parsed.getAsJsonObject();
         sendJson(exchange, 200, onClient(() -> {
-            if ("/api/hud-editor".equals(path)) {
-                hudEditor.open();
-                return state();
-            }
             if ("/api/transfer/export".equals(path)) {
                 return transfer.exportData(request);
             }
@@ -365,6 +358,8 @@ final class WebUiServer {
                     session.cancel();
                 }
             }
+        } else if ("reset".equals(action)) {
+            result = profiles.resetActive();
         } else {
             UUID id = UUID.fromString(requiredString(request, "id"));
             switch (action) {

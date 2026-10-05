@@ -32,6 +32,8 @@ public interface Profiles {
 
     ProfileMutationResult switchTo(UUID profileId);
 
+    ProfileMutationResult resetActive();
+
     ProfileMutationResult beginCreate();
 
     ProfileMutationResult rename(UUID profileId, String name);
