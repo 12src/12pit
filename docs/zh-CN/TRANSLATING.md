@@ -1,6 +1,6 @@
-<!-- Source: docs/TRANSLATING.md; Based on: f293ac9e7ef68fc0145c6c72f93b5c3f30dbf7c5 -->
+<!-- Source: docs/TRANSLATING.md; Based on: 21ad9d4e5bba89917eaf6e9187b2fa27c724982e -->
 
-# 翻译 12pit
+# 贡献翻译
 
 ## 通用规则
 
@@ -12,7 +12,69 @@
 
 添加前是否需要讨论，取决于语言标签。例如，`zh-CN` 使用 ISO 639-1 代码 `zh`，因此无需事先讨论。
 
-## 文档翻译
+## 贡献界面翻译
+
+Web UI、配置文字、命令回显和 HUD 标签使用同一套语言文件。使用 Python 3，在仓库根目录运行以下命令。
+
+### 准备语言文件
+
+先查看已有语言及其进度：
+
+```sh
+python scripts/languages.py status
+```
+
+更新已有语言时，先同步文件。将 `zh-CN` 替换为你选择的语言标签：
+
+```sh
+python scripts/languages.py sync --language zh-CN
+```
+
+同步会保留已有译文，补充新的英文原文。已删除原文的译文会保存到 `.obsolete.txt` 文件，供后续参考。
+
+添加新语言时，使用 `add`，指定语言标签和本地名称：
+
+```sh
+python scripts/languages.py add fr-FR --name Français
+```
+
+脚本会将语言登记到 `languages.json`，并创建文本文件。已有语言的设置值保持不变，无需修改 Java 或前端代码。
+
+### 填写译文
+
+打开 `src/main/resources/assets/pit12/languages/<语言标签>.txt`。每个条目有两行：第一行是英文原文，第二行是译文。在第二行填写翻译：
+
+```text
+Player List
+玩家列表
+
+Bound {0} to {1} ({2})
+已将{0}绑定到{1}（{2}）
+```
+
+译文行留空时使用英文。不要修改英文原文。`//` 开头的行标明文字的使用位置。保留 `{0}` 等编号参数及其出现次数，可以调整顺序。保留 `§a` 等 Minecraft 格式代码。
+
+用 `\n` 表示换行，`\t` 表示制表符，`\\` 表示反斜杠。文件保存为 UTF-8。如果翻译期间英文原文发生变化，再次运行 `sync --language <语言标签>`，并核对新增条目。
+
+### 核对译文
+
+查看该语言的进度和文件问题：
+
+```sh
+python scripts/languages.py status --language zh-CN
+```
+
+状态会显示已翻译数量和完成比例，空译文不计入已翻译数量。它也会报告缺失或过时条目、重复原文、非法转义和参数错误。不带 `--language` 时，`status` 显示所有语言，`sync` 更新所有翻译文件。
+
+结合使用位置通读译文。状态检查文件结构，不判断用词是否合适。需要在 Mod 中核对文字时，构建包含修改后资源的版本，再到 Settings 页面选择语言。构建会打包语言文件，但不会运行脚本。
+
+### 提交译文
+
+拉取请求聚焦一种语言，包含 TXT 文件；新增语言时，也包含 `languages.json` 中的条目。说明贡献的语言、修改的文字和核对方式。未完成的条目留空，并在拉取请求中说明尚未完成的部分。
+
+修改代码中的英文原文时，参阅[实现指南的语言部分](IMPLEMENTATION.md#语言)。
+
+## 贡献文档翻译
 
 ### 路径和链接
 
