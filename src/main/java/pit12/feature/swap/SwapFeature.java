@@ -106,6 +106,7 @@ public final class SwapFeature implements ClientLifecycle, ConfigChangeListener,
         if (!started)
             return;
         started = false;
+        controller.finish(false);
         configs.removeListener(this);
         session.removeListener(sessionListener);
         updateListening();
@@ -114,12 +115,18 @@ public final class SwapFeature implements ClientLifecycle, ConfigChangeListener,
 
     @Override
     public void onConfigChanged(ConfigChangeSet changes) {
-        if (changes.affects("swap", "enabled"))
+        if (changes.affects("swap", "enabled")) {
+            if (!config.enabled()) {
+                controller.cancel();
+                automatic.reset();
+                overlay.clear();
+            }
             updateListening();
+        }
     }
 
     private void updateListening() {
-        boolean enabled = started && config.enabled();
+        boolean enabled = started && (config.enabled() || !controller.idle());
         if (enabled == listening)
             return;
         listening = enabled;
@@ -129,7 +136,6 @@ public final class SwapFeature implements ClientLifecycle, ConfigChangeListener,
         } else {
             hookBinding.pit12$bindSwapHooks(null);
             MinecraftForge.EVENT_BUS.unregister(this);
-            controller.cancel();
             automatic.reset();
             updateMouseGrab();
             overlay.clear();
@@ -138,11 +144,12 @@ public final class SwapFeature implements ClientLifecycle, ConfigChangeListener,
     }
 
     private void worldChanged() {
-        controller.abandon();
+        controller.finish(false);
         automatic.reset();
         updateMouseGrab();
         overlay.clear();
         rightClickHeld = false;
+        updateListening();
     }
 
     private void lockInput() {
@@ -169,7 +176,7 @@ public final class SwapFeature implements ClientLifecycle, ConfigChangeListener,
         // Restore held states without replaying presses buffered while the inventory was open.
         for (KeyBinding binding : minecraft.gameSettings.keyBindings) {
             int key = binding.getKeyCode();
-            if (listening && (key == config.unequipKey.get() || bindings.hasKey(key)))
+            if (config.enabled() && (key == config.unequipKey.get() || bindings.hasKey(key)))
                 continue;
             KeyBinding.setKeyBindState(key, physicallyHeld(key));
         }
@@ -193,7 +200,7 @@ public final class SwapFeature implements ClientLifecycle, ConfigChangeListener,
     public boolean key(int key, boolean pressed, boolean repeat) {
         if (inputLocked())
             return true;
-        if (!pressed || key <= 0 || key >= Keyboard.KEYBOARD_SIZE || !listening
+        if (!pressed || key <= 0 || key >= Keyboard.KEYBOARD_SIZE || !config.enabled()
                 || !controller.acceptsInput())
             return false;
         boolean unequip = key == controller.unequipKey();
@@ -213,7 +220,7 @@ public final class SwapFeature implements ClientLifecycle, ConfigChangeListener,
             return true;
         if (rightClickHeld)
             return true;
-        if (!listening || !controller.rightClickEnabled() || minecraft.currentScreen != null
+        if (!config.enabled() || !controller.rightClickEnabled() || minecraft.currentScreen != null
                 || !controller.acceptsInput())
             return false;
         ItemStack held = minecraft.thePlayer.getHeldItem();
@@ -240,6 +247,13 @@ public final class SwapFeature implements ClientLifecycle, ConfigChangeListener,
         automatic.sound(name, x, y, z, volume, pitch);
     }
 
+    @Override
+    public void inventoryTick() {
+        controller.tick();
+        updateMouseGrab();
+        updateListening();
+    }
+
     @SubscribeEvent
     public void onTick(TickEvent.ClientTickEvent event) {
         if (event.phase != TickEvent.Phase.END)
@@ -247,7 +261,6 @@ public final class SwapFeature implements ClientLifecycle, ConfigChangeListener,
         if (!physicallyHeld(minecraft.gameSettings.keyBindUseItem.getKeyCode()))
             rightClickHeld = false;
         automatic.tick();
-        controller.tick();
         updateMouseGrab();
         overlay.refresh();
     }
@@ -294,6 +307,16 @@ public final class SwapFeature implements ClientLifecycle, ConfigChangeListener,
     public void onDraw(GuiScreenEvent.DrawScreenEvent.Pre event) {
         if (controller.owns(event.gui) && controller.hidden())
             event.setCanceled(true);
+    }
+
+    @Override
+    public void clickSent(int windowId, short actionNumber) {
+        controller.clickSent(windowId, actionNumber);
+    }
+
+    @Override
+    public void confirmClick(int windowId, short actionNumber, boolean accepted) {
+        controller.confirmClick(windowId, actionNumber, accepted);
     }
 
     private void report(Tone tone, String message) {

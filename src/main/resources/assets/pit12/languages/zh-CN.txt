@@ -946,6 +946,14 @@ Close delay
 Ticks to wait after the last request finishes before closing the inventory.
 最后一个请求完成后，关闭物品栏前等待的 tick 数。
 
+// src/main/java/pit12/feature/swap/SwapConfig.java:78
+Resume input next tick
+下一 tick 恢复输入
+
+// src/main/java/pit12/feature/swap/SwapConfig.java:79
+Keeps all input locked until the next tick after closing the inventory.
+关闭物品栏后，将所有输入锁定到下一 tick。
+
 // src/main/java/pit12/feature/swap/SwapConfig.java:77
 Swap messages
 切换消息
@@ -1142,21 +1150,25 @@ Restore threshold
 Health points needed to restore leggings in Health mode. Health must also exceed the trigger threshold.
 生命值模式中，还原护腿所需的生命值，且必须高于切换触发值。
 
-// src/main/java/pit12/feature/swap/SwapController.java:209
-Inventory did not open; swap stopped
-物品栏未打开，切换已停止
+// src/main/java/pit12/feature/swap/SwapController.java:227
+Inventory did not open
+物品栏未打开
 
-// src/main/java/pit12/feature/swap/SwapController.java:225
-Swap stopped
-切换已停止
+// src/main/java/pit12/feature/swap/SwapController.java:242
+Unexpected error
+发生意外错误
+
+// src/main/java/pit12/feature/swap/SwapController.java:259
+Server rejected the inventory click
+服务器拒绝了物品栏点击
 
 // src/main/java/pit12/feature/swap/SwapController.java:276, src/main/java/pit12/feature/swap/SwapController.java:468
 Missing item: {0}
 缺少物品：{0}
 
-// src/main/java/pit12/feature/swap/SwapController.java:332
-Inventory changed; swap stopped
-物品栏已变化，切换已停止
+// src/main/java/pit12/feature/swap/SwapController.java:183, src/main/java/pit12/feature/swap/SwapController.java:363
+Inventory changed
+物品栏已变化
 
 // src/main/java/pit12/feature/swap/SwapController.java:346
 Swapped: {0}
@@ -1166,9 +1178,13 @@ Swapped: {0}
 Swapped {0} item(s)
 已切换{0}件物品
 
-// src/main/java/pit12/feature/swap/SwapController.java:377
-Inventory could not be closed
-无法关闭物品栏
+// src/main/java/pit12/feature/swap/SwapController.java:404
+Swap failed: {0}
+切换失败：{0}
+
+// src/main/java/pit12/feature/swap/SwapController.java:446
+Swap failed: inventory could not be closed
+切换失败：无法关闭物品栏
 
 // src/main/java/pit12/feature/swap/SwapController.java:434
 Armor could not be moved to the inventory
@@ -1178,9 +1194,9 @@ Armor could not be moved to the inventory
 Not enough inventory space to unequip armor
 物品栏空间不足，无法卸下护甲
 
-// src/main/java/pit12/feature/swap/SwapController.java:444, src/main/java/pit12/feature/swap/SwapController.java:460
-Transfer slot changed; swap stopped
-中转槽位已变化，切换已停止
+// src/main/java/pit12/feature/swap/SwapController.java:526, src/main/java/pit12/feature/swap/SwapController.java:542
+Transfer slot changed
+中转槽位已变化
 
 // src/main/java/pit12/feature/swap/SwapController.java:449
 Armor could not be equipped

@@ -23,7 +23,10 @@ import org.lwjgl.input.Keyboard;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.Slice;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import pit12.feature.swap.SwapHooks;
 import pit12.feature.swap.SwapHooksBinding;
 
@@ -40,6 +43,18 @@ public abstract class MinecraftMixin implements SwapHooksBinding {
     @Override
     public SwapHooks pit12$swapHooks() {
         return pit12$swapHooks;
+    }
+
+    // This point follows GUI input and precedes movement, even when the inventory pauses the world.
+    @Inject(method = "runTick",
+            slice = @Slice(from = @At(value = "INVOKE",
+                    target = "Lnet/minecraft/client/Minecraft;sendClickBlockToController(Z)V")),
+            at = @At(value = "FIELD",
+                    target = "Lnet/minecraft/client/Minecraft;theWorld:Lnet/minecraft/client/multiplayer/WorldClient;",
+                    ordinal = 0))
+    private void pit12$afterInput(CallbackInfo callback) {
+        if (pit12$swapHooks != null)
+            pit12$swapHooks.inventoryTick();
     }
 
     @Redirect(method = "runTick",

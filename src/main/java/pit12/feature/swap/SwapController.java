@@ -37,6 +37,7 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.inventory.GuiInventory;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
+import net.minecraft.network.play.client.C16PacketClientStatus;
 import pit12.runtime.languages.Languages;
 import pit12.runtime.session.ClientSession;
 import pit12.shared.chat.ChatFeedback.Tone;
@@ -55,6 +56,7 @@ final class SwapController {
     private final Deque<Action> actions = new ArrayDeque<>();
     private final Set<String> problems = new LinkedHashSet<>();
     private final List<String> completed = new ArrayList<>();
+    private final Set<Short> pendingClicks = new HashSet<>();
     private SwapConfig.Options options;
     private EntityPlayerSP player;
     private long sessionRevision;
@@ -65,6 +67,11 @@ final class SwapController {
     private GuiInventory screen;
     private Request current;
     private int groupWorkspace;
+    private boolean cancelling;
+    private boolean restoreOnCancel;
+    private boolean sendingClick;
+    private boolean waitingToResume;
+    private String rejection;
 
     SwapController(Minecraft minecraft, ClientSession session, SwapConfig config,
             BindingBook bindings, BiConsumer<Tone, String> report, Runnable lockInput,
@@ -142,7 +149,7 @@ final class SwapController {
     }
 
     private void enqueue(Request request, Object identity) {
-        if (!acceptsInput() || !accepted.add(identity))
+        if (cancelling || waitingToResume || !acceptsInput() || !accepted.add(identity))
             return;
         if (options == null) {
             options = new SwapConfig.Options(config);
@@ -159,25 +166,34 @@ final class SwapController {
         if (options == null)
             return;
         if (session.revision() != sessionRevision || minecraft.thePlayer != player) {
-            abandon();
-            return;
-        }
-        if (!acceptsInput()) {
-            cancel();
-            return;
-        }
-        if (screen != null && minecraft.currentScreen != screen) {
-            cancel();
+            finish(false);
             return;
         }
         try {
+            if (rejection != null) {
+                fail(rejection);
+                rejection = null;
+            }
+            if (waitingToResume) {
+                finish(false);
+                return;
+            }
+            if (!acceptsInput() || screen != null && minecraft.currentScreen != screen) {
+                if (!cancelling)
+                    fail(language.translate("Inventory changed"));
+                restoreOnCancel = false;
+            }
+            if (cancelling) {
+                finishCancellation();
+                return;
+            }
             while (options != null) {
                 if (current == null) {
                     if (queue.isEmpty()) {
                         if (closeAt < 0)
                             closeAt = tick + options.closeDelay;
                         if (screen == null || tick >= closeAt)
-                            finish();
+                            finish(true);
                         return;
                     }
                     current = queue.removeFirst();
@@ -200,13 +216,15 @@ final class SwapController {
                     continue;
                 }
                 if (screen == null) {
+                    player.sendQueue.addToSendQueue(new C16PacketClientStatus(
+                            C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT));
                     screen = new GuiInventory(player);
                     minecraft.displayGuiScreen(screen);
                     if (options == null)
                         return;
                     if (!owns(minecraft.currentScreen) || !acceptsInput()) {
                         throw new IllegalStateException(
-                                language.translate("Inventory did not open; swap stopped"));
+                                language.translate("Inventory did not open"));
                     }
                     lastClickTick = tick;
                 }
@@ -221,11 +239,24 @@ final class SwapController {
                     actions.removeFirst();
             }
         } catch (RuntimeException failure) {
-            report.accept(Tone.ERROR,
-                    failure.getMessage() == null ? language.translate("Swap stopped")
-                            : failure.getMessage());
-            cancel();
+            fail(failure.getMessage() == null ? language.translate("Unexpected error")
+                    : failure.getMessage());
         }
+    }
+
+    void clickSent(int windowId, short actionNumber) {
+        if (!sendingClick || windowId != player.inventoryContainer.windowId)
+            return;
+        pendingClicks.add(actionNumber);
+    }
+
+    void confirmClick(int windowId, short actionNumber, boolean accepted) {
+        if (options == null || player != minecraft.thePlayer
+                || windowId != player.inventoryContainer.windowId
+                || !pendingClicks.remove(actionNumber))
+            return;
+        if (!accepted)
+            rejection = language.translate("Server rejected the inventory click");
     }
 
     private void prepare() {
@@ -329,10 +360,15 @@ final class SwapController {
     private void click(int slot, int button, int mode) {
         if (!owns(minecraft.currentScreen) || player.openContainer != player.inventoryContainer
                 || player.inventory.getItemStack() != null) {
-            throw new IllegalStateException(language.translate("Inventory changed; swap stopped"));
+            throw new IllegalStateException(language.translate("Inventory changed"));
         }
-        minecraft.playerController.windowClick(player.inventoryContainer.windowId, slot, button,
-                mode, player);
+        sendingClick = true;
+        try {
+            minecraft.playerController.windowClick(player.inventoryContainer.windowId, slot, button,
+                    mode, player);
+        } finally {
+            sendingClick = false;
+        }
         current.started = true;
         clicked = true;
         lastClickTick = tick;
@@ -349,35 +385,76 @@ final class SwapController {
     }
 
     void cancel() {
-        if (options == null)
+        if (options == null || cancelling)
             return;
-        if (session.revision() == sessionRevision && player == minecraft.thePlayer
-                && minecraft.theWorld != null && owns(minecraft.currentScreen)
-                && player.openContainer == player.inventoryContainer
-                && player.inventory.getItemStack() == null) {
-            Action action = actions.peekFirst();
-            if (action != null)
-                action.restoreOnCancel();
+        cancelling = true;
+        restoreOnCancel = true;
+        queue.clear();
+        closeAt = -1;
+    }
+
+    private void fail(String message) {
+        if (options != null) {
+            cancel();
+            restoreOnCancel = false;
+            pendingClicks.clear();
+            if (closeAt < 0)
+                closeAt = tick + options.closeDelay;
         }
-        finish();
+        report.accept(Tone.ERROR, language.format("Swap failed: {0}", message));
     }
 
-    void abandon() {
-        reset();
+    private void finishCancellation() {
+        if (restoreOnCancel) {
+            Action action = actions.peekFirst();
+            if (action != null && options.restore && action.restorable()) {
+                int delay = current.key == 0 ? options.swapDelay : options.bindingDelay;
+                if (tick - lastClickTick < delay)
+                    return;
+                action.swap(action.source, action.work);
+            }
+            restoreOnCancel = false;
+        }
+        if (closeAt < 0)
+            closeAt = tick + options.closeDelay;
+        if (screen == null || tick >= closeAt)
+            finish(true);
     }
 
-    private void finish() {
-        if (session.revision() == sessionRevision && player == minecraft.thePlayer
-                && minecraft.theWorld != null && owns(minecraft.currentScreen)
-                && player.openContainer == player.inventoryContainer
-                && player.inventory.getItemStack() == null) {
-            try {
-                player.closeScreen();
-            } catch (RuntimeException failure) {
-                report.accept(Tone.ERROR, language.translate("Inventory could not be closed"));
+    void finish(boolean allowDelay) {
+        boolean closingInventory = owns(minecraft.currentScreen);
+        try {
+            if (closingInventory) {
+                try {
+                    if (session.revision() == sessionRevision && player == minecraft.thePlayer
+                            && minecraft.theWorld != null
+                            && player.openContainer == player.inventoryContainer) {
+                        player.closeScreen();
+                    } else {
+                        minecraft.displayGuiScreen(null);
+                    }
+                } finally {
+                    if (owns(minecraft.currentScreen)) {
+                        // GUI listeners can veto closing; detach our screen before releasing input.
+                        minecraft.currentScreen = null;
+                        if (minecraft.thePlayer != null && minecraft.theWorld != null)
+                            minecraft.setIngameFocus();
+                    }
+                }
+            }
+        } catch (RuntimeException failure) {
+            report.accept(Tone.ERROR,
+                    language.translate("Swap failed: inventory could not be closed"));
+        } finally {
+            if (owns(minecraft.currentScreen))
+                minecraft.currentScreen = null;
+            if (allowDelay && closingInventory && options != null && options.resumeInputNextTick
+                    && minecraft.currentScreen == null) {
+                waitingToResume = true;
+            } else {
+                reset();
             }
         }
-        reset();
     }
 
     private void reset() {
@@ -392,12 +469,18 @@ final class SwapController {
         actions.clear();
         problems.clear();
         completed.clear();
+        pendingClicks.clear();
         options = null;
         player = null;
         screen = null;
         current = null;
         clicked = false;
         closeAt = -1;
+        cancelling = false;
+        restoreOnCancel = false;
+        sendingClick = false;
+        waitingToResume = false;
+        rejection = null;
         if (active)
             releaseInput.accept(resume);
     }
@@ -440,8 +523,7 @@ final class SwapController {
             if (stage == 1) {
                 if (!binding.identity.matches(stack(36 + work))
                         || !ItemStack.areItemStacksEqual(stack(source), originalWorkspace)) {
-                    throw new IllegalStateException(
-                            language.translate("Transfer slot changed; swap stopped"));
+                    throw new IllegalStateException(language.translate("Transfer slot changed"));
                 }
                 swap(binding.guiTarget(), work);
                 if (!binding.identity.matches(stack(binding.guiTarget()))) {
@@ -456,8 +538,7 @@ final class SwapController {
             }
             if (stage == 2) {
                 if (!restorable())
-                    throw new IllegalStateException(
-                            language.translate("Transfer slot changed; swap stopped"));
+                    throw new IllegalStateException(language.translate("Transfer slot changed"));
                 swap(source, work);
                 complete();
                 return;
@@ -506,15 +587,6 @@ final class SwapController {
         private boolean restorable() {
             return stage > 0 && ItemStack.areItemStacksEqual(stack(source), originalWorkspace)
                     && ItemStack.areItemStacksEqual(stack(36 + work), expectedWorkspace);
-        }
-
-        void restoreOnCancel() {
-            if (binding != null && options.restore && restorable()) {
-                try {
-                    swap(source, work);
-                } catch (RuntimeException ignored) {
-                }
-            }
         }
 
         private void verifyAndComplete() {
