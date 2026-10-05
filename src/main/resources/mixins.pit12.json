@@ -9,6 +9,7 @@
   "client": [
     "lifecycle.MinecraftShutdownMixin",
     "accessor.FMLModContainerAccessor",
+    "accessor.MinecraftAccessor",
     "network.FMLHandshakeClientStateMixin",
     "player.NetHandlerPlayClientEquipmentMixin",
     "player.NetHandlerPlayClientTabMixin",

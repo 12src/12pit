@@ -25,6 +25,8 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.minecraft.client.Minecraft;
+import pit12.feature.autofish.AutoFishConfig;
+import pit12.feature.autofish.AutoFishFeature;
 import pit12.feature.eventlist.EventListConfig;
 import pit12.feature.eventlist.EventListFeature;
 import pit12.feature.gamma.GammaBinding;
@@ -67,6 +69,7 @@ import pit12.runtime.player.TabPresence;
 import pit12.runtime.player.TabPresenceTracker;
 import pit12.runtime.session.ClientSession;
 import pit12.shared.concurrent.ClientThread;
+import pit12.shared.input.MinecraftActions;
 import pit12.shared.lifecycle.ClientLifecycle;
 import pit12.shared.lifecycle.ClientShutdownBinding;
 
@@ -111,6 +114,7 @@ public final class ClientBootstrap {
         // Category: Player
         registerAutoSprint(configs);
         // Category: Utility
+        registerAutoFish(configs, session, (MinecraftActions) minecraft);
         registerAutoQuickMath(configs);
         // Category: Render
         registerEventList(configs, hudRegistry, commands);
@@ -166,6 +170,13 @@ public final class ClientBootstrap {
     }
 
     // Category: Utility
+    private void registerAutoFish(ConfigCatalog configs, ClientSession session,
+            MinecraftActions actions) {
+        AutoFishConfig config = new AutoFishConfig();
+        configs.register(config);
+        components.add(new AutoFishFeature(configs, config, session, actions));
+    }
+
     private void registerAutoQuickMath(ConfigCatalog configs) {
         AutoQuickMathConfig config = new AutoQuickMathConfig();
         configs.register(config);
