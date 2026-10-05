@@ -105,6 +105,7 @@ final class AutoSwapController {
             if (!poisoned || !automaticPending || pending == null)
                 return;
             swaps.cancel();
+            return;
         }
         if (automaticPending) {
             finishPending();

@@ -37,6 +37,7 @@ public final class SwapConfig extends FeatureConfig {
     final IntegerSetting swapDelay;
     final IntegerSetting bindingDelay;
     final IntegerSetting closeDelay;
+    final BooleanSetting resumeInputNextTick;
     final IntegerSetting unequipKey;
     final BooleanSetting bindingMessages;
     final BooleanSetting swapMessages;
@@ -74,6 +75,10 @@ public final class SwapConfig extends FeatureConfig {
         closeDelay = integerSliderSetting("close_delay", source("Close delay"), source(
                 "Ticks to wait after the last request finishes before closing the inventory."), 1,
                 0, 10, 1);
+        resumeInputNextTick = booleanSetting("resume_input_next_tick",
+                source("Resume input next tick"),
+                source("Keeps all input locked until the next tick after closing the inventory."),
+                true);
         swapMessages = booleanSetting("swap_messages", source("Swap messages"),
                 source("Shows a message after items are swapped or unequipped."), true);
         workspace = integerSliderSetting("workspace_slot", source("Transfer slot"),
@@ -147,6 +152,7 @@ public final class SwapConfig extends FeatureConfig {
         final int swapDelay;
         final int bindingDelay;
         final int closeDelay;
+        final boolean resumeInputNextTick;
         final boolean messages;
         final boolean details;
 
@@ -161,6 +167,7 @@ public final class SwapConfig extends FeatureConfig {
             swapDelay = config.swapDelay.get();
             bindingDelay = config.bindingDelay.get();
             closeDelay = config.closeDelay.get();
+            resumeInputNextTick = config.resumeInputNextTick.get();
             messages = config.swapMessages.get();
             details = config.messageDetails.get();
         }

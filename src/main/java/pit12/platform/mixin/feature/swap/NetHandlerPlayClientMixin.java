@@ -20,7 +20,10 @@ package pit12.platform.mixin.feature.swap;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.network.NetHandlerPlayClient;
+import net.minecraft.network.Packet;
+import net.minecraft.network.play.client.C0EPacketClickWindow;
 import net.minecraft.network.play.server.S29PacketSoundEffect;
+import net.minecraft.network.play.server.S32PacketConfirmTransaction;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -30,6 +33,34 @@ import pit12.feature.swap.SwapHooksBinding;
 
 @Mixin(NetHandlerPlayClient.class)
 public abstract class NetHandlerPlayClientMixin {
+    @Inject(method = "addToSendQueue", at = @At("HEAD"))
+    private void pit12$beforeWindowClick(Packet<?> packet, CallbackInfo callback) {
+        if (!(packet instanceof C0EPacketClickWindow))
+            return;
+        Minecraft minecraft = Minecraft.getMinecraft();
+        if (!minecraft.isCallingFromMinecraftThread() || (Object) this != minecraft.getNetHandler())
+            return;
+        SwapHooks hooks = ((SwapHooksBinding) minecraft).pit12$swapHooks();
+        if (hooks != null) {
+            C0EPacketClickWindow click = (C0EPacketClickWindow) packet;
+            hooks.clickSent(click.getWindowId(), click.getActionNumber());
+        }
+    }
+
+    // Vanilla handles rejected clicks first and schedules this handler on the client thread.
+    @Inject(method = "handleConfirmTransaction", at = @At("TAIL"))
+    private void pit12$afterInventoryConfirmation(S32PacketConfirmTransaction packet,
+            CallbackInfo callback) {
+        Minecraft minecraft = Minecraft.getMinecraft();
+        if ((Object) this != minecraft.getNetHandler())
+            return;
+        SwapHooks hooks = ((SwapHooksBinding) minecraft).pit12$swapHooks();
+        // MCP 22 leaves the acceptance getter unmapped.
+        if (hooks != null)
+            hooks.confirmClick(packet.getWindowId(), packet.getActionNumber(),
+                    packet.func_148888_e());
+    }
+
     // TAIL runs after vanilla moves packet handling onto the client thread; audio settings do not affect it.
     @Inject(method = "handleSoundEffect", at = @At("TAIL"))
     private void pit12$afterSoundEffect(S29PacketSoundEffect packet, CallbackInfo callback) {
