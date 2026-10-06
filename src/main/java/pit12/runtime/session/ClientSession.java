@@ -33,7 +33,7 @@ import pit12.shared.concurrent.ClientThread;
 import pit12.shared.event.Listeners;
 import pit12.shared.lifecycle.ClientLifecycle;
 
-/** One owner publishes connection and world changes after both identities have been updated. */
+/** Listeners see connection and world changes only after both references are updated. */
 public final class ClientSession implements ClientLifecycle {
     private final Minecraft minecraft;
     private final ClientThread client;

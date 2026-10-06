@@ -102,7 +102,6 @@ public final class JsonProfileStore implements ProfileStore {
     }
 
     public void writeProfile(StoredProfile profile) throws IOException {
-        // UUID identity keeps renames and untrusted display names out of filesystem paths.
         AtomicFile.write(directory.resolve(profile.id().toString() + ".json"),
                 codec.encode(profile));
     }

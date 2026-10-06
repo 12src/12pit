@@ -34,7 +34,7 @@ public final class PitEnchantments implements Iterable<PitEnchantments.Entry> {
         if (size == 0) {
             return EMPTY;
         }
-        // The reader does not retain the array, so storing it directly does not expose mutable state.
+        // The reader transfers ownership of this array.
         return new PitEnchantments(size == entries.length ? entries : Arrays.copyOf(entries, size));
     }
 
@@ -62,9 +62,8 @@ public final class PitEnchantments implements Iterable<PitEnchantments.Entry> {
         return formatDisplayNames(true, false, false);
     }
 
-    // Enchanted items normally have at most three entries, so linear scans remain cheap.
     public boolean contains(PitEnchantment enchantment) {
-        // Unknown entries have a null enchantment, so null must not match them.
+        // Unknown entries also have null enchantments.
         if (enchantment == null) {
             return false;
         }
@@ -106,7 +105,7 @@ public final class PitEnchantments implements Iterable<PitEnchantments.Entry> {
             text.append(displayName);
             return;
         }
-        // A color code resets styles, so bold must follow the leading color instead of preceding it.
+        // Color codes reset styles, so apply bold after the leading color.
         if (displayName.length() >= 2 && displayName.charAt(0) == '\u00A7') {
             text.append(displayName, 0, 2).append(EnumChatFormatting.BOLD).append(displayName, 2,
                     displayName.length());

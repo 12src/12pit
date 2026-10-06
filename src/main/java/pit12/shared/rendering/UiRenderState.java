@@ -25,7 +25,7 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL14;
 
 public final class UiRenderState {
-    // LWJGL 2 validates vector glGet buffers against OpenGL's 16-value maximum, even for four-value queries.
+    // LWJGL 2 requires space for 16 values even when glGet reads a four-component color.
     private final FloatBuffer currentColor = BufferUtils.createFloatBuffer(16);
     private final float[] color = new float[4];
     private boolean active;

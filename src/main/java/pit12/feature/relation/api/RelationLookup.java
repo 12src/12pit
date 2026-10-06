@@ -29,7 +29,7 @@ public interface RelationLookup {
 
     List<RelationEntry> entries(Relation relation);
 
-    /** Subscription does not replay state. */
+    /** Listeners receive future changes only. */
     void addListener(RelationListener listener);
 
     void removeListener(RelationListener listener);

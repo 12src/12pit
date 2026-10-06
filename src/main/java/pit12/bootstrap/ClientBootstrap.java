@@ -84,6 +84,7 @@ public final class ClientBootstrap {
     private boolean started;
 
     public ClientBootstrap() {
+        // BootstrapLayoutTest reads the section and category comments.
         // Shared runtime
         Minecraft minecraft = Minecraft.getMinecraft();
         client = new ClientThread(minecraft::isCallingFromMinecraftThread,
@@ -256,7 +257,7 @@ public final class ClientBootstrap {
         }
         try {
             for (ClientLifecycle component : components) {
-                // A failed start may still acquire resources that rollback must release.
+                // A failed start may leave resources that stop() must release.
                 startedComponents.add(component);
                 component.start();
             }

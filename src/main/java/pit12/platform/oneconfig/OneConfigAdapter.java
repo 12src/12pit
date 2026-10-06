@@ -73,7 +73,6 @@ public final class OneConfigAdapter implements ClientLifecycle, ConfigChangeList
             buildPage(featureView, feature);
             featureMods.add(featureView.mod);
         }
-        // @SubConfig uses the same parent/child registry; settings stay bound to 12pit.
         ConfigCore.subMods.put(view.mod, new ArrayList<>(featureMods));
         ConfigCore.mods.addAll(featureMods);
         Config.register(view.mod);
@@ -163,11 +162,11 @@ public final class OneConfigAdapter implements ClientLifecycle, ConfigChangeList
 
         @Override
         public void initialize() {
-            // Base initialization loads files. This view only connects controls to 12pit settings.
+            // Skip OneConfig's file loading because 12pit owns these settings.
             mod.config = this;
         }
 
-        // Card clicks call save on the client thread; the save worker must not change live settings.
+        // OneConfig calls save from both card clicks and a worker. Live settings need the client thread.
         @Override
         public void save() {
             if (canToggle && Minecraft.getMinecraft().isCallingFromMinecraftThread()) {
@@ -192,7 +191,7 @@ public final class OneConfigAdapter implements ClientLifecycle, ConfigChangeList
         ConfigOption.Kind kind = option == null ? null : option.kind();
         String title = setting.originalDisplayName();
         if (kind == ConfigOption.Kind.KEYBIND) {
-            // 12pit stores one keyboard code; OneConfig keybinds also accept mouse buttons and chords.
+            // OneConfig keybinds accept mouse buttons and chords, but 12pit stores one keyboard code.
             title += " (key code)";
         }
         if (setting instanceof ChoiceSetting) {
@@ -304,13 +303,13 @@ public final class OneConfigAdapter implements ClientLifecycle, ConfigChangeList
         if (setting instanceof IntegerSetting) {
             return setting.get();
         }
-        // OneConfig decimal controls expect Float; 12pit stores Double.
+        // OneConfig decimal controls require Float values.
         return setting.get().floatValue();
     }
 
     private void writeNumber(NumberSetting<?> setting, Object value) {
         double number = ((Number) value).doubleValue();
-        // Float bounds can round past the exact limits held by 12pit.
+        // Float rounding can put OneConfig values outside 12pit's bounds.
         setValue(setting,
                 Math.max(setting.minimumValue(), Math.min(setting.maximumValue(), number)));
     }

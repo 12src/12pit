@@ -199,7 +199,7 @@ final class EventListHud implements HudElement {
     private void icon(String symbol, int y, int color) {
         int x = PADDING + (iconWidth - renderer.textWidth(symbol, false)) / 2;
         int iconY = y + (lineHeight - 2 - renderer.fontHeight(symbol, false)) / 2;
-        // The vanilla symbols have the intended proportions, including smaller circles.
+        // The vanilla font keeps circle icons smaller than the other symbols.
         renderer.text(symbol, x, iconY, color, hudConfig.textShadow().get(), false);
     }
 }

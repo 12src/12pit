@@ -88,7 +88,7 @@ public final class HudEditorFeature implements ClientLifecycle, HudEditor {
     @SubscribeEvent
     public void onClientTick(ClientTickEvent event) {
         registry.checkThread();
-        // GuiChat closes itself after dispatching a command, so wait until it is gone.
+        // GuiChat closes itself after dispatching a command.
         if (event.phase != Phase.END || !pendingOpen
                 || minecraft.currentScreen instanceof GuiChat) {
             return;

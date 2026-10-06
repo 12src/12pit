@@ -34,7 +34,7 @@ public final class RelationEntry {
         }
     }
 
-    /** Null until a Tab observation or Mojang lookup confirms the identity. */
+    /** Null until Tab or a Mojang lookup confirms the player's identity. */
     public UUID playerId() {
         return playerId;
     }

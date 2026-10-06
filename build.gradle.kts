@@ -52,7 +52,7 @@ loom {
 
     mixin {
         defaultRefmapName.set("mixins.$modId.refmap.json")
-        // Forge 1.8.9 needs Loom's legacy AP path for MCP mappings to reach Mixin.
+        // Mixin needs Loom's legacy annotation processor to read MCP mappings on Forge 1.8.9.
         useLegacyMixinAp.set(true)
     }
 }
@@ -88,7 +88,7 @@ sourceSets.main {
 
 tasks.compileJava { dependsOn(generateBuildConfig) }
 
-// Layout checks read comments that are absent from compiled classes.
+// Layout checks need the section comments from the source file.
 tasks.test { inputs.file("src/main/java/pit12/bootstrap/ClientBootstrap.java") }
 
 repositories {

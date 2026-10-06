@@ -39,7 +39,7 @@ public abstract class Setting<T> {
     private Runnable checkThread;
 
     /**
-     * Subclasses validate their default after initializing any state used by {@link #requireValue(Object)}.
+     * Subclasses must initialize the fields used by {@link #requireValue(Object)} before validating the default.
      */
     protected Setting(String id, String displayName, String description, T defaultValue,
             StorageType storageType) {
@@ -92,7 +92,7 @@ public abstract class Setting<T> {
         return value;
     }
 
-    /** Setting values are client-thread confined once their catalog is used by started features. */
+    /** After features start, read and change setting values on the client thread. */
     public final void set(T candidate) {
         if (checkThread != null)
             checkThread.run();

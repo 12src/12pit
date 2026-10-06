@@ -169,8 +169,7 @@ public final class AutoFishFeature implements ClientLifecycle, ConfigChangeListe
                 delayTicks--;
                 return;
             }
-            // Consume before clicking so a canceled cast or delayed spawn cannot cause a
-            // retry.
+            // Reset first to prevent retries if the cast is canceled or the hook spawns later.
             reset();
             rightClick();
             return;
@@ -213,8 +212,7 @@ public final class AutoFishFeature implements ClientLifecycle, ConfigChangeListe
                 break;
             case WAITING_FOR_RECOVERY:
             case EMPTY_REEL_DELAY:
-                // A submerged hook can pause mid-bite, so stability alone does not mean
-                // recovery.
+                // A hook can pause below the surface during a bite. Wait for it to rise too.
                 stableTicks =
                         floatingY - hook.posY <= STABLE_MOTION && Math.abs(dy) <= STABLE_MOTION
                                 ? stableTicks + 1

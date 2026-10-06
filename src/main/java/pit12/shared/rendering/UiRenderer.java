@@ -176,7 +176,7 @@ public class UiRenderer {
                 break;
             }
         }
-        // Minecraft reports zero width for missing glyphs; drawString does not report them.
+        // Minecraft reports zero width for missing glyphs.
         if (vanilla || systemText() == null) {
             return FontBackend.VANILLA;
         }
@@ -187,7 +187,7 @@ public class UiRenderer {
         float inverseScale = 1.0F / pixelScale;
         int pixelX = Math.round(x * pixelScale);
         int pixelY = Math.round(y * pixelScale);
-        // Fractional logical scales return to framebuffer pixels before glyph texture sampling.
+        // Draw in framebuffer pixels to keep glyphs aligned at fractional scales.
         GlStateManager.pushMatrix();
         GlStateManager.scale(inverseScale, inverseScale, 1.0F);
         try {
@@ -240,7 +240,7 @@ public class UiRenderer {
         fontAttempted = true;
         int boundTexture = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
         try {
-            // Monocraft has nine design cells per em, so size nine keeps its grid aligned at integer scales.
+            // Monocraft uses nine cells per em. Size nine aligns its grid at integer scales.
             font = new UiFont(minecraft, fontLocation, 9.0F, pixelScale);
         } catch (RuntimeException failure) {
             LOGGER.log(Level.WARNING, "Unable to prepare UI font", failure);

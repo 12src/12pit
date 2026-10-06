@@ -64,12 +64,12 @@ public final class PlayerEquipmentSnapshot {
         return (knownSlots & PlayerEquipmentCache.LEGGINGS) != 0;
     }
 
-    /** Returns a defensive copy, or null when the known slot is empty or unknown. */
+    /** Empty or unobserved slots return null. {@link #heldItemKnown()} distinguishes them. */
     public ItemStack copyHeldItem() {
         return copy(heldItem);
     }
 
-    /** Returns a defensive copy, or null when the known slot is empty or unknown. */
+    /** Empty or unobserved slots return null. {@link #leggingsKnown()} distinguishes them. */
     public ItemStack copyLeggings() {
         return copy(leggings);
     }

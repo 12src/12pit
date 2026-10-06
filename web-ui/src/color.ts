@@ -49,7 +49,7 @@ export function toArgb(color: Rgba): number {
 }
 
 export function toHex(color: Rgba): string {
-  // CSS puts alpha last; the stored ARGB integer puts it first.
+  // CSS hex colors put alpha last.
   return `#${[color.r, color.g, color.b, color.a * 255]
     .map((value) => Math.round(value).toString(16).padStart(2, '0'))
     .join('')}`

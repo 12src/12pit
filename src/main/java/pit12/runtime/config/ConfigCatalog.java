@@ -101,7 +101,7 @@ public final class ConfigCatalog {
         listeners.remove(listener);
     }
 
-    /** Catalog values are client-thread confined once started features consume this catalog. */
+    /** After features start, read and change catalog values on the client thread. */
     public ConfigSnapshot snapshot() {
         client.check();
         LinkedHashMap<String, Map<String, Object>> values =
@@ -167,7 +167,7 @@ public final class ConfigCatalog {
         return new ConfigSnapshot(values);
     }
 
-    /** All candidates are validated before any live setting is changed. Missing known values reset to defaults. */
+    /** Invalid values leave all live settings unchanged. Missing values reset to defaults. */
     public ConfigChangeSet apply(ConfigSnapshot snapshot) {
         client.check();
         ConfigSnapshot normalized = normalize(snapshot);

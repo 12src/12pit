@@ -74,7 +74,7 @@ public final class HudConfig {
     public void placement(HudPlacement placement) {
         offsetX.set(placement.offsetX());
         offsetY.set(placement.offsetY());
-        // An anchor-change listener must not observe offsets from the previous placement.
+        // Set the offsets first so anchor listeners see the new placement.
         anchor.set(placement.anchor().id());
     }
 }

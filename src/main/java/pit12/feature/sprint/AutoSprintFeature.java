@@ -60,7 +60,7 @@ public final class AutoSprintFeature implements ClientLifecycle {
         if (event.phase != Phase.START) {
             return;
         }
-        // Respawns and dimension changes replace the player entity, so the binding is refreshed every tick.
+        // Respawns and dimension changes replace the player entity.
         Object player = Minecraft.getMinecraft().thePlayer;
         if (player instanceof AutoSprintBinding) {
             ((AutoSprintBinding) player).pit12$bindSprintConfig(config);

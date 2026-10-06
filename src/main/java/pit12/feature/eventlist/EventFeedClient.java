@@ -164,7 +164,7 @@ final class EventFeedClient {
         final List<PitEvent> events;
         final long retryAt;
 
-        // The worker transfers its parsed rows to the client through this result.
+        // The worker gives up ownership of events when returning this result.
         Result(List<PitEvent> events, long retryAt) {
             this.events = events == null ? null : Collections.unmodifiableList(events);
             this.retryAt = retryAt;

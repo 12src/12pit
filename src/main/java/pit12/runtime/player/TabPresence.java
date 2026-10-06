@@ -25,7 +25,7 @@ import java.util.UUID;
 public interface TabPresence {
     boolean contains(UUID playerId);
 
-    /** Returns current Tab UUIDs with known profile names; unnamed entries can still be present. */
+    /** Lists Tab entries with known names. {@link #contains(UUID)} also includes unnamed entries. */
     Map<UUID, String> players();
 
     void addListener(TabPresenceListener listener);

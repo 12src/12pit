@@ -131,8 +131,7 @@ final class HudEditorController {
     }
 
     void mouseWheel(int delta) {
-        // A mid-drag scale change invalidates the stored drag offsets, so the wheel only
-        // applies once the element is released.
+        // Changing scale during a drag invalidates the stored offsets.
         if (selected == null || dragging != null) {
             return;
         }

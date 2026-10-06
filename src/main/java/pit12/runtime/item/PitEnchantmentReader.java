@@ -36,7 +36,7 @@ public final class PitEnchantmentReader {
         int size = 0;
         for (int index = 0; index < count; index++) {
             NBTTagCompound tag = enchantments.getCompoundTagAt(index);
-            // Missing or mismatched NBT values resolve to "" and 0, which are rejected below.
+            // NBT getters return "" or 0 for missing or mismatched tags.
             String key = tag.getString("Key");
             int level = tag.getInteger("Level");
             if (key.isEmpty() || level <= 0) {
@@ -75,7 +75,7 @@ public final class PitEnchantmentReader {
             return null;
         }
         NBTTagCompound itemTag = stack.getTagCompound();
-        // Vanilla allocates empty tags for missing compounds and lists, so reject them before descending.
+        // Check keys first because Vanilla creates empty tags for missing compounds and lists.
         if (!itemTag.hasKey("ExtraAttributes", Constants.NBT.TAG_COMPOUND)) {
             return null;
         }

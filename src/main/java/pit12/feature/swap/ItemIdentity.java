@@ -68,7 +68,6 @@ final class ItemIdentity {
         NBTTagCompound root = stack.getTagCompound();
         if (root != null && root.hasKey("ExtraAttributes", Constants.NBT.TAG_COMPOUND)) {
             NBTTagCompound extra = root.getCompoundTag("ExtraAttributes");
-            // For rage, drak, aqua...
             if (extra.hasKey("Nonce", Constants.NBT.TAG_ANY_NUMERIC)) {
                 long nonce = extra.getLong("Nonce");
                 if (nonce >= 10)

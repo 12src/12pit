@@ -303,7 +303,7 @@ final class WebUiServer {
     }
 
     private <T> T onClient(Callable<T> action) throws ExecutionException, InterruptedException {
-        // ConfigCatalog and Profiles are confined to Minecraft's client thread.
+        // ConfigCatalog and Profiles require Minecraft's client thread.
         return minecraft.addScheduledTask(action).get();
     }
 

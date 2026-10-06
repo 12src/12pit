@@ -199,7 +199,7 @@ final class SwapController {
                     current = queue.removeFirst();
                     prepare();
                 }
-                // Recheck delayed automatic requests before their first click, then finish the transfer safely.
+                // Readiness can change during the open delay. Once started, finish the transfer.
                 if (current.ready != null && !current.started && !current.ready.getAsBoolean()) {
                     cancel();
                     return;
@@ -309,7 +309,7 @@ final class SwapController {
                 selected.put(binding.guiTarget(), binding);
             }
         }
-        // A workspace can displace a satisfied slot, so check its final position after armor swaps.
+        // Armor swaps can move an item out of an already satisfied slot.
         for (SwapBinding binding : satisfiedSlots.values())
             selected.putIfAbsent(binding.guiTarget(), binding);
         List<Action> ordered = new ArrayList<>();
@@ -435,7 +435,7 @@ final class SwapController {
                     }
                 } finally {
                     if (owns(minecraft.currentScreen)) {
-                        // GUI listeners can veto closing; detach our screen before releasing input.
+                        // GUI listeners can cancel closing. Detach our screen before restoring input.
                         minecraft.currentScreen = null;
                         if (minecraft.thePlayer != null && minecraft.theWorld != null)
                             minecraft.setIngameFocus();

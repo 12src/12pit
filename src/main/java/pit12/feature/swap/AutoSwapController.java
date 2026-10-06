@@ -117,7 +117,7 @@ final class AutoSwapController {
         if (tick < retryAt || minecraft.currentScreen != null || !minecraft.inGameHasFocus
                 || !swaps.acceptsInput())
             return;
-        // Enchanted leggings cannot help while poisoned, so poison swaps take priority.
+        // Poison disables leggings enchantments.
         if (poisoned) {
             if (venomPending)
                 swapVenom();
@@ -254,7 +254,7 @@ final class AutoSwapController {
         if (root == null || !root.hasKey("ExtraAttributes", Constants.NBT.TAG_COMPOUND))
             return -1;
         NBTTagCompound extra = root.getCompoundTag("ExtraAttributes");
-        // Missing numeric NBT reads as zero; keep unknown Lives below known values.
+        // Missing numeric NBT reads as zero. Use -1 to rank unknown Lives below known values.
         return extra.hasKey("Lives", Constants.NBT.TAG_ANY_NUMERIC)
                 ? Math.max(-1, extra.getInteger("Lives"))
                 : -1;
@@ -289,7 +289,6 @@ final class AutoSwapController {
             source = findOriginalPants(expected);
         }
         if (source < 0) {
-            // A manual move or missing original must never cause us to restore a different item.
             clearActive();
             return;
         }
@@ -351,7 +350,7 @@ final class AutoSwapController {
             reset();
             player = current;
         }
-        // These server sound signatures report enchantment use and rearming, even with audio muted.
+        // Server sounds signal enchantment use and rearming even when audio is muted.
         if ("note.pling".equals(name) && near(volume, 8) && near(pitch, 4.05f)) {
             if (automaticPending)
                 swaps.cancel();

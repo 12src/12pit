@@ -94,7 +94,7 @@ public abstract class FeatureConfig {
         return setting;
     }
 
-    /** defaultValue is an ARGB integer (0xAARRGGBB). */
+    /** The default color uses ARGB (0xAARRGGBB). */
     protected final ColorSetting colorPickerSetting(String id, String displayName,
             String description, int defaultValue) {
         ColorSetting setting = new ColorSetting(id, displayName, description, defaultValue);

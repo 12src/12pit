@@ -91,7 +91,7 @@ public final class Languages {
         return locale;
     }
 
-    // The script reads these calls; keeping English lets display caches switch languages.
+    // The language script collects these calls. The English text lets cached displays switch languages.
     public static String source(String text) {
         return text;
     }
@@ -144,6 +144,7 @@ public final class Languages {
         throw new IllegalArgumentException("Unknown language: " + requested);
     }
 
+    /** Runs the listener immediately and after each language change. */
     public void addListener(Runnable listener) {
         client.check();
         listeners.add(listener);

@@ -21,10 +21,10 @@ package pit12.runtime.hud;
 import pit12.runtime.config.HudConfig;
 
 public interface HudElement {
-    /** This ID remains stable for the element's registration lifetime. */
+    /** Keep this ID stable while registered. */
     String id();
 
-    /** This name and {@link #config()} remain non-null for the registration lifetime. */
+    /** The name and {@link #config()} must stay non-null while registered. */
     String displayName();
 
     boolean enabled();
@@ -39,15 +39,15 @@ public interface HudElement {
         resize(pixelScale);
     }
 
-    /** Width remains inexpensive to query each frame and matches the unscaled render bounds. */
+    /** Return the unscaled render width. Keep this query cheap enough for every frame. */
     int width();
 
-    /** Height remains inexpensive to query each frame and matches the unscaled render bounds. */
+    /** Return the unscaled render height. Keep this query cheap enough for every frame. */
     int height();
 
     /**
-     * Rendering starts at logical origin 0,0 under a caller-owned transform and GL state guard. Implementations provide
-     * representative content while editing even when the live HUD is disabled or has no current data.
+     * Render at (0, 0). The caller manages the transform and GL state. Show sample content while editing, even if the live
+     * HUD is disabled or has no data.
      */
     void render(float partialTicks, boolean editing);
 }
