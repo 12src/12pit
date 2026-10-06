@@ -1,0 +1,163 @@
+/*
+ * This file is part of 12pit.
+ *
+ * Copyright (C) 2026 The 12pit Authors and contributors <https://github.com/12src/12pit>
+ *
+ * 12pit is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * 12pit is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
+ */
+.heading-features .search {
+  margin-left: auto;
+}
+
+.feature-description {
+  margin: 8px 0 0;
+  color: var(--muted);
+}
+
+.breadcrumbs {
+  min-width: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.breadcrumbs ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.breadcrumbs li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.breadcrumbs svg {
+  flex: none;
+  color: var(--faint);
+}
+
+.breadcrumbs button {
+  min-height: 28px;
+  padding: 4px 0;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  color: inherit;
+}
+
+.breadcrumbs button:hover {
+  color: var(--accent);
+}
+
+.breadcrumbs h1 {
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.category-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.category-buttons button {
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--control-border);
+  border-radius: 5px;
+  background: var(--panel);
+  color: var(--text);
+  font-size: 12px;
+}
+
+.category-buttons button:hover {
+  background: var(--hover);
+}
+
+.category-buttons button[aria-pressed='true'] {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+.feature-list {
+  padding-top: 16px;
+}
+
+.feature-row {
+  display: flex;
+  gap: 15px;
+  min-height: 74px;
+  padding: 12px 10px;
+  --row-hover: #ffffff03;
+}
+
+.feature-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex: 1;
+  min-width: 0;
+  min-height: 48px;
+  padding: 3px 0;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  color: var(--text);
+  text-align: left;
+}
+
+.feature-link strong {
+  display: block;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.feature-link small {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.feature-link svg {
+  flex: none;
+  color: var(--muted);
+}
+
+button.feature-link:hover strong {
+  color: var(--accent);
+}
+
+.feature-favorite {
+  flex: none;
+}
+
+.feature-favorite[aria-pressed='true'] {
+  color: var(--accent);
+}
+
+.feature-favorite[aria-pressed='true'] svg {
+  fill: currentColor;
+}

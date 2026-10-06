@@ -1,4 +1,4 @@
-<!-- Source: docs/TRANSLATING.md; Based on: 9e3455a4346e4997be2d01c6d78e031334c73fd5 -->
+<!-- Source: docs/TRANSLATING.md; Based on: 2232dc5e10013e89eb44cac454aa965c84b6ce20 -->
 
 # 贡献翻译
 
@@ -14,7 +14,9 @@
 
 ## 贡献界面翻译
 
-Web UI、配置文字、命令回显和 HUD 标签使用同一套语言文件。使用 Python 3，在仓库根目录运行以下命令。
+Web UI、配置文字、命令回显和 HUD 标签使用同一套语言文件。OneConfig 设置界面使用英文原文。核对设置的译文时，使用 Web UI。
+
+使用 Python 3，在仓库根目录运行以下命令。
 
 ### 准备语言文件
 

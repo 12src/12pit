@@ -19,7 +19,11 @@ along with 12pit. If not, see <https://www.gnu.org/licenses/>.
 <script setup lang="ts">
 import { t } from './languages'
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
-import { Plus, Search, Trash2, X } from '@lucide/vue'
+import { Plus, Trash2, X } from '@lucide/vue'
+import ExpandTransition from './ExpandTransition.vue'
+import ResizeTransition from './ResizeTransition.vue'
+import SearchField from './SearchField.vue'
+import UiNotice from './UiNotice.vue'
 import type {
   RelationEntry,
   RelationInput,
@@ -31,11 +35,12 @@ import type {
 const props = defineProps<{
   relations: State['relations']
   busy: boolean
+  hasRequestError: boolean
   update: (
     action: 'add' | 'remove',
     relation: RelationType,
     entries: RelationInput[],
-  ) => Promise<RelationResult[]>
+  ) => Promise<RelationResult[] | null>
 }>()
 
 const relationTypes: RelationType[] = ['FRIEND', 'ENEMY']
@@ -79,7 +84,7 @@ const someVisibleSelected = computed(() =>
 )
 const parsed = computed(() => {
   const names: string[] = []
-  const skipped: RelationResult[] = []
+  const invalid: string[] = []
   const seen = new Set<string>()
   const existing = new Set(
     entries.value.map((entry) => entry.name.toLowerCase()),
@@ -87,25 +92,15 @@ const parsed = computed(() => {
   for (const part of input.value.split(/[,\r\n]/)) {
     const name = part.trim()
     if (!name) continue
-    if (!/^[A-Za-z0-9_]{1,48}$/.test(name)) {
-      skipped.push({ name, message: t('Invalid player name') })
-    } else if (seen.has(name.toLowerCase())) {
-      skipped.push({ name, message: t('Duplicate entry skipped') })
-    } else if (existing.has(name.toLowerCase())) {
-      skipped.push({ name, message: t('Already on this list') })
-      seen.add(name.toLowerCase())
-    } else {
-      names.push(name)
-      seen.add(name.toLowerCase())
+    if (!/^[A-Za-z0-9_]{1,48}$/.test(name)) invalid.push(name)
+    else {
+      const key = name.toLowerCase()
+      if (!seen.has(key) && !existing.has(key)) names.push(name)
+      seen.add(key)
     }
   }
-  return { names, skipped }
+  return { names, invalid }
 })
-const invalid = computed(() =>
-  parsed.value.skipped.filter(
-    (item) => item.message === t('Invalid player name'),
-  ),
-)
 
 function entryKey(entry: RelationEntry) {
   return entry.uuid ?? `pending:${entry.name.toLowerCase()}`
@@ -193,65 +188,59 @@ function clearConfirmation() {
 }
 
 async function add() {
-  if (props.busy || !parsed.value.names.length) return
-  const remaining = invalid.value.map((item) => item.name)
-  try {
-    const results = await props.update(
-      'add',
-      relation.value,
-      parsed.value.names.map((name) => ({ name })),
-    )
-    await nextTick()
-    const saved = new Set(
-      entries.value.map((entry) => entry.name.toLowerCase()),
-    )
-    issues.value = results.filter((item) => !saved.has(item.name.toLowerCase()))
-    input.value = [...remaining, ...issues.value.map((item) => item.name)].join(
-      '\n',
-    )
-    if (!input.value && !issues.value.length) addOpen.value = false
-  } catch {
-    // The shared error notice displays request failures.
-  }
+  if (
+    props.busy ||
+    !parsed.value.names.length ||
+    parsed.value.names.length > 100
+  )
+    return
+  const remaining = parsed.value.invalid
+  const results = await props.update(
+    'add',
+    relation.value,
+    parsed.value.names.map((name) => ({ name })),
+  )
+  if (results === null) return
+  await nextTick()
+  const saved = new Set(entries.value.map((entry) => entry.name.toLowerCase()))
+  issues.value = results.filter((item) => !saved.has(item.name.toLowerCase()))
+  input.value = [...remaining, ...issues.value.map((item) => item.name)].join(
+    '\n',
+  )
+  if (!input.value && !issues.value.length) addOpen.value = false
 }
 
 async function removeSelected() {
   if (props.busy || !selectedEntries.value.length) return
   const removing = selectedEntries.value
-  try {
-    const results = await props.update(
-      'remove',
-      relation.value,
-      removing.map(({ name, uuid }) => ({ name, uuid })),
-    )
-    await nextTick()
-    const stillHere = new Set(entries.value.map(entryKey))
-    issues.value = results.filter((_, index) =>
-      stillHere.has(entryKey(removing[index])),
-    )
-    selected.value = []
-    confirmingDelete.value = false
-  } catch {
-    // The shared error notice displays request failures.
-  }
+  const results = await props.update(
+    'remove',
+    relation.value,
+    removing.map(({ name, uuid }) => ({ name, uuid })),
+  )
+  if (results === null) return
+  await nextTick()
+  const stillHere = new Set(entries.value.map(entryKey))
+  issues.value = results.filter((_, index) =>
+    stillHere.has(entryKey(removing[index])),
+  )
+  selected.value = []
+  confirmingDelete.value = false
 }
 
 async function removeEntry(entry: RelationEntry) {
   if (props.busy) return
-  try {
-    const results = await props.update('remove', relation.value, [
-      { name: entry.name, uuid: entry.uuid },
-    ])
-    await nextTick()
-    issues.value = entries.value.some(
-      (item) => entryKey(item) === entryKey(entry),
-    )
-      ? results
-      : []
-    deletingKey.value = null
-  } catch {
-    // The shared error notice displays request failures.
-  }
+  const results = await props.update('remove', relation.value, [
+    { name: entry.name, uuid: entry.uuid },
+  ])
+  if (results === null) return
+  await nextTick()
+  issues.value = entries.value.some(
+    (item) => entryKey(item) === entryKey(entry),
+  )
+    ? results
+    : []
+  deletingKey.value = null
 }
 </script>
 
@@ -283,24 +272,7 @@ async function removeEntry(entry: RelationEntry) {
       </button>
     </div>
     <div class="relation-controls">
-      <div class="search">
-        <Search :size="15" />
-        <input
-          v-model="search"
-          type="search"
-          :placeholder="t('Search MC ID or UUID')"
-          :aria-label="t('Search MC ID or UUID')"
-        />
-        <button
-          v-if="search"
-          type="button"
-          :aria-label="t('Clear search')"
-          :title="t('Clear search')"
-          @click="search = ''"
-        >
-          <X :size="14" />
-        </button>
-      </div>
+      <SearchField v-model="search" :label="t('Search MC ID or UUID')" />
       <div class="relation-actions">
         <button
           v-if="!selectedEntries.length"
@@ -310,9 +282,15 @@ async function removeEntry(entry: RelationEntry) {
           :disabled="busy || !!relations.problem"
           @click="toggleAdd"
         >
-          <X v-if="addOpen" :size="15" /><Plus v-else :size="15" />{{
-            addOpen ? t('Close') : t('Add players')
-          }}
+          <X v-if="addOpen" :size="15" /><Plus v-else :size="15" />
+          <span class="state-label">
+            <span :class="{ 'is-hidden': addOpen }" :aria-hidden="addOpen">{{
+              t('Add players')
+            }}</span>
+            <span :class="{ 'is-hidden': !addOpen }" :aria-hidden="!addOpen">{{
+              t('Close')
+            }}</span>
+          </span>
         </button>
         <template v-else>
           <span class="relation-selected-count">{{
@@ -374,79 +352,70 @@ async function removeEntry(entry: RelationEntry) {
     </div>
   </div>
 
-  <p v-if="relations.problem" class="profile-problem">
+  <UiNotice v-if="relations.problem" variant="text" class="data-problem">
     {{ relations.problem }}
-  </p>
+  </UiNotice>
   <template v-else>
-    <Transition name="relation-form">
-      <div v-if="addOpen" class="relation-form-reveal">
-        <div class="relation-form-inner">
-          <form class="relation-add" @submit.prevent="add">
-            <label for="relation-names">
-              {{ relation === 'FRIEND' ? t('Add friends') : t('Add enemies') }}
-            </label>
-            <textarea
-              id="relation-names"
-              ref="nameInput"
-              v-model="input"
-              :placeholder="t('MC IDs, separated by commas or new lines')"
-              rows="5"
-              :disabled="busy"
-              @keydown.esc.prevent="addOpen = false"
-            />
-            <p v-if="invalid.length" class="relation-validation">
-              {{ t('Invalid MC IDs:') }}
-              {{
-                invalid
-                  .slice(0, 3)
-                  .map((item) => item.name)
-                  .join(', ')
-              }}{{
-                invalid.length > 3 ? t(' and {0} more', invalid.length - 3) : ''
-              }}
-            </p>
-            <p v-if="parsed.names.length > 100" class="relation-validation">
-              {{ t('Add at most 100 players at a time.') }}
-            </p>
-            <div class="relation-add-actions">
-              <span v-if="input.trim()">{{
-                t('{0} ready to add', parsed.names.length)
-              }}</span>
-              <button
-                class="primary"
-                type="submit"
-                :disabled="
-                  busy || !parsed.names.length || parsed.names.length > 100
-                "
-              >
-                <Plus :size="15" />{{
-                  parsed.names.length === 1
-                    ? t('Add player')
-                    : parsed.names.length
-                      ? t('Add {0} players', parsed.names.length)
-                      : t('Add players')
-                }}
-              </button>
-            </div>
-          </form>
+    <ExpandTransition :open="addOpen">
+      <form class="relation-add" @submit.prevent="add">
+        <label for="relation-names">
+          {{ relation === 'FRIEND' ? t('Add friends') : t('Add enemies') }}
+        </label>
+        <textarea
+          id="relation-names"
+          ref="nameInput"
+          v-model="input"
+          :placeholder="t('MC IDs, separated by commas or new lines')"
+          rows="5"
+          :disabled="busy"
+          @keydown.esc.prevent="addOpen = false"
+        />
+        <p v-if="parsed.invalid.length" class="relation-validation">
+          {{ t('Invalid MC IDs:') }}
+          {{ parsed.invalid.slice(0, 3).join(', ')
+          }}{{
+            parsed.invalid.length > 3
+              ? t(' and {0} more', parsed.invalid.length - 3)
+              : ''
+          }}
+        </p>
+        <p v-if="parsed.names.length > 100" class="relation-validation">
+          {{ t('Add at most 100 players at a time.') }}
+        </p>
+        <div class="relation-add-actions">
+          <span v-if="input.trim()">{{
+            t('{0} ready to add', parsed.names.length)
+          }}</span>
+          <button
+            class="primary"
+            type="submit"
+            :disabled="
+              busy || !parsed.names.length || parsed.names.length > 100
+            "
+          >
+            <Plus :size="15" />{{
+              parsed.names.length === 1
+                ? t('Add player')
+                : parsed.names.length
+                  ? t('Add {0} players', parsed.names.length)
+                  : t('Add players')
+            }}
+          </button>
         </div>
-      </div>
-    </Transition>
-    <div v-if="issues.length" class="relation-issues" role="alert">
+      </form>
+    </ExpandTransition>
+    <UiNotice
+      v-if="issues.length && !hasRequestError"
+      class="error-notice relation-issues"
+      :dismiss-label="t('Dismiss errors')"
+      @dismiss="issues = []"
+    >
       <strong>{{ t('Some players could not be updated.') }}</strong>
       <p v-for="(item, index) in issues" :key="index">
         {{ item.name }}: {{ item.message }}
       </p>
-      <button
-        type="button"
-        :aria-label="t('Dismiss errors')"
-        :title="t('Dismiss errors')"
-        @click="issues = []"
-      >
-        <X :size="15" />
-      </button>
-    </div>
-    <Transition :name="relationTransition" mode="out-in">
+    </UiNotice>
+    <ResizeTransition :name="relationTransition">
       <section :key="relation" class="relation-list">
         <div class="relation-list-heading">
           <input
@@ -467,7 +436,7 @@ async function removeEntry(entry: RelationEntry) {
         <div
           v-for="entry in visible"
           :key="entryKey(entry)"
-          class="relation-row"
+          class="relation-row list-row"
           :class="{ confirming: deletingKey === entryKey(entry) }"
         >
           <input
@@ -536,6 +505,6 @@ async function removeEntry(entry: RelationEntry) {
           }}
         </p>
       </section>
-    </Transition>
+    </ResizeTransition>
   </template>
 </template>

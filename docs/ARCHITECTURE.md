@@ -12,7 +12,7 @@ Each package immediately under `feature` owns one user-facing capability. Its se
 
 `shared` owns small helper interfaces and utilities for threading, listeners, rendering, and file writes. It does not own live game state.
 
-`platform` adapts external mechanisms such as Forge commands and Mixin. Adapters route external requests to their owners through narrow interfaces.
+`platform` adapts external mechanisms such as Forge commands and Mixin. Adapters route external requests to their owners through narrow interfaces. An adapter can implement `ClientLifecycle` to manage its own subscriptions and registrations.
 
 Commands definitions and actions are owned by features. `runtime.command` owns routing, help, completion, and availability of commands. `platform.command` owns Forge registration.
 

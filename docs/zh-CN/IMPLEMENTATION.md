@@ -1,4 +1,4 @@
-<!-- Source: docs/IMPLEMENTATION.md; Based on: 9e3455a4346e4997be2d01c6d78e031334c73fd5 -->
+<!-- Source: docs/IMPLEMENTATION.md; Based on: 2232dc5e10013e89eb44cac454aa965c84b6ce20 -->
 
 # 12pit 实现
 
@@ -10,7 +10,7 @@
 
 `ClientBootstrap` 在构造器中创建共享 runtime 组件。每个功能有一个私有的 `register...` 方法，负责按需创建和注册配置、创建功能并加入 `components`。依赖通过参数传入。只有后续装配方法需要使用时，才返回功能的 API。
 
-构造器分为共享 runtime、功能提供方和其余功能三段。runtime 保留内联创建。功能调用和方法声明先按 `ConfigCategory.displayOrder()` 分组，再按方法名 A–Z 排列。没有配置的功能放在最前面的 `Category: No config` 段。两处使用一致的组别和分类注释。依赖先后优先于分类和名称顺序。Bootstrap 按列表顺序启动组件，并按逆序停止。装配方法只创建和注册对象；监听器和工作线程放在 `start()` 中。
+构造器分为共享 runtime、功能提供方、其余功能和平台适配四段。runtime 组件和平台适配器在各自的段内直接创建。功能调用和方法声明先按 `ConfigCategory.displayOrder()` 分组，再按方法名 A–Z 排列。没有配置的功能放在最前面的 `Category: No config` 段。两处使用一致的组别和分类注释。依赖先后优先于分类和名称顺序。Bootstrap 按列表顺序启动组件，并按逆序停止。装配方法只创建和注册对象；监听器和工作线程放在 `start()` 中。
 
 Bootstrap 注册组件并调用其 `start()` 方法。如果 `start()` 引发异常，Bootstrap 会停止此组件和之前已启动的所有组件。`stop()` 应在任何情况下释放资源，包括仅完成部分初始化或被调用多次的情况。如果某个组件在 `stop()` 中抛出异常，该异常会被记录，但其他所有组件仍会停止。
 
@@ -51,7 +51,7 @@ public void stop() {
 
 ## 配置
 
-`FeatureConfig` 表示功能的设置及其 Web UI 元数据。在其子类构造器中定义设置：
+`FeatureConfig` 表示功能的设置及其界面元数据。在其子类构造器中定义设置：
 
 ```java
 import static pit12.runtime.languages.Languages.source;
@@ -74,9 +74,9 @@ public final class StatusConfig extends FeatureConfig {
 }
 ```
 
-`ConfigCategory` 提供分类 ID、显示名称和顺序编号。相关功能复用同一分类。Features 页通过分类按钮和 All 按钮切换。All 显示分类标题。选中具体分类时，只显示该分类的功能，不重复显示标题。
+`ConfigCategory` 提供分类 ID、显示名称和顺序编号。相关功能复用同一分类。Web UI 的 Features 页通过分类按钮和 All 按钮切换。All 显示分类标题。选中具体分类时，只显示该分类的功能，不重复显示标题。
 
-`subcategory()` 将其后的设置放到功能页顶部的切换按钮下。`subsubcategory()` 在页面内分组。两层都可省略。不调用 `subcategory()` 时，分组直接显示在功能页中。未设置 subsubcategory 的选项不显示分组标题。第一个 subcategory 之前的设置在切换按钮后仍然可见。开始新的 subcategory 会清除当前 subsubcategory。设置和分组按定义顺序排列。
+在 Web UI 中，`subcategory()` 将其后的设置放到功能页顶部的切换按钮下。`subsubcategory()` 在页面内分组。两层都可省略。不调用 `subcategory()` 时，分组直接显示在功能页中。未设置 subsubcategory 的选项不显示分组标题。第一个 subcategory 之前的设置在切换按钮后仍然可见。开始新的 subcategory 会清除当前 subsubcategory。设置和分组按定义顺序排列。
 
 四参数的 `FeatureConfig` 构造器会添加默认值为 `true` 的 `enabled` 设置。带有 `toggleable` 参数的构造器允许不添加 `enabled` 设置；在这种情况下，查询功能是否启用时，它始终返回 true。带有 `defaultEnabled` 参数的构造器选择初始值。`setEnabled` 方法改变设置，而非生命周期。
 
@@ -182,7 +182,7 @@ HUD 缓存文字时，保留语言监听器，在 `start()` 中注册，在 `sto
 hud = hudConfig("status", source("Status"), HudAnchor.TOP_LEFT, 6, 6, true);
 ```
 
-该辅助方法定义以下设置：`status.anchor`、`status.offset_x`、`status.offset_y`、`status.scale`、`status.text_shadow`、`status.use_monospace_font` 和 `status.translate_text`。缩放以百分比存储，默认值为 `100`。HUD 编辑器控制位置和缩放。文字阴影、字体和翻译开关作为 Web UI 中的设置提供。字体开关默认关闭，开启后使用内置的 Monocraft。翻译开关默认开启；准备 HUD 文字时使用 `language.translate(text, hud.translateText().get())`，切换后更新文字缓存和布局。
+该辅助方法定义以下设置：`status.anchor`、`status.offset_x`、`status.offset_y`、`status.scale`、`status.text_shadow`、`status.use_monospace_font` 和 `status.translate_text`。缩放以百分比存储，默认值为 `100`。HUD 编辑器控制位置和缩放。文字阴影、字体和翻译开关作为 Web UI 和 OneConfig 中的设置提供。字体开关默认关闭，开启后使用内置的 Monocraft。翻译开关默认开启；准备 HUD 文字时使用 `language.translate(text, hud.translateText().get())`，切换后更新文字缓存和布局。
 
 [HudElement](../../src/main/java/pit12/runtime/hud/HudElement.java) 的实现应满足以下契约：
 

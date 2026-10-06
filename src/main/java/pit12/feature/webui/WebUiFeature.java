@@ -21,6 +21,7 @@ package pit12.feature.webui;
 import java.awt.Desktop;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.file.Path;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.minecraft.client.Minecraft;
@@ -42,20 +43,23 @@ public final class WebUiFeature implements ClientLifecycle, ConfigChangeListener
     private static final Logger LOGGER = Logger.getLogger(WebUiFeature.class.getName());
     private final Minecraft minecraft = Minecraft.getMinecraft();
     private final WebUiConfig config;
-    private final ConfigCatalog catalog;
+    private final ConfigCatalog settings;
     private final Languages language;
     private final HudEditor hudEditor;
     private final WebUiServer server;
+    private final WebUiPreferences preferences;
     private boolean started;
 
-    public WebUiFeature(ConfigCatalog catalog, Profiles profiles, Relations relations,
-            HudEditor hudEditor, SwapBindings swapBindings, WebUiConfig config,
-            Languages language) {
-        this.catalog = catalog;
+    public WebUiFeature(ConfigCatalog catalog, ConfigCatalog settings, Profiles profiles,
+            Relations relations, HudEditor hudEditor, SwapBindings swapBindings, WebUiConfig config,
+            Languages language, Path path) {
+        this.settings = settings;
         this.language = language;
         this.config = config;
         this.hudEditor = hudEditor;
-        server = new WebUiServer(minecraft, catalog, profiles, relations, swapBindings, language);
+        preferences = new WebUiPreferences(settings, config, path);
+        server = new WebUiServer(minecraft, catalog, settings, config, profiles, relations,
+                swapBindings, language, preferences);
     }
 
     @Override
@@ -64,7 +68,8 @@ public final class WebUiFeature implements ClientLifecycle, ConfigChangeListener
             return;
         }
         language.select(config.language().get());
-        catalog.addListener(this);
+        settings.addListener(this);
+        preferences.start(server::notifyStreams);
         try {
             server.start();
         } catch (IOException failure) {
@@ -83,7 +88,8 @@ public final class WebUiFeature implements ClientLifecycle, ConfigChangeListener
             started = false;
         }
         server.stop();
-        catalog.removeListener(this);
+        settings.removeListener(this);
+        preferences.stop();
     }
 
     @Override

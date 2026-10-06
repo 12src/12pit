@@ -19,10 +19,12 @@ along with 12pit. If not, see <https://www.gnu.org/licenses/>.
 <script setup lang="ts">
 import { t } from './languages'
 import { computed, ref, watch } from 'vue'
-import { Check, ChevronDown } from '@lucide/vue'
+import { Check } from '@lucide/vue'
 import type { Option } from './api'
 import ColorPicker from './ColorPicker.vue'
 import FormattedText from './FormattedText.vue'
+import PickerMenu from './PickerMenu.vue'
+import ToggleSwitch from './ToggleSwitch.vue'
 
 const props = defineProps<{
   option: Option
@@ -40,7 +42,7 @@ const palette = [
 ]
 const draft = ref(Number(props.option.value))
 const numericInput = ref<HTMLInputElement | null>(null)
-const menu = ref<HTMLDetailsElement | null>(null)
+const menu = ref<InstanceType<typeof PickerMenu> | null>(null)
 const selectedChoice = computed(
   () =>
     props.option.choices?.find((choice) => choice.value === props.option.value)
@@ -67,8 +69,7 @@ watch(
 watch(
   () => props.busy,
   (busy) => {
-    if (busy && menu.value) menu.value.open = false
-    else if (!busy) draft.value = Number(props.option.value)
+    if (!busy) draft.value = Number(props.option.value)
   },
 )
 
@@ -96,31 +97,21 @@ function resetNumber() {
 }
 function setChoice(value: number) {
   emit('change', value)
-  if (menu.value) {
-    menu.value.open = false
-    menu.value.querySelector('summary')?.focus()
-  }
-}
-function closeMenu(event: FocusEvent) {
-  if (menu.value && !menu.value.contains(event.relatedTarget as Node | null))
-    menu.value.open = false
+  menu.value?.close()
+  menu.value?.focusTrigger()
 }
 function menuKeydown(event: KeyboardEvent) {
-  if (!menu.value) return
-  if (event.key === 'Escape') {
-    menu.value.open = false
-    menu.value.querySelector('summary')?.focus()
-    event.preventDefault()
-  } else if (
+  if (props.busy || !menu.value) return
+  if (
     event.key === 'ArrowDown' ||
     event.key === 'ArrowUp' ||
     event.key === 'Home' ||
     event.key === 'End'
   ) {
     event.preventDefault()
-    menu.value.open = true
+    menu.value.open()
     const buttons = [
-      ...menu.value.querySelectorAll<HTMLButtonElement>(
+      ...menu.value.element!.querySelectorAll<HTMLButtonElement>(
         '.choice-options button',
       ),
     ]
@@ -149,7 +140,7 @@ function keyLabel(value: string) {
 </script>
 
 <template>
-  <div class="row">
+  <div class="row list-row">
     <div>
       <strong><FormattedText :text="option.name" /></strong>
       <p v-if="showDetails && option.description">
@@ -157,21 +148,17 @@ function keyLabel(value: string) {
       </p>
     </div>
     <div class="control">
-      <button
+      <ToggleSwitch
         v-if="option.kind === 'BOOLEAN'"
-        class="switch-button"
-        type="button"
+        :model-value="Boolean(option.value)"
+        :label="option.name"
         :disabled="busy"
-        role="switch"
-        :aria-label="option.name"
-        :aria-checked="Boolean(option.value)"
-        @click="emit('change', !option.value)"
-      >
-        <span class="switch" :class="{ on: option.value }" />
-      </button>
+        @update:model-value="emit('change', $event)"
+      />
       <template v-else-if="option.kind === 'NUMBER'">
         <div class="numeric-control" :style="{ '--range-fill': rangeFill }">
           <input
+            class="range-slider"
             type="range"
             :aria-label="option.name"
             :min="option.min"
@@ -198,22 +185,15 @@ function keyLabel(value: string) {
           />
         </div>
       </template>
-      <details
+      <PickerMenu
         v-else-if="option.kind === 'CHOICE'"
         ref="menu"
-        class="choice-picker"
-        :class="{ busy }"
-        @focusout="closeMenu"
+        :label="option.name"
+        :busy="busy"
         @keydown="menuKeydown"
       >
-        <summary
-          :aria-label="option.name"
-          :aria-disabled="busy"
-          :tabindex="busy ? -1 : 0"
-        >
-          <FormattedText :text="selectedChoice" /><ChevronDown :size="15" />
-        </summary>
-        <div class="choice-options">
+        <template #trigger><FormattedText :text="selectedChoice" /></template>
+        <div class="choice-options menu-panel">
           <button
             v-for="choice in option.choices"
             :key="choice.value"
@@ -224,12 +204,13 @@ function keyLabel(value: string) {
             @click="setChoice(choice.value)"
           >
             <FormattedText :text="choice.name" /><Check
-              v-if="choice.value === option.value"
+              :class="{ 'is-hidden': choice.value !== option.value }"
+              aria-hidden="true"
               :size="14"
             />
           </button>
         </div>
-      </details>
+      </PickerMenu>
       <div
         v-else-if="option.kind === 'COLOR'"
         class="swatches"
@@ -262,7 +243,7 @@ function keyLabel(value: string) {
       <button
         v-else-if="option.kind === 'KEYBIND'"
         type="button"
-        class="secondary"
+        class="secondary keybind-button"
         :class="{ capturing }"
         :disabled="busy"
         :aria-label="
@@ -272,7 +253,12 @@ function keyLabel(value: string) {
         "
         @click="capturing ? emit('cancel') : emit('capture')"
       >
-        {{ capturing ? t('Press a key') : keyLabel(option.keyName ?? 'NONE') }}
+        <span :class="{ 'is-hidden': capturing }" :aria-hidden="capturing">{{
+          keyLabel(option.keyName ?? 'NONE')
+        }}</span>
+        <span :class="{ 'is-hidden': !capturing }" :aria-hidden="!capturing">{{
+          t('Press a key')
+        }}</span>
       </button>
     </div>
   </div>

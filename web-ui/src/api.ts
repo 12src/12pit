@@ -69,6 +69,12 @@ export interface State {
   language: string
   version: string
   features: Feature[]
+  webui: {
+    settings: Feature
+    favorites: string[]
+    ready: boolean
+    problem: string | null
+  }
   profiles: {
     loadState: 'LOADING' | 'READY' | 'DEGRADED'
     activeId: string | null
@@ -116,6 +122,8 @@ async function request<T = State>(path: string, body?: object): Promise<T> {
 }
 
 export const loadState = () => request('/api/state')
+export const changeFavorite = (featureId: string, favorite: boolean) =>
+  request('/api/favorite', { featureId, favorite })
 export const changeSetting = (
   featureId: string,
   settingId: string,

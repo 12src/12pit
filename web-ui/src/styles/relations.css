@@ -1,0 +1,254 @@
+/*
+ * This file is part of 12pit.
+ *
+ * Copyright (C) 2026 The 12pit Authors and contributors <https://github.com/12src/12pit>
+ *
+ * 12pit is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * 12pit is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
+ */
+.relation-toolbar {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  min-height: 54px;
+}
+
+.relation-controls {
+  display: flex;
+  flex: 1;
+  align-items: flex-end;
+  justify-content: flex-end;
+  gap: 10px;
+  min-width: 0;
+}
+
+.relation-controls .search {
+  flex: 1 1 220px;
+  max-width: 285px;
+  min-width: 160px;
+}
+
+.relation-actions {
+  display: flex;
+  flex: 0 0 165px;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  min-height: 36px;
+}
+
+.relation-selected-count {
+  margin-right: 4px;
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.relation-action-anchor {
+  position: relative;
+}
+
+.relation-tabs {
+  position: relative;
+  display: grid;
+  flex: none;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: 208px;
+  margin-right: auto;
+}
+
+.relation-tabs::after {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 50%;
+  height: 2px;
+  background: var(--accent);
+  transform: translateX(0);
+  transition:
+    transform 0.18s cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 0.18s ease;
+  content: '';
+  pointer-events: none;
+}
+
+.relation-tabs.enemy::after {
+  transform: translateX(100%);
+}
+
+.relation-tabs button {
+  min-height: 40px;
+  padding: 0 12px 4px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 13px;
+  transition: color 0.18s ease;
+}
+
+.relation-tabs button:hover {
+  color: var(--text);
+}
+
+.relation-tabs button.active {
+  color: var(--text);
+}
+
+.relation-tabs span {
+  margin-left: 7px;
+  color: var(--faint);
+  font-size: 11px;
+}
+
+.relation-add {
+  display: grid;
+  gap: 10px;
+  padding: 18px 0 20px;
+}
+
+.relation-add label {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.relation-add textarea {
+  width: 100%;
+  min-height: 130px;
+  padding: 9px 10px;
+  resize: vertical;
+}
+
+.relation-add textarea:focus {
+  border-color: var(--accent);
+}
+
+.relation-add textarea::placeholder {
+  color: var(--faint);
+}
+
+.relation-add-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  min-height: 36px;
+}
+
+.relation-add-actions > span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.relation-validation {
+  margin: 0;
+  color: var(--danger);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.relation-list {
+  padding-top: 6px;
+}
+
+.relation-list-heading,
+.relation-row {
+  display: grid;
+  grid-template-columns: 20px minmax(100px, 1fr) minmax(0, 1.6fr) 36px;
+  gap: 12px;
+  padding: 0 10px;
+  --row-hover: #ffffff06;
+}
+
+.relation-list-heading {
+  align-items: center;
+  min-height: 42px;
+  border-bottom: 1px solid var(--line);
+  color: var(--faint);
+  font-size: 11px;
+}
+
+.relation-row {
+  position: relative;
+  min-height: 58px;
+  border-bottom: 1px solid var(--line);
+  transition: background-color 0.15s ease;
+}
+
+.relation-row.confirming {
+  z-index: 2;
+}
+
+.relation-row input,
+.relation-list-heading input {
+  width: 15px;
+  height: 15px;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.relation-row strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+}
+
+.relation-row > .relation-uuid {
+  color: var(--muted);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.relation-row > .relation-uuid.pending {
+  color: var(--faint);
+}
+
+.relation-popover {
+  position: absolute;
+  z-index: 3;
+  top: calc(100% + 6px);
+  right: 0;
+  width: min(260px, calc(100vw - 48px));
+  padding: 12px;
+  border: 1px solid var(--control-border);
+  border-radius: 5px;
+  background: var(--panel);
+  box-shadow: 0 12px 24px #0008;
+}
+
+.relation-popover p {
+  margin: 0 0 12px;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.relation-popover-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.relation-row-popover {
+  top: calc(100% - 8px);
+  right: 4px;
+}
+
+.relation-tabs span,
+.relation-selected-count {
+  font-variant-numeric: tabular-nums;
+}
+
+.relation-issues p {
+  margin: 4px 0 0;
+}

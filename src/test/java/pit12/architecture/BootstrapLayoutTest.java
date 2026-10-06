@@ -58,15 +58,15 @@ public final class BootstrapLayoutTest {
         String constructorBody =
                 code.substring(constructorStart, bodyEnd(code, constructorStart - 1));
         List<String> groups = new ArrayList<>();
-        Matcher headings = Pattern
-                .compile("(?m)^[ \\t]*// (Shared runtime|Feature providers|Features)[ \\t]*$")
+        Matcher headings = Pattern.compile(
+                "(?m)^[ \\t]*// (Shared runtime|Feature providers|Features|Platform integrations)[ \\t]*$")
                 .matcher(source.substring(constructorStart,
                         constructorStart + constructorBody.length()));
         while (headings.find()) {
             groups.add(headings.group(1));
         }
-        assertEquals("Constructor sections",
-                Arrays.asList("Shared runtime", "Feature providers", "Features"), groups);
+        assertEquals("Constructor sections", Arrays.asList("Shared runtime", "Feature providers",
+                "Features", "Platform integrations"), groups);
         Map<String, String> imports = new HashMap<>();
         Matcher imported = Pattern.compile("import ([\\w.]+);").matcher(code);
         while (imported.find()) {
@@ -113,20 +113,27 @@ public final class BootstrapLayoutTest {
         assertFalse("Missing feature registration methods", registrations.isEmpty());
         Map<String, String> producers = new HashMap<>();
         Map<String, String> arguments = new LinkedHashMap<>();
-        Set<String> runtimeComponents = new HashSet<>();
+        Set<String> inlineComponents = new HashSet<>();
+        Set<String> platformComponents = new HashSet<>();
         Matcher objects = Pattern.compile("\\b(\\w+)\\s*=\\s*new\\s+(\\w+)\\(([^;]*)\\);")
                 .matcher(constructorBody);
         while (objects.find()) {
             producers.put(objects.group(1), objects.group(1));
             arguments.put(objects.group(1), objects.group(3));
             String type = imports.get(objects.group(2));
-            assertNotNull("Missing runtime import: " + objects.group(2), type);
+            assertNotNull("Missing component import: " + objects.group(2), type);
             if (ClientLifecycle.class
                     .isAssignableFrom(Class.forName(type, false, getClass().getClassLoader()))) {
-                runtimeComponents.add(objects.group(1));
+                inlineComponents.add(objects.group(1));
             }
-            assertEquals("Runtime creation section for " + objects.group(1),
-                    Arrays.asList("Shared runtime", null),
+            if (type.startsWith("pit12.platform.")) {
+                platformComponents.add(objects.group(1));
+            }
+            assertEquals("Component creation section for " + objects.group(1),
+                    Arrays.asList(
+                            platformComponents.contains(objects.group(1)) ? "Platform integrations"
+                                    : "Shared runtime",
+                            null),
                     sectionAt(source, constructorStart + objects.start()));
         }
         Matcher results =
@@ -138,10 +145,14 @@ public final class BootstrapLayoutTest {
         List<String> componentOrder = new ArrayList<>();
         for (Call call : calls(constructorBody, "register\\w+|components\\.add")) {
             if ("components.add".equals(call.name)) {
-                assertEquals("Runtime registration section", Arrays.asList("Shared runtime", null),
-                        sectionAt(source, constructorStart + call.offset));
                 String component = producers.get(call.arguments.trim());
-                assertNotNull("Unknown runtime component: " + call.arguments, component);
+                assertNotNull("Unknown component: " + call.arguments, component);
+                assertEquals("Component registration section",
+                        Arrays.asList(
+                                platformComponents.contains(component) ? "Platform integrations"
+                                        : "Shared runtime",
+                                null),
+                        sectionAt(source, constructorStart + call.offset));
                 componentOrder.add(component);
             } else {
                 Registration registration = registrations.get(call.name);
@@ -155,9 +166,9 @@ public final class BootstrapLayoutTest {
         }
         assertEquals("Each component must be registered once", componentOrder.size(),
                 new HashSet<>(componentOrder).size());
-        Set<String> expectedComponents = new HashSet<>(runtimeComponents);
+        Set<String> expectedComponents = new HashSet<>(inlineComponents);
         expectedComponents.addAll(registrations.keySet());
-        assertEquals("Register every runtime component and feature", expectedComponents,
+        assertEquals("Register every component and feature", expectedComponents,
                 new HashSet<>(componentOrder));
         assertEquals("Declarations and calls must have the same order",
                 new ArrayList<>(registrations.keySet()), callOrder);
@@ -236,7 +247,7 @@ public final class BootstrapLayoutTest {
         String group = null;
         String category = null;
         Matcher matcher = Pattern.compile(
-                "(?m)^[ \\t]*// (Shared runtime|Feature providers|Features|Category: [^\\r\\n]+)$")
+                "(?m)^[ \\t]*// (Shared runtime|Feature providers|Features|Platform integrations|Category: [^\\r\\n]+)$")
                 .matcher(source.substring(0, offset));
         while (matcher.find()) {
             String heading = matcher.group(1).trim();

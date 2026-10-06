@@ -20,35 +20,28 @@ import { shallowRef } from 'vue'
 
 const texts = shallowRef<Record<string, string> | null>(null)
 const catalogs = new Map<string, Promise<Record<string, string>>>()
-let selected = 'en-us'
-
-export async function setLanguage(language: string) {
-  if (selected === language) return
-  selected = language
-  if (language === 'en-us') {
-    texts.value = null
-    return
-  }
+export async function loadLanguage(language: string) {
+  if (language === 'en-us') return null
   let catalog = catalogs.get(language)
   if (!catalog) {
     catalog = fetch(`/api/languages/${encodeURIComponent(language)}`, {
       cache: 'no-store',
-    }).then(async (response) => {
-      if (!response.ok) throw new Error(t('Could not load language'))
-      return (await response.json()) as Record<string, string>
     })
+      .then(async (response) => {
+        if (!response.ok) throw new Error(t('Could not load language'))
+        return (await response.json()) as Record<string, string>
+      })
+      .catch((cause) => {
+        catalogs.delete(language)
+        throw cause
+      })
     catalogs.set(language, catalog)
   }
-  try {
-    const values = await catalog
-    if (selected === language) texts.value = values
-  } catch (cause) {
-    catalogs.delete(language)
-    if (selected === language) {
-      selected = ''
-      throw cause
-    }
-  }
+  return catalog
+}
+
+export function applyLanguage(catalog: Record<string, string> | null) {
+  texts.value = catalog
 }
 
 export function t(source: string, ...parameters: unknown[]) {

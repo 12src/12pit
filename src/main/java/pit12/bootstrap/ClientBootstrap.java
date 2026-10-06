@@ -57,6 +57,7 @@ import pit12.feature.tooltip.TooltipFeature;
 import pit12.feature.webui.WebUiConfig;
 import pit12.feature.webui.WebUiFeature;
 import pit12.platform.command.ForgeCommandAdapter;
+import pit12.platform.oneconfig.OneConfigSupport;
 import pit12.runtime.command.CommandRegistry;
 import pit12.runtime.config.ConfigCatalog;
 import pit12.runtime.hud.HudRegistry;
@@ -89,6 +90,7 @@ public final class ClientBootstrap {
                 task -> minecraft.addScheduledTask(task));
         language = new Languages(client);
         ConfigCatalog configs = new ConfigCatalog(client);
+        ConfigCatalog webUiConfigs = new ConfigCatalog(client);
         shutdown = (ClientShutdownBinding) minecraft;
         ClientSession session = new ClientSession(minecraft, client);
         components.add(session);
@@ -127,8 +129,14 @@ public final class ClientBootstrap {
         registerPlayerList(configs, playerEquipment, pitContext, hudRegistry, relations, presence);
         registerTooltip(configs);
         // Category: Interface
-        registerWebUi(configs, profiles, relations, hudEditor, swapBindings);
+        registerWebUi(webUiConfigs, configs, profiles, relations, hudEditor, swapBindings,
+                new File(minecraft.mcDataDir, "12pit/webui.json").toPath());
+        // Platform integrations
+        OneConfigSupport oneConfig = new OneConfigSupport(configs);
+        components.add(oneConfig);
         language.addListener(() -> configs.localize(language));
+        language.addListener(() -> webUiConfigs.localize(language));
+        webUiConfigs.freeze();
         configs.freeze();
     }
 
@@ -230,12 +238,13 @@ public final class ClientBootstrap {
     }
 
     // Category: Interface
-    private void registerWebUi(ConfigCatalog configs, Profiles profiles, Relations relations,
-            HudEditorFeature hudEditor, SwapBindings swapBindings) {
+    private void registerWebUi(ConfigCatalog configs, ConfigCatalog featureConfigs,
+            Profiles profiles, Relations relations, HudEditorFeature hudEditor,
+            SwapBindings swapBindings, Path path) {
         WebUiConfig config = new WebUiConfig(language);
         configs.register(config);
-        WebUiFeature webUi = new WebUiFeature(configs, profiles, relations, hudEditor, swapBindings,
-                config, language);
+        WebUiFeature webUi = new WebUiFeature(featureConfigs, configs, profiles, relations,
+                hudEditor, swapBindings, config, language, path);
         hudEditor.setWebUiOpener(webUi::open);
         components.add(webUi);
     }

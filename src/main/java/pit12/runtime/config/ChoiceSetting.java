@@ -43,6 +43,10 @@ public final class ChoiceSetting extends Setting<Integer> {
         public String displayName() {
             return displayName;
         }
+
+        public String originalDisplayName() {
+            return originalDisplayName;
+        }
     }
 
     private final List<Choice> choices;

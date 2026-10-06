@@ -8,7 +8,7 @@ This guide covers the project classes and their usage. For package responsibilit
 
 Components are created by `ClientBootstrap` in the constructor. There is a private `register...` method for each feature which creates and registers its config if required, builds the feature, and registers it in `components`. Pass required dependencies as arguments. Return only the API of the feature if subsequent registration methods require it.
 
-Divide the constructor in three parts: shared runtime, feature providers, and other features. Create shared runtime within the constructor itself. Call feature methods and declare them sorted in order of `ConfigCategory.displayOrder()` followed by alphabetical order of their names. Sort the features without configuration in the group `Category: No config`. The same comment should be used in both groups and categories. Prioritize dependencies over category and name. Bootstrap initializes components in list order and stops them in reverse order. Registration methods only create and register objects, not listeners and workers, which should be done in `start()`.
+Divide the constructor into shared runtime, feature providers, other features, and platform integrations. Create runtime components and platform integrations directly in their sections. Call feature methods and declare them sorted in order of `ConfigCategory.displayOrder()` followed by alphabetical order of their names. Sort the features without configuration in the group `Category: No config`. The same comment should be used in both groups and categories. Prioritize dependencies over category and name. Bootstrap initializes components in list order and stops them in reverse order. Registration methods only create and register objects, not listeners and workers, which should be done in `start()`.
 
 Bootstrap registers the component and calls its `start()` method. If `start()` causes an exception, then Bootstrap will stop this component and all components that were started before it. `stop()` should release resources in any case, including partial initialization and even if it was called multiple times. An exception thrown by one of the components in `stop()` will be logged but all the others will be stopped.
 
@@ -49,7 +49,7 @@ Disk I/O, HTTP requests, expensive computations are done on owned workers with a
 
 ## Config
 
-`FeatureConfig` represents the settings of a feature and their Web UI metadata. Settings are defined in its subclass constructor:
+`FeatureConfig` represents the settings of a feature and their interface metadata. Settings are defined in its subclass constructor:
 
 ```java
 import static pit12.runtime.languages.Languages.source;
@@ -72,9 +72,9 @@ public final class StatusConfig extends FeatureConfig {
 }
 ```
 
-`ConfigCategory` provides category id, display name and order number. Reuse the category for related features. The Features page shows category buttons and an All button. All shows category headings. Selecting a category shows its features without repeating the heading.
+`ConfigCategory` provides category id, display name and order number. Reuse the category for related features. The Web UI Features page shows category buttons and an All button. All shows category headings. Selecting a category shows its features without repeating the heading.
 
-`subcategory()` puts the following settings under a button at the top of the feature page. `subsubcategory()` groups settings within that page. Both levels are optional. Without `subcategory()`, groups appear directly on the feature page. Settings without a subsubcategory have no section heading. Settings defined before the first subcategory stay visible under every button. Starting a new subcategory clears the current subsubcategory. Settings and groups follow their definition order.
+In the Web UI, `subcategory()` puts the following settings under a button at the top of the feature page. `subsubcategory()` groups settings within that page. Both levels are optional. Without `subcategory()`, groups appear directly on the feature page. Settings without a subsubcategory have no section heading. Settings defined before the first subcategory stay visible under every button. Starting a new subcategory clears the current subsubcategory. Settings and groups follow their definition order.
 
 The four-argument `FeatureConfig` constructor adds `enabled` setting with default value `true`. Constructor with `toggleable` parameter allows to not add `enabled` setting; in this case the feature always returns true when asked whether it is enabled. Constructor with `defaultEnabled` parameter chooses the initial value. Method `setEnabled` changes the setting, not the lifecycle.
 
@@ -180,7 +180,7 @@ After adding or changing marked source text, run `python scripts/languages.py sy
 hud = hudConfig("status", source("Status"), HudAnchor.TOP_LEFT, 6, 6, true);
 ```
 
-The helper defines these settings: `status.anchor`, `status.offset_x`, `status.offset_y`, `status.scale`, `status.text_shadow`, `status.use_monospace_font`, and `status.translate_text`. Scale is stored as a percentage and defaults to `100`. The HUD editor controls placement and scale. Text shadow, font, and translation switches appear in Web UI. The font switch defaults to off and uses bundled Monocraft when enabled. The translation switch defaults to on; use `language.translate(text, hud.translateText().get())` when preparing HUD text and refresh cached text and layout when it changes.
+The helper defines these settings: `status.anchor`, `status.offset_x`, `status.offset_y`, `status.scale`, `status.text_shadow`, `status.use_monospace_font`, and `status.translate_text`. Scale is stored as a percentage and defaults to `100`. The HUD editor controls placement and scale. Text shadow, font, and translation switches appear in the Web UI and OneConfig. The font switch defaults to off and uses bundled Monocraft when enabled. The translation switch defaults to on; use `language.translate(text, hud.translateText().get())` when preparing HUD text and refresh cached text and layout when it changes.
 
 A [HudElement](../src/main/java/pit12/runtime/hud/HudElement.java) implementation should satisfy the following contract:
 

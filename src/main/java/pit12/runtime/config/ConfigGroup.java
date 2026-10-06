@@ -42,4 +42,8 @@ public final class ConfigGroup {
     public String displayName() {
         return displayName;
     }
+
+    public String originalDisplayName() {
+        return originalDisplayName;
+    }
 }

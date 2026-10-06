@@ -1,0 +1,263 @@
+/*
+ * This file is part of 12pit.
+ *
+ * Copyright (C) 2026 The 12pit Authors and contributors <https://github.com/12src/12pit>
+ *
+ * 12pit is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * 12pit is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
+ */
+:root {
+  color-scheme: dark;
+  font:
+    14px/1.5 'Segoe UI',
+    Arial,
+    sans-serif;
+  --bg: #111315;
+  --side: #0e1012;
+  --panel: #191c1f;
+  --hover: #22262a;
+  --line: #30353a;
+  --text: #e8eaec;
+  --muted: #a4abb1;
+  --faint: #737c84;
+  --accent: #ffffff;
+  --accent-text: #111315;
+  --wash: #ffffff22;
+  --control-border: #485057;
+  --danger: #f0a5a7;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scrollbar-width: none;
+}
+
+html::-webkit-scrollbar {
+  display: none;
+}
+
+body {
+  margin: 0;
+  color: var(--text);
+  background: var(--bg);
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+button:disabled,
+input:disabled,
+textarea:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.app {
+  display: grid;
+  grid-template-columns: 212px minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.sidebar {
+  position: sticky;
+  top: 0;
+  display: flex;
+  align-self: start;
+  flex-direction: column;
+  height: 100vh;
+  background: var(--side);
+  border-right: 1px solid var(--line);
+}
+
+.brand {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 76px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.brand-lockup {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  max-width: 100%;
+}
+
+.brand-name {
+  flex: none;
+  white-space: nowrap;
+  font-size: 26px;
+  line-height: 1.1;
+  font-weight: 750;
+}
+
+.brand-name span {
+  color: var(--accent);
+}
+
+.brand-version {
+  min-width: 0;
+  margin-top: 11px;
+  color: var(--faint);
+  font-size: 10px;
+  line-height: 15px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+nav {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+  padding: 22px 12px;
+  overflow-y: auto;
+}
+
+.nav-indicator {
+  position: absolute;
+  top: var(--indicator-top);
+  left: 12px;
+  right: 12px;
+  height: 40px;
+  border-left: 2px solid var(--accent);
+  border-radius: 5px;
+  background: var(--wash);
+  pointer-events: none;
+  transition:
+    top 0.22s ease,
+    background-color 0.18s ease;
+}
+
+nav button {
+  position: relative;
+  display: block;
+  width: 100%;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--muted);
+  text-align: left;
+  font-weight: 600;
+  transition:
+    color 0.18s ease,
+    background-color 0.18s ease;
+}
+
+nav .nav-settings {
+  margin-top: auto;
+}
+
+nav button:hover:not(.active) {
+  background: var(--hover);
+  color: var(--text);
+}
+
+nav button.active {
+  color: var(--text);
+}
+
+.community-links {
+  display: flex;
+  flex: none;
+  justify-content: center;
+  gap: 6px;
+  padding: 13px 12px;
+  border-top: 1px solid var(--line);
+}
+
+.community-links a {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 5px;
+  color: var(--muted);
+  text-decoration: none;
+  transition:
+    color 0.18s ease,
+    background-color 0.18s ease;
+}
+
+.community-links a:hover,
+.community-links a:focus-visible {
+  background: var(--hover);
+  color: var(--text);
+}
+
+main {
+  width: min(100%, 1040px);
+  margin: 0 auto;
+  padding: 64px 60px 100px;
+  min-width: 0;
+}
+
+.heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--line);
+}
+
+.heading > div {
+  min-width: 0;
+}
+
+h1 {
+  margin: 0;
+  font-size: 28px;
+  line-height: 1.25;
+  font-weight: 650;
+}
+
+section {
+  padding-top: 26px;
+}
+
+h2 {
+  margin: 0 0 10px;
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.empty {
+  color: var(--muted);
+  padding: 20px 0;
+}
+
+.resize-stage {
+  display: flow-root;
+  min-width: 0;
+}

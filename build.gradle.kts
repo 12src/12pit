@@ -20,6 +20,7 @@ val mixinRuntimeVersion: String by project
 val mixinProcessorVersion: String by project
 val devAuthVersion: String by project
 val archUnitVersion: String by project
+val oneConfigVersion: String by project
 val ktfmtVersion: String by project
 val licenseHeaderPath: String by project
 val eclipseFormatterConfigPath: String by project
@@ -92,6 +93,9 @@ tasks.test { inputs.file("src/main/java/pit12/bootstrap/ClientBootstrap.java") }
 
 repositories {
     mavenCentral()
+    maven("https://repo.polyfrost.org/releases") {
+        content { includeGroup("cc.polyfrost") }
+    }
     maven("https://repo.spongepowered.org/maven/")
     maven("https://pkgs.dev.azure.com/djtheredstoner/DevAuth/_packaging/public/maven/v1")
 }
@@ -107,6 +111,8 @@ dependencies {
     forge("net.minecraftforge:forge:$minecraftVersion-$forgeVersion")
 
     compileOnly("com.google.code.gson:gson:$minecraftGsonVersion")
+    // The development bundle exposes the registry used to unregister the view on shutdown.
+    compileOnly("cc.polyfrost:oneconfig-1.8.9-forge:$oneConfigVersion:full-dev") { isTransitive = false }
     shaded("org.spongepowered:mixin:$mixinRuntimeVersion") { isTransitive = false }
     annotationProcessor("org.spongepowered:mixin:$mixinProcessorVersion:processor")
 
