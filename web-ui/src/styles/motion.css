@@ -1,0 +1,160 @@
+/*
+ * This file is part of 12pit.
+ *
+ * Copyright (C) 2026 The 12pit Authors and contributors <https://github.com/12src/12pit>
+ *
+ * 12pit is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * 12pit is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
+ */
+:is(.page-view, .tab-view, .relation-list):is(
+  .slide-up-enter-active,
+  .slide-down-enter-active,
+  .slide-left-enter-active,
+  .slide-right-enter-active
+) {
+  transition:
+    opacity 0.14s ease-out,
+    transform 0.14s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+:is(.page-view, .tab-view, .relation-list):is(
+  .slide-up-leave-active,
+  .slide-down-leave-active,
+  .slide-left-leave-active,
+  .slide-right-leave-active
+) {
+  pointer-events: none;
+  transition:
+    opacity 0.06s ease-in,
+    transform 0.06s ease-in;
+}
+
+.slide-up-enter-from,
+.slide-down-leave-to {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.slide-up-leave-to,
+.slide-down-enter-from {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+.slide-left-enter-from,
+.slide-right-leave-to {
+  opacity: 0;
+  transform: translateX(12px);
+}
+
+.slide-left-leave-to,
+.slide-right-enter-from {
+  opacity: 0;
+  transform: translateX(-12px);
+}
+.profile-list-enter-active,
+.profile-list-leave-active,
+.profile-list-move {
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease;
+}
+.profile-list-enter-from,
+.profile-list-leave-to {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
+.expand-reveal {
+  display: grid;
+  grid-template-rows: 1fr;
+}
+
+.expand-inner {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.expand-enter-active,
+.expand-leave-active {
+  transition:
+    grid-template-rows 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.16s ease;
+}
+
+.expand-enter-from,
+.expand-leave-to {
+  grid-template-rows: 0fr;
+  opacity: 0;
+}
+
+@keyframes content-enter {
+  from {
+    opacity: 0.7;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu-panel,
+  .transfer-conflicts {
+    animation: none;
+  }
+  :is(.page-view, .tab-view, .relation-list):is(
+    .slide-up-enter-active,
+    .slide-up-leave-active,
+    .slide-down-enter-active,
+    .slide-down-leave-active,
+    .slide-left-enter-active,
+    .slide-left-leave-active,
+    .slide-right-enter-active,
+    .slide-right-leave-active
+  ) {
+    transition: none;
+  }
+  .relation-tabs::after {
+    transition: none;
+  }
+  .profile-create,
+  .profile-create-input,
+  .expand-enter-active,
+  .expand-leave-active {
+    transition: none;
+  }
+  .nav-indicator,
+  nav button,
+  .community-links a,
+  .feature-row,
+  .row,
+  .profile-row,
+  .relation-row,
+  .relation-tabs button,
+  .search,
+  .switch,
+  .switch::after,
+  .swatch,
+  .choice-picker summary svg,
+  .primary,
+  .secondary,
+  .icon-button,
+  .danger,
+  .profile-list-enter-active,
+  .profile-list-leave-active,
+  .profile-list-move {
+    transition: none;
+  }
+}

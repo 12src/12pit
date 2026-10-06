@@ -1,0 +1,168 @@
+/*
+ * This file is part of 12pit.
+ *
+ * Copyright (C) 2026 The 12pit Authors and contributors <https://github.com/12src/12pit>
+ *
+ * 12pit is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * 12pit is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
+ */
+.heading-profiles {
+  gap: 18px;
+}
+
+.heading-profiles h1 {
+  flex: none;
+}
+
+.name-input:hover:not(:disabled),
+.profile-create input:hover:not(:disabled) {
+  border-color: var(--muted);
+}
+
+.name-input:focus,
+.profile-create input:focus {
+  border-color: var(--accent);
+}
+
+.profiles,
+.settings-options {
+  padding-top: 0;
+}
+
+.profile-create {
+  display: flex;
+  flex: 0 1 auto;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0;
+  width: min(420px, calc(100% - 120px));
+  min-width: 0;
+  transition: gap 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.profile-create.creating {
+  gap: 8px;
+}
+
+.profile-create-input {
+  flex: 0 1 0;
+  min-width: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition:
+    flex-grow 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.18s ease;
+}
+
+.profile-create.creating .profile-create-input {
+  flex-grow: 1;
+  opacity: 1;
+}
+
+.profile-create input {
+  display: block;
+  width: 100%;
+}
+
+.profile-create .new-profile-button {
+  flex: none;
+}
+
+.profile-row {
+  display: flex;
+  gap: 12px;
+  min-height: 70px;
+  padding: 12px 10px;
+  --row-hover: #ffffff04;
+}
+
+.profile-row.is-active {
+  background: #ffffff03;
+}
+
+.profile-row.is-deleting {
+  background: #592b301c;
+}
+
+.profile-row > strong {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.profile-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  flex: none;
+}
+
+.use-profile {
+  gap: 6px;
+  border-color: transparent;
+  background: transparent;
+  color: var(--accent);
+}
+
+.use-profile:hover:not(:disabled) {
+  border-color: var(--line);
+  background: var(--hover);
+}
+
+.delete-question {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.delete-question strong {
+  color: var(--text);
+}
+
+.active-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.active-label::before {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  content: '';
+}
+
+.name-input {
+  flex: 1;
+}
+
+.profile-use-slot {
+  display: grid;
+  align-items: center;
+}
+.profile-use-slot > * {
+  grid-area: 1 / 1;
+  justify-self: end;
+}

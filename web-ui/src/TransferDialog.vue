@@ -19,6 +19,9 @@ along with 12pit. If not, see <https://www.gnu.org/licenses/>.
 <script setup lang="ts">
 import { t } from './languages'
 import { computed, nextTick, onMounted, ref } from 'vue'
+import ExpandTransition from './ExpandTransition.vue'
+import UiNotice from './UiNotice.vue'
+import { useSizeTransition } from './useSizeTransition'
 import {
   ChevronDown,
   ChevronRight,
@@ -41,10 +44,10 @@ import {
 const props = defineProps<{
   mode: 'export' | 'import'
   state: State
+  acceptImport: (state: State) => Promise<boolean>
 }>()
 const emit = defineEmits<{
   close: []
-  imported: [state: State]
 }>()
 
 const relationTypes: RelationType[] = ['FRIEND', 'ENEMY']
@@ -89,6 +92,15 @@ const busy = ref(false)
 const error = ref('')
 const fileInput = ref<HTMLInputElement | null>(null)
 const dialog = ref<HTMLElement | null>(null)
+let displayedPreview = preview.value
+useSizeTransition(dialog, {
+  automatic: true,
+  fade: () => {
+    const changed = displayedPreview !== preview.value
+    displayedPreview = preview.value
+    return changed
+  },
+})
 const selectedConflicts = computed(() =>
   relationMode.value === 'merge'
     ? (preview.value?.conflicts ?? []).filter((row) =>
@@ -136,23 +148,24 @@ function changeRelation(type: RelationType) {
 async function readFile(event: Event) {
   const file = (event.target as HTMLInputElement).files?.[0]
   if (!file) return
+  busy.value = true
   fileData.value = null
   preview.value = null
   filename.value = ''
   error.value = ''
-  if (file.size > 3 * 1024 * 1024) {
-    error.value = t('File is too large')
-    return
-  }
-  busy.value = true
   try {
+    if (file.size > 3 * 1024 * 1024) {
+      error.value = t('File is too large')
+      return
+    }
     const parsed: unknown = JSON.parse(await file.text())
     if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-      throw new Error(t('File must be a JSON object'))
+      error.value = t('File must be a JSON object')
+      return
     }
     fileData.value = parsed as Record<string, unknown>
     filename.value = file.name
-    await refreshPreview()
+    await updatePreview(fileData.value)
   } catch (cause) {
     error.value = cause instanceof Error ? cause.message : t('Cannot read file')
   } finally {
@@ -161,21 +174,25 @@ async function readFile(event: Event) {
   }
 }
 
+async function updatePreview(data: Record<string, unknown>) {
+  const result = await previewData(data)
+  preview.value = result
+  selectedProfiles.value = result.profiles.map((profile) => profile.id)
+  selectedRelations.value = relationTypes.filter((type) =>
+    Object.hasOwn(result.relations, type),
+  )
+  selectedSwap.value = result.swapBindings
+  resolutions.value = Object.fromEntries(
+    result.conflicts.map((row) => [row.id, 'local' as const]),
+  )
+}
+
 async function refreshPreview() {
   if (!fileData.value) return
   busy.value = true
   error.value = ''
   try {
-    const result = await previewData(fileData.value)
-    preview.value = result
-    selectedProfiles.value = result.profiles.map((profile) => profile.id)
-    selectedRelations.value = relationTypes.filter((type) =>
-      Object.hasOwn(result.relations, type),
-    )
-    selectedSwap.value = result.swapBindings
-    resolutions.value = Object.fromEntries(
-      result.conflicts.map((row) => [row.id, 'local' as const]),
-    )
+    await updatePreview(fileData.value)
   } catch (cause) {
     preview.value = null
     error.value =
@@ -219,7 +236,7 @@ async function submit() {
         preview.value.fingerprint,
         selectedSwap.value && availableSwap.value,
       )
-      emit('imported', next)
+      if (await props.acceptImport(next)) emit('close')
     }
   } catch (cause) {
     error.value = cause instanceof Error ? cause.message : t('Transfer failed')
@@ -250,8 +267,15 @@ function onKeydown(event: KeyboardEvent) {
       'button:not(:disabled), input:not(:disabled)',
     ),
   ].filter((item) => item.offsetParent !== null)
-  if (!controls.length) return
-  if (event.shiftKey && document.activeElement === controls[0]) {
+  if (!controls.length) {
+    event.preventDefault()
+    dialog.value.focus()
+    return
+  }
+  if (!controls.includes(document.activeElement as HTMLElement)) {
+    event.preventDefault()
+    controls[event.shiftKey ? controls.length - 1 : 0].focus()
+  } else if (event.shiftKey && document.activeElement === controls[0]) {
     event.preventDefault()
     controls[controls.length - 1].focus()
   } else if (
@@ -311,21 +335,26 @@ function onKeydown(event: KeyboardEvent) {
           >
             {{ t('Choose file') }}
           </button>
-          <span v-if="filename">{{ filename }}</span>
+          <span>{{ filename }}</span>
           <button
-            v-if="fileData"
             type="button"
             class="icon-button"
+            :class="{ 'is-hidden': !fileData }"
+            :tabindex="fileData ? 0 : -1"
+            :aria-hidden="!fileData"
             :aria-label="t('Refresh preview')"
             :title="t('Refresh preview')"
-            :disabled="busy"
+            :disabled="busy || !fileData"
             @click="refreshPreview"
           >
             <RefreshCw :size="15" />
           </button>
         </div>
 
-        <div v-if="mode === 'export' || preview" class="transfer-tree">
+        <div
+          v-if="mode === 'export' || preview"
+          class="transfer-tree scroll-region"
+        >
           <div class="transfer-parent">
             <button
               type="button"
@@ -358,20 +387,22 @@ function onKeydown(event: KeyboardEvent) {
               >
             </label>
           </div>
-          <div v-if="expandedProfiles" class="transfer-children">
-            <label v-for="profile in availableProfiles" :key="profile.id">
-              <input
-                type="checkbox"
-                :checked="selectedProfiles.includes(profile.id)"
-                :disabled="busy"
-                @change="changeProfile(profile.id)"
-              />
-              {{ profile.name }}
-            </label>
-            <span v-if="!availableProfiles.length" class="transfer-empty">{{
-              t('No profiles')
-            }}</span>
-          </div>
+          <ExpandTransition :open="expandedProfiles">
+            <div class="transfer-children">
+              <label v-for="profile in availableProfiles" :key="profile.id">
+                <input
+                  type="checkbox"
+                  :checked="selectedProfiles.includes(profile.id)"
+                  :disabled="busy"
+                  @change="changeProfile(profile.id)"
+                />
+                {{ profile.name }}
+              </label>
+              <span v-if="!availableProfiles.length" class="transfer-empty">{{
+                t('No profiles')
+              }}</span>
+            </div>
+          </ExpandTransition>
 
           <div class="transfer-parent">
             <button
@@ -405,23 +436,25 @@ function onKeydown(event: KeyboardEvent) {
               >
             </label>
           </div>
-          <div v-if="expandedRelations" class="transfer-children">
-            <label v-for="type in availableRelations" :key="type">
-              <input
-                type="checkbox"
-                :checked="selectedRelations.includes(type)"
-                :disabled="busy"
-                @change="changeRelation(type)"
-              />
-              {{ type === 'FRIEND' ? t('Friends') : t('Enemies') }}
-              <span v-if="mode === 'import'">{{
-                preview?.relations[type]
+          <ExpandTransition :open="expandedRelations">
+            <div class="transfer-children">
+              <label v-for="type in availableRelations" :key="type">
+                <input
+                  type="checkbox"
+                  :checked="selectedRelations.includes(type)"
+                  :disabled="busy"
+                  @change="changeRelation(type)"
+                />
+                {{ type === 'FRIEND' ? t('Friends') : t('Enemies') }}
+                <span v-if="mode === 'import'">{{
+                  preview?.relations[type]
+                }}</span>
+              </label>
+              <span v-if="!availableRelations.length" class="transfer-empty">{{
+                t('No relations')
               }}</span>
-            </label>
-            <span v-if="!availableRelations.length" class="transfer-empty">{{
-              t('No relations')
-            }}</span>
-          </div>
+            </div>
+          </ExpandTransition>
           <div class="transfer-parent transfer-leaf">
             <label>
               <input
@@ -437,7 +470,7 @@ function onKeydown(event: KeyboardEvent) {
           v-if="mode === 'import' && preview && selectedRelations.length"
         >
           <div
-            class="transfer-mode"
+            class="transfer-mode segmented"
             role="group"
             :aria-label="t('Relation import mode')"
           >
@@ -491,7 +524,7 @@ function onKeydown(event: KeyboardEvent) {
                 </button>
               </div>
             </div>
-            <div class="transfer-conflict-list">
+            <div class="transfer-conflict-list scroll-region">
               <div
                 v-for="row in selectedConflicts"
                 :key="row.id"
@@ -504,7 +537,7 @@ function onKeydown(event: KeyboardEvent) {
                 }}</small>
                 <small>{{ t('File: {0}', detail(row.incoming)) }}</small>
                 <div
-                  class="transfer-choice"
+                  class="transfer-choice segmented"
                   role="group"
                   :aria-label="t('Resolve {0}', row.incoming.name)"
                 >
@@ -531,7 +564,9 @@ function onKeydown(event: KeyboardEvent) {
             </div>
           </section>
         </template>
-        <p v-if="error" class="transfer-error" role="alert">{{ error }}</p>
+        <UiNotice v-if="error" variant="text" class="transfer-error">{{
+          error
+        }}</UiNotice>
       </div>
 
       <footer class="transfer-footer">
@@ -551,13 +586,14 @@ function onKeydown(event: KeyboardEvent) {
         >
           <Download v-if="mode === 'export'" :size="15" />
           <Upload v-else :size="15" />
-          {{
-            busy
-              ? t('Working...')
-              : mode === 'export'
-                ? t('Export')
-                : t('Import')
-          }}
+          <span class="state-label">
+            <span :class="{ 'is-hidden': busy }" :aria-hidden="busy">{{
+              mode === 'export' ? t('Export') : t('Import')
+            }}</span>
+            <span :class="{ 'is-hidden': !busy }" :aria-hidden="!busy">{{
+              t('Working...')
+            }}</span>
+          </span>
         </button>
       </footer>
     </div>
