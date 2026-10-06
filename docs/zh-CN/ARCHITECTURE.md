@@ -1,4 +1,4 @@
-<!-- Source: docs/ARCHITECTURE.md; Based on: 9e3455a4346e4997be2d01c6d78e031334c73fd5 -->
+<!-- Source: docs/ARCHITECTURE.md; Based on: 2232dc5e10013e89eb44cac454aa965c84b6ce20 -->
 
 # 12pit 架构
 
@@ -14,7 +14,7 @@
 
 `shared` 拥有用于线程、监听器、渲染和文件写入的小型辅助接口和工具。它不拥有实时游戏状态。
 
-`platform` 适配 Forge 命令和 Mixin 等外部机制。适配器通过范围有限的接口，将外部请求转发给其所有者。
+`platform` 适配 Forge 命令和 Mixin 等外部机制。适配器通过范围有限的接口，将外部请求转发给其所有者。适配器可以实现 `ClientLifecycle`，管理自己持有的监听和注册资源。
 
 命令定义和操作由功能拥有。`runtime.command` 拥有命令的路由、帮助、补全和可用性。`platform.command` 拥有 Forge 注册。
 
