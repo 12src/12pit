@@ -21,8 +21,14 @@ package pit12.shared.chat;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumChatFormatting;
+import pit12.bootstrap.BuildConfig;
 
 public final class ChatFeedback {
+    private static final String BUILD_LABEL = BuildConfig.RELEASE_BUILD ? BuildConfig.VERSION
+            : BuildConfig.GIT_COMMIT.isEmpty() ? "dev"
+                    : BuildConfig.GIT_COMMIT.substring(0,
+                            Math.min(7, BuildConfig.GIT_COMMIT.length()));
+
     public enum Tone {
         INFO(EnumChatFormatting.WHITE),
         SUCCESS(EnumChatFormatting.GREEN),
@@ -42,12 +48,16 @@ public final class ChatFeedback {
         ChatComponentText prefix = new ChatComponentText("[");
         prefix.getChatStyle().setColor(EnumChatFormatting.DARK_GRAY);
         ChatComponentText number = new ChatComponentText("12");
-        number.getChatStyle().setColor(EnumChatFormatting.AQUA).setBold(true);
+        number.getChatStyle().setColor(EnumChatFormatting.DARK_AQUA).setBold(true);
         ChatComponentText name = new ChatComponentText("pit");
-        name.getChatStyle().setColor(EnumChatFormatting.DARK_AQUA).setBold(true);
+        name.getChatStyle().setColor(EnumChatFormatting.AQUA).setBold(true);
+        ChatComponentText version = new ChatComponentText(" " + BUILD_LABEL);
+        version.getChatStyle().setColor(EnumChatFormatting.GRAY);
         ChatComponentText body = new ChatComponentText(message);
         body.getChatStyle().setColor(tone.color);
-        prefix.appendSibling(number).appendSibling(name).appendText("] » ").appendSibling(body);
+        prefix.appendSibling(number).appendSibling(name).appendSibling(version)
+                .appendText("] » ")
+                .appendSibling(body);
         sender.addChatMessage(prefix);
     }
 }
