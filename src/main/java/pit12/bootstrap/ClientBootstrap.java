@@ -33,7 +33,6 @@ import pit12.feature.gamma.GammaBinding;
 import pit12.feature.gamma.GammaConfig;
 import pit12.feature.gamma.GammaFeature;
 import pit12.feature.hudeditor.HudEditorFeature;
-import pit12.feature.hudeditor.api.HudEditor;
 import pit12.feature.itemesp.ItemEspConfig;
 import pit12.feature.itemesp.ItemEspFeature;
 import pit12.feature.playeresp.PlayerEspConfig;
@@ -105,7 +104,7 @@ public final class ClientBootstrap {
         HudRegistry hudRegistry = new HudRegistry(client);
         // Feature providers
         // Category: No config
-        HudEditor hudEditor = registerHudEditor(hudRegistry, commands);
+        HudEditorFeature hudEditor = registerHudEditor(hudRegistry, commands);
         Profiles profiles =
                 registerProfiles(configs, new File(minecraft.mcDataDir, "12pit/config").toPath());
         Relations relations = registerRelations(presence,
@@ -135,8 +134,8 @@ public final class ClientBootstrap {
 
     // Feature providers
     // Category: No config
-    private HudEditor registerHudEditor(HudRegistry hudRegistry, CommandRegistry commands) {
-        HudEditorFeature hudEditor = new HudEditorFeature(hudRegistry, commands);
+    private HudEditorFeature registerHudEditor(HudRegistry hudRegistry, CommandRegistry commands) {
+        HudEditorFeature hudEditor = new HudEditorFeature(hudRegistry, commands, language);
         components.add(hudEditor);
         return hudEditor;
     }
@@ -232,11 +231,13 @@ public final class ClientBootstrap {
 
     // Category: Interface
     private void registerWebUi(ConfigCatalog configs, Profiles profiles, Relations relations,
-            HudEditor hudEditor, SwapBindings swapBindings) {
+            HudEditorFeature hudEditor, SwapBindings swapBindings) {
         WebUiConfig config = new WebUiConfig(language);
         configs.register(config);
-        components.add(new WebUiFeature(configs, profiles, relations, hudEditor, swapBindings,
-                config, language));
+        WebUiFeature webUi = new WebUiFeature(configs, profiles, relations, hudEditor, swapBindings,
+                config, language);
+        hudEditor.setWebUiOpener(webUi::open);
+        components.add(webUi);
     }
 
     public void start() {

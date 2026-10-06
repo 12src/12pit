@@ -253,6 +253,26 @@ final class ProfileController {
         return ProfileMutationResult.success();
     }
 
+    ProfileMutationResult resetActive() {
+        ProfileMutationResult ready = requireLoaded();
+        if (ready != null) {
+            return ready;
+        }
+        ConfigSnapshot defaults = catalog.defaults();
+        applyingProfile = true;
+        try {
+            catalog.apply(defaults);
+        } finally {
+            applyingProfile = false;
+        }
+        ProfileRecord active = profilesById.get(activeProfileId);
+        active.resetConfig(defaults);
+        markChanged(active);
+        publish();
+        persistence.changed();
+        return ProfileMutationResult.success();
+    }
+
     ProfileMutationResult beginCreate() {
         ProfileMutationResult ready = requireLoaded();
         if (ready != null) {

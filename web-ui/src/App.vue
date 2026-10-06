@@ -24,9 +24,9 @@ import {
   Check,
   ChevronRight,
   Download,
-  LayoutDashboard,
   Pencil,
   Plus,
+  RotateCcw,
   Search,
   Trash2,
   Upload,
@@ -37,7 +37,6 @@ import {
   changeRelations,
   changeSetting,
   loadState,
-  openHudEditor,
   type Feature,
   type RelationInput,
   type RelationResult,
@@ -295,6 +294,7 @@ async function flushSettings() {
 }
 
 async function profileAction(action: string, id?: string, name?: string) {
+  cancelCapture()
   await mutate(() => changeProfile(action, id, name))
 }
 
@@ -907,10 +907,19 @@ onUnmounted(() => {
                   <button
                     type="button"
                     class="secondary"
-                    :disabled="pending || sendingSetting"
-                    @click="mutate(openHudEditor)"
+                    :disabled="
+                      pending ||
+                      sendingSetting ||
+                      state.profiles.loadState === 'LOADING'
+                    "
+                    :title="
+                      t(
+                        'Replaces the active profile configuration with defaults.',
+                      )
+                    "
+                    @click="profileAction('reset')"
                   >
-                    <LayoutDashboard :size="15" />{{ t('Edit HUD') }}
+                    <RotateCcw :size="15" />{{ t('Restore defaults') }}
                   </button>
                   <button
                     type="button"

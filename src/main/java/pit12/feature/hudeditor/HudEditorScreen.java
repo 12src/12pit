@@ -19,19 +19,30 @@
 package pit12.feature.hudeditor;
 
 import java.io.IOException;
+import java.util.Collections;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.ScaledResolution;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
+import pit12.runtime.languages.Languages;
 
 final class HudEditorScreen extends GuiScreen {
     private final HudEditorController controller;
     private final GuiScreen parent;
+    private final Languages language;
+    private final Runnable openWebUi;
+    private GuiButton webUiButton;
+    private GuiButton hideWebUiButton;
+    private boolean webUiButtonsHidden;
 
-    HudEditorScreen(HudEditorController controller, GuiScreen parent) {
+    HudEditorScreen(HudEditorController controller, GuiScreen parent, Languages language,
+            Runnable openWebUi) {
         this.controller = controller;
         this.parent = parent;
+        this.language = language;
+        this.openWebUi = openWebUi;
     }
 
     boolean belongsTo(HudEditorController candidate) {
@@ -42,6 +53,13 @@ final class HudEditorScreen extends GuiScreen {
     public void initGui() {
         controller.open();
         resizeController();
+        webUiButton = new GuiButton(0, width - 152, height - 28, 120, 20,
+                language.translate("Open Web UI"));
+        hideWebUiButton = new GuiButton(1, width - 28, height - 28, 20, 20, "×");
+        webUiButton.visible = !webUiButtonsHidden;
+        hideWebUiButton.visible = !webUiButtonsHidden;
+        buttonList.add(webUiButton);
+        buttonList.add(hideWebUiButton);
     }
 
     @Override
@@ -50,11 +68,35 @@ final class HudEditorScreen extends GuiScreen {
             controller.mouseDragged(mouseX, mouseY);
         }
         controller.render(mouseX, mouseY, partialTicks);
+        webUiButton.displayString = language.translate("Open Web UI");
+        super.drawScreen(mouseX, mouseY, partialTicks);
+        if (hideWebUiButton.visible && hideWebUiButton.isMouseOver()) {
+            drawHoveringText(
+                    Collections.singletonList(
+                            language.translate("Hide until the HUD editor is reopened")),
+                    mouseX, mouseY);
+        }
     }
 
     @Override
-    protected void mouseClicked(int mouseX, int mouseY, int mouseButton) {
+    protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
+        if (mouseButton == 0 && (webUiButton.mousePressed(mc, mouseX, mouseY)
+                || hideWebUiButton.mousePressed(mc, mouseX, mouseY))) {
+            super.mouseClicked(mouseX, mouseY, mouseButton);
+            return;
+        }
         controller.mousePressed(mouseX, mouseY, mouseButton);
+    }
+
+    @Override
+    protected void actionPerformed(GuiButton button) {
+        if (button == webUiButton) {
+            openWebUi.run();
+        } else if (button == hideWebUiButton) {
+            webUiButtonsHidden = true;
+            webUiButton.visible = false;
+            hideWebUiButton.visible = false;
+        }
     }
 
     @Override
@@ -65,6 +107,7 @@ final class HudEditorScreen extends GuiScreen {
 
     @Override
     protected void mouseReleased(int mouseX, int mouseY, int state) {
+        super.mouseReleased(mouseX, mouseY, state);
         controller.mouseReleased(state);
     }
 
@@ -87,6 +130,7 @@ final class HudEditorScreen extends GuiScreen {
     @Override
     public void onGuiClosed() {
         controller.close();
+        webUiButtonsHidden = false;
     }
 
     @Override

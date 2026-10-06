@@ -30,25 +30,36 @@ import pit12.feature.hudeditor.api.HudEditor;
 import pit12.runtime.command.CommandNode;
 import pit12.runtime.command.CommandRegistry;
 import pit12.runtime.hud.HudRegistry;
+import pit12.runtime.languages.Languages;
 import pit12.shared.lifecycle.ClientLifecycle;
 
 public final class HudEditorFeature implements ClientLifecycle, HudEditor {
     private final Minecraft minecraft = Minecraft.getMinecraft();
     private final HudEditorController controller;
     private final HudRegistry registry;
+    private final Languages language;
+    private Runnable openWebUi;
     private boolean started;
     private boolean pendingOpen;
 
-    public HudEditorFeature(HudRegistry registry, CommandRegistry commands) {
+    public HudEditorFeature(HudRegistry registry, CommandRegistry commands, Languages language) {
         this.registry = registry;
+        this.language = language;
         controller = new HudEditorController(registry);
         commands.register(CommandNode.command("hudeditor", source("Open the HUD editor"))
                 .executes((sender, args) -> requestOpen()).build(), true);
     }
 
+    public void setWebUiOpener(Runnable openWebUi) {
+        this.openWebUi = openWebUi;
+    }
+
     @Override
     public void start() {
         registry.checkThread();
+        if (openWebUi == null) {
+            throw new IllegalStateException("Web UI opener is not bound");
+        }
         started = true;
     }
 
@@ -97,6 +108,7 @@ public final class HudEditorFeature implements ClientLifecycle, HudEditor {
                 && ((HudEditorScreen) minecraft.currentScreen).belongsTo(controller)) {
             return;
         }
-        minecraft.displayGuiScreen(new HudEditorScreen(controller, minecraft.currentScreen));
+        minecraft.displayGuiScreen(
+                new HudEditorScreen(controller, minecraft.currentScreen, language, openWebUi));
     }
 }

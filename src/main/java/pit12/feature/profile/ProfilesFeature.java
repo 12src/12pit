@@ -173,6 +173,12 @@ public final class ProfilesFeature
     }
 
     @Override
+    public ProfileMutationResult resetActive() {
+        catalog.clientThread().check();
+        return started ? controller.resetActive() : unavailable();
+    }
+
+    @Override
     public ProfileMutationResult beginCreate() {
         catalog.clientThread().check();
         return started ? controller.beginCreate() : unavailable();

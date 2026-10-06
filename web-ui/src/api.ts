@@ -123,7 +123,6 @@ export const changeSetting = (
 ) => request('/api/setting', { featureId, settingId, value })
 export const changeProfile = (action: string, id?: string, name?: string) =>
   request('/api/profile', { action, id, name })
-export const openHudEditor = () => request('/api/hud-editor', {})
 export const changeRelations = (
   action: 'add' | 'remove',
   relation: RelationType,

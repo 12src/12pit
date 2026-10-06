@@ -31,6 +31,7 @@ import pit12.runtime.languages.Languages;
 
 public final class WebUiConfig extends FeatureConfig {
     private final IntegerSetting keybind;
+    private final ChoiceSetting keybindAction;
     private final ChoiceSetting language;
 
     public WebUiConfig(Languages languages) {
@@ -48,12 +49,19 @@ public final class WebUiConfig extends FeatureConfig {
                 0x7BADE2);
         booleanSetting("show_details", source("Show details"),
                 source("Shows descriptions for features and settings."), false);
-        keybind = keybindSetting("keybind", source("Open Web UI key"),
-                source("Opens the web interface."), Keyboard.KEY_RSHIFT);
+        keybind = keybindSetting("keybind", source("Interface key"),
+                source("Opens the selected interface."), Keyboard.KEY_RSHIFT);
+        keybindAction = choiceSetting("keybind_action", source("Key action"),
+                source("Chooses which interface the key opens."), 0,
+                new Choice(0, source("Web UI")), new Choice(1, source("HUD editor")));
     }
 
     public IntegerSetting keybind() {
         return keybind;
+    }
+
+    public ChoiceSetting keybindAction() {
+        return keybindAction;
     }
 
     public ChoiceSetting language() {

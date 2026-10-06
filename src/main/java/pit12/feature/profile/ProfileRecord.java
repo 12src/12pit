@@ -18,7 +18,9 @@
  */
 package pit12.feature.profile;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import java.util.Map;
 import java.util.UUID;
 import pit12.feature.profile.api.ProfileSummary;
 import pit12.feature.profile.storage.StoredProfile;
@@ -26,7 +28,7 @@ import pit12.runtime.config.ConfigSnapshot;
 
 final class ProfileRecord {
     private final UUID id;
-    private final JsonObject preservedRoot;
+    private JsonObject preservedRoot;
     private String name;
     private int order;
     private long updatedAt;
@@ -84,6 +86,18 @@ final class ProfileRecord {
 
     void config(ConfigSnapshot config) {
         this.config = config;
+    }
+
+    void resetConfig(ConfigSnapshot defaults) {
+        config = defaults;
+        // In-flight writes still reference the old root, so leave it unchanged.
+        JsonObject root = new JsonObject();
+        for (Map.Entry<String, JsonElement> entry : preservedRoot.entrySet()) {
+            if (!"features".equals(entry.getKey())) {
+                root.add(entry.getKey(), entry.getValue());
+            }
+        }
+        preservedRoot = root;
     }
 
     boolean dirty() {
