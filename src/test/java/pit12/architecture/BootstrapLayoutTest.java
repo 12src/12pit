@@ -65,9 +65,8 @@ public final class BootstrapLayoutTest {
         while (headings.find()) {
             groups.add(headings.group(1));
         }
-        assertEquals("Constructor sections",
-                Arrays.asList("Shared runtime", "Feature providers", "Features",
-                        "Platform integrations"), groups);
+        assertEquals("Constructor sections", Arrays.asList("Shared runtime", "Feature providers",
+                "Features", "Platform integrations"), groups);
         Map<String, String> imports = new HashMap<>();
         Matcher imported = Pattern.compile("import ([\\w.]+);").matcher(code);
         while (imported.find()) {
@@ -131,8 +130,10 @@ public final class BootstrapLayoutTest {
                 platformComponents.add(objects.group(1));
             }
             assertEquals("Component creation section for " + objects.group(1),
-                    Arrays.asList(platformComponents.contains(objects.group(1))
-                            ? "Platform integrations" : "Shared runtime", null),
+                    Arrays.asList(
+                            platformComponents.contains(objects.group(1)) ? "Platform integrations"
+                                    : "Shared runtime",
+                            null),
                     sectionAt(source, constructorStart + objects.start()));
         }
         Matcher results =
@@ -147,8 +148,10 @@ public final class BootstrapLayoutTest {
                 String component = producers.get(call.arguments.trim());
                 assertNotNull("Unknown component: " + call.arguments, component);
                 assertEquals("Component registration section",
-                        Arrays.asList(platformComponents.contains(component)
-                                ? "Platform integrations" : "Shared runtime", null),
+                        Arrays.asList(
+                                platformComponents.contains(component) ? "Platform integrations"
+                                        : "Shared runtime",
+                                null),
                         sectionAt(source, constructorStart + call.offset));
                 componentOrder.add(component);
             } else {

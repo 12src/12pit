@@ -69,9 +69,6 @@ public final class OneConfigAdapter implements ClientLifecycle, ConfigChangeList
         }
         view = new RootView();
         for (FeatureConfig feature : catalog.features()) {
-            if (feature.category().id().equals("interface")) {
-                continue;
-            }
             View featureView = new View(feature);
             buildPage(featureView, feature);
             featureMods.add(featureView.mod);

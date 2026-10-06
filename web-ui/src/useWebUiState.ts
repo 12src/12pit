@@ -18,6 +18,7 @@
  */
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import {
+  changeFavorite,
   changeProfile,
   changeRelations,
   changeSetting,
@@ -38,16 +39,12 @@ type SettingEdit = {
 export function useWebUiState() {
   const state = ref<State | null>(null)
   const error = ref('')
+  const favorites = computed(() => new Set(state.value?.webui.favorites ?? []))
   const pending = ref(false)
   const sendingSetting = ref(false)
   const busy = computed(() => pending.value || sendingSetting.value)
-  const features = computed(
-    () =>
-      state.value?.features.filter((feature) => feature.id !== 'webui') ?? [],
-  )
-  const settings = computed(() =>
-    state.value?.features.find((feature) => feature.id === 'webui'),
-  )
+  const features = computed(() => state.value?.features ?? [])
+  const settings = computed(() => state.value?.webui.settings)
   const settingsOptions = computed(
     () => settings.value?.sections.flatMap((section) => section.options) ?? [],
   )
@@ -88,8 +85,18 @@ export function useWebUiState() {
     error.value = cause instanceof Error ? cause.message : t('Request failed')
   }
 
+  async function toggleFavorite(id: string) {
+    await mutate(
+      () => changeFavorite(id, !favorites.value.has(id)),
+      (result) => result,
+    )
+  }
+
   function applySetting(next: State, edit: SettingEdit) {
-    const feature = next.features.find((item) => item.id === edit.featureId)
+    const feature =
+      next.webui.settings.id === edit.featureId
+        ? next.webui.settings
+        : next.features.find((item) => item.id === edit.featureId)
     if (!feature) return
     if (edit.optionId === 'enabled') {
       feature.enabled = Boolean(edit.value)
@@ -116,6 +123,7 @@ export function useWebUiState() {
     applyLanguage(catalog)
     state.value = next
     if (languageError) reportError(languageError)
+    else if (next.webui.problem) error.value = t(next.webui.problem)
     else if (clearError) error.value = ''
     return true
   }
@@ -263,6 +271,8 @@ export function useWebUiState() {
     features,
     settings,
     showDetails,
+    favorites,
+    toggleFavorite,
     setting,
     profileAction,
     updateRelations,

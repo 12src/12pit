@@ -18,7 +18,7 @@ along with 12pit. If not, see <https://www.gnu.org/licenses/>.
 -->
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { ChevronRight } from '@lucide/vue'
+import { ChevronRight, Star } from '@lucide/vue'
 import type { Feature } from './api'
 import { t } from './languages'
 import FormattedText from './FormattedText.vue'
@@ -29,6 +29,8 @@ import ToggleSwitch from './ToggleSwitch.vue'
 
 const props = defineProps<{
   features: Feature[]
+  favorites: Set<string>
+  favoritesReady: boolean
   selectedId: string | null
   capturing: { featureId: string; settingId: string } | null
   busy: boolean
@@ -37,6 +39,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   open: [id: string]
   back: []
+  favorite: [id: string]
   change: [
     featureId: string,
     settingId: string,
@@ -52,6 +55,7 @@ const selectedSubcategoryId = defineModel<string | null>('subcategory', {
 })
 const categoryTransition = ref('slide-left')
 const subcategoryTransition = ref('slide-left')
+const nameOrder = new Intl.Collator('en', { sensitivity: 'base' })
 
 const current = computed(() =>
   props.features.find((feature) => feature.id === props.selectedId),
@@ -79,37 +83,27 @@ const categories = computed(() => [
     props.features.map((feature) => [feature.categoryId, feature.category]),
   ).entries(),
 ])
-const visible = computed(() =>
-  props.features.filter(
-    (feature) =>
-      (category.value === 'all' || feature.categoryId === category.value) &&
-      `${feature.name} ${feature.description}`
-        .toLowerCase()
-        .includes(search.value.trim().toLowerCase()),
-  ),
-)
-const grouped = computed(() => {
-  const groups = new Map<
-    string,
-    {
-      name: string
-      items: { feature: Feature; hasDetails: boolean }[]
-    }
-  >()
-  for (const feature of visible.value) {
-    let group = groups.get(feature.categoryId)
-    if (!group) {
-      group = { name: feature.category, items: [] }
-      groups.set(feature.categoryId, group)
-    }
-    group.items.push({
+const visible = computed(() => {
+  const query = search.value.trim().toLowerCase()
+  return props.features
+    .filter(
+      (feature) =>
+        (category.value === 'all' || feature.categoryId === category.value) &&
+        `${feature.name} ${feature.description}`.toLowerCase().includes(query),
+    )
+    .map((feature) => ({
       feature,
+      favorite: props.favorites.has(feature.id),
+      sortName: feature.name.replace(/\u00a7[0-9a-flmnor]/gi, ''),
       hasDetails: feature.sections.some(
         (section) => section.options.length > 0,
       ),
-    })
-  }
-  return [...groups]
+    }))
+    .sort(
+      (a, b) =>
+        Number(b.favorite) - Number(a.favorite) ||
+        nameOrder.compare(a.sortName, b.sortName),
+    )
 })
 function selectCategory(id: string) {
   categoryTransition.value =
@@ -152,40 +146,46 @@ function selectSubcategory(id: string) {
     </div>
     <ResizeTransition :name="categoryTransition">
       <div :key="category" class="tab-view feature-list">
-        <section v-for="[id, group] in grouped" :key="id">
-          <h2 v-if="category === 'all'">
-            <FormattedText :text="group.name" />
-          </h2>
-          <div
-            v-for="{ feature, hasDetails } in group.items"
-            :key="feature.id"
-            class="feature-row list-row"
+        <div
+          v-for="{ feature, favorite, hasDetails } in visible"
+          :key="feature.id"
+          class="feature-row list-row"
+        >
+          <component
+            :is="hasDetails ? 'button' : 'span'"
+            class="feature-link"
+            :type="hasDetails ? 'button' : undefined"
+            @click="hasDetails && emit('open', feature.id)"
           >
-            <component
-              :is="hasDetails ? 'button' : 'span'"
-              class="feature-link"
-              :type="hasDetails ? 'button' : undefined"
-              @click="hasDetails && emit('open', feature.id)"
-            >
-              <span>
-                <strong><FormattedText :text="feature.name" /></strong>
-                <small v-if="showDetails"
-                  ><FormattedText :text="feature.description"
-                /></small>
-              </span>
-              <ChevronRight v-if="hasDetails" :size="16" />
-            </component>
-            <ToggleSwitch
-              v-if="feature.toggleable"
-              :model-value="feature.enabled"
-              :label="t('Enable {0}', feature.name)"
-              :disabled="busy"
-              @update:model-value="
-                emit('change', feature.id, 'enabled', $event)
-              "
-            />
-          </div>
-        </section>
+            <span>
+              <strong><FormattedText :text="feature.name" /></strong>
+              <small v-if="showDetails"
+                ><FormattedText :text="feature.description"
+              /></small>
+            </span>
+            <ChevronRight v-if="hasDetails" :size="16" />
+          </component>
+          <button
+            type="button"
+            class="icon-button feature-favorite"
+            :aria-label="t('Favorite {0}', feature.name)"
+            :aria-pressed="favorite"
+            :disabled="busy || !favoritesReady"
+            :title="
+              favorite ? t('Remove from favorites') : t('Add to favorites')
+            "
+            @click="emit('favorite', feature.id)"
+          >
+            <Star :size="18" aria-hidden="true" />
+          </button>
+          <ToggleSwitch
+            v-if="feature.toggleable"
+            :model-value="feature.enabled"
+            :label="t('Enable {0}', feature.name)"
+            :disabled="busy"
+            @update:model-value="emit('change', feature.id, 'enabled', $event)"
+          />
+        </div>
         <p v-if="!visible.length" class="empty">
           {{ t('No matching features.') }}
         </p>

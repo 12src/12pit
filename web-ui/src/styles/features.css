@@ -103,10 +103,6 @@
   padding-top: 16px;
 }
 
-.feature-list > section:first-child {
-  padding-top: 0;
-}
-
 .feature-row {
   display: flex;
   gap: 15px;
@@ -152,4 +148,16 @@
 
 button.feature-link:hover strong {
   color: var(--accent);
+}
+
+.feature-favorite {
+  flex: none;
+}
+
+.feature-favorite[aria-pressed='true'] {
+  color: var(--accent);
+}
+
+.feature-favorite[aria-pressed='true'] svg {
+  fill: currentColor;
 }

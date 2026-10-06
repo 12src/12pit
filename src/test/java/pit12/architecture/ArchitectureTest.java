@@ -89,10 +89,10 @@ public final class ArchitectureTest {
     public static final ArchRule MODULES_MUST_BE_FREE_OF_CYCLES =
             slices().matching("pit12.(*).(*)..").should().beFreeOfCycles();
     @ArchTest
-    public static final ArchRule CLIENT_LIFECYCLE_OWNERS = classes().that()
-            .areAssignableTo("pit12.shared.lifecycle.ClientLifecycle").should()
-            .resideInAnyPackage("pit12.platform..", "pit12.runtime..", "pit12.feature..",
-                    "pit12.shared.lifecycle..");
+    public static final ArchRule CLIENT_LIFECYCLE_OWNERS =
+            classes().that().areAssignableTo("pit12.shared.lifecycle.ClientLifecycle").should()
+                    .resideInAnyPackage("pit12.platform..", "pit12.runtime..", "pit12.feature..",
+                            "pit12.shared.lifecycle..");
     @ArchTest
     public static final ArchRule FEATURES_MUST_ONLY_USE_OTHER_FEATURE_APIS =
             classes().that().resideInAPackage("pit12.feature..").should(onlyUseOtherFeatureApis())

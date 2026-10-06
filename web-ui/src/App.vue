@@ -38,6 +38,8 @@ const {
   features,
   settings,
   showDetails,
+  favorites,
+  toggleFavorite,
   setting,
   profileAction,
   updateRelations,
@@ -212,12 +214,15 @@ function closeTransfer() {
             v-model:category="category"
             v-model:subcategory="selectedSubcategoryId"
             :features="features"
+            :favorites="favorites"
+            :favorites-ready="state.webui.ready"
             :selected-id="selectedId"
             :capturing="capturing"
             :busy="pending"
             :show-details="showDetails"
             @open="openFeature"
             @back="selectPage('features')"
+            @favorite="toggleFavorite"
             @change="setting"
             @capture="startCapture"
             @cancel="cancelCapture"
@@ -234,7 +239,7 @@ function closeTransfer() {
             :settings="settings"
             :profiles-loading="state.profiles.loadState === 'LOADING'"
             :busy="busy"
-            :pending="pending"
+            :pending="pending || !state.webui.ready"
             :show-details="showDetails"
             :capturing="capturing"
             @reset="resetProfile"

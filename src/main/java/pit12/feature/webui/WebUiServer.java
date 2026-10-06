@@ -85,10 +85,13 @@ final class WebUiServer {
     private final Minecraft minecraft;
     private final Languages language;
     private final ConfigCatalog catalog;
+    private final ConfigCatalog settings;
+    private final WebUiConfig config;
     private final Profiles profiles;
     private final Relations relations;
     private final SwapBindings swapBindings;
     private final SettingsTransfer transfer;
+    private final WebUiPreferences preferences;
     private final Gson gson = new Gson();
     private final Set<BlockingQueue<Boolean>> streams = new HashSet<BlockingQueue<Boolean>>();
     private final ConfigChangeListener configListener = ignored -> notifyStreams();
@@ -96,14 +99,18 @@ final class WebUiServer {
     private HttpServer server;
     private ExecutorService executor;
 
-    WebUiServer(Minecraft minecraft, ConfigCatalog catalog, Profiles profiles, Relations relations,
-            SwapBindings swapBindings, Languages language) {
+    WebUiServer(Minecraft minecraft, ConfigCatalog catalog, ConfigCatalog settings,
+            WebUiConfig config, Profiles profiles, Relations relations, SwapBindings swapBindings,
+            Languages language, WebUiPreferences preferences) {
         this.language = language;
         this.minecraft = minecraft;
         this.catalog = catalog;
+        this.settings = settings;
+        this.config = config;
         this.profiles = profiles;
         this.relations = relations;
         this.swapBindings = swapBindings;
+        this.preferences = preferences;
         transfer = new SettingsTransfer(profiles, relations, swapBindings);
     }
 
@@ -125,6 +132,7 @@ final class WebUiServer {
         created.start();
         server = created;
         catalog.addListener(configListener);
+        settings.addListener(configListener);
         language.addListener(changeListener);
         profiles.addListener(changeListener);
         relations.addChangeListener(changeListener);
@@ -133,6 +141,7 @@ final class WebUiServer {
 
     void stop() {
         catalog.removeListener(configListener);
+        settings.removeListener(configListener);
         language.removeListener(changeListener);
         profiles.removeListener(changeListener);
         relations.removeChangeListener(changeListener);
@@ -197,9 +206,9 @@ final class WebUiServer {
             return;
         }
         if (!"POST".equals(exchange.getRequestMethod()) || !"/api/setting".equals(path)
-                && !"/api/profile".equals(path) && !"/api/relation".equals(path)
-                && !"/api/transfer/export".equals(path) && !"/api/transfer/preview".equals(path)
-                && !"/api/transfer/apply".equals(path)) {
+                && !"/api/favorite".equals(path) && !"/api/profile".equals(path)
+                && !"/api/relation".equals(path) && !"/api/transfer/export".equals(path)
+                && !"/api/transfer/preview".equals(path) && !"/api/transfer/apply".equals(path)) {
             sendJson(exchange, 404, object("error", "Unknown endpoint"));
             return;
         }
@@ -237,7 +246,16 @@ final class WebUiServer {
                 List<Object> results = changeRelations(request);
                 return object("state", state(), "results", results);
             }
-            if ("/api/setting".equals(path)) {
+            if ("/api/favorite".equals(path)) {
+                String id = requiredString(request, "featureId");
+                if (catalog.feature(id) == null)
+                    throw new IllegalArgumentException("Unknown feature");
+                JsonElement favorite = request.get("favorite");
+                if (favorite == null || !favorite.isJsonPrimitive()
+                        || !favorite.getAsJsonPrimitive().isBoolean())
+                    throw new IllegalArgumentException("Expected a boolean");
+                preferences.setFavorite(id, favorite.getAsBoolean());
+            } else if ("/api/setting".equals(path)) {
                 changeSetting(request);
             } else {
                 changeProfile(request);
@@ -276,7 +294,7 @@ final class WebUiServer {
         }
     }
 
-    private void notifyStreams() {
+    void notifyStreams() {
         synchronized (streams) {
             for (BlockingQueue<Boolean> signal : streams) {
                 signal.offer(Boolean.TRUE);
@@ -292,10 +310,12 @@ final class WebUiServer {
     private void changeSetting(JsonObject request) {
         String featureId = requiredString(request, "featureId");
         String settingId = requiredString(request, "settingId");
-        FeatureConfig feature = catalog.feature(featureId);
+        FeatureConfig feature = config.id().equals(featureId) ? config : catalog.feature(featureId);
         if (feature == null) {
             throw new IllegalArgumentException("Unknown feature");
         }
+        if (feature == config && !preferences.ready())
+            throw new IllegalArgumentException("Web UI settings are unavailable");
         JsonElement value = request.get("value");
         if (value == null || !value.isJsonPrimitive()) {
             throw new IllegalArgumentException("Expected a setting value");
@@ -456,35 +476,7 @@ final class WebUiServer {
     private Map<String, Object> state() {
         List<Object> features = new ArrayList<Object>();
         for (FeatureConfig feature : catalog.features()) {
-            List<Object> sections = new ArrayList<Object>();
-            Map<String, Map<String, Object>> byId =
-                    new LinkedHashMap<String, Map<String, Object>>();
-            for (ConfigOption<?> option : feature.options()) {
-                String sectionId =
-                        option.subsubcategory() == null ? null : option.subsubcategory().id();
-                String groupId = (option.subcategory() == null ? "" : option.subcategory().id())
-                        + "/" + (sectionId == null ? "" : sectionId);
-                Map<String, Object> section = byId.get(groupId);
-                if (section == null) {
-                    section = object("id", sectionId, "name",
-                            option.subsubcategory() == null ? null
-                                    : option.subsubcategory().displayName(),
-                            "subcategory",
-                            option.subcategory() == null ? null
-                                    : object("id", option.subcategory().id(), "name",
-                                            option.subcategory().displayName()),
-                            "options", new ArrayList<Object>());
-                    byId.put(groupId, section);
-                    sections.add(section);
-                }
-                @SuppressWarnings("unchecked")
-                List<Object> options = (List<Object>) section.get("options");
-                options.add(optionState(option));
-            }
-            features.add(object("id", feature.id(), "name", feature.displayName(), "description",
-                    feature.description(), "categoryId", feature.category().id(), "category",
-                    feature.category().displayName(), "toggleable", feature.toggleable(), "enabled",
-                    feature.enabled(), "sections", sections));
+            features.add(featureState(feature));
         }
         ProfilesSnapshot snapshot = profiles.snapshot();
         List<Object> entries = new ArrayList<Object>();
@@ -500,6 +492,9 @@ final class WebUiServer {
             }
         }
         return object("version", BUILD_LABEL, "language", language.locale(), "features", features,
+                "webui",
+                object("settings", featureState(config), "favorites", preferences.favorites(),
+                        "ready", preferences.ready(), "problem", preferences.problem()),
                 "relations",
                 object("problem", relations.readinessProblem(), "lookupProblems",
                         relations.lookupProblems(), "entries", relationEntries),
@@ -511,6 +506,37 @@ final class WebUiServer {
                                 : snapshot.activeProfileId().toString(),
                         "entries", entries, "problems", snapshot.problems(), "unpersisted",
                         snapshot.hasUnpersistedChanges()));
+    }
+
+    private Map<String, Object> featureState(FeatureConfig feature) {
+        List<Object> sections = new ArrayList<Object>();
+        Map<String, Map<String, Object>> byId = new LinkedHashMap<String, Map<String, Object>>();
+        for (ConfigOption<?> option : feature.options()) {
+            String sectionId =
+                    option.subsubcategory() == null ? null : option.subsubcategory().id();
+            String groupId = (option.subcategory() == null ? "" : option.subcategory().id()) + "/"
+                    + (sectionId == null ? "" : sectionId);
+            Map<String, Object> section = byId.get(groupId);
+            if (section == null) {
+                section = object("id", sectionId, "name",
+                        option.subsubcategory() == null ? null
+                                : option.subsubcategory().displayName(),
+                        "subcategory",
+                        option.subcategory() == null ? null
+                                : object("id", option.subcategory().id(), "name",
+                                        option.subcategory().displayName()),
+                        "options", new ArrayList<Object>());
+                byId.put(groupId, section);
+                sections.add(section);
+            }
+            @SuppressWarnings("unchecked")
+            List<Object> options = (List<Object>) section.get("options");
+            options.add(optionState(option));
+        }
+        return object("id", feature.id(), "name", feature.displayName(), "description",
+                feature.description(), "categoryId", feature.category().id(), "category",
+                feature.category().displayName(), "toggleable", feature.toggleable(), "enabled",
+                feature.enabled(), "sections", sections);
     }
 
     private static String buildLabel() {
