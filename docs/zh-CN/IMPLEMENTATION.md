@@ -1,8 +1,8 @@
-<!-- Source: docs/IMPLEMENTATION.md; Based on: 21ad9d4e5bba89917eaf6e9187b2fa27c724982e -->
+<!-- Source: docs/IMPLEMENTATION.md; Based on: 9e3455a4346e4997be2d01c6d78e031334c73fd5 -->
 
 # 12pit 实现
 
-本文件介绍项目中的类及其使用规则。每一节介绍项目中的一个部分。如果接口或规则过时，请修改本文。包的职责见[架构](ARCHITECTURE.md)。
+本文介绍项目中的类及其使用规则。包的职责见[架构](ARCHITECTURE.md)。
 
 ## 生命周期
 
@@ -14,7 +14,7 @@
 
 Bootstrap 注册组件并调用其 `start()` 方法。如果 `start()` 引发异常，Bootstrap 会停止此组件和之前已启动的所有组件。`stop()` 应在任何情况下释放资源，包括仅完成部分初始化或被调用多次的情况。如果某个组件在 `stop()` 中抛出异常，该异常会被记录，但其他所有组件仍会停止。
 
-保留监听器的引用，以便注销同一个对象。以下示例展示了具有 `client` 和 `configs` 依赖、保存的 `configListener` 以及 `started` 标志的组件：
+保留监听器的引用，以便注销同一个对象：
 
 ```java
 @Override
@@ -37,17 +37,17 @@ public void stop() {
 
 组件启动和 `enabled` 设置是不同的事情。即使功能被禁用，它仍可以保持对配置变更的订阅和在 HUD 编辑器中的注册。只有功能启用时才需要的工作，应在 `enabled` 设置变化时启动和停止。监听器、项目监听器和绑定应在其所有者停止时注销。
 
-服务器断开连接或世界变化会重置会话数据，而不停止功能。在 tick 之间进行的工作应管理自己的超时、取消和恢复。Minecraft 正常关闭时，会在世界和图形上下文释放前调用 Bootstrap。此时应释放工作线程和渲染资源。强制终止进程则无法完成这些操作。
+断开连接或世界变化会重置会话数据，而不停止功能。跨 tick 的工作应管理自己的超时、取消和恢复。Minecraft 正常关闭时，会在世界和图形上下文释放前调用 Bootstrap。此时应释放工作线程和渲染资源。
 
 ## 客户端线程
 
 `ClientThread` 检查线程访问并分派回调。Bootstrap 使用 Minecraft 的线程检查器和任务分派器创建它。通过构造器接收它；如果配置目录已经是依赖，也可以使用 `configs.clientThread()`。
 
-在实时 API 边界调用 `client.check()`。从错误的线程调用会抛出 `IllegalStateException`。`client.execute(Runnable)` 通过提供的分派器分派回调，并检查线程。它不会创建工作线程，也不会检查结果是否仍然有效。
+在实时 API 边界调用 `client.check()`。从错误的线程调用会抛出 `IllegalStateException`。`client.execute(Runnable)` 通过提供的分派器分派回调，并检查线程。
 
 磁盘 I/O、HTTP 请求和开销大的计算在所属的工作线程上执行，并使用数据副本。通过 `client.execute` 返回结果。检查所有者的启动状态，以及结果对应的请求或代次。如果工作依赖会话和世界，也检查它们的身份标识。
 
-`ClientThread.current()` 获取调用线程，并直接在该线程上执行回调。从另一个线程调用此 current 实例的 `execute()` 会抛出异常。它适用于测试和不需要跨线程分派的代码。它不会查找 Minecraft 的客户端线程。
+`ClientThread.current()` 获取调用线程，并直接在该线程上执行回调。从另一个线程调用它的 `execute()` 会抛出异常。它适用于测试和不需要跨线程分派的代码。
 
 ## 配置
 
@@ -101,11 +101,11 @@ private void registerTooltip(ConfigCatalog configs) {
 }
 ```
 
-所有设置都应在注册前定义。注册会将它们的读写操作绑定到目录的客户端线程。Bootstrap 构造器在所有功能装配方法返回后统一调用一次 `configs.freeze()`。这会阻止新的配置注册，但仍允许修改设置。配置方案在 `start()` 中记录设置结构，此时目录已冻结。Web UI 读取目录和设置元数据，因此普通设置不需要单独的页面或保存逻辑。
+所有设置都应在注册前定义。注册会将它们的读写操作绑定到目录的客户端线程。Bootstrap 构造器在所有功能装配方法返回后统一调用一次 `configs.freeze()`。这会阻止新的配置注册，但仍允许修改设置。配置方案在 `start()` 中记录设置结构，此时目录已冻结。
 
 使用设置的 `get()` 和 `set()` 方法访问其实时值。`set()` 校验值，并在值发生变化时发送通知。`Setting` 的子类在初始化 `requireValue` 使用的字段后校验默认值。
 
-将配置监听器保存为字段，在 `start()` 中注册，在 `stop()` 中注销。要得到已标记为需要更新的显示数据快照，监听器可以将其标记为需要更新：
+将配置监听器保存为字段，在 `start()` 中注册，在 `stop()` 中注销。显示数据变化时，监听器将快照标记为需要更新：
 
 ```java
 private boolean snapshotDirty = true;
@@ -172,7 +172,7 @@ HUD 缓存文字时，保留语言监听器，在 `start()` 中注册，在 `sto
 
 前端组件从 `./languages` 导入 `t`，调用 `t('Settings')` 或 `t('Remove {0} players', count)`。应用跟随服务器状态中的语言，每份译文只获取一次，并在语言变化时更新显示文字。
 
-新增或修改已标记的原文后，在仓库根目录运行 `python scripts/languages.py sync`。脚本提取 Java 的 `source(...)`、`translate(...)`、带编号参数的 `format(...)`，以及前端的 `t(...)`。它读取字面量和字面量拼接，不追踪变量中的值。同步会保留已有译文，新条目留空。`python scripts/languages.py status` 显示翻译进度和文件问题。这些命令手动运行，构建只打包资源。编辑或添加语言时，参阅[贡献翻译](TRANSLATING.md)。
+新增或修改已标记的原文后，在仓库根目录运行 `python scripts/languages.py sync`。脚本提取 Java 的 `source(...)`、`translate(...)`、带编号参数的 `format(...)`，以及前端的 `t(...)`。它读取字面量和字面量拼接，不追踪变量中的值。同步会保留已有译文，新条目尚未翻译。`python scripts/languages.py status` 显示翻译进度和文件问题。编辑或添加语言时，参阅[贡献翻译](TRANSLATING.md)。
 
 ## HUD
 
@@ -182,7 +182,7 @@ HUD 缓存文字时，保留语言监听器，在 `start()` 中注册，在 `sto
 hud = hudConfig("status", source("Status"), HudAnchor.TOP_LEFT, 6, 6, true);
 ```
 
-该辅助方法定义以下设置：`status.anchor`、`status.offset_x`、`status.offset_y`、`status.scale`、`status.text_shadow`、`status.use_monospace_font` 和 `status.translate_text`。缩放以百分比存储，默认值为 `100`。HUD 编辑器控制位置和缩放。文字阴影、字体和翻译开关作为 Web UI 中的设置提供。字体开关默认关闭，开启后使用内置的 Monocraft。翻译开关默认开启；准备 HUD 文字时使用 `language.translate(text, hud.translateText().get())`，切换后更新文字缓存和布局。配置方案功能将这些值与功能的其他设置一起保存。
+该辅助方法定义以下设置：`status.anchor`、`status.offset_x`、`status.offset_y`、`status.scale`、`status.text_shadow`、`status.use_monospace_font` 和 `status.translate_text`。缩放以百分比存储，默认值为 `100`。HUD 编辑器控制位置和缩放。文字阴影、字体和翻译开关作为 Web UI 中的设置提供。字体开关默认关闭，开启后使用内置的 Monocraft。翻译开关默认开启；准备 HUD 文字时使用 `language.translate(text, hud.translateText().get())`，切换后更新文字缓存和布局。
 
 [HudElement](../../src/main/java/pit12/runtime/hud/HudElement.java) 的实现应满足以下契约：
 
@@ -225,7 +225,7 @@ if (!hudRegistry.editing() && hud.enabled()) {
 
 `layout` 调用 `prepare`，应用位置和缩放，并在元素能放入屏幕时将计算得到的原点保持在屏幕内。`render` 应用变换，并在 `finally` 块中恢复 UI 渲染状态。常规叠加层应在编辑期间跳过渲染，因为编辑器会自行渲染元素。
 
-编辑时 `editing=true`。当实时数据为空或 HUD 被禁用时，提供预览内容，并确保测量的边界与内容一致。启用的 HUD 应已注册，以便在编辑器中定位。
+编辑时 `editing=true`。当实时数据为空或 HUD 被禁用时，提供预览内容，并确保测量的边界与内容一致。
 
 [UiRenderer](../../src/main/java/pit12/shared/rendering/UiRenderer.java) 提供项目的文字、矩形和纹理。使用 `HudRenderer.text`、`textWidth` 和 `fontHeight`，传入 HUD 配置来绘制和测量其文字。将元素的像素缩放传给它的 `resize`。复用它。Monocraft 使用逻辑字号 `9` 来匹配像素网格，系统回退字体使用 `8`。自定义字形采用最近邻采样，并对齐到屏幕像素。绘制原点使用整数 GUI 坐标，再应用 HUD 缩放。当其所有者停止或释放这些资源时，对它调用 `close()`。它可以在调整大小后再次创建资源。对于 `HudRenderer` 之外的自定义 UI，使用 [UiRenderState](../../src/main/java/pit12/shared/rendering/UiRenderState.java) 的 `begin()`，并在 `finally` 块中配合调用 `end()`。恢复代码额外修改的渲染状态。
 
@@ -276,7 +276,7 @@ components.add(new GammaFeature(configs, gammaConfig,
 AtomicFile.write(path, encodedJson);
 ```
 
-它创建父目录和目标附近的临时文件。它以 UTF-8 写入，刷新并同步临时文件，然后替换目标。如果不支持原子移动，它会回退为普通替换移动。这种回退不保证原子替换。该辅助工具不会将多个文件写入合并为一个事务，也不控制它们的顺序。发生错误时，它尝试删除临时文件并抛出异常；清理错误会附加到该错误上。
+它创建父目录和目标附近的临时文件，以 UTF-8 写入，刷新并同步后替换目标。如果不支持原子移动，则回退为普通替换移动。发生错误时，它尝试删除临时文件并抛出异常；清理错误会附加到该错误上。
 
 功能负责自己的工作线程和写入顺序。在客户端线程上复制待保存的数据，并传给工作线程。使用 `ClientThread.execute` 处理完成结果。核验产生结果的工作线程或代次。在清除未保存的改动前核验保存修订号，防止旧的完成结果清除较新的改动。只有依赖会话和世界的工作才需要检查它们；已保存的用户数据在断开连接后仍然保留。
 

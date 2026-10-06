@@ -1,12 +1,10 @@
-<!-- Source: docs/DEBUGGING.md; Based on: f293ac9e7ef68fc0145c6c72f93b5c3f30dbf7c5 -->
+<!-- Source: docs/DEBUGGING.md; Based on: 9e3455a4346e4997be2d01c6d78e031334c73fd5 -->
 
 # 运行和调试 12pit
 
 ## 环境设置
 
-[README 环境要求](README.md#环境要求)列出了 JDK 和 Node.js 的版本。Gradle 使用 JDK 21。编译模组需要 Java 8 工具链，客户端也使用 Java 8。
-
-在 IntelliJ IDEA 中，将仓库作为 Gradle 项目打开，并为 Gradle 配置 JDK 21。在 VS Code 中，安装推荐的扩展。可以使用 `Ctrl+Shift+B` 运行 `assemble`。
+[README 环境要求](README.md#环境要求)列出了 JDK 和 Node.js 的版本。
 
 ## 运行开发客户端
 
@@ -22,13 +20,11 @@
 ./gradlew runClient
 ```
 
-`runClient` 会构建内置的网页界面，因此应确保 Node.js 和 npm 可用。
-
 开发游戏目录为 `run/`。查看 `run/logs/latest.log`，获取客户端错误和 Web UI 地址。
 
 ## 开发网页界面
 
-先启动游戏。然后按右 Shift 键（默认按键），在浏览器中打开内置的网页界面。如果该按键没有打开浏览器，请打开日志中的 URL。
+启动游戏后，按右 Shift 键（默认按键）打开网页界面。如果该按键没有打开浏览器，请打开日志中的 URL。
 
 默认情况下，服务器监听 `http://127.0.0.1:60916/`。如果端口已被占用，服务器会使用其他可用端口。当前地址会显示在日志中。
 
@@ -46,7 +42,7 @@ $env:WEB_UI_TARGET = 'http://127.0.0.1:<game-port>'
 npm run dev --prefix web-ui
 ```
 
-将 `<game-port>` 替换为日志中的端口。前端没有示例数据模式。通过重新构建并重启模组来更新内置页面。
+将 `<game-port>` 替换为日志中的端口。重新构建并重启模组，更新内置页面。
 
 ## 运行检查
 
@@ -61,7 +57,7 @@ npm run format:check --prefix web-ui
 
 `check` 命令运行 Java 测试，包括 `ArchitectureTest`。`assemble` 命令构建网页界面，并在 `build/libs/` 中生成 jar 文件。
 
-格式检查命令只检查文件，不修改文件。在运行 npm 检查前，使用 `npm ci --prefix web-ui` 安装所需依赖。
+在运行 npm 检查前，使用 `npm ci --prefix web-ui` 安装所需依赖。
 
 ## 故障排查
 

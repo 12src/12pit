@@ -8,7 +8,7 @@ When adding a new language:
 - If the language has no ISO 639-1 code, get a maintainer's approval before adding it. Its language tag must still follow [RFC 5646](https://www.rfc-editor.org/rfc/rfc5646.html). Ask in an issue or mention a maintainer on [Discord](https://discord.gg/e9PRKMUenc).
 - We recommend translating only into your native language.
 
-The language tag determines whether prior discussion is needed. For example, `zh-CN` uses the ISO 639-1 code `zh`, so it does not need prior discussion.
+For example, `nl-NL` uses the ISO 639-1 code `nl`, so it does not need prior discussion.
 
 ## Contribute interface translations
 
@@ -22,53 +22,58 @@ First, view the list of languages with their status:
 python scripts/languages.py status
 ```
 
-If the language already exists, update its file before translating. Substitute `zh-CN` with the language tag that you have chosen:
-
-```sh
-python scripts/languages.py sync --language zh-CN
-```
-
-That will preserve existing translations and add the new source English text. Deleted translations are stored in the .obsolete.txt files.
+If the language already exists, edit its file directly. Leave `sync` to maintainers, who run it when needed.
 
 For a new language, use `add` with the language tag and its native name:
 
 ```sh
-python scripts/languages.py add fr-FR --name Français
+python scripts/languages.py add nl-NL --name Nederlands
 ```
 
-That adds the language to languages.json and creates the text file for it. Leave existing language names untouched. No changes in Java code and frontend are required.
+That adds the language to languages.json and creates its text file.
+
+If the English source changes while you are adding a new language, run `sync` for that language only:
+
+```sh
+python scripts/languages.py sync --language nl-NL
+```
+
+Sync keeps translations for existing source text, marks new translation lines with `=`, and removes unused entries.
 
 ### Write translations
 
-Open src/main/resources/assets/pit12/languages/<language-tag>.txt. Every entry has two lines: the English source and the translation. Put the translation on the second line:
+Open `src/main/resources/assets/pit12/languages/nl-NL.txt`. Every entry has two lines: the English source, then `=` followed by a space and the translation:
 
 ```text
 Player List
-玩家列表
+= Spelerslijst
 
 Bound {0} to {1} ({2})
-已将{0}绑定到{1}（{2}）
+= {0} gekoppeld aan {1} ({2})
+
+Settings
+=
 ```
 
-Keep the translation line empty if you want to use the English text. Do not modify the English source. Lines starting with // indicate the usage of the text. The numbered parameters like {0} should be left intact, along with their number of occurrences; their order may change. Preserve the Minecraft color codes like §a.
+Leave only `=` on the second line to use the English text. To find untranslated entries, search with the regular expression `^= ?$`. Do not remove the prefix or modify the English source. Lines starting with // indicate the usage of the text. The numbered parameters like {0} should be left intact, along with their number of occurrences; their order may change. Preserve the Minecraft color codes like §a.
 
-Use \n for a line break, \t for a tab character, and \\ for an escape backslash. Save the file in UTF-8. If the English source text has changed while you were working on the translation, rerun `sync --language <language-tag>`.
+Use \n for a line break, \t for a tab character, and \\ for an escape backslash. Save the file in UTF-8.
 
 ### Review your work
 
 Check the status of the language and the file issues:
 
 ```sh
-python scripts/languages.py status --language zh-CN
+python scripts/languages.py status --language nl-NL
 ```
 
-The report displays the number of translated entries and the percentage of completeness. Empty translations do not count as translated. It also points out missing entries, obsolete entries, duplicated sources, invalid escape sequences, and parameter issues. Without --language, status reports on all languages and sync updates all translation files.
+The report shows translation progress and flags missing or obsolete entries, duplicate sources, invalid escapes, and parameter errors.
 
-Examine the translation in context. The script checks the file integrity, not the meaning of the words. To review the text in the mod, build the mod with the changed resources and pick the language on the Settings page. The build includes the language files but not the translation script.
+Review the wording in context. To check it in the mod, build with the changed resources and select the language on the Settings page.
 
 ### Submit a translation
 
-Keep the pull request limited to one language. Attach the TXT file, and if that is a new language, attach the languages.json too. Mention the language, the text that you have changed and how you have checked it. Partial translations are OK; leave the untranslatable entries blank.
+Keep the pull request limited to one language. Attach the TXT file, and if that is a new language, attach the languages.json too. Mention the language, the text that you have changed and how you have checked it. Partial translations are OK.
 
 For changes to the English source text in the code, refer to [Languages in the implementation guide](IMPLEMENTATION.md#languages).
 
@@ -80,12 +85,12 @@ Put translations in `docs/<language-tag>/`. Keep the source filename and any sub
 
 | English source | Translation example |
 | --- | --- |
-| `README.md` | `docs/zh-CN/README.md` |
-| `docs/CONTRIBUTING.md` | `docs/zh-CN/CONTRIBUTING.md` |
+| `README.md` | `docs/nl-NL/README.md` |
+| `docs/CONTRIBUTING.md` | `docs/nl-NL/CONTRIBUTING.md` |
 
 For a new language, translate the README first. Add a link beside the language links in the root README, using the language's own name. Separate language links with `|` in translated documents as well.
 
-Other documents can follow in separate pull requests. Link to a translated page when it exists; otherwise, link to the English page. Make sure all document links point to existing files. Check relative paths and heading anchors after translating. Keep commands, code, identifiers, file paths, and external URLs unchanged.
+Link to a translated page when it exists; otherwise, link to the English page. Check relative paths and heading anchors after translating. Keep commands, code, identifiers, file paths, and external URLs unchanged.
 
 ### Source header
 
@@ -105,7 +110,7 @@ From the repository root, compare the source with the commit in the header. Repl
 git diff <source-commit> -- docs/CONTRIBUTING.md
 ```
 
-No output means the source has not changed. A diff means the translation needs review; it may already cover some of those changes. Changes to other files do not make this translation outdated.
+No output means the source has not changed. If the diff shows changes, review the translation.
 
 Review every source change since the recorded commit, then update the translation as needed. Once they match, record the latest committed source version:
 
@@ -115,6 +120,6 @@ git log -1 --format=%H -- docs/CONTRIBUTING.md
 
 ### Submit a translation
 
-Make sure that each pull request contains translations for only one language and mentions the files that have been modified. Examine the entire translation and validate all links, headings, examples, and the source header.
+Keep each pull request to one language and list the changed files. Review the translation, links, headings, examples, and source header.
 
-If the pull request not only modifies the translation but also modifies the source, make sure that the pull request is made up of two separate commits. Make the commit for the source and then for the translation.
+If a pull request changes both the source and its translation, use two commits: source first, then translation.

@@ -1,6 +1,6 @@
 # 12pit architecture
 
-12pit is a client-side Forge mod. The following describes the responsibility of each component, who owns what state, and what dependencies exist between the components. [Implementation](IMPLEMENTATION.md) covers the classes in this project and how to use them.
+[Implementation](IMPLEMENTATION.md) covers the project classes and their APIs.
 
 ## Components
 
@@ -12,11 +12,11 @@ Each package immediately under `feature` owns one user-facing capability. Its se
 
 `shared` owns small helper interfaces and utilities for threading, listeners, rendering, and file writes. It does not own live game state.
 
-`platform` adapts the use of external mechanisms like Forge commands and Mixin. Adapters route external requests to their owners through narrow interfaces. Rules of features are owned by features.
+`platform` adapts external mechanisms such as Forge commands and Mixin. Adapters route external requests to their owners through narrow interfaces.
 
 Commands definitions and actions are owned by features. `runtime.command` owns routing, help, completion, and availability of commands. `platform.command` owns Forge registration.
 
-`feature.webui` owns the local HTTP server and the connection of the browser interface to the config and feature APIs. `web-ui` owns the browser pages. Features store their rules and state behind the APIs.
+`feature.webui` owns the local HTTP server and connects the browser interface to config and feature APIs. `web-ui` owns the browser pages.
 
 ## Dependencies
 

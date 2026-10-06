@@ -181,9 +181,13 @@ public final class Languages {
                     throw new IllegalArgumentException(
                             file + ":" + number + ": missing translation line");
                 }
-                source = decode(source);
-                target = decode(target);
                 number++;
+                if (!target.equals("=") && !target.startsWith("= ")) {
+                    throw new IllegalArgumentException(file + ":" + number
+                            + ": translation line must be '=' or start with '= '");
+                }
+                source = decode(source);
+                target = target.equals("=") ? "" : decode(target.substring(2));
                 if (values.containsKey(source)) {
                     throw new IllegalArgumentException(
                             file + ":" + (number - 1) + ": duplicate source");

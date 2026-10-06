@@ -1,6 +1,6 @@
 # 12pit implementation
 
-This file contains information about project classes and the rules for using them. One section contains information about each part of the project. Modify it if the interfaces or the rules become outdated. For package responsibilities, refer to [Architecture](ARCHITECTURE.md).
+This guide covers the project classes and their usage. For package responsibilities, see [Architecture](ARCHITECTURE.md).
 
 ## Lifecycle
 
@@ -12,7 +12,7 @@ Divide the constructor in three parts: shared runtime, feature providers, and ot
 
 Bootstrap registers the component and calls its `start()` method. If `start()` causes an exception, then Bootstrap will stop this component and all components that were started before it. `stop()` should release resources in any case, including partial initialization and even if it was called multiple times. An exception thrown by one of the components in `stop()` will be logged but all the others will be stopped.
 
-Keep the reference to the listener to unregister the same object. The following example illustrates components with `client` and `configs` dependencies, the saved `configListener` and `started` flag:
+Keep a reference to each listener so you can unregister the same object:
 
 ```java
 @Override
@@ -35,17 +35,17 @@ public void stop() {
 
 Startup of the component and `enabled` setting are different things. Feature can keep itself subscribed to config changes and registered in the HUD editor even when it is disabled. Work that is required only if the feature is enabled should be started and stopped on `enabled` setting change. Unregister listeners, project listeners and bindings on the stop of their owner.
 
-Disconnection of the server or world changes will reset session data without stopping the features. Work that is done between ticks should manage its own timeout, cancellation and recovery. Regular Minecraft shutdown call Bootstrap before the world and graphics context are released. Resources for workers and rendering should be disposed at that point. Forced process termination won't allow to do it.
+A disconnect or world change resets session data without stopping features. Work that spans ticks should manage its timeout, cancellation, and recovery. Normal Minecraft shutdown calls Bootstrap before releasing the world and graphics context. Release worker and rendering resources at that point.
 
 ## Client thread
 
 `ClientThread` checks thread access and dispatches callbacks. Bootstrap creates it with Minecraft's thread checker and task dispatcher. Receive it in a constructor or use `configs.clientThread()` if the config catalog is already a dependency.
 
-Call `client.check()` in a live API boundary. Calling from the wrong thread will throw `IllegalStateException`. `client.execute(Runnable)` dispatches the callback through the provided dispatcher and checks the thread. It will not create workers nor will check if the result is still valid.
+Call `client.check()` at a live API boundary. Calls from the wrong thread throw `IllegalStateException`. `client.execute(Runnable)` dispatches the callback through the provided dispatcher and checks the thread.
 
 Disk I/O, HTTP requests, expensive computations are done on owned workers with a copy of data. Return results with `client.execute`. Check the started state of the owner and the request or generation of the result. Check the session and world identity too if the work depends on them.
 
-`ClientThread.current()` finds the calling thread and executes callbacks directly on it. Calling `execute()` of the current from another thread will throw. It is useful for tests and code which does not require cross-thread dispatching. It does not find Minecraft's client thread.
+`ClientThread.current()` captures the calling thread and runs callbacks directly on it. Calling its `execute()` from another thread throws. Use it for tests and code that needs no cross-thread dispatch.
 
 ## Config
 
@@ -99,7 +99,7 @@ private void registerTooltip(ConfigCatalog configs) {
 }
 ```
 
-Register all the settings prior to registration. Registering connects read/write operation of those settings to the client thread of the catalog. Once all the feature registration methods have been invoked, the constructor of Bootstrap invokes `configs.freeze()` only once. This disallows new configurations but allows changing the existing settings. Profiles will capture the schema of the settings in `start()` after freezing the catalog. Web UI reads the catalog and setting metadata, so no extra pages needed for that.
+Define all settings before registering the config. Registration binds their reads and writes to the catalog's client thread. Bootstrap calls `configs.freeze()` once after all feature registration methods return. This prevents new config registrations while allowing setting changes. Profiles capture the settings schema in `start()` after the catalog is frozen.
 
 Use `get()` and `set()` methods of a setting for its live value. `set()` validates the value and sends the notification if it changed. The subclasses of `Setting` validate default value after initializing fields used by `requireValue`.
 
@@ -170,7 +170,7 @@ To update cached HUD text, hold a language listener, register it in `start()` an
 
 Frontend components import `t` from `./languages` and call `t('Settings')` or `t('Remove {0} players', count)`. Application will follow the server state language, load catalogs once, and update display text when language changes.
 
-After any addition or modification of marked source text, execute `python scripts/languages.py sync` from the root directory of the repository. Script will find Java `source(...)`, `translate(...)`, and numbered `format(...)` calls and frontend `t(...)` calls. It will parse literals and literal concatenations but not variables storing strings. Translations will be preserved and newly added entries will be left empty. `python scripts/languages.py status` will show translation progress and file problems. These actions are manual; build process just packages resources. See [Contributing translations](TRANSLATING.md) for editing and adding a language.
+After adding or changing marked source text, run `python scripts/languages.py sync` from the repository root. The script finds Java `source(...)`, `translate(...)`, numbered `format(...)` calls, and frontend `t(...)` calls. It reads literals and literal concatenations, not variables. Sync preserves translations and leaves new entries untranslated. `python scripts/languages.py status` shows progress and file errors. See [Contributing translations](TRANSLATING.md) for editing and adding a language.
 
 ## HUD
 
@@ -180,7 +180,7 @@ After any addition or modification of marked source text, execute `python script
 hud = hudConfig("status", source("Status"), HudAnchor.TOP_LEFT, 6, 6, true);
 ```
 
-The helper defines the following settings: `status.anchor`, `status.offset_x`, `status.offset_y`, `status.scale`, `status.text_shadow`, `status.use_monospace_font`, and `status.translate_text`. Scale is stored in percentages and defaults to `100`. The HUD editor controls placement and scale. Text shadow, font, and translation switches are exposed as settings in Web UI. The font switch defaults to off and uses bundled Monocraft when enabled. The translation switch defaults to on; use `language.translate(text, hud.translateText().get())` when preparing HUD text and refresh cached text and layout when it changes. Profile feature saves all these values with the rest of feature's settings.
+The helper defines these settings: `status.anchor`, `status.offset_x`, `status.offset_y`, `status.scale`, `status.text_shadow`, `status.use_monospace_font`, and `status.translate_text`. Scale is stored as a percentage and defaults to `100`. The HUD editor controls placement and scale. Text shadow, font, and translation switches appear in Web UI. The font switch defaults to off and uses bundled Monocraft when enabled. The translation switch defaults to on; use `language.translate(text, hud.translateText().get())` when preparing HUD text and refresh cached text and layout when it changes.
 
 A [HudElement](../src/main/java/pit12/runtime/hud/HudElement.java) implementation should satisfy the following contract:
 
@@ -223,7 +223,7 @@ if (!hudRegistry.editing() && hud.enabled()) {
 
 `layout` calls `prepare`, applies placement and scaling and keeps the resolved origin inside the screen if the element fits. `render` applies the transform and restores the UI rendering state in `finally` block. The regular overlay should skip rendering during editing, as the editor renders the elements itself.
 
-Editing happens with `editing=true`. Provide preview content when live data is empty or when the HUD is disabled and ensure that the measured bounds match the content. An enabled HUD should be registered so it could be positioned in the editor.
+Editing uses `editing=true`. Provide preview content when live data is empty or the HUD is disabled, and ensure the measured bounds match the content.
 
 [UiRenderer](../src/main/java/pit12/shared/rendering/UiRenderer.java) provides the project text, rectangles and textures. Use `HudRenderer.text`, `textWidth` and `fontHeight` with the HUD's config to draw and measure its text. Pass the element's pixel scale to its `resize`. Reuse it. Monocraft uses logical size `9` to match its pixel grid; system fallback text uses `8`. Custom glyphs use nearest-neighbor sampling and screen-pixel positions. Keep the render origin in integer GUI coordinates before applying HUD scale. Call `close()` on it when its owner stops or releases those resources. It can create resources again after resizing. For custom UI outside of `HudRenderer`, use `begin()` from [UiRenderState](../src/main/java/pit12/shared/rendering/UiRenderState.java) together with `end()` in `finally` block. Restore the extra rendering state that your code modifies.
 
@@ -274,7 +274,7 @@ Validate the data being loaded. Implement handling of older formats when changin
 AtomicFile.write(path, encodedJson);
 ```
 
-It creates parent directories and a temporary file near the target. It writes UTF-8, flushes and syncs the temporary file, then replaces the target. If atomic moves are not supported, it makes a fallback to a normal replacement move. Such a fallback doesn't guarantee an atomic replacement. The helper does not group several file writes into one transaction and does not control their order. On error it tries to delete the temporary file and throws; cleanup errors are attached to the error.
+It creates parent directories and a temporary file near the target. It writes UTF-8, flushes and syncs the temporary file, then replaces the target. If atomic moves are unsupported, it falls back to a normal replacement move. On error it tries to delete the temporary file and throws; cleanup errors are attached to the error.
 
 The feature is responsible for its worker and for the order of the writes. On the client thread make a copy of the data being saved and pass it to the worker. Handle completion with `ClientThread.execute`. Verify the worker or generation producing the result. Verify the save revisions before clearing the unsaved changes, so that an old completion could not clear newer changes. Session and world checks are needed only for work dependent on them; saved user data survives disconnections.
 

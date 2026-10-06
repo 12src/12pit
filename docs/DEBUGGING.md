@@ -2,9 +2,7 @@
 
 ## Setup
 
-The [README requirements](../README.md#requirements) list the required JDK and Node.js versions. Gradle runs on JDK 21. Compiling the mod requires a Java 8 toolchain. The client also runs on Java 8.
-
-In IntelliJ IDEA, open the repository as Gradle project and configure JDK 21 for Gradle. In VS Code, install the recommended extensions. `Ctrl+Shift+B` will run `assemble`.
+The [README requirements](../README.md#requirements) list the required JDK and Node.js versions.
 
 ## Run the development client
 
@@ -20,13 +18,11 @@ On Linux/macOS, run:
 ./gradlew runClient
 ```
 
-`runClient` builds the bundled web interface, therefore, Node.js and npm should be available.
-
 The development game directory is `run/`. Look into `run/logs/latest.log` for any client errors and Web UI address.
 
 ## Develop the web interface
 
-Firstly, launch the game. Then press the Right Shift key (default key) to open the bundled web interface in the browser. If the key does not open the browser, open the URL from the log.
+Start the game, then press Right Shift (the default key) to open the web interface. If the key does not open the browser, use the URL from the log.
 
 By default, the server listens to `http://127.0.0.1:60916/`. In case the port is already occupied, the server uses some other available port. The current address is shown in the log.
 
@@ -44,7 +40,7 @@ $env:WEB_UI_TARGET = 'http://127.0.0.1:<game-port>'
 npm run dev --prefix web-ui
 ```
 
-Replace `<game-port>` with the port from the log. The frontend does not have the sample-data mode. Update the bundled page by rebuilding and restarting the mod.
+Replace `<game-port>` with the port from the log. Rebuild and restart the mod to update the bundled page.
 
 ## Run checks
 
@@ -59,7 +55,7 @@ npm run format:check --prefix web-ui
 
 The command `check` runs the Java tests, including `ArchitectureTest`. The command `assemble` builds the web interface and produces the jar file in `build/libs/`.
 
-The formatting commands just check the files. They don't modify the files. Install the required dependencies with `npm ci --prefix web-ui` before running the npm check.
+Install dependencies with `npm ci --prefix web-ui` before running the npm check.
 
 ## Troubleshooting
 

@@ -1,8 +1,8 @@
-<!-- Source: docs/ARCHITECTURE.md; Based on: f806c63891704b7c0fead89fac9993fa51d31c99 -->
+<!-- Source: docs/ARCHITECTURE.md; Based on: 9e3455a4346e4997be2d01c6d78e031334c73fd5 -->
 
 # 12pit 架构
 
-12pit 是一个基于 Forge 的模组。本文说明各组件的职责、各状态的所有者，以及组件之间的依赖。[实现](IMPLEMENTATION.md)介绍本项目中的基础类及其使用方式。
+[实现](IMPLEMENTATION.md)介绍项目中的基础类及其使用方式。
 
 ## 组件
 
@@ -14,11 +14,11 @@
 
 `shared` 拥有用于线程、监听器、渲染和文件写入的小型辅助接口和工具。它不拥有实时游戏状态。
 
-`platform` 适配 Forge 命令和 Mixin 等外部机制的使用。适配器通过范围有限的接口，将外部请求转发给其所有者。功能规则由功能拥有。
+`platform` 适配 Forge 命令和 Mixin 等外部机制。适配器通过范围有限的接口，将外部请求转发给其所有者。
 
 命令定义和操作由功能拥有。`runtime.command` 拥有命令的路由、帮助、补全和可用性。`platform.command` 拥有 Forge 注册。
 
-`feature.webui` 拥有本地 HTTP 服务器，以及浏览器界面与配置和功能 API 的连接。`web-ui` 拥有浏览器页面。功能在 API 后保存自己的规则和状态。
+`feature.webui` 拥有本地 HTTP 服务器，并将浏览器界面连接到配置和功能 API。`web-ui` 拥有浏览器页面。
 
 ## 依赖
 

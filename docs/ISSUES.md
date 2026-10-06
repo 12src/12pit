@@ -1,12 +1,12 @@
 # Issues
 
-Check out existing issues prior to submitting a new issue. In case of finding duplicates, post additional useful information in the existing thread instead of opening a new one.
+Check existing issues before opening one. Add useful information to the existing issue if it covers the same problem.
 
 ## Open an Issue
 
 In case of a bug, state expected behavior, actual results, and a way to reproduce the issue. Provide the version of the mod, environment of the Minecraft and, if possible, some lines of logs. Do not share any personal information such as account credentials with the logs.
 
-In case of a feature request or an enhancement, describe the problem that should be solved, and the desired outcome. Short examples are helpful, but the implementation does not have to be described. Questions and preliminary thoughts are also fine.
+For a feature request or enhancement, describe the problem and desired outcome. Short examples help. Questions and early ideas are welcome.
 
 ## Triage
 
