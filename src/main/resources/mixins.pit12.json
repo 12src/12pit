@@ -11,6 +11,7 @@
     "accessor.FMLModContainerAccessor",
     "accessor.MinecraftAccessor",
     "network.FMLHandshakeClientStateMixin",
+    "oneconfig.ModCardMixin",
     "player.NetHandlerPlayClientEquipmentMixin",
     "player.NetHandlerPlayClientTabMixin",
     "player.WorldClientEquipmentMixin",

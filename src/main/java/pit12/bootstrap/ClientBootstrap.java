@@ -57,6 +57,7 @@ import pit12.feature.tooltip.TooltipFeature;
 import pit12.feature.webui.WebUiConfig;
 import pit12.feature.webui.WebUiFeature;
 import pit12.platform.command.ForgeCommandAdapter;
+import pit12.platform.oneconfig.OneConfigSupport;
 import pit12.runtime.command.CommandRegistry;
 import pit12.runtime.config.ConfigCatalog;
 import pit12.runtime.hud.HudRegistry;
@@ -128,6 +129,9 @@ public final class ClientBootstrap {
         registerTooltip(configs);
         // Category: Interface
         registerWebUi(configs, profiles, relations, hudEditor, swapBindings);
+        // Platform integrations
+        OneConfigSupport oneConfig = new OneConfigSupport(configs);
+        components.add(oneConfig);
         language.addListener(() -> configs.localize(language));
         configs.freeze();
     }

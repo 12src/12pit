@@ -91,7 +91,8 @@ public final class ArchitectureTest {
     @ArchTest
     public static final ArchRule CLIENT_LIFECYCLE_OWNERS = classes().that()
             .areAssignableTo("pit12.shared.lifecycle.ClientLifecycle").should()
-            .resideInAnyPackage("pit12.runtime..", "pit12.feature..", "pit12.shared.lifecycle..");
+            .resideInAnyPackage("pit12.platform..", "pit12.runtime..", "pit12.feature..",
+                    "pit12.shared.lifecycle..");
     @ArchTest
     public static final ArchRule FEATURES_MUST_ONLY_USE_OTHER_FEATURE_APIS =
             classes().that().resideInAPackage("pit12.feature..").should(onlyUseOtherFeatureApis())

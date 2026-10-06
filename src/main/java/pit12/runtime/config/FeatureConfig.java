@@ -203,6 +203,10 @@ public abstract class FeatureConfig {
         return displayName;
     }
 
+    public final String originalDisplayName() {
+        return originalDisplayName;
+    }
+
     public final ConfigCategory category() {
         return category;
     }

@@ -12,7 +12,9 @@ For example, `nl-NL` uses the ISO 639-1 code `nl`, so it does not need prior dis
 
 ## Contribute interface translations
 
-The same files include translations for the Web UI, configuration text, command messages, and HUD labels. Use Python 3 and execute the commands below from the repository root.
+The same files include translations for the Web UI, configuration text, command messages, and HUD labels. The OneConfig settings view uses the original English text. Check translated settings in the Web UI.
+
+Use Python 3 and execute the commands below from the repository root.
 
 ### Prepare a language
 

@@ -66,8 +66,16 @@ public abstract class Setting<T> {
         return displayName;
     }
 
+    public final String originalDisplayName() {
+        return originalDisplayName;
+    }
+
     public final String description() {
         return description;
+    }
+
+    public final String originalDescription() {
+        return originalDescription;
     }
 
     public final T defaultValue() {

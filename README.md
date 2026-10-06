@@ -5,7 +5,7 @@ English | [简体中文](docs/zh-CN/README.md)
 > [!WARNING]
 > 12pit is being developed and is currently not playable.
 
-12pit is an open-source mod for The Pit on Minecraft 1.8.9 using the Forge modding platform. It is meant to be lightweight.
+12pit is a lightweight, open-source Forge mod for The Pit on Minecraft 1.8.9, with its own control interface and [OneConfig](https://github.com/Polyfrost/OneConfig) support.
 
 You can join our Discord [here](https://discord.gg/e9PRKMUenc) and seek help or discuss development related matters on the `#developer` channel.
 
