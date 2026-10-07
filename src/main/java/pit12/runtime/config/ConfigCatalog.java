@@ -59,6 +59,7 @@ public final class ConfigCatalog {
         if (featuresById.containsKey(feature.id())) {
             throw new IllegalArgumentException("Duplicate feature id: " + feature.id());
         }
+        feature.completeHudGroups();
         for (Setting<?> setting : feature.settings()) {
             setting.bind(this::onSettingChanged, client::check);
             settingOwners.put(setting, feature);

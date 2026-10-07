@@ -47,7 +47,7 @@ public final class EventListConfig extends FeatureConfig {
                 new ConfigCategory("render", source("Render"), 100),
                 source("Shows upcoming Pit events and their current stages."));
         subcategory("display", source("Display"));
-        hud = hudConfig("event_list", source("Event List"), HudAnchor.TOP_RIGHT, -6, 6, true);
+        hud = hudConfig("event_list", HudAnchor.TOP_RIGHT, -6, 6, true);
         eventCount = integerSliderSetting("event_count", source("Event count"),
                 source("Sets the number of event rows. The day and night row is separate."), 6, 1,
                 20, 1);

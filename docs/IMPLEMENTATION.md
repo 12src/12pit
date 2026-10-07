@@ -4,11 +4,11 @@ This guide covers the project classes and their usage. For package responsibilit
 
 ## Lifecycle
 
-`ClientLifecycle` has `start()` which initializes the resources and `stop()` which releases them. Components that manage some resources implement this interface. There should be no implementation in the helper with no managed resources.
+`ClientLifecycle` defines `start()` to initialize resources and `stop()` to release them. Components that manage resources implement this interface. Helpers with no managed resources do not need it.
 
-Components are created by `ClientBootstrap` in the constructor. There is a private `register...` method for each feature which creates and registers its config if required, builds the feature, and registers it in `components`. Pass required dependencies as arguments. Return only the API of the feature if subsequent registration methods require it.
+`ClientBootstrap` creates the components in its constructor. Each feature has a private `register...` method that creates and registers its config when needed, creates the feature, and adds it to `components`. Pass dependencies as arguments. Return the feature's API only when a later registration method needs it.
 
-Divide the constructor into shared runtime, feature providers, other features, and platform integrations. Create runtime components and platform integrations directly in their sections. Call feature methods and declare them sorted in order of `ConfigCategory.displayOrder()` followed by alphabetical order of their names. Sort the features without configuration in the group `Category: No config`. The same comment should be used in both groups and categories. Prioritize dependencies over category and name. Bootstrap initializes components in list order and stops them in reverse order. Registration methods only create and register objects, not listeners and workers, which should be done in `start()`.
+Organize the constructor into shared runtime, feature providers, other features, and platform integrations. Create runtime components and platform adapters directly in their sections. Order feature registration calls and method declarations by `ConfigCategory.displayOrder()`, then alphabetically by method name. Put features without config in the first `Category: No config` group. Use matching group and category comments in both places. Dependency order takes priority over category and name. Bootstrap starts components in list order and stops them in reverse. Registration methods only create and register objects. Register listeners and start workers in `start()`.
 
 Bootstrap registers the component and calls its `start()` method. If `start()` causes an exception, then Bootstrap will stop this component and all components that were started before it. `stop()` should release resources in any case, including partial initialization and even if it was called multiple times. An exception thrown by one of the components in `stop()` will be logged but all the others will be stopped.
 
@@ -66,13 +66,13 @@ public final class StatusConfig extends FeatureConfig {
                 source("Shows player names."), true);
     }
 
-    public boolean showNames() {
-        return showNames.get();
+    public BooleanSetting showNames() {
+        return showNames;
     }
 }
 ```
 
-`ConfigCategory` provides category id, display name and order number. Reuse the category for related features. The Web UI Features page shows category buttons and an All button. All shows category headings. Selecting a category shows its features without repeating the heading.
+`ConfigCategory` defines a category's ID, display name, and order. Reuse the same category for related features.
 
 In the Web UI, `subcategory()` puts the following settings under a button at the top of the feature page. `subsubcategory()` groups settings within that page. Both levels are optional. Without `subcategory()`, groups appear directly on the feature page. Settings without a subsubcategory have no section heading. Settings defined before the first subcategory stay visible under every button. Starting a new subcategory clears the current subsubcategory. Settings and groups follow their definition order.
 
@@ -85,25 +85,25 @@ The following helpers create settings and register their metadata in the feature
 - `keybindSetting` stores the key code from `0` to `255`. The feature is responsible for handling the input.
 - `colorSetting` stores RGB color as `0xRRGGBB`. `colorPickerSetting` stores ARGB color as `0xAARRGGBB`.
 - `choiceSetting` creates a choice with default id and `ChoiceSetting.Choice` instances with stable ids.
-- `hudConfig` adds anchor, offset, scale, text shadow and monospace font settings to the HUD.
+- `hudConfig` adds grouped anchor, text shadow, font, and translation options. It also stores placement and scale for the HUD editor. See [HUD](#hud) for grouping and storage details.
 
-Feature ids are unique in the catalog. Ids of the settings and HUD configurations are unique in their feature. Id starts with a lowercase ASCII letter or digit; the rest can also be `.`, `-`, or `_`. Preserve saved ids while changing the display names. HUD configuration ids are prefixes like `status.offset_x`; do not create settings with ids conflicting with them.
+Feature IDs are unique in the catalog. Setting and HUD config IDs are unique within their feature. An ID starts with a lowercase ASCII letter or digit; the remaining characters can also include `.`, `-`, or `_`. Preserve saved IDs when changing display names. A HUD config reserves setting IDs under its prefix, such as `status.offset_x`; do not define settings with conflicting IDs.
 
 Register this config in the register method of the feature in Bootstrap, then pass the same config to the feature:
 
 ```java
-private void registerTooltip(ConfigCatalog configs) {
-    TooltipConfig config = new TooltipConfig();
+private void registerStatus(ConfigCatalog configs) {
+    StatusConfig config = new StatusConfig();
     configs.register(config);
-    components.add(new TooltipFeature(configs, config));
+    components.add(new StatusFeature(configs, config));
 }
 ```
 
 Define all settings before registering the config. Registration binds their reads and writes to the catalog's client thread. Bootstrap calls `configs.freeze()` once after all feature registration methods return. This prevents new config registrations while allowing setting changes. Profiles capture the settings schema in `start()` after the catalog is frozen.
 
-Use `get()` and `set()` methods of a setting for its live value. `set()` validates the value and sends the notification if it changed. The subclasses of `Setting` validate default value after initializing fields used by `requireValue`.
+The feature reads the example setting with `config.showNames().get()` and changes it with `config.showNames().set(false)`. A setting's `set()` validates the value and notifies listeners if it changed. When implementing a `Setting` subclass, validate its default value after initializing the fields used by `requireValue`.
 
-Save the config listener as field, register it in `start()` and unregister in `stop()`. To get the dirty snapshot of display data, listener can mark it dirty:
+Keep the config listener in a field, register it with `configs.addListener(configListener)` in `start()`, and unregister it with `configs.removeListener(configListener)` in `stop()`. The listener can mark display data for rebuilding:
 
 ```java
 private boolean snapshotDirty = true;
@@ -114,7 +114,7 @@ private final ConfigChangeListener configListener = changes -> {
 };
 ```
 
-`ConfigChangeSet.affects(featureId, settingId)` evaluates the changed IDs. Listeners will be called after changes are processed. `snapshot()` takes a copy of all registered values. `apply(snapshot)` validates all known values before updating live settings, then sends one notification for the whole set. Missing known values will be reset to their defaults; it's a complete snapshot, not a patch. Unknown IDs are ignored. Empty snapshot triggers no notifications.
+`ConfigChangeSet.affects(featureId, settingId)` checks which settings changed. Listeners run after all changes are applied. `snapshot()` copies all registered values. `apply(snapshot)` validates all known values before changing live settings, then sends one notification for the whole set. It applies a complete snapshot: missing known values reset to their defaults, and unknown IDs are ignored. An empty snapshot resets all settings to their defaults. No notification is sent if the resulting values are unchanged.
 
 `recoverSavedValues(snapshot, problems)` restores default values for saved values that are not valid and returns them through the callback. It creates a normalized snapshot but does not apply it. Live input uses a normal validation instead. Profile feature handles saving and switching config snapshots.
 
@@ -146,9 +146,9 @@ Bootstrap provides [ForgeCommandAdapter](../src/main/java/pit12/platform/command
 
 ## Chat feedback
 
-To send a message to the local player use [ChatFeedback](../src/main/java/pit12/shared/chat/ChatFeedback.java) and call `ChatFeedback.reply(sender, ChatFeedback.Tone.INFO, message)`. The tone should be `INFO`, `SUCCESS`, `WARNING` or `ERROR`, depending on the outcome. The shared utility will include `[12pit] »` prefix with gray brackets, bold aqua `12` and bold dark aqua `pit` followed by gray separator. Colors of the body text are white, green, yellow and red.
+Use [ChatFeedback](../src/main/java/pit12/shared/chat/ChatFeedback.java) for local chat messages: `ChatFeedback.reply(sender, Tone.INFO, message)`. Import `ChatFeedback.Tone` and choose `INFO`, `SUCCESS`, `WARNING`, or `ERROR` based on the outcome. The helper adds the shared prefix and tone color.
 
-It is called from the client thread. In case of messages not related to a command, ensure that there is a local player before calling and sending him/her the message.
+Call it on the client thread. Outside a command, check that the local player exists and pass that player as the sender.
 
 ## Languages
 
@@ -177,55 +177,85 @@ After adding or changing marked source text, run `python scripts/languages.py sy
 [HudConfig](../src/main/java/pit12/runtime/config/HudConfig.java) stores settings related to HUD's placement and scale. Define it with `hudConfig` in FeatureConfig subclass' constructor and retain the result:
 
 ```java
-hud = hudConfig("status", source("Status"), HudAnchor.TOP_LEFT, 6, 6, true);
+hud = hudConfig("status", HudAnchor.TOP_LEFT, 6, 6, true);
 ```
 
-The helper defines these settings: `status.anchor`, `status.offset_x`, `status.offset_y`, `status.scale`, `status.text_shadow`, `status.use_monospace_font`, and `status.translate_text`. Scale is stored as a percentage and defaults to `100`. The HUD editor controls placement and scale. Text shadow, font, and translation switches appear in the Web UI and OneConfig. The font switch defaults to off and uses bundled Monocraft when enabled. The translation switch defaults to on; use `language.translate(text, hud.translateText().get())` when preparing HUD text and refresh cached text and layout when it changes.
+The arguments specify the ID, initial screen anchor, horizontal and vertical offsets, and default text shadow. The anchor aligns the same point of the HUD and the screen. Offsets are in GUI pixels. Anchor mode defaults to Auto. The supplied anchor and offsets define the initial position.
 
-A [HudElement](../src/main/java/pit12/runtime/hud/HudElement.java) implementation should satisfy the following contract:
-
-- `id()` is unique in the HUD registry and doesn't change during registration. `displayName()` and `config()` must not be null.
-- `enabled()` returns true when the live HUD is enabled.
-- `resize(pixelScale)` receives the Minecraft GUI scale times HUD's scale setting.
-- `prepare(pixelScale, editing)` prepares either live or preview contents before the bounds are accessed. Its default implementation calls `resize()`.
-- `width()` and `height()` provide cheap unscaled logical size of the element's content.
-- `render(partialTicks, editing)` draws the element from logical point `0,0` according to the caller's transformation.
-
-The feature gets [HudRegistry](../src/main/java/pit12/runtime/hud/HudRegistry.java) from Bootstrap. It creates its element once and registers it in `start()`:
+The default group name is `HUD`. To specify the group level and name, use the overload:
 
 ```java
-hudRegistry.register(hud);
+hud = hudConfig("status", HudAnchor.TOP_LEFT, 6, 6, true,
+        HudGroup.SUBSUBCATEGORY, source("Status appearance"));
 ```
 
-Unregisters the same element in `stop()`:
+Use `HudGroup.AUTO` for a subcategory when the feature declares other subcategories, or a subsubcategory otherwise. `SUBCATEGORY` creates a separate subcategory. `SUBSUBCATEGORY` uses the active subcategory at the call site, or the feature root if there is none. Pass null for the name to use `HUD`. The call preserves the active groups for later settings.
+
+The returned `HudConfig` exposes settings through `textShadow()`, `useMonospaceFont()`, `translateText()`, and `scale()`. Read or change their values with `get()` and `set()`. Scale is a percentage and defaults to `100`.
+
+Read the current placement with `placement()`. To change it, pass a [HudPlacement](../src/main/java/pit12/runtime/config/HudPlacement.java) containing the anchor, offsets, and anchor mode:
 
 ```java
-hudRegistry.unregister(hud);
+hud.placement(new HudPlacement(HudAnchor.TOP_RIGHT, -6, 6, true));
 ```
 
-The registration provides access to the element through the HUD editor. It does not schedule the normal rendering of the element. The feature owns its overlay callback and its display data. Generate display snapshots in response to input changes and keep expensive parsing, IO operations, and large world scanning out of render callbacks.
+The last argument selects Auto when true and a fixed anchor when false. `HudPlacement.anchor()` returns the resolved screen anchor in either mode. `fromOrigin(x, y, elementWidth, elementHeight, screenWidth, screenHeight)` creates an Auto placement from GUI coordinates and the element's scaled dimensions. To restore the default position and Auto mode, call `hud.placement(hud.defaultPlacement())`.
 
-Keep one [HudRenderer](../src/main/java/pit12/runtime/hud/HudRenderer.java) in a field:
+The font switch defaults to off and uses bundled Monocraft when enabled. The translation switch defaults to on. Use `language.translate(text, hud.translateText().get())` when preparing HUD text and refresh cached text and layout when it changes.
+
+Keep one [HudRenderer](../src/main/java/pit12/runtime/hud/HudRenderer.java) in a field and pass it to the element for drawing and measuring content:
 
 ```java
 private final HudRenderer hudRenderer = new HudRenderer();
 ```
 
+Implement [HudElement](../src/main/java/pit12/runtime/hud/HudElement.java) with the following contract:
+
+- `id()` is unique in the HUD registry and doesn't change during registration. `displayName()` and `config()` must not be null.
+- `enabled()` returns true when the live HUD is enabled.
+- `resize(pixelScale)` receives the Minecraft GUI scale times the HUD's scale setting. Pass this value to the renderer's `resize` before measuring or drawing content.
+- `prepare(pixelScale, editing)` prepares live content when `editing=false` and sample content when `editing=true`, before bounds are read. Its default implementation calls `resize()`.
+- `width()` and `height()` provide cheap unscaled logical size of the element's content.
+- `render(partialTicks, editing)` draws the element from logical point `0,0` according to the caller's transformation.
+
+Use the renderer's `text`, `textWidth`, and `fontHeight` methods with the same HUD config to draw and measure text. Prepare display snapshots when inputs change. Keep expensive parsing, IO, and large world scans out of render callbacks.
+
+For `editing=true`, prepare and render fixed sample content, including for disabled HUDs. Refresh its text and bounds when display settings or the language change. Measured bounds must match the rendered content.
+
+The feature receives [HudRegistry](../src/main/java/pit12/runtime/hud/HudRegistry.java) from Bootstrap. Create the element once and register it in `start()`:
+
+```java
+hudRegistry.register(element);
+```
+
+Registration gives the HUD editor access to the element. The feature still owns its normal overlay callback and display data.
+
 This is the regular overlay path, where `resolution` and `partialTicks` come from the overlay event:
 
 ```java
-if (!hudRegistry.editing() && hud.enabled()) {
-    HudBounds bounds = HudRenderer.layout(hud, resolution.getScaledWidth(),
+if (!hudRegistry.editing() && element.enabled()) {
+    HudBounds bounds = HudRenderer.layout(element, resolution.getScaledWidth(),
             resolution.getScaledHeight(), resolution.getScaleFactor(), false);
-    hudRenderer.render(hud, bounds, partialTicks, false);
+    hudRenderer.render(element, bounds, partialTicks, false);
 }
 ```
 
 `layout` calls `prepare`, applies placement and scaling and keeps the resolved origin inside the screen if the element fits. `render` applies the transform and restores the UI rendering state in `finally` block. The regular overlay should skip rendering during editing, as the editor renders the elements itself.
 
-Editing uses `editing=true`. Provide preview content when live data is empty or the HUD is disabled, and ensure the measured bounds match the content.
+In `stop()`, unregister the same element and release the renderer's resources:
 
-[UiRenderer](../src/main/java/pit12/shared/rendering/UiRenderer.java) provides the project text, rectangles and textures. Use `HudRenderer.text`, `textWidth` and `fontHeight` with the HUD's config to draw and measure its text. Pass the element's pixel scale to its `resize`. Reuse it. Monocraft uses logical size `9` to match its pixel grid; system fallback text uses `8`. Custom glyphs use nearest-neighbor sampling and screen-pixel positions. Keep the render origin in integer GUI coordinates before applying HUD scale. Call `close()` on it when its owner stops or releases those resources. It can create resources again after resizing. For custom UI outside of `HudRenderer`, use `begin()` from [UiRenderState](../src/main/java/pit12/shared/rendering/UiRenderState.java) together with `end()` in `finally` block. Restore the extra rendering state that your code modifies.
+```java
+hudRegistry.unregister(element);
+hudRenderer.close();
+```
+
+Clear the element's cached rendering state before reuse. The renderer can create resources again after `resize`.
+
+For custom UI, [UiRenderer](../src/main/java/pit12/shared/rendering/UiRenderer.java) provides text, rectangles, and textures. Construct it with Minecraft and a font `ResourceLocation`. Keep the renderer for reuse, call `resize(pixelScale)` before measuring or drawing, and call `close()` when its owner releases those resources.
+
+Monocraft uses logical size `9` to match its pixel grid. System fallback text uses `8`. Custom glyphs use nearest-neighbor sampling and screen-pixel positions. Keep the render origin in integer GUI coordinates before applying HUD scale.
+
+Outside `HudRenderer.render`, use [UiRenderState](../src/main/java/pit12/shared/rendering/UiRenderState.java) to protect rendering state. Call `begin()` before drawing and `end()` in a `finally` block. Restore any extra rendering state your code changes.
 
 ## Game state
 
@@ -235,9 +265,13 @@ Bootstrap provides query contracts to features. Their live queries and subscript
 
 Keep `Runnable` in a field for session changes. Register it with `session.addListener(sessionListener)` in `start()` and read the current state once; adding a listener does not cause the initial callback. Unregister it with `session.removeListener(sessionListener)` in `stop()`. Reset the state according to what it belongs to: the connection data lives for the connection, and the world data lives for the world. Do not delete the user data on either change.
 
-[TabPresence](../src/main/java/pit12/runtime/player/TabPresence.java) separates the membership from the known names. Use `contains(UUID)` to check the membership. Use `players()` to get the current UUID-to-profile-name map; the player may be present but not in that map if its name is unknown. [TabPresenceListener](../src/main/java/pit12/runtime/player/TabPresenceListener.java) reports seen players, departures and display changes. Store and unregister the listener with its owner.
+[TabPresence](../src/main/java/pit12/runtime/player/TabPresence.java) separates membership from known names. Use `contains(UUID)` to check membership and `players()` to get the current UUID-to-profile-name map. A player with an unknown name may be present without appearing in that map.
 
-[PlayerEquipmentAccess](../src/main/java/pit12/runtime/player/PlayerEquipmentAccess.java) provides `loadedEquipment(UUID)` and equipment listeners. A query returns `null` if the entity is not loaded or has not been observed yet. In a snapshot, check `heldItemKnown()` or `leggingsKnown()` before considering a slot as empty. `copyHeldItem()` and `copyLeggings()` return defensive copies but `null` can be considered as either an unknown slot or a known empty slot. Use `heldEnchantments()` or `leggingsEnchantments()` for already parsed data. Equipment listeners report the changes, removal and reset.
+Keep a [TabPresenceListener](../src/main/java/pit12/runtime/player/TabPresenceListener.java) in a field. In `start()`, register it with `tabPresence.addListener(tabListener)`, then read the current state; registration does not report existing entries. Handle `onPlayerSeen(playerId, name, joined)` for observed players, `onPlayerLeft(playerId)` for departures, and `onTabDisplayChanged()` for display changes. The name may be null, and `joined=false` means the entry was already present. In `stop()`, call `tabPresence.removeListener(tabListener)` with the same listener.
+
+[PlayerEquipmentAccess](../src/main/java/pit12/runtime/player/PlayerEquipmentAccess.java) provides `loadedEquipment(UUID)`. It returns `null` if the entity is unloaded or has not been observed yet. In a snapshot, check `heldItemKnown()` or `leggingsKnown()` before treating a slot as empty. `copyHeldItem()` and `copyLeggings()` return defensive copies. A `null` result may mean an unknown slot or a known empty slot. Use `heldEnchantments()` or `leggingsEnchantments()` for already parsed data.
+
+Keep a [PlayerEquipmentListener](../src/main/java/pit12/runtime/player/PlayerEquipmentListener.java) in a field. Register it with `equipment.addListener(equipmentListener)` in `start()`, then query the current players your feature needs; registration does not send an initial callback. In `onPlayerEquipmentChanged(playerId, changedSlots, revision)`, query `loadedEquipment(playerId)` again to update the feature's data. The `changedSlots` mask uses `PlayerEquipmentCache.HELD_ITEM` and `PlayerEquipmentCache.LEGGINGS`. Handle `onPlayerEquipmentRemoved(playerId)` by discarding that player's equipment data, and `onPlayerEquipmentReset()` by clearing derived equipment data. Unregister the same listener with `equipment.removeListener(equipmentListener)` in `stop()`.
 
 [PitContext](../src/main/java/pit12/runtime/pit/PitContext.java) provides `current()`. The returned `PitSnapshot` provides the map, Pit state, revision and `spawnStateAt(x, y, z)`. The state is `UNKNOWN` until the map is identified. The snapshots can be passed to the workers; live providers cannot.
 

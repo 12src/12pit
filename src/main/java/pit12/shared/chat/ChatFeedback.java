@@ -55,8 +55,7 @@ public final class ChatFeedback {
         version.getChatStyle().setColor(EnumChatFormatting.GRAY);
         ChatComponentText body = new ChatComponentText(message);
         body.getChatStyle().setColor(tone.color);
-        prefix.appendSibling(number).appendSibling(name).appendSibling(version)
-                .appendText("] » ")
+        prefix.appendSibling(number).appendSibling(name).appendSibling(version).appendText("] » ")
                 .appendSibling(body);
         sender.addChatMessage(prefix);
     }

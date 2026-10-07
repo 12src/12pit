@@ -1,6 +1,6 @@
 # Contributing to 12pit
 
-For translations, see the [translation guide](TRANSLATING.md).
+For translations, see the [translation guide](https://github.com/12src/12pit/blob/main/docs/TRANSLATING.md).
 
 ## Getting Started
 
@@ -8,7 +8,7 @@ Contributions to bug fixes, documentation, tests, maintenance, and new features 
 
 Find an open issue labeled as https://github.com/12src/12pit/labels/confirmed and https://github.com/12src/12pit/labels/help%20wanted. Contributors new to the project can start with issues labeled as https://github.com/12src/12pit/labels/confirmed and https://github.com/12src/12pit/labels/good%20first%20issue. Look at assignees, comments, and referenced pull requests first.
 
-If the contribution is a larger feature or a change that needs design decisions, create an issue before implementing it. The [issue guide](ISSUES.md) outlines everything you need to include. Ask for clarification in the issue or `#developer` channel on [Discord](https://discord.gg/e9PRKMUenc) if the scope of the change is unclear.
+If the contribution is a larger feature or a change that needs design decisions, create an issue before implementing it. The [issue guide](https://github.com/12src/12pit/blob/main/docs/ISSUES.md) outlines everything you need to include. Ask for clarification in the issue or `#developer` channel on [Discord](https://discord.gg/e9PRKMUenc) if the scope of the change is unclear.
 
 ## Claiming an Issue
 
@@ -18,7 +18,7 @@ Leave a comment when you start working on an issue. If your contribution may ove
 
 Each commit should represent one change only. Messages that follow the [conventional commit format](https://www.conventionalcommits.org/) are preferred: `fix: correct profile loading`, `docs: clarify build steps`, etc. A pull request should generally have one goal. A couple of changes are okay if they are easy to review together.
 
-The [architecture guide](ARCHITECTURE.md) outlines package roles and dependencies. The [implementation guide](IMPLEMENTATION.md) outlines lifecycle, configuration, commands, HUDs, and other project-related classes. The [debugging guide](DEBUGGING.md) outlines the development client and checks.
+The [architecture guide](https://github.com/12src/12pit/blob/main/docs/ARCHITECTURE.md) outlines package roles and dependencies. The [implementation guide](https://github.com/12src/12pit/blob/main/docs/IMPLEMENTATION.md) outlines lifecycle, configuration, commands, HUDs, and other project-related classes. The [debugging guide](https://github.com/12src/12pit/blob/main/docs/DEBUGGING.md) outlines the development client and checks.
 
 Read through the relevant code and use existing helpers when appropriate. Keep all new behavior within its feature. Extract any shared code when really necessary. Do not add any unrelated code cleanup in the pull request.
 

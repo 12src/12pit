@@ -26,11 +26,18 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Items;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.ResourceLocation;
 import pit12.Pit12;
 import pit12.runtime.config.HudConfig;
 import pit12.runtime.hud.HudElement;
 import pit12.runtime.hud.HudRenderer;
+import pit12.runtime.item.PitEnchantment;
+import pit12.runtime.item.PitEnchantmentReader;
 import pit12.runtime.languages.Languages;
 
 final class PlayerListHud implements HudElement {
@@ -43,13 +50,13 @@ final class PlayerListHud implements HudElement {
     private static final float FAR_DISTANCE = 50.0F;
     private static final ResourceLocation ARROW_TEXTURE =
             new ResourceLocation(Pit12.MOD_ID, "textures/gui/playerlist/arrow.png");
-    private static final PlayerListSnapshot SAMPLE = sampleSnapshot();
     private final PlayerListConfig config;
     private final HudConfig hudConfig;
     private final Minecraft minecraft;
     private final HudRenderer renderer;
     private final String[] groupNames = new String[PlayerListGroup.values().length];
     private PlayerListSnapshot snapshot = PlayerListSnapshot.empty();
+    private PlayerListSnapshot sample;
     private int nameWidth;
     private int leggingsWidth;
     private int heldItemWidth;
@@ -69,12 +76,14 @@ final class PlayerListHud implements HudElement {
     private double renderRightZ;
     private boolean renderDirectionReady;
     private boolean sampleLayout;
+    private boolean layoutDirty = true;
 
     PlayerListHud(PlayerListConfig config, HudRenderer renderer) {
         this.config = config;
         hudConfig = config.hud();
         minecraft = Minecraft.getMinecraft();
         this.renderer = renderer;
+        sample = sampleSnapshot();
     }
 
     void localize(Languages language) {
@@ -85,12 +94,19 @@ final class PlayerListHud implements HudElement {
                             ? language.translate(group.displayName(), translate)
                             : group.displayName();
         }
-        recalculateLayout(sampleLayout ? SAMPLE : snapshot);
+        recalculateLayout(sampleLayout ? sample : snapshot);
     }
 
     void snapshot(PlayerListSnapshot snapshot) {
         this.snapshot = snapshot;
-        recalculateLayout();
+        if (!sampleLayout) {
+            recalculateLayout(snapshot);
+        }
+    }
+
+    void configurationChanged() {
+        sample = sampleSnapshot();
+        layoutDirty = true;
     }
 
     void close() {
@@ -140,10 +156,9 @@ final class PlayerListHud implements HudElement {
     @Override
     public void prepare(float pixelScale, boolean editing) {
         resize(pixelScale);
-        boolean sample = editing && snapshot.isEmpty();
-        if (sample != sampleLayout) {
-            recalculateLayout(sample ? SAMPLE : snapshot);
-            sampleLayout = sample;
+        if (layoutDirty || editing != sampleLayout) {
+            sampleLayout = editing;
+            recalculateLayout(editing ? sample : snapshot);
         }
     }
 
@@ -154,11 +169,8 @@ final class PlayerListHud implements HudElement {
 
     @Override
     public void render(float partialTicks, boolean editing) {
-        PlayerListSnapshot content = snapshot;
+        PlayerListSnapshot content = editing ? sample : snapshot;
         prepareRenderDirection(partialTicks);
-        if (editing && content.isEmpty()) {
-            content = SAMPLE;
-        }
         int y = EDGE_PADDING;
         boolean hasGroup = false;
         for (PlayerListGroup group : PlayerListGroup.values()) {
@@ -284,11 +296,11 @@ final class PlayerListHud implements HudElement {
     }
 
     private void recalculateLayout() {
-        sampleLayout = false;
-        recalculateLayout(snapshot);
+        recalculateLayout(sampleLayout ? sample : snapshot);
     }
 
     private void recalculateLayout(PlayerListSnapshot content) {
+        layoutDirty = false;
         nameWidth = 0;
         leggingsWidth = 0;
         heldItemWidth = 0;
@@ -383,13 +395,33 @@ final class PlayerListHud implements HudElement {
         return 0xFF000000 | red << 16 | green << 8;
     }
 
-    private static PlayerListSnapshot sampleSnapshot() {
+    private PlayerListSnapshot sampleSnapshot() {
         Map<PlayerListGroup, List<PlayerListEntry>> groups =
                 new EnumMap<PlayerListGroup, List<PlayerListEntry>>(PlayerListGroup.class);
-        groups.put(PlayerListGroup.REGULARITY, Collections.singletonList(new PlayerListEntry(null,
-                0, "ExamplePlayer", "§4REG 3", "§bSW 3", 12.0F, 18.0F, true, true, false)));
-        groups.put(PlayerListGroup.DARK, Collections.singletonList(new PlayerListEntry(null, 0,
-                "DarkPlayer", "§dDark 2", "", 28.0F, -42.0F, true, true, false)));
+        groups.put(PlayerListGroup.REGULARITY,
+                Collections.singletonList(new PlayerListEntry(null, 0, "ExamplePlayer",
+                        sampleEnchantment(Items.leather_leggings, PitEnchantment.Regularity, 3),
+                        sampleEnchantment(Items.golden_sword, PitEnchantment.Sweaty, 3), 12.0F,
+                        18.0F, true, true, false)));
+        groups.put(PlayerListGroup.DARK,
+                Collections.singletonList(new PlayerListEntry(null, 0, "DarkPlayer",
+                        sampleEnchantment(Items.leather_leggings, PitEnchantment.Somber, 1), null,
+                        28.0F, -42.0F, true, true, false)));
         return PlayerListSnapshot.create(groups);
+    }
+
+    private String sampleEnchantment(Item item, PitEnchantment enchantment, int level) {
+        NBTTagCompound entry = new NBTTagCompound();
+        entry.setString("Key", enchantment.getKey());
+        entry.setInteger("Level", level);
+        NBTTagList enchantments = new NBTTagList();
+        enchantments.appendTag(entry);
+        NBTTagCompound attributes = new NBTTagCompound();
+        attributes.setTag("CustomEnchants", enchantments);
+        NBTTagCompound tag = new NBTTagCompound();
+        tag.setTag("ExtraAttributes", attributes);
+        ItemStack stack = new ItemStack(item);
+        stack.setTagCompound(tag);
+        return PlayerListBuilder.formatEnchantments(PitEnchantmentReader.read(stack), config);
     }
 }

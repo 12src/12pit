@@ -33,9 +33,7 @@ import cc.polyfrost.oneconfig.gui.elements.config.ConfigSlider;
 import cc.polyfrost.oneconfig.gui.elements.config.ConfigSwitch;
 import cc.polyfrost.oneconfig.internal.config.core.ConfigCore;
 import java.util.ArrayList;
-import java.util.IdentityHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.minecraft.client.Minecraft;
@@ -103,18 +101,11 @@ public final class OneConfigAdapter implements ClientLifecycle, ConfigChangeList
     }
 
     private void buildPage(View target, FeatureConfig feature) {
-        Map<Setting<?>, ConfigOption<?>> options = new IdentityHashMap<>();
         for (ConfigOption<?> option : feature.options()) {
-            options.put(option.setting(), option);
-        }
-        for (Setting<?> setting : feature.settings()) {
-            if (feature.toggleable() && setting.id().equals("enabled")) {
-                continue;
-            }
-            ConfigOption<?> option = options.get(setting);
-            String category = option == null || option.subcategory() == null ? "General"
-                    : option.subcategory().originalDisplayName();
-            String subcategory = option == null || option.subsubcategory() == null ? ""
+            Setting<?> setting = option.setting();
+            String category =
+                    option.subcategory() == null ? "" : option.subcategory().originalDisplayName();
+            String subcategory = option.subsubcategory() == null ? ""
                     : option.subsubcategory().originalDisplayName();
             OptionSubcategory section =
                     ConfigUtils.getSubCategory(target.mod.defaultPage, category, subcategory);
@@ -188,7 +179,7 @@ public final class OneConfigAdapter implements ClientLifecycle, ConfigChangeList
 
     private BasicOption createOption(Setting<?> setting, ConfigOption<?> option, String category,
             String subcategory) {
-        ConfigOption.Kind kind = option == null ? null : option.kind();
+        ConfigOption.Kind kind = option.kind();
         String title = setting.originalDisplayName();
         if (kind == ConfigOption.Kind.KEYBIND) {
             // OneConfig keybinds accept mouse buttons and chords, but 12pit stores one keyboard code.
@@ -235,12 +226,6 @@ public final class OneConfigAdapter implements ClientLifecycle, ConfigChangeList
                     setValue(setting, value);
                 }
             };
-        }
-        if (setting.id().endsWith(".anchor")) {
-            return dropdown((IntegerSetting) setting,
-                    new String[] {"Top left", "Top center", "Top right", "Center left", "Center",
-                            "Center right", "Bottom left", "Bottom center", "Bottom right"},
-                    new int[] {0, 1, 2, 3, 4, 5, 6, 7, 8}, title, category, subcategory);
         }
         NumberSetting<?> number = (NumberSetting<?>) setting;
         float minimum = (float) number.minimumValue();

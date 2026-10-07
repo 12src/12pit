@@ -107,9 +107,9 @@ public final class ClientBootstrap {
         HudRegistry hudRegistry = new HudRegistry(client);
         // Feature providers
         // Category: No config
-        HudEditorFeature hudEditor = registerHudEditor(hudRegistry, commands);
         Profiles profiles =
                 registerProfiles(configs, new File(minecraft.mcDataDir, "12pit/config").toPath());
+        HudEditorFeature hudEditor = registerHudEditor(hudRegistry, commands, configs, profiles);
         Relations relations = registerRelations(presence,
                 new File(minecraft.mcDataDir, "12pit/relations.json").toPath(), client, commands);
         // Category: Player
@@ -143,16 +143,18 @@ public final class ClientBootstrap {
 
     // Feature providers
     // Category: No config
-    private HudEditorFeature registerHudEditor(HudRegistry hudRegistry, CommandRegistry commands) {
-        HudEditorFeature hudEditor = new HudEditorFeature(hudRegistry, commands, language);
-        components.add(hudEditor);
-        return hudEditor;
-    }
-
     private Profiles registerProfiles(ConfigCatalog configs, Path directory) {
         ProfilesFeature profiles = new ProfilesFeature(configs, directory);
         components.add(profiles);
         return profiles;
+    }
+
+    private HudEditorFeature registerHudEditor(HudRegistry hudRegistry, CommandRegistry commands,
+            ConfigCatalog configs, Profiles profiles) {
+        HudEditorFeature hudEditor =
+                new HudEditorFeature(hudRegistry, commands, language, configs, profiles);
+        components.add(hudEditor);
+        return hudEditor;
     }
 
     private Relations registerRelations(TabPresence presence, Path path, ClientThread client,
@@ -246,7 +248,6 @@ public final class ClientBootstrap {
         configs.register(config);
         WebUiFeature webUi = new WebUiFeature(featureConfigs, configs, profiles, relations,
                 hudEditor, swapBindings, config, language, path);
-        hudEditor.setWebUiOpener(webUi::open);
         components.add(webUi);
     }
 

@@ -84,14 +84,15 @@ final class EventListSnapshot {
     }
 
     static EventListSnapshot sample(EventListConfig config, Languages language) {
-        long now = System.currentTimeMillis();
+        // Fixed view of BrookeAFK/brookeafk-api events.js at 8a1bc6a, 2026-10-07 10:25:30 UTC.
+        long now = 1_791_368_730_000L;
         return build(
-                Arrays.asList(new PitEvent(EventType.BLOCKHEAD, now - 240_000L, true),
-                        new PitEvent(EventType.KOTH, now - 30_000L, false),
-                        new PitEvent(EventType.PIZZA, now - 20_000L, true),
-                        new PitEvent(EventType.DRAGON_EGG, now + 150_000L, false),
-                        new PitEvent(EventType.SPIRE, now + 540_000L, true),
-                        new PitEvent(EventType.DOUBLE_REWARDS, now + 780_000L, false)),
+                Arrays.asList(new PitEvent(EventType.CARE_PACKAGE, 1_791_368_580_000L, false),
+                        new PitEvent(EventType.SQUADS, 1_791_368_700_000L, true),
+                        new PitEvent(EventType.DOUBLE_REWARDS, 1_791_369_660_000L, false),
+                        new PitEvent(EventType.KOTH, 1_791_370_200_000L, false),
+                        new PitEvent(EventType.DOUBLE_REWARDS, 1_791_370_980_000L, false),
+                        new PitEvent(EventType.KOTL, 1_791_371_640_000L, false)),
                 config, now, "", false, language);
     }
 

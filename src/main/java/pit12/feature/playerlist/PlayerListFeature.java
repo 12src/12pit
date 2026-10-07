@@ -33,6 +33,7 @@ import pit12.feature.relation.api.RelationLookup;
 import pit12.runtime.config.ConfigCatalog;
 import pit12.runtime.config.ConfigChangeListener;
 import pit12.runtime.config.ConfigChangeSet;
+import pit12.runtime.config.Setting;
 import pit12.runtime.hud.HudRegistry;
 import pit12.runtime.hud.HudRenderer;
 import pit12.runtime.languages.Languages;
@@ -182,6 +183,12 @@ public final class PlayerListFeature implements ClientLifecycle, PlayerEquipment
     public void onConfigChanged(ConfigChangeSet changes) {
         if (!started) {
             return;
+        }
+        for (Setting<?> setting : config.settings()) {
+            if (changes.affects("playerlist", setting.id())) {
+                hud.configurationChanged();
+                break;
+            }
         }
         if (changes.affects("playerlist", config.hud().translateText().id())) {
             hud.localize(language);

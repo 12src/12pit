@@ -28,6 +28,10 @@ import java.util.Set;
 import pit12.runtime.languages.Languages;
 
 public abstract class FeatureConfig {
+    protected enum HudGroup {
+        AUTO, SUBCATEGORY, SUBSUBCATEGORY
+    }
+
     private final String id;
     private final String originalDisplayName;
     private String displayName;
@@ -42,6 +46,8 @@ public abstract class FeatureConfig {
     private final Set<String> settingIds = new HashSet<String>();
     private ConfigGroup currentSubcategory;
     private ConfigGroup currentSubsubcategory;
+    private boolean hasSubcategories;
+    private final List<Runnable> hudGroups = new ArrayList<>();
 
     protected FeatureConfig(String id, String displayName, ConfigCategory category,
             String description) {
@@ -127,6 +133,7 @@ public abstract class FeatureConfig {
     }
 
     protected final void subcategory(String id, String displayName) {
+        hasSubcategories = true;
         currentSubcategory = new ConfigGroup(id, displayName);
         currentSubsubcategory = null;
     }
@@ -135,8 +142,14 @@ public abstract class FeatureConfig {
         currentSubsubcategory = new ConfigGroup(id, displayName);
     }
 
-    protected final HudConfig hudConfig(String id, String displayName, HudAnchor defaultAnchor,
-            int defaultOffsetX, int defaultOffsetY, boolean defaultTextShadow) {
+    protected final HudConfig hudConfig(String id, HudAnchor defaultAnchor, int defaultOffsetX,
+            int defaultOffsetY, boolean defaultTextShadow) {
+        return hudConfig(id, defaultAnchor, defaultOffsetX, defaultOffsetY, defaultTextShadow,
+                HudGroup.AUTO, source("HUD"));
+    }
+
+    protected final HudConfig hudConfig(String id, HudAnchor defaultAnchor, int defaultOffsetX,
+            int defaultOffsetY, boolean defaultTextShadow, HudGroup grouping, String groupName) {
         String prefix = id + ".";
         BooleanSetting textShadow =
                 new BooleanSetting(prefix + "text_shadow", source("Text shadow"),
@@ -147,23 +160,57 @@ public abstract class FeatureConfig {
         BooleanSetting translateText =
                 new BooleanSetting(prefix + "translate_text", source("Translate text"),
                         source("Translates HUD text into the selected language."), true);
-        IntegerSetting anchor = new IntegerSetting(prefix + "anchor", source("Anchor"), "",
-                defaultAnchor.id(), HudAnchor.TOP_LEFT.id(), HudAnchor.BOTTOM_RIGHT.id());
+        ChoiceSetting anchor = new ChoiceSetting(prefix + "anchor", source("Anchor"),
+                source("Auto chooses an anchor when the HUD is moved."), HudConfig.AUTO_ANCHOR,
+                new ChoiceSetting.Choice(HudConfig.AUTO_ANCHOR, source("Auto")),
+                new ChoiceSetting.Choice(0, source("Top left")),
+                new ChoiceSetting.Choice(1, source("Top center")),
+                new ChoiceSetting.Choice(2, source("Top right")),
+                new ChoiceSetting.Choice(3, source("Center left")),
+                new ChoiceSetting.Choice(4, source("Center")),
+                new ChoiceSetting.Choice(5, source("Center right")),
+                new ChoiceSetting.Choice(6, source("Bottom left")),
+                new ChoiceSetting.Choice(7, source("Bottom center")),
+                new ChoiceSetting.Choice(8, source("Bottom right")));
+        IntegerSetting autoAnchor = new IntegerSetting(prefix + "auto_anchor", source("Anchor"),
+                source("Stores the anchor chosen by Auto."), defaultAnchor.id(), 0, 8);
         IntegerSetting offsetX = new IntegerSetting(prefix + "offset_x",
-                source("Horizontal offset"), "", defaultOffsetX, -32768, 32767);
+                source("Horizontal offset"), source("Offset from the anchor, in GUI pixels."),
+                defaultOffsetX, -32768, 32767);
         IntegerSetting offsetY = new IntegerSetting(prefix + "offset_y", source("Vertical offset"),
-                "", defaultOffsetY, -32768, 32767);
-        IntegerSetting scale =
-                new IntegerSetting(prefix + "scale", source("Scale"), "", 100, 25, 300);
+                source("Offset from the anchor, in GUI pixels."), defaultOffsetY, -32768, 32767);
+        IntegerSetting scale = new IntegerSetting(prefix + "scale", source("Scale"),
+                source("HUD size, in percent."), 100, 25, 300);
+        int firstOption = options.size();
         register(textShadow, ConfigOption.Kind.BOOLEAN);
         register(useMonospaceFont, ConfigOption.Kind.BOOLEAN);
         register(translateText, ConfigOption.Kind.BOOLEAN);
-        register(anchor, null);
+        register(anchor, ConfigOption.Kind.CHOICE);
+        int lastOption = options.size();
+        ConfigGroup group =
+                new ConfigGroup(id + ".hud", groupName == null ? source("HUD") : groupName);
+        ConfigGroup parent = currentSubcategory;
+        hudGroups.add(() -> {
+            boolean topLevel = grouping == HudGroup.SUBCATEGORY
+                    || grouping == HudGroup.AUTO && hasSubcategories;
+            for (int index = firstOption; index < lastOption; index++) {
+                options.get(index).group(topLevel ? group : parent, topLevel ? null : group);
+            }
+        });
+        register(autoAnchor, null);
         register(offsetX, null);
         register(offsetY, null);
         register(scale, null);
-        return new HudConfig(textShadow, useMonospaceFont, translateText, anchor, offsetX, offsetY,
-                scale);
+        return new HudConfig(textShadow, useMonospaceFont, translateText, anchor, autoAnchor,
+                offsetX, offsetY, scale);
+    }
+
+    void completeHudGroups() {
+        // A feature can declare more subcategories after its HUD settings.
+        for (Runnable group : hudGroups) {
+            group.run();
+        }
+        hudGroups.clear();
     }
 
     private <T> void register(Setting<T> setting, ConfigOption.Kind optionKind) {

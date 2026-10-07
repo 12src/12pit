@@ -94,11 +94,11 @@ final class PlayerListBuilder {
                     .spawnStateAt(player.posX, player.posY, player.posZ) == SpawnState.IN_SPAWN;
             String leggingsText = config.showLeggings() && playerEquipment != null
                     && playerEquipment.leggingsKnown()
-                            ? formatEnchantments(playerEquipment.leggingsEnchantments())
+                            ? formatEnchantments(playerEquipment.leggingsEnchantments(), config)
                             : null;
             String heldItemText = config.showHeldItem() && playerEquipment != null
                     && playerEquipment.heldItemKnown()
-                            ? formatEnchantments(playerEquipment.heldEnchantments())
+                            ? formatEnchantments(playerEquipment.heldEnchantments(), config)
                             : null;
             PlayerListEntry entry = new PlayerListEntry(playerId,
                     player == null ? 0 : player.getEntityId(), nameOf(info), leggingsText,
@@ -113,7 +113,7 @@ final class PlayerListBuilder {
         return PlayerListSnapshot.create(groups);
     }
 
-    private String formatEnchantments(PitEnchantments enchantments) {
+    static String formatEnchantments(PitEnchantments enchantments, PlayerListConfig config) {
         switch (config.enchantmentFormat()) {
             case PlayerListConfig.ENCHANTMENT_FORMAT_PLAIN_LEVELS:
                 return enchantments.formatDisplayNames();

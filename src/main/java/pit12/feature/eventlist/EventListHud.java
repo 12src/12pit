@@ -108,7 +108,7 @@ final class EventListHud implements HudElement {
     @Override
     public void prepare(float pixelScale, boolean editing) {
         resize(pixelScale);
-        boolean sample = editing && (!enabled() || snapshot.rows.isEmpty());
+        boolean sample = editing;
         if (!dirty && sample == sampleLayout) {
             return;
         }

@@ -51,7 +51,7 @@ public final class PlayerListConfig extends FeatureConfig {
                 new ConfigCategory("render", source("Render"), 100),
                 source("Shows loaded player equipment and direction in a compact HUD."));
         subcategory("display", source("Display"));
-        hud = hudConfig("player_list", source("Player List"), HudAnchor.TOP_LEFT, 6, 6, true);
+        hud = hudConfig("player_list", HudAnchor.TOP_LEFT, 6, 6, true);
         subsubcategory("enchantments", source("Enchantments"));
         enchantmentFormat = choiceSetting("enchantment_format", source("Enchantment format"),
                 source("Controls how enchantment names and levels are shown."),

@@ -46,8 +46,8 @@ public interface HudElement {
     int height();
 
     /**
-     * Render at (0, 0). The caller manages the transform and GL state. Show sample content while editing, even if the live
-     * HUD is disabled or has no data.
+     * Render at (0, 0). The caller manages the transform and GL state. Always show sample content while editing, including
+     * disabled HUDs. Live previews use the normal overlay callbacks instead.
      */
     void render(float partialTicks, boolean editing);
 }
