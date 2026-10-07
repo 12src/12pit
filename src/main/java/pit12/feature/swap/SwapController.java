@@ -103,7 +103,7 @@ final class SwapController {
     }
 
     boolean hidden() {
-        return screen != null && options != null && !options.visible;
+        return screen != null && !options.visible;
     }
 
     int unequipKey() {
@@ -543,7 +543,7 @@ final class SwapController {
                 complete();
                 return;
             }
-            if (source < 5 || !binding.identity.matches(stack(source)))
+            if (!binding.identity.matches(stack(source)))
                 source = find(binding.identity);
             if (source < 0) {
                 problems.add(language.format("Missing item: {0}", binding.name));

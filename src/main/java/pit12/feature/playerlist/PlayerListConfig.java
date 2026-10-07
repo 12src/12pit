@@ -155,7 +155,7 @@ public final class PlayerListConfig extends FeatureConfig {
             case BOUNTY_HUNTER:
                 return showBountyHunter();
             default:
-                return false;
+                throw new IllegalStateException("Unknown player list group: " + group);
         }
     }
 }

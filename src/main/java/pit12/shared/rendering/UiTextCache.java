@@ -43,8 +43,7 @@ final class UiTextCache {
 
     UiTextCache(float logicalFontSize, float pixelScale) {
         this.pixelScale = pixelScale;
-        fonts[0] = new Font(Font.SANS_SERIF, Font.PLAIN,
-                Math.max(1, Math.round(logicalFontSize * pixelScale)));
+        fonts[0] = new Font(Font.SANS_SERIF, Font.PLAIN, Math.round(logicalFontSize * pixelScale));
         fonts[1] = fonts[0].deriveFont(Font.BOLD);
         BufferedImage metricsImage = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
         Graphics2D graphics = metricsImage.createGraphics();
@@ -170,10 +169,9 @@ final class UiTextCache {
         }
         FontMetrics runMetrics = metrics[bold ? 1 : 0];
         int advance = runMetrics.stringWidth(plainText);
-        int textWidth = Math.max(1, advance);
-        int textHeight = Math.max(1, runMetrics.getHeight());
-        BufferedImage image =
-                new BufferedImage(textWidth + 2, textHeight + 2, BufferedImage.TYPE_INT_ARGB);
+        int width = advance + 2;
+        int height = runMetrics.getHeight() + 2;
+        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         Graphics2D graphics = image.createGraphics();
         try {
             graphics.setComposite(AlphaComposite.Clear);
@@ -195,7 +193,7 @@ final class UiTextCache {
         } finally {
             image.flush();
         }
-        TextureEntry created = new TextureEntry(texture, textWidth + 2, textHeight + 2, advance);
+        TextureEntry created = new TextureEntry(texture, width, height, advance);
         entries.put(key, created);
         trimOldest();
         return created;

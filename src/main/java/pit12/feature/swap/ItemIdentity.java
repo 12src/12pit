@@ -18,8 +18,6 @@
  */
 package pit12.feature.swap;
 
-import static pit12.runtime.languages.Languages.source;
-
 import com.google.gson.JsonArray;
 import com.google.gson.JsonPrimitive;
 import java.util.ArrayList;
@@ -49,10 +47,6 @@ final class ItemIdentity {
         this.variant = variant;
         this.kind = kind;
         this.value = value;
-        if (item.isEmpty() || kind != Kind.NAME && value.isEmpty() || variant < 0
-                || kind == Kind.NONCE && Long.parseLong(value) < 10) {
-            throw new IllegalArgumentException(source("Invalid item identity"));
-        }
     }
 
     static ItemIdentity read(ItemStack stack) {

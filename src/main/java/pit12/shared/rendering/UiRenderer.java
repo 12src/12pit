@@ -45,12 +45,11 @@ public class UiRenderer {
     }
 
     public void resize(float pixelScale) {
-        float normalizedScale = Math.max(0.01F, pixelScale);
-        if (Float.compare(this.pixelScale, normalizedScale) == 0) {
+        if (Float.compare(this.pixelScale, pixelScale) == 0) {
             return;
         }
         releaseFonts();
-        this.pixelScale = normalizedScale;
+        this.pixelScale = pixelScale;
     }
 
     public void rect(int x, int y, int width, int height, int color) {

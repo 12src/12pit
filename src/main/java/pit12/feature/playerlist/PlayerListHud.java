@@ -136,15 +136,14 @@ final class PlayerListHud implements HudElement {
 
     @Override
     public void resize(float pixelScale) {
-        float normalizedScale = Math.max(0.01F, pixelScale);
         boolean monospaceFont = hudConfig.useMonospaceFont().get();
-        if (Float.compare(this.pixelScale, normalizedScale) == 0
+        if (Float.compare(this.pixelScale, pixelScale) == 0
                 && this.monospaceFont == monospaceFont) {
             return;
         }
-        this.pixelScale = normalizedScale;
+        this.pixelScale = pixelScale;
         this.monospaceFont = monospaceFont;
-        renderer.resize(normalizedScale);
+        renderer.resize(pixelScale);
         recalculateLayout();
     }
 
@@ -232,7 +231,7 @@ final class PlayerListHud implements HudElement {
     }
 
     private float interpolatedDirection(PlayerListEntry entry, float partialTicks) {
-        if (entry.playerId() == null || !entry.directionKnown() || !renderDirectionReady) {
+        if (entry.playerId() == null || !renderDirectionReady) {
             return entry.direction();
         }
         WorldClient world = minecraft.theWorld;

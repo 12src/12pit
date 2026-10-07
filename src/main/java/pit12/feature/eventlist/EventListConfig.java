@@ -24,6 +24,7 @@ import java.util.EnumMap;
 import java.util.Map;
 import pit12.runtime.config.BooleanSetting;
 import pit12.runtime.config.ChoiceSetting;
+import pit12.runtime.config.ChoiceSetting.Choice;
 import pit12.runtime.config.ConfigCategory;
 import pit12.runtime.config.FeatureConfig;
 import pit12.runtime.config.HudAnchor;
@@ -32,12 +33,12 @@ import pit12.runtime.config.IntegerSetting;
 
 public final class EventListConfig extends FeatureConfig {
     private final HudConfig hud;
-    private final BooleanSetting showDayNight;
-    private final BooleanSetting showIcons;
-    private final BooleanSetting showColors;
-    private final BooleanSetting zeroPadding;
-    private final IntegerSetting eventCount;
-    private final ChoiceSetting timeFormat;
+    final BooleanSetting showDayNight;
+    final BooleanSetting showIcons;
+    final BooleanSetting showColors;
+    final BooleanSetting zeroPadding;
+    final IntegerSetting eventCount;
+    final ChoiceSetting timeFormat;
     private final BooleanSetting showMajorEvents;
     private final BooleanSetting showMinorEvents;
     private final Map<EventType, BooleanSetting> shownEvents = new EnumMap<>(EventType.class);
@@ -61,10 +62,9 @@ public final class EventListConfig extends FeatureConfig {
         zeroPadding = booleanSetting("zero_padding", source("Pad time with zeros"),
                 source("Shows two digits for each part of a countdown."), true);
         timeFormat = choiceSetting("time_format", source("Time format"),
-                source("Sets how event times are shown."), 0,
-                new ChoiceSetting.Choice(0, source("Countdown")),
-                new ChoiceSetting.Choice(1, source("Local time (24-hour)")),
-                new ChoiceSetting.Choice(2, source("Countdown and local time")));
+                source("Sets how event times are shown."), 0, new Choice(0, source("Countdown")),
+                new Choice(1, source("Local time (24-hour)")),
+                new Choice(2, source("Countdown and local time")));
         subcategory("filter", source("Filter"));
         subsubcategory("major_events", source("Major events"));
         showMajorEvents = booleanSetting("show_major_events", source("Show major events"),
@@ -88,30 +88,6 @@ public final class EventListConfig extends FeatureConfig {
 
     HudConfig hud() {
         return hud;
-    }
-
-    boolean showDayNight() {
-        return showDayNight.get();
-    }
-
-    boolean showIcons() {
-        return showIcons.get();
-    }
-
-    boolean showColors() {
-        return showColors.get();
-    }
-
-    boolean zeroPadding() {
-        return zeroPadding.get();
-    }
-
-    int eventCount() {
-        return eventCount.get();
-    }
-
-    int timeFormat() {
-        return timeFormat.get();
     }
 
     boolean shows(PitEvent event) {

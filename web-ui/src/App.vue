@@ -36,7 +36,6 @@ const {
   pending,
   busy,
   features,
-  settings,
   showDetails,
   favorites,
   toggleFavorite,
@@ -87,8 +86,8 @@ function openFeature(id: string) {
   selectedId.value = id
   selectedSubcategoryId.value =
     features.value
-      .find((feature) => feature.id === id)
-      ?.sections.find((section) => section.subcategory)?.subcategory?.id ?? null
+      .find((feature) => feature.id === id)!
+      .sections.find((section) => section.subcategory)?.subcategory?.id ?? null
   cancelCapture()
 }
 
@@ -236,7 +235,7 @@ function closeTransfer() {
           />
           <SettingsPage
             v-else-if="page === 'settings'"
-            :settings="settings"
+            :settings="state.webui.settings"
             :profiles-loading="state.profiles.loadState === 'LOADING'"
             :busy="busy"
             :pending="pending || !state.webui.ready"

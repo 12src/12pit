@@ -94,13 +94,12 @@ final class EventListHud implements HudElement {
 
     @Override
     public void resize(float pixelScale) {
-        float normalizedScale = Math.max(0.01F, pixelScale);
         boolean monospaceFont = hudConfig.useMonospaceFont().get();
-        if (Float.compare(this.pixelScale, normalizedScale) != 0
+        if (Float.compare(this.pixelScale, pixelScale) != 0
                 || this.monospaceFont != monospaceFont) {
-            this.pixelScale = normalizedScale;
+            this.pixelScale = pixelScale;
             this.monospaceFont = monospaceFont;
-            renderer.resize(normalizedScale);
+            renderer.resize(pixelScale);
             dirty = true;
         }
     }
@@ -108,12 +107,11 @@ final class EventListHud implements HudElement {
     @Override
     public void prepare(float pixelScale, boolean editing) {
         resize(pixelScale);
-        boolean sample = editing;
-        if (!dirty && sample == sampleLayout) {
+        if (!dirty && editing == sampleLayout) {
             return;
         }
-        content = sample ? EventListSnapshot.sample(config, language) : snapshot;
-        sampleLayout = sample;
+        content = editing ? EventListSnapshot.sample(config, language) : snapshot;
+        sampleLayout = editing;
         dirty = false;
         int fontHeight = Math.max(renderer.fontHeight(content.dayName, hudConfig),
                 renderer.fontHeight(content.dayTime, hudConfig));
@@ -124,7 +122,7 @@ final class EventListHud implements HudElement {
         int nameWidth = renderer.textWidth(content.dayName, hudConfig);
         int timeWidth = renderer.textWidth(content.dayTime, hudConfig);
         for (EventListSnapshot.Row row : content.rows) {
-            if (config.showIcons()) {
+            if (config.showIcons.get()) {
                 String icon = eventIcon(row);
                 iconWidth = Math.max(iconWidth, renderer.textWidth(icon, false));
                 fontHeight = Math.max(fontHeight, renderer.fontHeight(icon, false));
@@ -172,14 +170,14 @@ final class EventListHud implements HudElement {
             return;
         }
         for (EventListSnapshot.Row row : content.rows) {
-            if (config.showIcons()) {
+            if (config.showIcons.get()) {
                 int color = row.phase == PitEvent.Phase.ACTIVE ? 0xFF55FF55
                         : row.phase == PitEvent.Phase.PREPARING ? 0xFFFFFF55
                                 : row.major ? 0xFFFFAA00 : 0xFF55FFFF;
                 icon(eventIcon(row), y, color);
             }
             renderer.text(eventNames[row.type.ordinal()], nameX, y,
-                    config.showColors() ? 0xFF000000 | row.type.color : 0xFFFFFFFF, hudConfig);
+                    config.showColors.get() ? 0xFF000000 | row.type.color : 0xFFFFFFFF, hudConfig);
             renderer.text(row.time, width - PADDING - renderer.textWidth(row.time, hudConfig), y,
                     0xFFFFFFFF, hudConfig);
             y += lineHeight;

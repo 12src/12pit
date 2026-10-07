@@ -32,7 +32,7 @@ Extract a method, constant or variable if that improves the readability of the c
 
 Validate user input, file and network data, and potentially missing Minecraft values where they enter the project. Trust internal callers instead of repeating those checks. Treat broken internal invariants as bugs and handle them where they occur. Avoid fallbacks that hide them. `stop()` must tolerate resources that were never created because initialization may have failed.
 
-Copy a collection only when another consumer may modify it or when passing it to another thread. Briefly document when a method takes ownership of a collection.
+Copy a collection only when another consumer may modify it or when passing it to another thread.
 
 Catch an exception only if you can do something with it, handle it or provide more information to the caller. A `catch` block that either rethrows an exception or ignores it should be removed.
 
@@ -44,11 +44,11 @@ Use plain forms provided by the language. Rely on autoboxing instead of performi
 
 ## Comments
 
-Write short comments for non-obvious reasons and hidden contracts, such as unexpected return values from an external API. Update comments with the code.
+Read the code as someone seeing it for the first time. Add a short comment if its purpose, behavior, or contract is unclear or easy to misread. If the code already makes those points clear, no comment is needed. Update comments with the code.
 
 ## Submitting a Pull Request
 
-Format code with ./gradlew spotlessApply, run the checks relevant to your change, and do a build once before submitting the pull request. Mention what you ran and any known limitations. Submit focused tests if the behavior has changed.
+Format code with `./gradlew spotlessApply` and `npm run format --prefix web-ui`, run the checks relevant to your change, and do a build once before submitting the pull request. Mention what you ran and any known limitations. Submit focused tests if the behavior has changed.
 
 Update the architecture guide and relevant tests if package role or dependencies change. Update the implementation guide if some basic interface, calling convention, or registration step changes.
 

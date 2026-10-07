@@ -146,7 +146,7 @@ public final class AutoFishFeature implements ClientLifecycle, ConfigChangeListe
         // Minecraft clears this reference when the hook dies.
         EntityFishHook current = player.fishEntity;
         if (current != hook) {
-            boolean recast = state == State.WAITING_FOR_REMOVAL && hook != null && current == null
+            boolean recast = state == State.WAITING_FOR_REMOVAL && current == null
                     && config.autoRecast.get();
             reset();
             hook = current;

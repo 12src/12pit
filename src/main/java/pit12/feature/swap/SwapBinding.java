@@ -22,7 +22,6 @@ import static pit12.runtime.languages.Languages.source;
 
 import net.minecraft.item.ItemArmor;
 import net.minecraft.item.ItemStack;
-import org.lwjgl.input.Keyboard;
 import pit12.runtime.item.PitEnchantmentReader;
 
 final class SwapBinding {
@@ -35,10 +34,6 @@ final class SwapBinding {
 
     SwapBinding(int key, ItemIdentity identity, boolean equipment, int target, String name,
             String details) {
-        if (key <= 0 || key >= Keyboard.KEYBOARD_SIZE || Keyboard.getKeyName(key) == null
-                || target < 1 || target > (equipment ? 4 : 9) || name.isEmpty()) {
-            throw new IllegalArgumentException(source("Invalid swap binding"));
-        }
         this.key = key;
         this.identity = identity;
         this.equipment = equipment;
@@ -89,8 +84,10 @@ final class SwapBinding {
                 return "Leggings";
             case 3:
                 return "Chestplate";
-            default:
+            case 4:
                 return "Helmet";
+            default:
+                throw new IllegalStateException("Unknown armor target: " + target);
         }
     }
 }

@@ -25,6 +25,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 import java.io.IOException;
@@ -89,31 +90,35 @@ final class WebUiPreferences implements ConfigChangeListener {
         });
         catalog.addListener(this);
         worker.execute(() -> {
+            boolean missing;
+            JsonObject loaded;
             try {
-                boolean missing = Files.notExists(path);
-                JsonObject loaded;
+                missing = Files.notExists(path);
                 if (missing) {
                     loaded = new JsonObject();
                     loaded.addProperty("schemaVersion", 1);
                 } else {
                     loaded = read(path);
                 }
-                dispatch(activeGeneration, () -> {
-                    try {
-                        applyLoaded(loaded);
-                        ready = true;
-                        if (missing || !editedWhileLoading.isEmpty())
-                            save();
-                        editedWhileLoading.clear();
-                        changed.run();
-                    } catch (RuntimeException failure) {
-                        failed(source("Could not load Web UI settings"), failure);
-                    }
-                });
-            } catch (IOException | RuntimeException failure) {
+            } catch (IOException | JsonParseException | IllegalArgumentException
+                    | SecurityException failure) {
                 dispatch(activeGeneration,
                         () -> failed(source("Could not load Web UI settings"), failure));
+                return;
             }
+            dispatch(activeGeneration, () -> {
+                try {
+                    applyLoaded(loaded);
+                } catch (IllegalArgumentException failure) {
+                    failed(source("Could not load Web UI settings"), failure);
+                    return;
+                }
+                ready = true;
+                if (missing || !editedWhileLoading.isEmpty())
+                    save();
+                editedWhileLoading.clear();
+                changed.run();
+            });
         });
     }
 
@@ -159,8 +164,6 @@ final class WebUiPreferences implements ConfigChangeListener {
     }
 
     void setFavorite(String featureId, boolean favorite) {
-        if (!ready)
-            throw new IllegalArgumentException(source("Web UI settings are unavailable"));
         if (favorite ? favorites.add(featureId) : favorites.remove(featureId)) {
             save();
             changed.run();
@@ -277,7 +280,7 @@ final class WebUiPreferences implements ConfigChangeListener {
                     changed.run();
                 }
             });
-        } catch (IOException | RuntimeException failure) {
+        } catch (IOException | SecurityException failure) {
             LOGGER.log(Level.WARNING, "Could not save Web UI settings to " + path, failure);
             dispatch(activeGeneration, () -> {
                 problem = source("Could not save Web UI settings");

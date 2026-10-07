@@ -71,7 +71,7 @@ public final class HudRegistry {
 
     public boolean contains(HudElement element) {
         client.check();
-        return element != null && elementsById.get(element.id()) == element;
+        return elementsById.get(element.id()) == element;
     }
 
     public boolean editing() {

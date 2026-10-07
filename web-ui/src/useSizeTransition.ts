@@ -81,7 +81,6 @@ export function useSizeTransition(
       if (Number(value) < 1) fading = true
     }
     if (motion.matches || (Math.abs(start - target) < 0.5 && !fading)) {
-      node.style.height = restingHeight
       node.style.overflow = restingOverflow
       holding = false
       return
@@ -108,7 +107,6 @@ export function useSizeTransition(
       holding = false
       animations = []
     }
-    node.style.height = restingHeight
     if (options.fade) {
       for (const child of node.children) {
         const startOpacity = opacity.get(child) ?? '1'

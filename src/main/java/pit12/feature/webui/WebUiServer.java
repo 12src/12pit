@@ -18,6 +18,8 @@
  */
 package pit12.feature.webui;
 
+import static pit12.runtime.languages.Languages.source;
+
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -254,6 +256,8 @@ final class WebUiServer {
                 if (favorite == null || !favorite.isJsonPrimitive()
                         || !favorite.getAsJsonPrimitive().isBoolean())
                     throw new IllegalArgumentException("Expected a boolean");
+                if (!preferences.ready())
+                    throw new IllegalArgumentException(source("Web UI settings are unavailable"));
                 preferences.setFavorite(id, favorite.getAsBoolean());
             } else if ("/api/setting".equals(path)) {
                 changeSetting(request);

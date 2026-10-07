@@ -32,6 +32,7 @@ import pit12.runtime.config.ConfigChangeListener;
 import pit12.runtime.config.HudAnchor;
 import pit12.runtime.config.HudConfig;
 import pit12.runtime.config.HudPlacement;
+import pit12.runtime.config.IntegerSetting;
 import pit12.runtime.hud.HudBounds;
 import pit12.runtime.hud.HudElement;
 import pit12.runtime.hud.HudRegistry;
@@ -390,16 +391,13 @@ final class HudEditorController {
         layouts.clear();
     }
 
-    private void scale(int value) {
-        change(selected, () -> primary.config().scale().set(value));
-    }
-
     void mouseWheel(int mouseX, int mouseY, int delta, boolean fine) {
         if (live || busy() || selected.size() != 1 || !contains(bounds(primary), mouseX, mouseY)) {
             return;
         }
-        scale(clamp(primary.config().scale().get() + Integer.signum(delta) * (fine ? 1 : 5),
-                primary.config().scale().minimum(), primary.config().scale().maximum()));
+        IntegerSetting scale = primary.config().scale();
+        change(selected, () -> scale.set(clamp(scale.get() + Integer.signum(delta) * (fine ? 1 : 5),
+                scale.minimum(), scale.maximum())));
     }
 
     void reset(boolean all) {

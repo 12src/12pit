@@ -59,7 +59,7 @@ final class UiFont {
 
     UiFont(Minecraft minecraft, ResourceLocation fontLocation, float logicalFontSize,
             float pixelScale) {
-        float fontSize = Math.max(1.0F, logicalFontSize * pixelScale);
+        float fontSize = logicalFontSize * pixelScale;
         Font font = loadFont(minecraft, fontLocation, fontSize);
         boldOffset = Math.max(1, Math.round(pixelScale));
         BufferedImage metricsImage = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);

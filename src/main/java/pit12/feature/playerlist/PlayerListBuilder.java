@@ -122,8 +122,10 @@ final class PlayerListBuilder {
             case PlayerListConfig.ENCHANTMENT_FORMAT_NAMES_ONLY:
                 return enchantments.formatBoldDisplayNamesWithoutLevels();
             case PlayerListConfig.ENCHANTMENT_FORMAT_BOLD_LEVELS:
-            default:
                 return enchantments.formatBoldDisplayNames();
+            default:
+                throw new IllegalStateException(
+                        "Unknown enchantment format: " + config.enchantmentFormat());
         }
     }
 
