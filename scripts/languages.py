@@ -22,7 +22,7 @@ def write_changed(path, content):
 
 
 def decode_line(line, path, number):
-    escapes = {"n": "\n", "r": "\r", "t": "\t", "\\": "\\"}
+    escapes = {"n": "\n", "r": "\r", "t": "\t", "\\": "\\", "|": "|"}
     result = []
     index = 0
     while index < len(line):
@@ -44,10 +44,14 @@ def encode_line(text):
 def read_pairs(path):
     lines = path.read_text(encoding="utf-8-sig").splitlines()
     pairs = {}
+    locations = []
     index = 0
     while index < len(lines):
         source_line = lines[index]
         index += 1
+        if source_line.startswith("// "):
+            locations = source_line[3:].split(", ")
+            continue
         if not source_line or source_line.startswith("//"):
             continue
         number = index
@@ -55,15 +59,36 @@ def read_pairs(path):
         if index == len(lines):
             raise ValueError(f"{path}:{number}: missing translation line")
         target_line = lines[index]
-        if target_line != "=" and not target_line.startswith("= "):
-            raise ValueError(f"{path}:{index + 1}: translation line must be '=' or start with '= '")
-        target = decode_line(target_line[2:], path, index + 1)
+        if target_line == "==" or target_line.startswith("== "):
+            parts, start, cursor = [], 3, 3
+            while cursor < len(target_line):
+                if target_line[cursor] == "\\":
+                    cursor += 2
+                    continue
+                if target_line[cursor] == "|":
+                    parts.append(target_line[start:cursor].strip())
+                    start = cursor + 1
+                cursor += 1
+            parts.append(target_line[start:].strip())
+            target = [decode_line(part, path, index + 1) for part in parts]
+            if len(target) < 2 or len(target) != len(locations):
+                raise ValueError(f"{path}:{index + 1}: '==' needs one translation per usage, separated by '|'")
+            if len(set(locations)) != len(locations) or any(
+                    not re.fullmatch(r"(?:src/main/java/.+\.java:[1-9][0-9]*|web-ui/src/.+\.(?:vue|ts):[1-9][0-9]*(?::[1-9][0-9]*)?)", location)
+                    for location in locations):
+                raise ValueError(f"{path}:{number - 1}: '==' needs distinct usage locations")
+        elif target_line == "=" or target_line.startswith("= "):
+            target = decode_line(target_line[2:], path, index + 1)
+        else:
+            raise ValueError(f"{path}:{index + 1}: translation line must start with '= ' or '== '")
         index += 1
         if source in pairs:
             raise ValueError(f"{path}:{number}: duplicate source: {source}")
-        if target and Counter(PARAMETER.findall(source)) != Counter(PARAMETER.findall(target)):
-            raise ValueError(f"{path}:{number + 1}: translation parameters do not match the source")
-        pairs[source] = target
+        for text in target if isinstance(target, list) else [target]:
+            if text and Counter(PARAMETER.findall(source)) != Counter(PARAMETER.findall(text)):
+                raise ValueError(f"{path}:{number + 1}: translation parameters do not match the source")
+        pairs[source] = (locations, target)
+        locations = []
     return pairs
 
 
@@ -123,13 +148,35 @@ def sources():
         if path.suffix not in {".vue", ".ts"} or "generated" in path.parts:
             continue
         content = path.read_text(encoding="utf-8")
-        for match in re.finditer(r"\bt\(\s*(" + WEB_STRING + r"(?:\s*\+\s*" + WEB_STRING + r")*)\s*(?=[,)])", content):
+        for match in re.finditer(r"\bt\s*\(\s*(" + WEB_STRING + r"(?:\s*\+\s*" + WEB_STRING + r")*)\s*(?=[,)])", content):
             source = "".join(ast.literal_eval(part.group())
                              for part in re.finditer(WEB_STRING, match.group(1)))
             if source:
                 line = content.count("\n", 0, match.start()) + 1
-                found.setdefault(source, []).append(f"{path.relative_to(ROOT).as_posix()}:{line}")
+                # Match the compiler's UTF-16 columns.
+                prefix = content[content.rfind("\n", 0, match.start()) + 1:match.start()]
+                column = len(prefix.encode("utf-16-le")) // 2 + 1
+                found.setdefault(source, []).append(f"{path.relative_to(ROOT).as_posix()}:{line}:{column}")
     return found
+
+
+def remap_targets(locations, previous):
+    old_locations, target = previous
+    if not isinstance(target, list):
+        return target
+    old_files, new_files = {}, {}
+    for location, text in zip(old_locations, target):
+        old_files.setdefault(location.split(":", 1)[0], []).append(text)
+    for location in locations:
+        new_files.setdefault(location.split(":", 1)[0], []).append(location)
+    positions, targets = {}, []
+    for location in locations:
+        file = location.split(":", 1)[0]
+        texts = old_files.get(file, [])
+        position = positions.get(file, 0)
+        targets.append(texts[position] if len(texts) == len(new_files[file]) else "")
+        positions[file] = position + 1
+    return targets
 
 
 def sync(found, entry):
@@ -137,9 +184,16 @@ def sync(found, entry):
     previous = read_pairs(path) if path.exists() else {}
     lines = []
     for source, locations in found.items():
-        target = previous.get(source, "")
-        lines.extend(["// " + ", ".join(locations), encode_line(source),
-                      "= " + encode_line(target) if target else "=", ""])
+        target = remap_targets(locations, previous.get(source, ([], "")))
+        if isinstance(target, list) and len(target) == 1:
+            target = target[0]
+        if isinstance(target, list):
+            if len(set(locations)) != len(locations):
+                raise ValueError(f"{path}: {source!r}: '==' needs distinct usage locations; put Java calls on separate lines")
+            translation = "== " + " | ".join(encode_line(text).replace("|", "\\|") for text in target)
+        else:
+            translation = "= " + encode_line(target) if target else "="
+        lines.extend(["// " + ", ".join(locations), encode_line(source), translation, ""])
     write_changed(path, "\n".join(lines) + "\n")
     return len(found.keys() - previous.keys()), len(previous.keys() - found.keys())
 
@@ -161,9 +215,17 @@ def status(found, entries):
             notes.append(f"{locale}: {error}")
             failed = True
             continue
-        translated = sum(bool(pairs.get(source)) for source in found)
-        progress = translated / total if total else 1
-        rows.append((locale, f"{translated}/{total}", f"{progress:.1%}", name))
+        translated, slots = 0, 0
+        for source, locations in found.items():
+            previous = pairs.get(source, ([], ""))
+            target = remap_targets(locations, previous)
+            targets = target if isinstance(target, list) else [target]
+            translated += sum(bool(text) for text in targets)
+            slots += len(targets)
+            if isinstance(target, list) and previous[0] != locations:
+                notes.append(f"{locale}: usage locations changed for {source!r}; run sync and review its translations")
+        progress = translated / slots if slots else 1
+        rows.append((locale, f"{translated}/{slots}", f"{progress:.1%}", name))
         missing = len(found.keys() - pairs.keys())
         stale = len(pairs.keys() - found.keys())
         if not path.exists():
@@ -172,7 +234,7 @@ def status(found, entries):
             notes.append(f"{locale}: {missing} missing, {stale} obsolete")
 
     width = max(len("Language"), *(len(row[0]) for row in rows))
-    count_width = max(len("Translated"), len(f"{total}/{total}"))
+    count_width = max(len("Translated"), *(len(row[1]) for row in rows))
     print(f"{total} source texts\n")
     print(f"{'Language':<{width}}  {'Translated':>{count_width}}  {'Progress':>8}  Name")
     for locale, count, progress, name in rows:

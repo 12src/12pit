@@ -27,8 +27,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -39,12 +39,14 @@ import pit12.shared.concurrent.ClientThread;
 
 public final class Languages {
     private static final Pattern PARAMETER = Pattern.compile("\\{([0-9]+)\\}");
+    private static final Map<String, String> MARKED_TEXTS = new HashMap<>();
+    private static final Map<String, String> SOURCE_LOCATIONS = new IdentityHashMap<>();
     private final ClientThread client;
     private final Map<Integer, Entry> entries = new LinkedHashMap<>();
-    private final Map<String, Map<String, String>> catalogs = new HashMap<>();
+    private final Map<String, Catalog> catalogs = new HashMap<>();
     private final List<Runnable> listeners = new ArrayList<>();
     private String locale = "en-us";
-    private Map<String, String> translations;
+    private Catalog translations;
 
     public Languages(ClientThread client) {
         this.client = client;
@@ -91,9 +93,34 @@ public final class Languages {
         return locale;
     }
 
-    // The language script collects these calls. The English text lets cached displays switch languages.
+    // Equal literals share a JVM object, so each marked usage needs its own string.
     public static String source(String text) {
-        return text;
+        String location = location();
+        String key = location + '\0' + text;
+        synchronized (SOURCE_LOCATIONS) {
+            String marked = MARKED_TEXTS.get(key);
+            if (marked == null) {
+                marked = new String(text);
+                MARKED_TEXTS.put(key, marked);
+                SOURCE_LOCATIONS.put(marked, location);
+            }
+            return marked;
+        }
+    }
+
+    /** Returns plain text or a text/location object for frontend translation. */
+    public static Object sourceText(String text) {
+        String location;
+        synchronized (SOURCE_LOCATIONS) {
+            location = SOURCE_LOCATIONS.get(text);
+        }
+        if (location == null) {
+            return text;
+        }
+        Map<String, String> source = new HashMap<>();
+        source.put("text", text);
+        source.put("location", location);
+        return source;
     }
 
     public void select(int value) {
@@ -102,7 +129,7 @@ public final class Languages {
         if (locale.equals(entry.locale)) {
             return;
         }
-        Map<String, String> values = load(entry);
+        Catalog values = load(entry);
         translations = value == 0 ? null : values;
         locale = entry.locale;
         for (Runnable listener : listeners.toArray(new Runnable[listeners.size()])) {
@@ -114,7 +141,19 @@ public final class Languages {
         if (translations == null) {
             return source;
         }
-        String translated = translations.get(source);
+        String translated = translations.shared.get(source);
+        if (translated != null) {
+            return translated;
+        }
+        Map<String, String> variants = translations.contextual.get(source);
+        if (variants == null) {
+            return source;
+        }
+        String location;
+        synchronized (SOURCE_LOCATIONS) {
+            location = SOURCE_LOCATIONS.get(source);
+        }
+        translated = variants.get(location == null ? location() : location);
         return translated == null ? source : translated;
     }
 
@@ -135,10 +174,15 @@ public final class Languages {
         return result.append(translated, start, translated.length()).toString();
     }
 
-    public Map<String, String> texts(String requested) {
+    public Map<String, Object> texts(String requested) {
         for (Entry entry : entries.values()) {
             if (entry.locale.equals(requested)) {
-                return new HashMap<>(load(entry));
+                Catalog catalog = load(entry);
+                Map<String, Object> texts = new HashMap<>(catalog.shared);
+                for (Map.Entry<String, Map<String, String>> text : catalog.contextual.entrySet()) {
+                    texts.put(text.getKey(), new HashMap<>(text.getValue()));
+                }
+                return texts;
             }
         }
         throw new IllegalArgumentException("Unknown language: " + requested);
@@ -156,23 +200,28 @@ public final class Languages {
         listeners.remove(listener);
     }
 
-    private Map<String, String> load(Entry entry) {
+    private Catalog load(Entry entry) {
         if (entry.locale.equals("en-us")) {
-            return Collections.emptyMap();
+            return new Catalog();
         }
-        Map<String, String> values = catalogs.get(entry.locale);
+        Catalog values = catalogs.get(entry.locale);
         if (values != null) {
             return values;
         }
-        values = new HashMap<>();
+        values = new Catalog();
         String file = entry.file + ".txt";
         try (BufferedReader reader = resource(file)) {
             String source;
+            String[] locations = new String[0];
             int number = 0;
             while ((source = reader.readLine()) != null) {
                 number++;
                 if (number == 1 && source.startsWith("\uFEFF")) {
                     source = source.substring(1);
+                }
+                if (source.startsWith("// ")) {
+                    locations = source.substring(3).split(", ", -1);
+                    continue;
                 }
                 if (source.isEmpty() || source.startsWith("//")) {
                     continue;
@@ -183,23 +232,71 @@ public final class Languages {
                             file + ":" + number + ": missing translation line");
                 }
                 number++;
-                if (!target.equals("=") && !target.startsWith("= ")) {
-                    throw new IllegalArgumentException(file + ":" + number
-                            + ": translation line must be '=' or start with '= '");
-                }
                 source = decode(source);
-                target = target.equals("=") ? "" : decode(target.substring(2));
-                if (values.containsKey(source)) {
+                if (values.shared.containsKey(source) || values.contextual.containsKey(source)) {
                     throw new IllegalArgumentException(
                             file + ":" + (number - 1) + ": duplicate source");
                 }
-                values.put(source, target.isEmpty() ? source : target);
+                if (target.equals("==") || target.startsWith("== ")) {
+                    List<String> targets = split(target.length() > 2 ? target.substring(3) : "");
+                    if (targets.size() < 2 || targets.size() != locations.length) {
+                        throw new IllegalArgumentException(file + ":" + number
+                                + ": '==' needs one translation per usage, separated by '|'");
+                    }
+                    Map<String, String> variants = new LinkedHashMap<>();
+                    for (int index = 0; index < locations.length; index++) {
+                        String location = locations[index];
+                        if (!location.matches("(?:src/main/java/.+\\.java:[1-9][0-9]*"
+                                + "|web-ui/src/.+\\.(?:vue|ts):[1-9][0-9]*(?::[1-9][0-9]*)?)")
+                                || variants.containsKey(location)) {
+                            throw new IllegalArgumentException(file + ":" + (number - 2)
+                                    + ": '==' needs distinct usage locations");
+                        }
+                        String text = targets.get(index);
+                        variants.put(location, text.isEmpty() ? source : text);
+                    }
+                    values.contextual.put(source, variants);
+                } else if (target.equals("=") || target.startsWith("= ")) {
+                    target = target.equals("=") ? "" : decode(target.substring(2));
+                    values.shared.put(source, target.isEmpty() ? source : target);
+                } else {
+                    throw new IllegalArgumentException(file + ":" + number
+                            + ": translation line must start with '= ' or '== '");
+                }
+                locations = new String[0];
             }
         } catch (IOException | RuntimeException failure) {
             throw new IllegalStateException("Could not read language file " + file, failure);
         }
         catalogs.put(entry.locale, values);
         return values;
+    }
+
+    private static String location() {
+        StackTraceElement[] trace = new Throwable().getStackTrace();
+        int index = 1;
+        while (trace[index].getClassName().equals(Languages.class.getName())) {
+            index++;
+        }
+        StackTraceElement caller = trace[index];
+        String name = caller.getClassName();
+        return "src/main/java/" + name.substring(0, name.lastIndexOf('.') + 1).replace('.', '/')
+                + caller.getFileName() + ":" + caller.getLineNumber();
+    }
+
+    private static List<String> split(String text) {
+        List<String> targets = new ArrayList<>();
+        int start = 0;
+        for (int index = 0; index < text.length(); index++) {
+            if (text.charAt(index) == '\\') {
+                index++;
+            } else if (text.charAt(index) == '|') {
+                targets.add(decode(text.substring(start, index).trim()));
+                start = index + 1;
+            }
+        }
+        targets.add(decode(text.substring(start).trim()));
+        return targets;
     }
 
     private static BufferedReader resource(String file) {
@@ -231,6 +328,9 @@ public final class Languages {
                     case '\\':
                         character = '\\';
                         break;
+                    case '|':
+                        character = '|';
+                        break;
                     default:
                         throw new IllegalArgumentException("Unknown language escape");
                 }
@@ -240,6 +340,10 @@ public final class Languages {
         return result.toString();
     }
 
+    private static final class Catalog {
+        private final Map<String, String> shared = new HashMap<>();
+        private final Map<String, Map<String, String>> contextual = new HashMap<>();
+    }
     private static final class Entry {
         private final String file;
         private final String locale;

@@ -154,7 +154,7 @@ Call it on the client thread. Outside a command, check that the local player exi
 
 Bootstrap uses one [Languages](../src/main/java/pit12/runtime/languages/Languages.java) instance and passes it to its consumers. `WebUiConfig` stores the selected language along with other settings. Language names and stable setting values are defined in `src/main/resources/assets/pit12/languages/languages.json`. Each translation catalog is loaded from its respective TXT resource on first use and cached.
 
-Import the static `source(...)` method as shown in the config example for names, descriptions, choice labels, enum labels, and command descriptions. It will return the English text unmodified and mark it for the script. Config classes store the original text and its translated version separately. Bootstrap updates those values via `ConfigCatalog.localize(language)` whenever language is changed. Command registry translates command descriptions when displaying help. Do not modify saved IDs, command names, and aliases.
+Import the static `source(...)` method as shown in the config example for names, descriptions, choice labels, enum labels, and command descriptions. It returns the English text and retains its usage location for split translations. Config classes store the original text and its translated version separately. Bootstrap updates those values via `ConfigCatalog.localize(language)` whenever language is changed. Command registry translates command descriptions when displaying help. Do not modify saved IDs, command names, and aliases.
 
 Inject `Languages` via the constructor for messages to be generated at runtime. Use `translate(...)` for messages that do not depend on parameters and `format(...)` for messages that do:
 
@@ -169,6 +169,10 @@ Pass an English literal as the first argument to `format(...)` and `translate(..
 To update cached HUD text, hold a language listener, register it in `start()` and unregister in `stop()`. `addListener(...)` will immediately call the listener and again after every language change. Update both the cached text and its measured layout at the same time. Prepare dynamic texts while updating the display snapshot. Render callback receives prepared text. Language switch and listener registration/removal occur on the client thread.
 
 Frontend components import `t` from `./languages` and call `t('Settings')` or `t('Remove {0} players', count)`. Application will follow the server state language, load catalogs once, and update display text when language changes.
+
+Split translations need Java source filenames and line numbers in compiler debug information. Put separate uses of the same Java source on separate lines. For a split label translated repeatedly in an update loop, mark it once with `source(...)` and retain the returned string to avoid repeated caller lookups.
+
+Use `Languages.sourceText(...)` when sending marked text through an API field that the frontend passes to `t(...)`. It retains the usage location across JSON.
 
 After adding or changing marked source text, run `python scripts/languages.py sync` from the repository root. The script finds Java `source(...)`, `translate(...)`, numbered `format(...)` calls, and frontend `t(...)` calls. It reads literals and literal concatenations, not variables. Sync preserves translations and leaves new entries untranslated. `python scripts/languages.py status` shows progress and file errors. See [Contributing translations](TRANSLATING.md) for editing and adding a language.
 

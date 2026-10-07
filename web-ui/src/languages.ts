@@ -18,8 +18,11 @@
  */
 import { shallowRef } from 'vue'
 
-const texts = shallowRef<Record<string, string> | null>(null)
-const catalogs = new Map<string, Promise<Record<string, string>>>()
+export type Catalog = Record<string, string | Record<string, string>>
+export type SourceText = string | { text: string; location: string }
+
+const texts = shallowRef<Catalog | null>(null)
+const catalogs = new Map<string, Promise<Catalog>>()
 export async function loadLanguage(language: string) {
   if (language === 'en-us') return null
   let catalog = catalogs.get(language)
@@ -29,7 +32,7 @@ export async function loadLanguage(language: string) {
     })
       .then(async (response) => {
         if (!response.ok) throw new Error(t('Could not load language'))
-        return (await response.json()) as Record<string, string>
+        return (await response.json()) as Catalog
       })
       .catch((cause) => {
         catalogs.delete(language)
@@ -40,14 +43,25 @@ export async function loadLanguage(language: string) {
   return catalog
 }
 
-export function applyLanguage(catalog: Record<string, string> | null) {
+export function applyLanguage(catalog: Catalog | null) {
   texts.value = catalog
 }
 
-export function t(source: string, ...parameters: unknown[]) {
+export function t(source: SourceText, ...parameters: unknown[]) {
+  const original = typeof source === 'string' ? source : source.text
   const values = texts.value
-  if (values === null && parameters.length === 0) return source
-  const translated = values?.[source] ?? source
+  if (values === null && parameters.length === 0) return original
+  const target = values?.[original]
+  const translated =
+    typeof target === 'string'
+      ? target
+      : typeof source === 'string'
+        ? original
+        : (target?.[source.location] ??
+          target?.[
+            source.location.slice(0, source.location.lastIndexOf(':'))
+          ] ??
+          original)
   return parameters.length
     ? translated.replace(/\{([0-9]+)\}/g, (_, index: string) =>
         String(parameters[Number(index)]),

@@ -44,7 +44,7 @@ Sync keeps translations for existing source text, marks new translation lines wi
 
 ### Write translations
 
-Open `src/main/resources/assets/pit12/languages/nl-NL.txt`. Every entry has two lines: the English source, then `=` followed by a space and the translation:
+Open `src/main/resources/assets/pit12/languages/nl-NL.txt`. Each entry has an English source and a translation line. Use `=` followed by a space to share one translation across all uses:
 
 ```text
 Player List
@@ -57,7 +57,19 @@ Settings
 =
 ```
 
-Leave only `=` on the second line to use the English text. To find untranslated entries, search with the regular expression `^= ?$`. Do not remove the prefix or modify the English source. Lines starting with // indicate the usage of the text. The numbered parameters like {0} should be left intact, along with their number of occurrences; their order may change. Preserve the Minecraft color codes like §a.
+When the same English text needs different translations, use `==` and separate them with `|` on one line:
+
+```text
+// src/main/java/pit12/feature/eventlist/EventListSnapshot.java:106, web-ui/src/ProfilesPage.vue:290:21
+Active
+== Actief | Huidig
+```
+
+The translations follow the order of the usage locations in the comment. Include one part for each location. An empty part uses English, so `== Actief |` leaves the second use untranslated. Spaces around each part are removed. Write `\|` for a literal pipe in a split translation. A pipe after `=` is part of the shared translation.
+
+Leave only `=` to use English for every location. Search with `^= ?$` for empty shared translations. Do not change the English source or the usage comments. Web UI locations include a column to distinguish calls on the same line. Each translation must keep the numbered parameters like {0} and their number of occurrences; their order may change. Preserve Minecraft color codes like §a.
+
+Sync keeps split translations in their order within each file. If a file gains or loses a use of that source, its parts are left empty for review. Review split translations after moving or reordering calls. The status report counts each split part separately.
 
 Use \n for a line break, \t for a tab character, and \\ for an escape backslash. Save the file in UTF-8.
 
@@ -69,7 +81,7 @@ Check the status of the language and the file issues:
 python scripts/languages.py status --language nl-NL
 ```
 
-The report shows translation progress and flags missing or obsolete entries, duplicate sources, invalid escapes, and parameter errors.
+The report shows translation progress and flags missing or obsolete entries, duplicate sources, invalid escapes, parameter errors, and invalid or changed usage locations for split translations.
 
 Review the wording in context. To check it in the mod, build with the changed resources and select the language on the Settings page.
 

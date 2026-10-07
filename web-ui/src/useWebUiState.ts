@@ -28,7 +28,7 @@ import {
   type RelationType,
   type State,
 } from './api'
-import { applyLanguage, loadLanguage, t } from './languages'
+import { applyLanguage, loadLanguage, t, type Catalog } from './languages'
 
 type SettingEdit = {
   featureId: string
@@ -111,7 +111,7 @@ export function useWebUiState() {
   }
 
   async function displayState(next: State, version: number, clearError = true) {
-    let catalog: Record<string, string> | null = null
+    let catalog: Catalog | null = null
     let languageError: unknown
     try {
       catalog = await loadLanguage(next.language)

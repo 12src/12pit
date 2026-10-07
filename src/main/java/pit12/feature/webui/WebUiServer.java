@@ -173,11 +173,11 @@ final class WebUiServer {
         } catch (JsonParseException failure) {
             sendJson(exchange, 400, object("error", "Invalid JSON"));
         } catch (IllegalArgumentException failure) {
-            sendJson(exchange, 400, object("error", failure.getMessage()));
+            sendJson(exchange, 400, object("error", Languages.sourceText(failure.getMessage())));
         } catch (ExecutionException failure) {
             Throwable cause = failure.getCause();
             if (cause instanceof IllegalArgumentException) {
-                sendJson(exchange, 400, object("error", cause.getMessage()));
+                sendJson(exchange, 400, object("error", Languages.sourceText(cause.getMessage())));
             } else {
                 sendJson(exchange, 500, object("error", "Settings operation failed"));
             }
@@ -494,7 +494,8 @@ final class WebUiServer {
         return object("version", BUILD_LABEL, "language", language.locale(), "features", features,
                 "webui",
                 object("settings", featureState(config), "favorites", preferences.favorites(),
-                        "ready", preferences.ready(), "problem", preferences.problem()),
+                        "ready", preferences.ready(), "problem",
+                        Languages.sourceText(preferences.problem())),
                 "relations",
                 object("problem", relations.readinessProblem(), "lookupProblems",
                         relations.lookupProblems(), "entries", relationEntries),
