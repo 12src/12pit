@@ -54,7 +54,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import net.minecraft.client.Minecraft;
 import org.lwjgl.input.Keyboard;
-import pit12.bootstrap.BuildConfig;
 import pit12.feature.profile.api.ProfileCreateSession;
 import pit12.feature.profile.api.ProfileMutationResult;
 import pit12.feature.profile.api.ProfileSummary;
@@ -72,6 +71,7 @@ import pit12.runtime.config.FeatureConfig;
 import pit12.runtime.config.NumberSetting;
 import pit12.runtime.config.Setting;
 import pit12.runtime.languages.Languages;
+import pit12.shared.build.BuildConfig;
 import pit12.shared.result.OperationResult;
 
 final class WebUiServer {

@@ -21,7 +21,7 @@ package pit12.shared.chat;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumChatFormatting;
-import pit12.bootstrap.BuildConfig;
+import pit12.shared.build.BuildConfig;
 
 public final class ChatFeedback {
     private static final String BUILD_LABEL = BuildConfig.RELEASE_BUILD ? BuildConfig.VERSION

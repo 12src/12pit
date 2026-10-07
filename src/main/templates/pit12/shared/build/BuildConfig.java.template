@@ -16,14 +16,32 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.bootstrap;
+package pit12.shared.build;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
+import java.util.Properties;
 
 public final class BuildConfig {
     public static final String MOD_ID = "${modId}";
     public static final String MOD_NAME = "${modName}";
     public static final String VERSION = "${modVersion}";
-    public static final String GIT_COMMIT = "${gitCommit}";
+    public static final String GIT_COMMIT = readGitCommit();
     public static final boolean RELEASE_BUILD = ${releaseBuild};
 
     private BuildConfig() {}
+
+    private static String readGitCommit() {
+        try (InputStream stream = BuildConfig.class.getResourceAsStream("/assets/pit12/build.properties")) {
+            if (stream == null) {
+                throw new IllegalStateException("Build information is missing");
+            }
+            Properties properties = new Properties();
+            properties.load(stream);
+            return properties.getProperty("gitCommit", "");
+        } catch (IOException e) {
+            throw new UncheckedIOException("Failed to read build information", e);
+        }
+    }
 }
