@@ -22,6 +22,7 @@ import static pit12.runtime.languages.Languages.source;
 
 import java.util.Map;
 import org.lwjgl.input.Keyboard;
+import pit12.runtime.config.BooleanSetting;
 import pit12.runtime.config.ChoiceSetting;
 import pit12.runtime.config.ChoiceSetting.Choice;
 import pit12.runtime.config.ConfigCategory;
@@ -33,6 +34,7 @@ public final class WebUiConfig extends FeatureConfig {
     private final IntegerSetting keybind;
     private final ChoiceSetting keybindAction;
     private final ChoiceSetting language;
+    private final BooleanSetting discordRpc;
 
     public WebUiConfig(Languages languages) {
         super("webui", source("Settings"),
@@ -49,6 +51,8 @@ public final class WebUiConfig extends FeatureConfig {
                 0x7BADE2);
         booleanSetting("show_details", source("Show details"),
                 source("Shows descriptions for features and settings."), false);
+        discordRpc = booleanSetting("discord_rpc", source("Discord RPC"),
+                source("Shows 12pit and elapsed time on your Discord profile."), true);
         keybind = keybindSetting("keybind", source("Interface key"),
                 source("Opens the selected interface."), Keyboard.KEY_RSHIFT);
         keybindAction = choiceSetting("keybind_action", source("Key action"),
@@ -66,5 +70,9 @@ public final class WebUiConfig extends FeatureConfig {
 
     public ChoiceSetting language() {
         return language;
+    }
+
+    public BooleanSetting discordRpc() {
+        return discordRpc;
     }
 }

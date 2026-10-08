@@ -27,6 +27,7 @@ import java.util.logging.Logger;
 import net.minecraft.client.Minecraft;
 import pit12.feature.autofish.AutoFishConfig;
 import pit12.feature.autofish.AutoFishFeature;
+import pit12.feature.discordrpc.DiscordRpcFeature;
 import pit12.feature.eventlist.EventListConfig;
 import pit12.feature.eventlist.EventListFeature;
 import pit12.feature.gamma.GammaBinding;
@@ -59,6 +60,7 @@ import pit12.feature.webui.WebUiFeature;
 import pit12.platform.command.ForgeCommandAdapter;
 import pit12.platform.oneconfig.OneConfigSupport;
 import pit12.runtime.command.CommandRegistry;
+import pit12.runtime.config.BooleanSetting;
 import pit12.runtime.config.ConfigCatalog;
 import pit12.runtime.hud.HudRegistry;
 import pit12.runtime.languages.Languages;
@@ -119,7 +121,13 @@ public final class ClientBootstrap {
         SwapBindings swapBindings = registerSwap(minecraft, client, configs, session, pitContext,
                 commands, new File(minecraft.mcDataDir, "12pit/swap-bindings.json").toPath(),
                 (SwapHooksBinding) minecraft);
+        // Category: Interface
+        BooleanSetting discordRpc =
+                registerWebUi(webUiConfigs, configs, profiles, relations, hudEditor, swapBindings,
+                        new File(minecraft.mcDataDir, "12pit/webui.json").toPath());
         // Features
+        // Category: No config
+        registerDiscordRpc(webUiConfigs, discordRpc);
         // Category: Player
         registerAutoSprint(configs);
         // Category: Utility
@@ -133,9 +141,6 @@ public final class ClientBootstrap {
         registerPlayerList(configs, playerNames, playerEquipment, pitContext, hudRegistry,
                 relations, presence);
         registerTooltip(configs);
-        // Category: Interface
-        registerWebUi(webUiConfigs, configs, profiles, relations, hudEditor, swapBindings,
-                new File(minecraft.mcDataDir, "12pit/webui.json").toPath());
         // Platform integrations
         OneConfigSupport oneConfig = new OneConfigSupport(configs);
         components.add(oneConfig);
@@ -180,7 +185,24 @@ public final class ClientBootstrap {
         return swap.bindings();
     }
 
+    // Category: Interface
+    private BooleanSetting registerWebUi(ConfigCatalog configs, ConfigCatalog featureConfigs,
+            Profiles profiles, Relations relations, HudEditorFeature hudEditor,
+            SwapBindings swapBindings, Path path) {
+        WebUiConfig config = new WebUiConfig(language);
+        configs.register(config);
+        WebUiFeature webUi = new WebUiFeature(featureConfigs, configs, profiles, relations,
+                hudEditor, swapBindings, config, language, path);
+        components.add(webUi);
+        return config.discordRpc();
+    }
+
     // Features
+    // Category: No config
+    private void registerDiscordRpc(ConfigCatalog configs, BooleanSetting enabled) {
+        components.add(new DiscordRpcFeature(configs, enabled));
+    }
+
     // Category: Player
     private void registerAutoSprint(ConfigCatalog configs) {
         AutoSprintConfig config = new AutoSprintConfig();
@@ -242,17 +264,6 @@ public final class ClientBootstrap {
         TooltipConfig config = new TooltipConfig();
         configs.register(config);
         components.add(new TooltipFeature(configs, config));
-    }
-
-    // Category: Interface
-    private void registerWebUi(ConfigCatalog configs, ConfigCatalog featureConfigs,
-            Profiles profiles, Relations relations, HudEditorFeature hudEditor,
-            SwapBindings swapBindings, Path path) {
-        WebUiConfig config = new WebUiConfig(language);
-        configs.register(config);
-        WebUiFeature webUi = new WebUiFeature(featureConfigs, configs, profiles, relations,
-                hudEditor, swapBindings, config, language, path);
-        components.add(webUi);
     }
 
     public void start() {
