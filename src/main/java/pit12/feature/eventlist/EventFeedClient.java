@@ -25,79 +25,180 @@ import com.google.gson.JsonParser;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.InterruptedIOException;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.http.Header;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 
 final class EventFeedClient {
+    static final long REFRESH_THRESHOLD = 10_800_000L;
     private static final Logger LOGGER = Logger.getLogger(EventFeedClient.class.getName());
+    private static final String[] ENDPOINTS =
+            {"https://raw.githubusercontent.com/BrookeAFK/brookeafk-api/main/events.js",
+                    "https://fastly.jsdelivr.net/gh/BrookeAFK/brookeafk-api@main/events.js",
+                    "https://gcore.jsdelivr.net/gh/BrookeAFK/brookeafk-api@main/events.js",
+                    "https://testingcf.jsdelivr.net/gh/BrookeAFK/brookeafk-api@main/events.js",
+                    "https://cdn.jsdelivr.net/gh/BrookeAFK/brookeafk-api@main/events.js"};
+    private long loadedThrough;
+    private long purgedThrough = -1L;
 
     Result fetch() {
-        HttpURLConnection connection = null;
-        long retryAt = 0L;
-        try {
-            connection = (HttpURLConnection) new URL(
-                    "https://api.github.com/repos/BrookeAFK/brookeafk-api/contents/events.js?ref=main")
-                    .openConnection();
-            connection.setConnectTimeout(5000);
-            connection.setReadTimeout(10000);
-            connection.setUseCaches(false);
-            connection.setRequestProperty("Accept", "application/vnd.github.raw+json");
-            connection.setRequestProperty("User-Agent", "12pit");
-            connection.setRequestProperty("X-GitHub-Api-Version", "2022-11-28");
-            int status = connection.getResponseCode();
-            long now = System.currentTimeMillis();
-            retryAt = retryAfter(connection.getHeaderField("Retry-After"), now);
-            if ("0".equals(connection.getHeaderField("X-RateLimit-Remaining"))) {
-                String reset = connection.getHeaderField("X-RateLimit-Reset");
-                if (reset != null) {
-                    try {
-                        long seconds = Long.parseLong(reset);
-                        if (seconds > 0L && seconds <= (Long.MAX_VALUE - 1000L) / 1000L) {
-                            retryAt = Math.max(retryAt, seconds * 1000L + 1000L);
-                        }
-                    } catch (NumberFormatException failure) {
-                        LOGGER.fine("Ignoring an invalid GitHub rate limit reset time");
+        ExecutorService racers = Executors.newFixedThreadPool(ENDPOINTS.length, task -> {
+            Thread thread = new Thread(task, "12pit-event-feed");
+            thread.setDaemon(true);
+            return thread;
+        });
+        try (CloseableHttpClient http = HttpClients.custom()
+                .setDefaultRequestConfig(RequestConfig.custom().setConnectTimeout(5000)
+                        .setConnectionRequestTimeout(5000).setSocketTimeout(10000).build())
+                .setMaxConnTotal(ENDPOINTS.length).setMaxConnPerRoute(ENDPOINTS.length)
+                .useSystemProperties().disableAutomaticRetries().build()) {
+            Result result = race(http, racers);
+            if (result.events != null) {
+                long through = latestTimestamp(result.events);
+                loadedThrough = through;
+                if (through - System.currentTimeMillis() < REFRESH_THRESHOLD
+                        && through > purgedThrough) {
+                    purgedThrough = through;
+                    purge(http, racers);
+                    Result refreshed = race(http, racers);
+                    if (refreshed.events != null) {
+                        loadedThrough = latestTimestamp(refreshed.events);
+                        return refreshed;
                     }
                 }
             }
-            if (status != HttpURLConnection.HTTP_OK) {
-                LOGGER.warning("Event schedule request returned HTTP " + status);
+            return result;
+        } catch (InterruptedException failure) {
+            Thread.currentThread().interrupt();
+            return new Result(null, 0L);
+        } catch (IOException | ExecutionException failure) {
+            LOGGER.log(Level.WARNING, "Could not load the event schedule", failure);
+            return new Result(null, 0L);
+        } finally {
+            racers.shutdownNow();
+        }
+    }
+
+    private Result race(CloseableHttpClient http, ExecutorService racers)
+            throws InterruptedException, ExecutionException {
+        ExecutorCompletionService<Result> completed = new ExecutorCompletionService<>(racers);
+        List<HttpGet> requests = new ArrayList<>();
+        List<Future<Result>> futures = new ArrayList<>();
+        long retryAt = Long.MAX_VALUE;
+        try {
+            for (String endpoint : ENDPOINTS) {
+                HttpGet request = new HttpGet(endpoint);
+                requests.add(request);
+                futures.add(completed.submit(() -> fetch(http, request)));
+            }
+            for (int i = 0; i < ENDPOINTS.length; i++) {
+                Result result = completed.take().get();
+                retryAt = Math.min(retryAt, result.retryAt);
+                if (result.events != null) {
+                    // A stale mirror must not shorten a schedule we already loaded.
+                    if (latestTimestamp(result.events) >= loadedThrough) {
+                        return result;
+                    }
+                }
+            }
+            LOGGER.warning("Could not load the event schedule from any endpoint");
+            return new Result(null, retryAt);
+        } finally {
+            for (Future<Result> future : futures) {
+                future.cancel(true);
+            }
+            for (HttpGet request : requests) {
+                request.abort();
+            }
+        }
+    }
+
+    private void purge(CloseableHttpClient http, ExecutorService racers)
+            throws InterruptedException, ExecutionException {
+        HttpGet request =
+                new HttpGet("https://purge.jsdelivr.net/gh/BrookeAFK/brookeafk-api@main/events.js");
+        Future<?> task = racers.submit(() -> {
+            try (CloseableHttpResponse response = http.execute(request)) {
+                int status = response.getStatusLine().getStatusCode();
+                if (status < 200 || status >= 300) {
+                    LOGGER.fine("Event schedule cache purge returned HTTP " + status);
+                }
+            } catch (IOException failure) {
+                if (!request.isAborted()) {
+                    LOGGER.log(Level.FINE, "Could not purge the event schedule cache", failure);
+                }
+            }
+        });
+        try {
+            task.get();
+        } finally {
+            task.cancel(true);
+            request.abort();
+        }
+    }
+
+    private long latestTimestamp(List<PitEvent> events) {
+        long latest = 0L;
+        for (PitEvent event : events) {
+            latest = Math.max(latest, event.timestamp);
+        }
+        return latest;
+    }
+
+    private Result fetch(CloseableHttpClient http, HttpGet request) {
+        long retryAt = 0L;
+        try (CloseableHttpResponse response = http.execute(request)) {
+            Header retryAfter = response.getFirstHeader("Retry-After");
+            retryAt = retryAfter(retryAfter == null ? null : retryAfter.getValue(),
+                    System.currentTimeMillis());
+            int status = response.getStatusLine().getStatusCode();
+            if (status != 200) {
+                LOGGER.fine("Event schedule request to " + request.getURI() + " returned HTTP "
+                        + status);
                 return new Result(null, retryAt);
             }
-            StringBuilder response = new StringBuilder();
-            try (InputStreamReader reader =
-                    new InputStreamReader(connection.getInputStream(), StandardCharsets.UTF_8)) {
+            if (response.getEntity() == null) {
+                throw new IOException("Event schedule response has no body");
+            }
+            StringBuilder body = new StringBuilder();
+            try (InputStreamReader reader = new InputStreamReader(response.getEntity().getContent(),
+                    StandardCharsets.UTF_8)) {
                 char[] buffer = new char[4096];
                 int count;
                 while ((count = reader.read(buffer)) != -1) {
                     if (Thread.currentThread().isInterrupted()) {
                         throw new InterruptedIOException("Event schedule request was canceled");
                     }
-                    if (response.length() + count > 262_144) {
+                    if (body.length() + count > 262_144) {
                         throw new IOException("Event schedule is too large");
                     }
-                    response.append(buffer, 0, count);
+                    body.append(buffer, 0, count);
                 }
             }
-            return new Result(parse(response.toString()), retryAt);
+            return new Result(parse(body.toString()), retryAt);
         } catch (IOException | JsonParseException | NumberFormatException
                 | ArithmeticException failure) {
-            if (!Thread.currentThread().isInterrupted()) {
-                LOGGER.log(Level.WARNING, "Could not load the event schedule", failure);
+            if (!request.isAborted() && !Thread.currentThread().isInterrupted()) {
+                LOGGER.log(Level.FINE, "Could not load the event schedule from " + request.getURI(),
+                        failure);
             }
             return new Result(null, retryAt);
-        } finally {
-            if (connection != null) {
-                connection.disconnect();
-            }
         }
     }
 

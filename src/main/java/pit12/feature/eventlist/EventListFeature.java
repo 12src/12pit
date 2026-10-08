@@ -189,7 +189,7 @@ public final class EventListFeature implements ClientLifecycle, ConfigChangeList
 
     private void fetch() {
         if (worker != null && worker.isShutdown()) {
-            // Interrupting an HTTP read may still leave it running until its timeout.
+            // Wait for canceled requests to release their connections before restarting.
             if (!worker.isTerminated()) {
                 return;
             }
@@ -240,7 +240,8 @@ public final class EventListFeature implements ClientLifecycle, ConfigChangeList
             loaded = true;
             retryDelay = 60_000L;
             long coverage = events.isEmpty() ? 0L : events.get(events.size() - 1).timestamp - now;
-            nextRequestAt = Math.max(now + (coverage >= 10_800_000L ? 1_800_000L : 300_000L),
+            nextRequestAt = Math.max(
+                    now + (coverage >= EventFeedClient.REFRESH_THRESHOLD ? 1_800_000L : 300_000L),
                     rateLimitedUntil);
         }
         rebuild(now);
