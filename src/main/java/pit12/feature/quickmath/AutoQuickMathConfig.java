@@ -30,7 +30,8 @@ public final class AutoQuickMathConfig extends FeatureConfig {
     public AutoQuickMathConfig() {
         super("auto_quick_math", source("Auto Quick Math"),
                 new ConfigCategory("utility", source("Utility"), 75),
-                source("Solves the QUICK MATHS! expression and answers in chat automatically."));
+                source("Solves the QUICK MATHS! expression and answers in chat automatically."),
+                true, false);
         delay = doubleSliderSetting("delay", source("Answer delay"),
                 source("Waits this many seconds before sending the answer."), 1.0, 0.0, 5.0, 0.1);
     }
