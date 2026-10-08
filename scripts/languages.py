@@ -1,5 +1,3 @@
-"""Manage language files and show translation progress."""
-
 import argparse
 import ast
 from collections import Counter
