@@ -24,7 +24,7 @@ The development game directory is `run/`. Look into `run/logs/latest.log` for an
 
 ## Develop the web interface
 
-Start the game, then press Right Shift (the default key) to open the web interface. If the key does not open the browser, use the URL from the log.
+Start the game, then press Right Shift (the default key) to open the HUD editor. Press it again with no HUD selected to open the web interface. Click empty space to clear a selection. If the key does not open the browser, use the URL from the log.
 
 By default, the server listens to `http://127.0.0.1:60916/`. In case the port is already occupied, the server uses some other available port. The current address is shown in the log.
 

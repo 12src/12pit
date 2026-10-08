@@ -19,6 +19,7 @@
 package pit12.feature.hudeditor;
 
 import java.io.IOException;
+import java.util.function.IntSupplier;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.ScaledResolution;
 import org.lwjgl.input.Keyboard;
@@ -31,16 +32,21 @@ final class HudEditorScreen extends GuiScreen {
     private final HudEditorController controller;
     private final GuiScreen parent;
     private final Languages language;
+    private final IntSupplier interfaceKey;
+    private final Runnable webUiOpener;
     private final HudRenderer renderer = new HudRenderer();
     private final UiRenderState renderState = new UiRenderState();
     private String[] tips;
     private boolean initialized;
     private boolean previousRepeatEvents;
 
-    HudEditorScreen(HudEditorController controller, GuiScreen parent, Languages language) {
+    HudEditorScreen(HudEditorController controller, GuiScreen parent, Languages language,
+            IntSupplier interfaceKey, Runnable webUiOpener) {
         this.controller = controller;
         this.parent = parent;
         this.language = language;
+        this.interfaceKey = interfaceKey;
+        this.webUiOpener = webUiOpener;
     }
 
     boolean belongsTo(HudEditorController candidate) {
@@ -78,7 +84,9 @@ final class HudEditorScreen extends GuiScreen {
 
     private void updatePreview() {
         // Normal overlay callbacks own the live display conditions and content.
-        controller.preview(Keyboard.isKeyDown(Keyboard.KEY_SPACE));
+        controller.preview(Keyboard.isKeyDown(Keyboard.KEY_SPACE)
+                && (interfaceKey.getAsInt() != Keyboard.KEY_SPACE || controller.hasSelection()
+                        || controller.busy()));
     }
 
     @Override
@@ -176,8 +184,13 @@ final class HudEditorScreen extends GuiScreen {
             controller.undo();
         } else if (isCtrlKeyDown() && keyCode == Keyboard.KEY_Y) {
             controller.redo();
-        } else if (keyCode == Keyboard.KEY_R && !Keyboard.isRepeatEvent()) {
+        } else if (keyCode == Keyboard.KEY_R && (controller.hasSelection() || isShiftKeyDown())
+                && !Keyboard.isRepeatEvent()) {
             controller.reset(isShiftKeyDown());
+        } else if (!controller.hasSelection() && !controller.busy() && keyCode != Keyboard.KEY_NONE
+                && keyCode == interfaceKey.getAsInt() && !Keyboard.isRepeatEvent()) {
+            mc.displayGuiScreen(parent);
+            webUiOpener.run();
         } else {
             int step = isShiftKeyDown() ? 10 : 1;
             if (keyCode == Keyboard.KEY_LEFT) {

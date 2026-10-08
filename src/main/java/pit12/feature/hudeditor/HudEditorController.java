@@ -150,6 +150,10 @@ final class HudEditorController {
         return gesture == Gesture.MOVE || gesture == Gesture.MARQUEE;
     }
 
+    boolean hasSelection() {
+        return !selected.isEmpty();
+    }
+
     boolean live() {
         return live;
     }
