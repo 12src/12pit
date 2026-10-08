@@ -4,13 +4,13 @@ Auto Fish
 
 // src/main/java/pit12/feature/autofish/AutoFishConfig.java:38, src/main/java/pit12/feature/quickmath/AutoQuickMathConfig.java:32
 Utility
-= 实用
+= 实用工具
 
 // src/main/java/pit12/feature/autofish/AutoFishConfig.java:39
 Reels in when a fish bites and can cast again.
-= 鱼上钩时收竿，也可以自动再次抛竿。
+= 鱼咬钩时自动收竿，也可再次抛竿。
 
-// src/main/java/pit12/feature/autofish/AutoFishConfig.java:40, src/main/java/pit12/feature/swap/SwapConfig.java:63
+// src/main/java/pit12/feature/autofish/AutoFishConfig.java:40, src/main/java/pit12/feature/swap/SwapConfig.java:64
 General
 = 常规
 
@@ -28,7 +28,7 @@ Reel delay min
 
 // src/main/java/pit12/feature/autofish/AutoFishConfig.java:44
 Shortest wait before reeling in, in ticks.
-= 收竿前的最短等待时间，单位为 tick。
+= 收竿前的最短等待时间，单位为游戏刻。
 
 // src/main/java/pit12/feature/autofish/AutoFishConfig.java:45
 Reel delay max
@@ -36,7 +36,7 @@ Reel delay max
 
 // src/main/java/pit12/feature/autofish/AutoFishConfig.java:46
 Longest wait before reeling in, in ticks.
-= 收竿前的最长等待时间，单位为 tick。
+= 收竿前的最长等待时间，单位为游戏刻。
 
 // src/main/java/pit12/feature/autofish/AutoFishConfig.java:47
 Recast delay min
@@ -44,7 +44,7 @@ Recast delay min
 
 // src/main/java/pit12/feature/autofish/AutoFishConfig.java:48
 Shortest wait before casting again, in ticks.
-= 再次抛竿前的最短等待时间，单位为 tick。
+= 再次抛竿前的最短等待时间，单位为游戏刻。
 
 // src/main/java/pit12/feature/autofish/AutoFishConfig.java:49
 Recast delay max
@@ -52,31 +52,31 @@ Recast delay max
 
 // src/main/java/pit12/feature/autofish/AutoFishConfig.java:50
 Longest wait before casting again, in ticks.
-= 再次抛竿前的最长等待时间，单位为 tick。
+= 再次抛竿前的最长等待时间，单位为游戏刻。
 
 // src/main/java/pit12/feature/autofish/AutoFishConfig.java:51
 Hook chances
-= 收竿概率
+= 咬钩处理概率
 
 // src/main/java/pit12/feature/autofish/AutoFishConfig.java:52
 Empty hook chance
-= 空竿概率
+= 空钩概率
 
 // src/main/java/pit12/feature/autofish/AutoFishConfig.java:53
 Percent chance of waiting for the float to recover before reeling in.
-= 浮标恢复后再收竿的概率，单位为百分比。
+= 等浮漂恢复后才收竿的概率，单位为百分比。
 
 // src/main/java/pit12/feature/autofish/AutoFishConfig.java:55
 Miss hook chance
-= 漏钩概率
+= 错过咬钩概率
 
 // src/main/java/pit12/feature/autofish/AutoFishConfig.java:56
 Percent chance of ignoring a bite and waiting for the next one.
-= 忽略本次上钩并等待下一次的概率，单位为百分比。
+= 忽略本次咬钩、等待下次咬钩的概率，单位为百分比。
 
 // src/main/java/pit12/feature/eventlist/EventListCommand.java:47
 Show stored events
-= 显示已保存的事件
+= 查看已保存的事件
 
 // src/main/java/pit12/feature/eventlist/EventListCommand.java:63
 Unknown event: {0}
@@ -84,73 +84,73 @@ Unknown event: {0}
 
 // src/main/java/pit12/feature/eventlist/EventListCommand.java:67
 {0} events ({1}):
-= {0}事件（{1}）：
+= {0}事件（{1} 个）：
 
 // src/main/java/pit12/feature/eventlist/EventListCommand.java:77
   No stored events
-=   没有已保存的事件
+=   暂无已保存的事件
 
-// src/main/java/pit12/feature/eventlist/EventListConfig.java:46, src/main/java/pit12/feature/eventlist/EventListConfig.java:50
+// src/main/java/pit12/feature/eventlist/EventListConfig.java:47
 Event List
 = 事件列表
 
-// src/main/java/pit12/feature/eventlist/EventListConfig.java:47, src/main/java/pit12/feature/gamma/GammaConfig.java:31, src/main/java/pit12/feature/itemesp/ItemEspConfig.java:35, src/main/java/pit12/feature/playeresp/PlayerEspConfig.java:43, src/main/java/pit12/feature/playerlist/PlayerListConfig.java:51, src/main/java/pit12/feature/tooltip/TooltipConfig.java:34
+// src/main/java/pit12/feature/eventlist/EventListConfig.java:48, src/main/java/pit12/feature/gamma/GammaConfig.java:31, src/main/java/pit12/feature/itemesp/ItemEspConfig.java:35, src/main/java/pit12/feature/playeresp/PlayerEspConfig.java:43, src/main/java/pit12/feature/playerlist/PlayerListConfig.java:52, src/main/java/pit12/feature/tooltip/TooltipConfig.java:34
 Render
 = 渲染
 
-// src/main/java/pit12/feature/eventlist/EventListConfig.java:48
+// src/main/java/pit12/feature/eventlist/EventListConfig.java:49
 Shows upcoming Pit events and their current stages.
-= 显示即将发生的 Pit 事件及其当前阶段。
+= 显示即将到来的 Pit 事件及其当前阶段。
 
-// src/main/java/pit12/feature/eventlist/EventListConfig.java:49, src/main/java/pit12/feature/playerlist/PlayerListConfig.java:53
+// src/main/java/pit12/feature/eventlist/EventListConfig.java:50, src/main/java/pit12/feature/playerlist/PlayerListConfig.java:54
 Display
 = 显示
 
-// src/main/java/pit12/feature/eventlist/EventListConfig.java:51
+// src/main/java/pit12/feature/eventlist/EventListConfig.java:52
 Event count
 = 事件数量
 
-// src/main/java/pit12/feature/eventlist/EventListConfig.java:52
+// src/main/java/pit12/feature/eventlist/EventListConfig.java:53
 Sets the number of event rows. The day and night row is separate.
-= 设置事件行数，昼夜信息单独显示。
+= 设置事件行数，昼夜行不计入其中。
 
-// src/main/java/pit12/feature/eventlist/EventListConfig.java:54
+// src/main/java/pit12/feature/eventlist/EventListConfig.java:55
 Show day and night
 = 显示昼夜
 
-// src/main/java/pit12/feature/eventlist/EventListConfig.java:55
-Shows the Pit day and night cycle above the events.
-= 在事件上方显示 Pit 的昼夜周期。
-
 // src/main/java/pit12/feature/eventlist/EventListConfig.java:56
+Shows the Pit day and night cycle above the events.
+= 在事件列表上方显示 Pit 的昼夜周期。
+
+// src/main/java/pit12/feature/eventlist/EventListConfig.java:57
 Show status icons
 = 显示状态图标
 
-// src/main/java/pit12/feature/eventlist/EventListConfig.java:57
+// src/main/java/pit12/feature/eventlist/EventListConfig.java:58
 Marks upcoming major and minor events, preparation, and active events.
-= 标记即将发生的重大和小型事件，以及准备和进行中的事件。
+= 标记即将到来的大型与小型事件，以及准备中和进行中的事件。
 
-// src/main/java/pit12/feature/eventlist/EventListConfig.java:59
+// src/main/java/pit12/feature/eventlist/EventListConfig.java:60
 Show event colors
 = 显示事件颜色
 
-// src/main/java/pit12/feature/eventlist/EventListConfig.java:60
-Uses each event's color for its name.
-= 用事件对应的颜色显示名称。
-
 // src/main/java/pit12/feature/eventlist/EventListConfig.java:61
+Uses each event's color for its name.
+= 用各事件的颜色显示其名称。
+
+// src/main/java/pit12/feature/eventlist/EventListConfig.java:62
 Pad time with zeros
 = 时间补零
 
-// src/main/java/pit12/feature/eventlist/EventListConfig.java:62
-Shows two digits for each part of a countdown.
-= 倒计时的每一部分都显示两位数字。
-
 // src/main/java/pit12/feature/eventlist/EventListConfig.java:63
+Shows two digits for each part of a countdown.
+= 将倒计时中各部分不足两位的数字补零。
+
+// src/main/java/pit12/feature/eventlist/EventListConfig.java:64
 Time format
 = 时间格式
 
-// src/main/java/pit12/feature/eventlist/EventListConfig.java:64
+// src/main/java/pit12/feature/eventlist/EventListConfig.java:65
 Sets how event times are shown.
 = 设置事件时间的显示方式。
 
@@ -172,15 +172,15 @@ Filter
 
 // src/main/java/pit12/feature/eventlist/EventListConfig.java:69
 Major events
-= 重大事件
+= 大型事件
 
 // src/main/java/pit12/feature/eventlist/EventListConfig.java:70
 Show major events
-= 显示重大事件
+= 显示大型事件
 
 // src/main/java/pit12/feature/eventlist/EventListConfig.java:71
 Shows major events in the list.
-= 在列表中显示重大事件。
+= 在列表中显示大型事件。
 
 // src/main/java/pit12/feature/eventlist/EventListConfig.java:75, src/main/java/pit12/feature/eventlist/EventListConfig.java:84
 Shows this event in the list.
@@ -204,21 +204,21 @@ Could not load events
 
 // src/main/java/pit12/feature/eventlist/EventListFeature.java:252
 Event schedule has ended
-= 事件日程已结束
+= 事件时间表已结束
 
 // src/main/java/pit12/feature/eventlist/EventListFeature.java:253
 Loading events…
 = 正在加载事件…
 
-// src/main/java/pit12/feature/eventlist/EventListSnapshot.java:74
+// src/main/java/pit12/feature/eventlist/EventListSnapshot.java:73
 Day
 = 白天
 
-// src/main/java/pit12/feature/eventlist/EventListSnapshot.java:75
+// src/main/java/pit12/feature/eventlist/EventListSnapshot.java:74
 Night
 = 夜晚
 
-// src/main/java/pit12/feature/eventlist/EventListSnapshot.java:81
+// src/main/java/pit12/feature/eventlist/EventListSnapshot.java:80
 No events match the filters
 = 没有符合筛选条件的事件
 
@@ -226,9 +226,9 @@ No events match the filters
 Preparing
 = 准备中
 
-// src/main/java/pit12/feature/eventlist/EventListSnapshot.java:105, web-ui/src/App.vue:1081
+// src/main/java/pit12/feature/eventlist/EventListSnapshot.java:105, web-ui/src/ProfilesPage.vue:290:21
 Active
-= 进行中
+== 进行中 | 当前使用
 
 // src/main/java/pit12/feature/eventlist/EventType.java:24
 Blockhead
@@ -244,7 +244,7 @@ Raffle
 
 // src/main/java/pit12/feature/eventlist/EventType.java:27
 Care Package
-= 空投
+= 空投补给
 
 // src/main/java/pit12/feature/eventlist/EventType.java:28
 All bounty
@@ -296,7 +296,7 @@ KOTH
 
 // src/main/java/pit12/feature/eventlist/EventType.java:40
 Giant Cake
-= 巨型蛋糕
+= 蛋糕
 
 // src/main/java/pit12/feature/eventlist/EventType.java:41
 Auction
@@ -304,7 +304,7 @@ Auction
 
 // src/main/java/pit12/feature/gamma/GammaConfig.java:31
 Gamma
-= 伽马
+= 伽马覆写
 
 // src/main/java/pit12/feature/gamma/GammaConfig.java:32
 Adjusts world brightness with a custom gamma value.
@@ -316,11 +316,43 @@ Gamma value
 
 // src/main/java/pit12/feature/gamma/GammaConfig.java:34
 Controls brightness. Minecraft's normal range is 0 to 1.
-= 控制亮度。Minecraft 的正常范围为 0 到 1。
+= 控制亮度。Minecraft 的常规范围为 0 到 1。
 
-// src/main/java/pit12/feature/hudeditor/HudEditorFeature.java:45
+// src/main/java/pit12/feature/hudeditor/HudEditorFeature.java:51
 Open the HUD editor
 = 打开 HUD 编辑器
+
+// src/main/java/pit12/feature/hudeditor/HudEditorScreen.java:61
+Hold Alt to disable snapping.
+= 按住 Alt 暂时关闭吸附。
+
+// src/main/java/pit12/feature/hudeditor/HudEditorScreen.java:62
+Drag to move. Drag empty space to select.
+= 拖动 HUD 可移动，拖动空白区域可框选。
+
+// src/main/java/pit12/feature/hudeditor/HudEditorScreen.java:63
+Ctrl+click to select multiple HUDs.
+= 按住 Ctrl 点击可选择多个 HUD。
+
+// src/main/java/pit12/feature/hudeditor/HudEditorScreen.java:64
+Scroll to resize. Hold Shift for smaller steps.
+= 滚动鼠标滚轮可缩放，按住 Shift 可微调。
+
+// src/main/java/pit12/feature/hudeditor/HudEditorScreen.java:65
+Arrow keys move by 1 px. Shift moves by 10 px.
+= 方向键每次移动 1 像素，按住 Shift 每次移动 10 像素。
+
+// src/main/java/pit12/feature/hudeditor/HudEditorScreen.java:66
+Ctrl+Z to undo. Ctrl+Y to redo.
+= Ctrl+Z 撤销，Ctrl+Y 重做。
+
+// src/main/java/pit12/feature/hudeditor/HudEditorScreen.java:67
+R to restore selection. Shift+R to restore all.
+= R 重置所选 HUD，Shift+R 重置全部 HUD。
+
+// src/main/java/pit12/feature/hudeditor/HudEditorScreen.java:68
+Hold Space to preview live HUDs.
+= 按住空格键预览实时 HUD。
 
 // src/main/java/pit12/feature/itemesp/ItemEspConfig.java:35
 Item ESP
@@ -328,23 +360,23 @@ Item ESP
 
 // src/main/java/pit12/feature/itemesp/ItemEspConfig.java:36
 Shows dropped raffle tickets and gold ingots through blocks.
-= 透视掉落的奖券和金锭。
+= 隔着方块显示掉落的抽奖券和金锭。
 
 // src/main/java/pit12/feature/itemesp/ItemEspConfig.java:38
 Raffle tickets
-= 奖券
+= 抽奖券
 
 // src/main/java/pit12/feature/itemesp/ItemEspConfig.java:39
 Show raffle tickets
-= 透视抽奖券
+= 显示抽奖券
 
 // src/main/java/pit12/feature/itemesp/ItemEspConfig.java:40
 Marks dropped name tags.
-= 透视掉落的命名牌。
+= 标记掉落的命名牌。
 
 // src/main/java/pit12/feature/itemesp/ItemEspConfig.java:42
 Raffle ticket color
-= 奖券颜色
+= 抽奖券颜色
 
 // src/main/java/pit12/feature/itemesp/ItemEspConfig.java:43
 Gold ingots
@@ -352,11 +384,11 @@ Gold ingots
 
 // src/main/java/pit12/feature/itemesp/ItemEspConfig.java:44
 Show gold ingots
-= 透视金锭
+= 显示金锭
 
 // src/main/java/pit12/feature/itemesp/ItemEspConfig.java:45
 Marks dropped gold ingots.
-= 透视掉落的金锭。
+= 标记掉落的金锭。
 
 // src/main/java/pit12/feature/itemesp/ItemEspConfig.java:46
 Gold ingot color
@@ -368,9 +400,9 @@ Player ESP
 
 // src/main/java/pit12/feature/playeresp/PlayerEspConfig.java:44
 Shows colored boxes around loaded players through blocks.
-= 透过方块显示已加载玩家的彩色边框。
+= 在已加载的玩家周围显示彩色方框，方框可透过方块看到。
 
-// src/main/java/pit12/feature/playeresp/PlayerEspConfig.java:45, src/main/java/pit12/feature/relation/RelationCommand.java:81, web-ui/src/RelationsPage.vue:279, web-ui/src/TransferDialog.vue:416
+// src/main/java/pit12/feature/playeresp/PlayerEspConfig.java:45, src/main/java/pit12/feature/relation/RelationCommand.java:81, web-ui/src/RelationsPage.vue:268:32, web-ui/src/TransferDialog.vue:448:40
 Friends
 = 好友
 
@@ -386,7 +418,7 @@ Marks friends.
 Friend color
 = 好友颜色
 
-// src/main/java/pit12/feature/playeresp/PlayerEspConfig.java:49, src/main/java/pit12/feature/relation/RelationCommand.java:82, web-ui/src/RelationsPage.vue:279, web-ui/src/TransferDialog.vue:416
+// src/main/java/pit12/feature/playeresp/PlayerEspConfig.java:49, src/main/java/pit12/feature/relation/RelationCommand.java:82, web-ui/src/RelationsPage.vue:268:47, web-ui/src/TransferDialog.vue:448:55
 Enemies
 = 敌人
 
@@ -420,15 +452,15 @@ Other player color
 
 // src/main/java/pit12/feature/playeresp/PlayerEspConfig.java:58
 Distance fade
-= 距离淡出
+= 距离淡化
 
 // src/main/java/pit12/feature/playeresp/PlayerEspConfig.java:59
 Fade nearby players
-= 淡出附近玩家
+= 淡化附近玩家的方框
 
 // src/main/java/pit12/feature/playeresp/PlayerEspConfig.java:60
 Makes boxes fade out as players get closer.
-= 玩家越近，边框越透明。
+= 玩家越近，方框越透明。
 
 // src/main/java/pit12/feature/playeresp/PlayerEspConfig.java:61
 Hidden distance
@@ -436,131 +468,139 @@ Hidden distance
 
 // src/main/java/pit12/feature/playeresp/PlayerEspConfig.java:62
 Hides boxes at or below the smaller distance.
-= 距离不大于此值时，隐藏边框。
+= 距离不超过两个距离设置中的较小值时，隐藏方框。
 
 // src/main/java/pit12/feature/playeresp/PlayerEspConfig.java:63
 Full color distance
-= 完整颜色距离
+= 完整显示距离
 
 // src/main/java/pit12/feature/playeresp/PlayerEspConfig.java:64
 Uses full color at or above the larger distance.
-= 距离不小于此值时，显示完整颜色。
+= 距离不小于两个距离设置中的较大值时，完整显示方框。
 
-// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:50, src/main/java/pit12/feature/playerlist/PlayerListConfig.java:54
+// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:51
 Player List
 = 玩家列表
 
-// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:52
+// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:53
 Shows loaded player equipment and direction in a compact HUD.
-= 在简洁的 HUD 中显示已加载玩家的装备和方向。
+= 在紧凑的 HUD 中显示已加载玩家的装备和方向。
 
-// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:55
+// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:56
 Enchantments
 = 附魔
 
-// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:56
+// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:57
 Enchantment format
 = 附魔格式
 
-// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:57
+// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:58
 Controls how enchantment names and levels are shown.
 = 设置附魔名称和等级的显示方式。
 
-// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:66
+// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:67
 Show held item enchantments
 = 显示手持物品附魔
 
-// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:67
+// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:68
 Shows the held item's Pit enchantments.
 = 显示手持物品的 Pit 附魔。
 
-// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:68
+// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:69
 Show leggings enchantments
 = 显示护腿附魔
 
-// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:69
+// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:70
 Shows the leggings' Pit enchantments.
 = 显示护腿的 Pit 附魔。
 
-// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:70
+// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:71
 Player information
 = 玩家信息
 
-// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:71
+// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:72
+Short player names
+= 精简玩家名称
+
+// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:73
+Shows only the level and player name, keeping their formatting.
+= 仅显示等级和玩家名称，保留原有文字格式。
+
+// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:74
 Show player distance
 = 显示玩家距离
 
-// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:72
+// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:75
 Shows the distance to each loaded player.
-= 显示各已加载玩家的距离。
+= 显示与每个已加载玩家的距离。
 
-// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:73
+// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:76
 Show player direction
 = 显示玩家方向
 
-// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:74
+// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:77
 Shows the continuous direction to each loaded player.
-= 显示各已加载玩家的实时方向。
-
-// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:75
-Show spawn marker
-= 显示出生区标记
-
-// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:76
-Shows SPAWN instead of distance and direction for players in spawn.
-= 玩家在出生区时，显示 SPAWN，不显示距离和方向。
+= 显示每个已加载玩家的方向，随方位连续变化。
 
 // src/main/java/pit12/feature/playerlist/PlayerListConfig.java:78
+Show spawn marker
+= 显示出生点标记
+
+// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:79
+Shows SPAWN instead of distance and direction for players in spawn.
+= 对出生点内的玩家显示 SPAWN，替代距离和方向。
+
+// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:81
 Groups
 = 分组
 
-// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:79
+// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:82
 Show group names
 = 显示分组名称
 
-// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:80
+// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:83
 Shows the name above each equipment group.
-= 在装备分组上方显示名称。
+= 在各装备分组上方显示分组名称。
 
-// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:81
+// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:84
 Show Friend group
 = 显示好友分组
 
-// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:82
+// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:85
 Shows friends in the player list.
 = 在玩家列表中显示好友。
 
-// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:83
+// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:86
 Show Enemy group
 = 显示敌人分组
 
-// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:84
+// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:87
 Shows enemies in the player list.
 = 在玩家列表中显示敌人。
 
-// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:85
+// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:88
 Show Regularity group
 = 显示 Regularity 分组
 
-// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:86
+// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:89
 Shows the Regularity equipment group.
 = 显示 Regularity 装备分组。
 
-// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:87
-Show Dark group
-= 显示 Dark 分组
-
-// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:88
-Shows the Dark equipment group.
-= 显示 Dark 装备分组。
-
-// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:89
-Show Bounty Hunter group
-= 显示 Bounty Hunter 分组
-
 // src/main/java/pit12/feature/playerlist/PlayerListConfig.java:90
+Show Dark group
+= 显示暗黑分组
+
+// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:91
+Shows the Dark equipment group.
+= 显示暗黑装备分组。
+
+// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:92
+Show Bounty Hunter group
+= 显示赏金猎人分组
+
+// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:93
 Shows the Bounty Hunter equipment group.
-= 显示 Bounty Hunter 装备分组。
+= 显示赏金猎人装备分组。
 
 // src/main/java/pit12/feature/playerlist/PlayerListGroup.java:24
 §a§lFriend
@@ -572,19 +612,19 @@ Shows the Bounty Hunter equipment group.
 
 // src/main/java/pit12/feature/quickmath/AutoQuickMathConfig.java:31
 Auto Quick Math
-= 自动快速计算
+= 自动速算
 
 // src/main/java/pit12/feature/quickmath/AutoQuickMathConfig.java:33
 Solves the QUICK MATHS! expression and answers in chat automatically.
-= 自动求解 QUICK MATHS! 算式并在聊天中回答。
-
-// src/main/java/pit12/feature/quickmath/AutoQuickMathConfig.java:34
-Answer delay
-= 回答延迟
+= 自动计算 QUICK MATHS! 的算式，并在聊天中发送答案。
 
 // src/main/java/pit12/feature/quickmath/AutoQuickMathConfig.java:35
+Answer delay
+= 答题延迟
+
+// src/main/java/pit12/feature/quickmath/AutoQuickMathConfig.java:36
 Waits this many seconds before sending the answer.
-= 发送答案前等待的秒数。
+= 发送答案前的等待时间，单位为秒。
 
 // src/main/java/pit12/feature/relation/RelationBook.java:85
 Enter a valid player name
@@ -596,15 +636,15 @@ Multiple players on this list have that name
 
 // src/main/java/pit12/feature/relation/RelationBook.java:101
 {0} is not on the {1} list
-= {0}不在{1}列表中
+= {0} 不在{1}列表中
 
 // src/main/java/pit12/feature/relation/RelationBook.java:104, src/main/java/pit12/feature/relation/RelationBook.java:165
 {0} removed from the {1} list
-= 已将{0}从{1}列表移除
+= 已将 {0} 从{1}列表中移除
 
 // src/main/java/pit12/feature/relation/RelationBook.java:108
 Multiple saved players have that name
-= 多名已保存的玩家使用该名称
+= 已保存的玩家中有多人使用该名称
 
 // src/main/java/pit12/feature/relation/RelationBook.java:116
 Multiple Tab players have that name
@@ -612,23 +652,23 @@ Multiple Tab players have that name
 
 // src/main/java/pit12/feature/relation/RelationBook.java:125
 That name belongs to a different saved UUID
-= 该名称属于另一个已保存的 UUID
+= 该名称对应另一个已保存的 UUID
 
 // src/main/java/pit12/feature/relation/RelationBook.java:135, src/main/java/pit12/feature/relation/RelationBook.java:144
 {0} added to the {1} list
-= 已将{0}加入{1}列表
+= 已将 {0} 加入{1}列表
 
 // src/main/java/pit12/feature/relation/RelationBook.java:139
 {0} is already on the {1} list
-= {0}已在{1}列表中
+= {0} 已在{1}列表中
 
 // src/main/java/pit12/feature/relation/RelationBook.java:148
 {0} is already on the {1} list (UUID pending)
-= {0}已在{1}列表中（UUID 待确认）
+= {0} 已在{1}列表中（UUID 待查询）
 
 // src/main/java/pit12/feature/relation/RelationBook.java:154
 {0} added to the {1} list (UUID pending)
-= 已将{0}加入{1}列表（UUID 待确认）
+= 已将 {0} 加入{1}列表（UUID 待查询）
 
 // src/main/java/pit12/feature/relation/RelationBook.java:161
 Player is not on the {0} list
@@ -644,19 +684,19 @@ enemy
 
 // src/main/java/pit12/feature/relation/RelationCommand.java:55
 Manage friend relations
-= 管理好友关系
+= 管理好友列表
 
 // src/main/java/pit12/feature/relation/RelationCommand.java:56
 Manage enemy relations
-= 管理敌人关系
+= 管理敌人列表
 
 // src/main/java/pit12/feature/relation/RelationCommand.java:61
 Show friend relations
-= 查看好友关系
+= 查看好友列表
 
 // src/main/java/pit12/feature/relation/RelationCommand.java:62
 Show enemy relations
-= 查看敌人关系
+= 查看敌人列表
 
 // src/main/java/pit12/feature/relation/RelationCommand.java:64
 Add a player
@@ -668,7 +708,7 @@ Remove a player
 
 // src/main/java/pit12/feature/relation/RelationCommand.java:80
 {0} ({1}):
-= {0}（{1}）：
+= {0}（{1} 人）：
 
 // src/main/java/pit12/feature/relation/RelationCommand.java:88
  (UUID {0})
@@ -676,7 +716,7 @@ Remove a player
 
 // src/main/java/pit12/feature/relation/RelationCommand.java:112
 waiting
-= 等待中
+= 等待查询
 
 // src/main/java/pit12/feature/relation/RelationCommand.java:114
 resolving
@@ -692,7 +732,7 @@ not_found
 
 // src/main/java/pit12/feature/relation/RelationCommand.java:120
 failed
-= 失败
+= 查询失败
 
 // src/main/java/pit12/feature/relation/RelationCommand.java:122
 confirmed
@@ -704,25 +744,25 @@ unknown
 
 // src/main/java/pit12/feature/relation/RelationFeature.java:202
 Relations are unavailable
-= 关系列表不可用
+= 玩家关系不可用
 
 // src/main/java/pit12/feature/relation/RelationFeature.java:204
 Relations could not be loaded: {0}
-= 无法加载关系列表：{0}
+= 无法加载玩家关系：{0}
 
 // src/main/java/pit12/feature/relation/RelationFeature.java:206
 Relations are still loading
-= 正在加载关系列表
+= 玩家关系仍在加载中
 
 // src/main/java/pit12/feature/relation/RelationFeature.java:346
 Duplicate relation identity
-= 重复的关系身份
+= 玩家关系中存在重复身份
 
 // src/main/java/pit12/feature/sprint/AutoSprintConfig.java:28
 Auto Sprint
 = 自动疾跑
 
-// src/main/java/pit12/feature/sprint/AutoSprintConfig.java:29, src/main/java/pit12/feature/swap/SwapConfig.java:61
+// src/main/java/pit12/feature/sprint/AutoSprintConfig.java:29, src/main/java/pit12/feature/swap/SwapConfig.java:62
 Player
 = 玩家
 
@@ -730,69 +770,85 @@ Player
 Sprints automatically while moving forward, without holding the sprint key.
 = 向前移动时自动疾跑，无需按住疾跑键。
 
-// src/main/java/pit12/feature/swap/BindingBook.java:51, src/main/java/pit12/feature/swap/BindingBook.java:65
+// src/main/java/pit12/feature/swap/AutoSwapController.java:178
+Swapped automatically because you were affected by venom
+= 因受到毒液影响，已自动换装
+
+// src/main/java/pit12/feature/swap/AutoSwapController.java:228
+Swapped to {0} because of low health
+= 因血量过低，已换上 {0}
+
+// src/main/java/pit12/feature/swap/AutoSwapController.java:278
+Swapped back after {0} was used
+= {0} 触发后，已换回原护腿
+
+// src/main/java/pit12/feature/swap/AutoSwapController.java:280
+Swapped back after health recovered
+= 血量恢复后，已换回原护腿
+
+// src/main/java/pit12/feature/swap/BindingBook.java:54, src/main/java/pit12/feature/swap/BindingBook.java:68
 Swap bindings are loading
-= 正在加载切换绑定
+= 正在加载换装绑定
 
-// src/main/java/pit12/feature/swap/BindingBook.java:91
+// src/main/java/pit12/feature/swap/BindingBook.java:86
 Swap bindings could not be loaded; import a file or use /swap clear
-= 无法加载切换绑定，请导入文件或使用 /swap clear
+= 无法加载换装绑定，请导入文件或使用 /swap clear
 
-// src/main/java/pit12/feature/swap/BindingBook.java:114
+// src/main/java/pit12/feature/swap/BindingBook.java:120
 Swap bindings are unavailable
-= 切换绑定不可用
+= 换装绑定不可用
 
-// src/main/java/pit12/feature/swap/BindingBook.java:189
+// src/main/java/pit12/feature/swap/BindingBook.java:195
 Swap bindings could not be saved
-= 无法保存切换绑定
+= 无法保存换装绑定
 
-// src/main/java/pit12/feature/swap/BindingStore.java:82
+// src/main/java/pit12/feature/swap/BindingStore.java:84
 Swap bindings must be an object
-= 切换绑定必须是一个对象
+= 换装绑定必须为 JSON 对象
 
-// src/main/java/pit12/feature/swap/BindingStore.java:86
+// src/main/java/pit12/feature/swap/BindingStore.java:88
 Unsupported swap binding version
-= 不支持此切换绑定版本
+= 不支持此换装绑定版本
 
-// src/main/java/pit12/feature/swap/BindingStore.java:90
+// src/main/java/pit12/feature/swap/BindingStore.java:92
 Expected swap binding list
-= 需要切换绑定列表
+= 换装绑定应为列表
 
-// src/main/java/pit12/feature/swap/BindingStore.java:96, src/main/java/pit12/feature/swap/SwapBinding.java:40
+// src/main/java/pit12/feature/swap/BindingStore.java:98, src/main/java/pit12/feature/swap/BindingStore.java:127
 Invalid swap binding
-= 无效的切换绑定
+= 无效的换装绑定
 
-// src/main/java/pit12/feature/swap/BindingStore.java:100
+// src/main/java/pit12/feature/swap/BindingStore.java:102
 Unknown swap binding type
-= 未知切换绑定类型
+= 未知的换装绑定类型
 
-// src/main/java/pit12/feature/swap/BindingStore.java:104
+// src/main/java/pit12/feature/swap/BindingStore.java:106
 Expected item identity
-= 需要物品身份
+= 物品标识必须为对象
 
-// src/main/java/pit12/feature/swap/BindingStore.java:112
-Duplicate bound item
-= 物品已重复绑定
-
-// src/main/java/pit12/feature/swap/ItemIdentity.java:54
+// src/main/java/pit12/feature/swap/BindingStore.java:116
 Invalid item identity
-= 无效的物品身份
+= 无效的物品标识
 
-// src/main/java/pit12/feature/swap/SwapBinding.java:52
+// src/main/java/pit12/feature/swap/BindingStore.java:120
+Duplicate bound item
+= 物品重复绑定
+
+// src/main/java/pit12/feature/swap/SwapBinding.java:47
 Hold an item to bind
 = 请手持要绑定的物品
 
-// src/main/java/pit12/feature/swap/SwapBinding.java:56
+// src/main/java/pit12/feature/swap/SwapBinding.java:51
 Hold armor or specify a hotbar slot from 1 to 9
-= 请手持护甲，或指定 1 到 9 的快捷栏槽位
+= 请手持盔甲，或指定 1 到 9 的快捷栏槽位
 
-// src/main/java/pit12/feature/swap/SwapBinding.java:61
+// src/main/java/pit12/feature/swap/SwapBinding.java:56
 Held item could not be identified
 = 无法识别手持物品
 
 // src/main/java/pit12/feature/swap/SwapCommand.java:53
 Manage swap bindings
-= 管理切换绑定
+= 管理换装绑定
 
 // src/main/java/pit12/feature/swap/SwapCommand.java:54
 Bind held armor or a hotbar item
@@ -800,27 +856,27 @@ Bind held armor or a hotbar item
 
 // src/main/java/pit12/feature/swap/SwapCommand.java:56
 Remove key or held item bindings
-= 移除按键或手持物品的绑定
+= 移除指定按键或手持物品的绑定
 
 // src/main/java/pit12/feature/swap/SwapCommand.java:58
 Show swap bindings
-= 查看切换绑定
+= 查看换装绑定
 
 // src/main/java/pit12/feature/swap/SwapCommand.java:59
 Clear swap bindings
-= 清空切换绑定
+= 清空换装绑定
 
 // src/main/java/pit12/feature/swap/SwapCommand.java:62
 Cleared swap bindings
-= 已清空切换绑定
+= 已清空换装绑定
 
 // src/main/java/pit12/feature/swap/SwapCommand.java:63
 Show automatic swap state
-= 查看自动切换状态
+= 查看自动换装状态
 
 // src/main/java/pit12/feature/swap/SwapCommand.java:64, src/main/java/pit12/feature/swap/SwapCommand.java:66
 Reset automatic swap state
-= 已重置自动切换状态
+= 重置自动换装状态
 
 // src/main/java/pit12/feature/swap/SwapCommand.java:89, src/main/java/pit12/feature/swap/SwapCommand.java:92
 Hotbar slot must be from 1 to 9
@@ -828,15 +884,15 @@ Hotbar slot must be from 1 to 9
 
 // src/main/java/pit12/feature/swap/SwapCommand.java:101
 Bound {0} to {1} ({2})
-= 已将{0}绑定到{1}（{2}）
+= 已将 {0} 绑定到 {1}（{2}）
 
 // src/main/java/pit12/feature/swap/SwapCommand.java:103
 Bound {0} ({1})
-= 已绑定{0}（{1}）
+= 已绑定 {0}（{1}）
 
 // src/main/java/pit12/feature/swap/SwapCommand.java:113
 Hold an item to unbind
-= 请手持要取消绑定的物品
+= 请手持要解绑的物品
 
 // src/main/java/pit12/feature/swap/SwapCommand.java:118
 No matching bindings
@@ -844,15 +900,15 @@ No matching bindings
 
 // src/main/java/pit12/feature/swap/SwapCommand.java:119
 Removed {0} binding(s)
-= 已移除{0}个绑定
+= 已移除 {0} 项绑定
 
 // src/main/java/pit12/feature/swap/SwapCommand.java:125
 Swap bindings: {0}
-= 切换绑定：{0}
+= 换装绑定：{0}
 
-// src/main/java/pit12/feature/swap/SwapCommand.java:133
+// src/main/java/pit12/feature/swap/SwapCommand.java:133, src/main/java/pit12/feature/swap/SwapController.java:384
 Automatic swap: {0}
-= 自动切换：{0}
+== 自动换装：{0} | 自动换装遇到问题：{0}
 
 // src/main/java/pit12/feature/swap/SwapCommand.java:134
 enabled
@@ -876,7 +932,7 @@ Join a world first
 
 // src/main/java/pit12/feature/swap/SwapCommand.java:151
 used
-= 已使用
+= 已触发
 
 // src/main/java/pit12/feature/swap/SwapCommand.java:153
 equipped
@@ -884,335 +940,343 @@ equipped
 
 // src/main/java/pit12/feature/swap/SwapCommand.java:154
 unused
-= 未使用
+= 未触发
 
 // src/main/java/pit12/feature/swap/SwapCommand.java:160
 Unknown keyboard key: {0}
 = 未知键盘按键：{0}
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:61
-Swap
-= 装备切换
-
 // src/main/java/pit12/feature/swap/SwapConfig.java:62
-Swaps armor and hotbar items manually, when poisoned or at low health.
-= 手动切换护甲和快捷栏物品，也可在中毒或低生命值时自动切换。
+Swap
+= 换装
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:64
-Right click swap
-= 右键切换
+// src/main/java/pit12/feature/swap/SwapConfig.java:63
+Swaps armor and hotbar items manually, when poisoned or at low health.
+= 手动更换盔甲和快捷栏物品，也可在中毒或低血量时自动更换。
 
 // src/main/java/pit12/feature/swap/SwapConfig.java:65
-Right-click held armor to replace the armor in its slot.
-= 右键手持护甲，将其换入对应装备槽。
+Right click swap
+= 右键换装
 
 // src/main/java/pit12/feature/swap/SwapConfig.java:66
-Inventory visibility
-= 物品栏显示
+Right-click held armor to replace the armor in its slot.
+= 右键点击手持盔甲，替换对应部位的盔甲。
 
 // src/main/java/pit12/feature/swap/SwapConfig.java:67
-Shows or hides the inventory during swaps.
-= 切换时显示或隐藏物品栏。
+Inventory visibility
+= 背包可见性
 
 // src/main/java/pit12/feature/swap/SwapConfig.java:68
+Shows or hides the inventory during swaps.
+= 换装时显示或隐藏背包界面。
+
+// src/main/java/pit12/feature/swap/SwapConfig.java:69
 Hidden
 = 隐藏
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:69
+// src/main/java/pit12/feature/swap/SwapConfig.java:70
 Visible
 = 显示
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:70
+// src/main/java/pit12/feature/swap/SwapConfig.java:71
 Open delay
 = 打开延迟
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:70
+// src/main/java/pit12/feature/swap/SwapConfig.java:71
 Ticks to wait after opening the inventory before the first click. Set to 0 for no wait.
-= 打开物品栏后，首次点击前等待的 tick 数。设为 0 时不等待。
-
-// src/main/java/pit12/feature/swap/SwapConfig.java:73
-Swap delay
-= 切换延迟
+= 打开背包后到首次点击的等待时间，单位为游戏刻。设为 0 则不等待。
 
 // src/main/java/pit12/feature/swap/SwapConfig.java:74
-Ticks between clicks for right click and automatic swaps.
-= 右键和自动切换时，两次点击之间的 tick 数。
+Swap delay
+= 换装延迟
 
 // src/main/java/pit12/feature/swap/SwapConfig.java:75
+Ticks between clicks for right click and automatic swaps.
+= 右键换装和自动换装时的点击间隔，单位为游戏刻。
+
+// src/main/java/pit12/feature/swap/SwapConfig.java:76
 Close delay
 = 关闭延迟
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:75
+// src/main/java/pit12/feature/swap/SwapConfig.java:76
 Ticks to wait after the last request finishes before closing the inventory.
-= 最后一个请求完成后，关闭物品栏前等待的 tick 数。
-
-// src/main/java/pit12/feature/swap/SwapConfig.java:79
-Resume input next tick
-= 下一 tick 恢复输入
+= 最后一次请求完成后到关闭背包的等待时间，单位为游戏刻。
 
 // src/main/java/pit12/feature/swap/SwapConfig.java:80
-Keeps all input locked until the next tick after closing the inventory.
-= 关闭物品栏后，将所有输入锁定到下一 tick。
+Resume input next tick
+= 下一游戏刻恢复输入
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:82
-Swap messages
-= 切换消息
+// src/main/java/pit12/feature/swap/SwapConfig.java:81
+Keeps all input locked until the next tick after closing the inventory.
+= 关闭背包后，保持所有输入锁定，直到下一游戏刻。
 
 // src/main/java/pit12/feature/swap/SwapConfig.java:83
-Shows a message after items are swapped or unequipped.
-= 切换或卸下物品后显示消息。
+Swap messages
+= 换装消息
 
 // src/main/java/pit12/feature/swap/SwapConfig.java:84
+Shows a message after items are swapped or unequipped.
+= 更换或卸下物品后显示消息。
+
+// src/main/java/pit12/feature/swap/SwapConfig.java:85
 Transfer slot
 = 中转槽位
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:85
-Hotbar slot used to move armor from the inventory.
-= 用于从物品栏移动护甲的快捷栏槽位。
-
 // src/main/java/pit12/feature/swap/SwapConfig.java:86
-Restore transfer slot
-= 还原中转槽位
+Hotbar slot used to move armor from the inventory.
+= 用于从背包移动盔甲的快捷栏槽位。
 
 // src/main/java/pit12/feature/swap/SwapConfig.java:87
-Restores the transfer slot's contents after moving armor. Slot bindings take priority.
-= 移动护甲后还原中转槽位的物品。槽位绑定优先。
+Restore transfer slot
+= 恢复中转槽位
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:89
+// src/main/java/pit12/feature/swap/SwapConfig.java:88
+Restores the transfer slot's contents after moving armor. Slot bindings take priority.
+= 移动盔甲后恢复中转槽位中的物品，槽位绑定优先。
+
+// src/main/java/pit12/feature/swap/SwapConfig.java:90
 Prefer empty hotbar slot
 = 优先使用空快捷栏槽位
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:90
+// src/main/java/pit12/feature/swap/SwapConfig.java:91
 Uses the first empty hotbar slot as the transfer slot. Otherwise uses the selected transfer slot.
-= 优先用第一个空快捷栏槽位中转，否则用选定的中转槽位。
+= 优先用快捷栏中第一个空槽位中转，否则使用指定的中转槽位。
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:92
+// src/main/java/pit12/feature/swap/SwapConfig.java:93
 Bindings
 = 绑定
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:93
-Unequip all
-= 卸下所有护甲
-
 // src/main/java/pit12/feature/swap/SwapConfig.java:94
-Moves worn armor into free inventory slots.
-= 将已穿戴的护甲移入空物品栏槽位。
+Unequip all
+= 卸下全部盔甲
 
 // src/main/java/pit12/feature/swap/SwapConfig.java:95
-Binding delay
-= 绑定延迟
+Moves worn armor into free inventory slots.
+= 将身上的盔甲移入背包空槽位。
 
 // src/main/java/pit12/feature/swap/SwapConfig.java:96
-Ticks between clicks for bindings and unequipping.
-= 执行绑定和卸下护甲时，两次点击之间的 tick 数。
+Binding delay
+= 绑定换装延迟
 
 // src/main/java/pit12/feature/swap/SwapConfig.java:97
+Ticks between clicks for bindings and unequipping.
+= 通过绑定换装或卸下盔甲时的点击间隔，单位为游戏刻。
+
+// src/main/java/pit12/feature/swap/SwapConfig.java:98
 Binding messages
 = 绑定消息
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:98
+// src/main/java/pit12/feature/swap/SwapConfig.java:99
 Shows messages when bindings are added, removed or cleared.
 = 添加、移除或清空绑定时显示消息。
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:99
+// src/main/java/pit12/feature/swap/SwapConfig.java:100
 Details
 = 详细信息
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:100
-Shows item names and enchantments in binding and swap messages.
-= 在绑定和切换消息中显示物品名称和附魔。
-
 // src/main/java/pit12/feature/swap/SwapConfig.java:101
+Shows item names and enchantments in binding and swap messages.
+= 在绑定和换装消息中显示物品名称与附魔。
+
+// src/main/java/pit12/feature/swap/SwapConfig.java:102
 Show binding keys
 = 显示绑定按键
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:102
+// src/main/java/pit12/feature/swap/SwapConfig.java:103
 Shows keys on bound items outside their target slots.
-= 物品不在目标槽位时，显示其绑定按键。
+= 在未处于目标槽位的绑定物品上显示按键。
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:103, src/main/java/pit12/feature/swap/SwapConfig.java:104
+// src/main/java/pit12/feature/swap/SwapConfig.java:104, src/main/java/pit12/feature/swap/SwapConfig.java:105
 Automatic swap
-= 自动切换
+= 自动换装
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:105
+// src/main/java/pit12/feature/swap/SwapConfig.java:106
 Automatically swaps items when poisoned or at low health.
-= 中毒或低生命值时自动切换物品。
+= 中毒或血量过低时自动更换物品。
 
 // src/main/java/pit12/feature/swap/SwapConfig.java:107
-Swap diamond armor
-= 切换钻石护甲
+Automatic swap messages
+= 自动换装消息
 
 // src/main/java/pit12/feature/swap/SwapConfig.java:108
-Equips diamond leggings and boots when poisoned.
-= 中毒时装备钻石护腿和靴子。
-
-// src/main/java/pit12/feature/swap/SwapConfig.java:109
-Swap Combat Spade
-= 切换 Combat Spade
+Shows why automatic swaps happened.
+= 显示自动换装的原因。
 
 // src/main/java/pit12/feature/swap/SwapConfig.java:110
-Moves a Combat Spade to the selected hotbar slot when poisoned.
-= 中毒时，将 Combat Spade 移到指定快捷栏槽位。
+Swap diamond armor
+= 换上钻石盔甲
 
 // src/main/java/pit12/feature/swap/SwapConfig.java:111
-Skip while wearing Venom
-= 穿戴 Venom 时跳过
+Equips diamond leggings and boots when poisoned.
+= 中毒时换上钻石护腿和靴子。
 
 // src/main/java/pit12/feature/swap/SwapConfig.java:112
-Skips poison swaps while wearing Combo Venom leggings.
-= 穿戴 Combo Venom 护腿时，跳过中毒切换。
+Swap Combat Spade
+= 换上 Combat Spade
 
 // src/main/java/pit12/feature/swap/SwapConfig.java:113
+Moves a Combat Spade to the selected hotbar slot when poisoned.
+= 中毒时将 Combat Spade 移至指定的快捷栏槽位。
+
+// src/main/java/pit12/feature/swap/SwapConfig.java:114
+Skip while wearing Venom
+= 穿着 Venom 护腿时跳过
+
+// src/main/java/pit12/feature/swap/SwapConfig.java:115
+Skips poison swaps while wearing Combo Venom leggings.
+= 穿着 Combo Venom 护腿时，跳过中毒换装。
+
+// src/main/java/pit12/feature/swap/SwapConfig.java:116
 Combat Spade slot
 = Combat Spade 槽位
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:114
+// src/main/java/pit12/feature/swap/SwapConfig.java:117
 Hotbar slot for the Combat Spade.
 = Combat Spade 使用的快捷栏槽位。
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:116
+// src/main/java/pit12/feature/swap/SwapConfig.java:119
 Use Escape Pod
 = 使用 Escape Pod
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:117
+// src/main/java/pit12/feature/swap/SwapConfig.java:120
 Equips Escape Pod leggings at or below their health threshold.
-= 生命值不高于触发值时，装备 Escape Pod 护腿。
-
-// src/main/java/pit12/feature/swap/SwapConfig.java:118
-Escape Pod threshold
-= Escape Pod 触发值
-
-// src/main/java/pit12/feature/swap/SwapConfig.java:119
-Health points for Escape Pod swaps. Two points equal one heart.
-= 触发 Escape Pod 切换的生命值。两点为一颗心。
+= 血量不高于设定阈值时，换上 Escape Pod 护腿。
 
 // src/main/java/pit12/feature/swap/SwapConfig.java:121
+Escape Pod threshold
+= Escape Pod 血量阈值
+
+// src/main/java/pit12/feature/swap/SwapConfig.java:122
+Health points for Escape Pod swaps. Two points equal one heart.
+= 触发 Escape Pod 换装的生命值，2 点等于 1 颗心。
+
+// src/main/java/pit12/feature/swap/SwapConfig.java:124
 Use Phoenix
 = 使用 Phoenix
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:122
+// src/main/java/pit12/feature/swap/SwapConfig.java:125
 Equips Phoenix leggings at or below their health threshold.
-= 生命值不高于触发值时，装备 Phoenix 护腿。
+= 血量不高于设定阈值时，换上 Phoenix 护腿。
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:123
+// src/main/java/pit12/feature/swap/SwapConfig.java:126
 Phoenix threshold
-= Phoenix 触发值
+= Phoenix 血量阈值
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:124
+// src/main/java/pit12/feature/swap/SwapConfig.java:127
 Health points for Phoenix swaps. Two points equal one heart.
-= 触发 Phoenix 切换的生命值。两点为一颗心。
+= 触发 Phoenix 换装的生命值，2 点等于 1 颗心。
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:126
+// src/main/java/pit12/feature/swap/SwapConfig.java:129
 Prefer first
-= 优先装备
+= 优先选择
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:126
+// src/main/java/pit12/feature/swap/SwapConfig.java:129
 Chooses which unused enchantment to equip when both are available and eligible.
-= 两种附魔都未使用且符合条件时，选择优先装备的附魔。
-
-// src/main/java/pit12/feature/swap/SwapConfig.java:130
-Prefer high Lives
-= 优先选择剩余 Lives 更多的护腿
-
-// src/main/java/pit12/feature/swap/SwapConfig.java:131
-Chooses Phoenix leggings with the most remaining Lives.
-= 选择剩余 Lives 最多的 Phoenix 护腿。
-
-// src/main/java/pit12/feature/swap/SwapConfig.java:132
-Restore leggings
-= 还原护腿
+= 两种附魔均可用且满足条件时，选择优先装备哪种尚未触发的附魔。
 
 // src/main/java/pit12/feature/swap/SwapConfig.java:133
-Restores the leggings worn before an automatic health swap.
-= 还原自动低生命值切换前穿戴的护腿。
+Prefer high Lives
+= 优先选择高寿命护腿
 
 // src/main/java/pit12/feature/swap/SwapConfig.java:134
-Restore mode
-= 还原模式
+Chooses Phoenix leggings with the most remaining Lives.
+= 选择剩余寿命最多的 Phoenix 护腿。
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:134
-Restores leggings after health recovers or the equipped enchantment triggers.
-= 生命值恢复或已装备附魔触发后，还原护腿。
+// src/main/java/pit12/feature/swap/SwapConfig.java:135
+Restore leggings
+= 换回原护腿
 
 // src/main/java/pit12/feature/swap/SwapConfig.java:136
-Health
-= 生命值
+Restores the leggings worn before an automatic health swap.
+= 换回因低血量自动换装前穿着的护腿。
 
 // src/main/java/pit12/feature/swap/SwapConfig.java:137
-Used
-= 已触发
+Restore mode
+= 换回模式
+
+// src/main/java/pit12/feature/swap/SwapConfig.java:137
+Restores leggings after health recovers or the equipped enchantment triggers.
+= 血量恢复或当前装备的附魔触发后，换回原护腿。
 
 // src/main/java/pit12/feature/swap/SwapConfig.java:139
-Restore threshold
-= 还原触发值
+Health
+= 血量恢复
 
 // src/main/java/pit12/feature/swap/SwapConfig.java:140
+Used
+= 附魔触发
+
+// src/main/java/pit12/feature/swap/SwapConfig.java:142
+Restore threshold
+= 换回血量阈值
+
+// src/main/java/pit12/feature/swap/SwapConfig.java:143
 Health points needed to restore leggings in Health mode. Health must also exceed the trigger threshold.
-= 生命值模式中，还原护腿所需的生命值，且必须高于切换触发值。
+= 血量恢复模式下换回原护腿所需的生命值。血量还须高于换装触发阈值。
 
-// src/main/java/pit12/feature/swap/SwapController.java:183, src/main/java/pit12/feature/swap/SwapController.java:363
-Inventory changed
-= 物品栏已变化
-
-// src/main/java/pit12/feature/swap/SwapController.java:227
-Inventory did not open
-= 物品栏未打开
-
-// src/main/java/pit12/feature/swap/SwapController.java:242
+// src/main/java/pit12/feature/swap/SwapController.java:172
 Unexpected error
-= 发生意外错误
+= 意外错误
 
-// src/main/java/pit12/feature/swap/SwapController.java:259
+// src/main/java/pit12/feature/swap/SwapController.java:191, src/main/java/pit12/feature/swap/SwapController.java:364
+Inventory changed
+= 背包内容已变化
+
+// src/main/java/pit12/feature/swap/SwapController.java:230
+Inventory did not open
+= 背包未打开
+
+// src/main/java/pit12/feature/swap/SwapController.java:260
 Server rejected the inventory click
-= 服务器拒绝了物品栏点击
+= 服务器拒绝了背包点击操作
 
-// src/main/java/pit12/feature/swap/SwapController.java:307, src/main/java/pit12/feature/swap/SwapController.java:549
+// src/main/java/pit12/feature/swap/SwapController.java:308, src/main/java/pit12/feature/swap/SwapController.java:564
 Missing item: {0}
-= 缺少物品：{0}
+= 找不到物品：{0}
 
-// src/main/java/pit12/feature/swap/SwapController.java:382
+// src/main/java/pit12/feature/swap/SwapController.java:389
 Swapped: {0}
-= 已切换：{0}
+= 已更换：{0}
 
-// src/main/java/pit12/feature/swap/SwapController.java:383
+// src/main/java/pit12/feature/swap/SwapController.java:390
 Swapped {0} item(s)
-= 已切换{0}件物品
+= 已更换 {0} 件物品
 
-// src/main/java/pit12/feature/swap/SwapController.java:404
+// src/main/java/pit12/feature/swap/SwapController.java:413
 Swap failed: {0}
-= 切换失败：{0}
+= 换装失败：{0}
 
-// src/main/java/pit12/feature/swap/SwapController.java:447
-Swap failed: inventory could not be closed
-= 切换失败：无法关闭物品栏
+// src/main/java/pit12/feature/swap/SwapController.java:459
+Inventory could not be closed
+= 无法关闭背包
 
-// src/main/java/pit12/feature/swap/SwapController.java:517
+// src/main/java/pit12/feature/swap/SwapController.java:532
 Armor could not be moved to the inventory
-= 无法将护甲移入物品栏
+= 无法将盔甲移入背包
 
-// src/main/java/pit12/feature/swap/SwapController.java:519
+// src/main/java/pit12/feature/swap/SwapController.java:534
 Not enough inventory space to unequip armor
-= 物品栏空间不足，无法卸下护甲
+= 背包空间不足，无法卸下盔甲
 
-// src/main/java/pit12/feature/swap/SwapController.java:526, src/main/java/pit12/feature/swap/SwapController.java:541
+// src/main/java/pit12/feature/swap/SwapController.java:541, src/main/java/pit12/feature/swap/SwapController.java:556
 Transfer slot changed
-= 中转槽位已变化
+= 中转槽位内容已变化
 
-// src/main/java/pit12/feature/swap/SwapController.java:531
+// src/main/java/pit12/feature/swap/SwapController.java:546
 Armor could not be equipped
-= 无法装备护甲
+= 无法装备盔甲
 
-// src/main/java/pit12/feature/swap/SwapController.java:556
+// src/main/java/pit12/feature/swap/SwapController.java:571
 Item does not fit: {0}
-= 物品不适用：{0}
+= 物品无法放入目标槽位：{0}
 
-// src/main/java/pit12/feature/swap/SwapController.java:574
+// src/main/java/pit12/feature/swap/SwapController.java:589
 Not enough inventory space for {0}
-= 物品栏空间不足，无法放入{0}
+= 背包空间不足，无法放入 {0}
 
-// src/main/java/pit12/feature/swap/SwapController.java:595
+// src/main/java/pit12/feature/swap/SwapController.java:610
 Item could not be swapped: {0}
-= 无法切换物品：{0}
+= 无法更换物品：{0}
 
 // src/main/java/pit12/feature/tooltip/TooltipConfig.java:33
 Held Item Tooltip
@@ -1228,55 +1292,83 @@ Show enchantments instead of item name
 
 // src/main/java/pit12/feature/tooltip/TooltipConfig.java:38
 Replaces the held item name with known Pit enchantments.
-= 用已知的 Pit 附魔替代手持物品名称。
+= 用已识别的 Pit 附魔替代手持物品名称。
 
 // src/main/java/pit12/feature/tooltip/TooltipConfig.java:39
 Move tooltip upward
-= 上移提示
+= 提示上移
 
 // src/main/java/pit12/feature/tooltip/TooltipConfig.java:40
 Moves the held item tooltip upward by this many pixels.
-= 将手持物品提示上移指定像素数。
+= 手持物品提示向上移动的像素数。
 
-// src/main/java/pit12/feature/webui/WebUiConfig.java:37, web-ui/src/App.vue:671, web-ui/src/App.vue:905
+// src/main/java/pit12/feature/webui/WebUiConfig.java:38, web-ui/src/App.vue:161:14, web-ui/src/SettingsPage.vue:48:12
 Settings
 = 设置
 
-// src/main/java/pit12/feature/webui/WebUiConfig.java:38
+// src/main/java/pit12/feature/webui/WebUiConfig.java:39
 Interface
 = 界面
 
-// src/main/java/pit12/feature/webui/WebUiConfig.java:45
+// src/main/java/pit12/feature/webui/WebUiConfig.java:46
 Language
 = 语言
 
-// src/main/java/pit12/feature/webui/WebUiConfig.java:46
+// src/main/java/pit12/feature/webui/WebUiConfig.java:47
 Sets the language for the interface, commands, and HUD.
-= 设置界面、命令和 HUD 使用的语言。
+= 设置界面、命令回显和 HUD 的语言。
 
-// src/main/java/pit12/feature/webui/WebUiConfig.java:47
+// src/main/java/pit12/feature/webui/WebUiConfig.java:48
 Accent color
-= 强调色
+= 主题色
 
-// src/main/java/pit12/feature/webui/WebUiConfig.java:47
+// src/main/java/pit12/feature/webui/WebUiConfig.java:48
 Controls the interface accent.
-= 设置界面的强调色。
-
-// src/main/java/pit12/feature/webui/WebUiConfig.java:49
-Show details
-= 显示说明
+= 设置界面的主题色。
 
 // src/main/java/pit12/feature/webui/WebUiConfig.java:50
+Show details
+= 显示详细说明
+
+// src/main/java/pit12/feature/webui/WebUiConfig.java:51
 Shows descriptions for features and settings.
 = 显示功能和设置的说明。
 
-// src/main/java/pit12/feature/webui/WebUiConfig.java:51
-Open Web UI key
-= 打开 Web UI 的按键
-
 // src/main/java/pit12/feature/webui/WebUiConfig.java:52
-Opens the web interface.
-= 打开网页界面。
+Interface key
+= 界面快捷键
+
+// src/main/java/pit12/feature/webui/WebUiConfig.java:53
+Opens the selected interface.
+= 打开所选界面。
+
+// src/main/java/pit12/feature/webui/WebUiConfig.java:54
+Key action
+= 按键动作
+
+// src/main/java/pit12/feature/webui/WebUiConfig.java:55
+Chooses which interface the key opens.
+= 选择按键打开的界面。
+
+// src/main/java/pit12/feature/webui/WebUiConfig.java:56
+Web UI
+= 网页界面
+
+// src/main/java/pit12/feature/webui/WebUiConfig.java:56
+HUD editor
+= HUD 编辑器
+
+// src/main/java/pit12/feature/webui/WebUiPreferences.java:106, src/main/java/pit12/feature/webui/WebUiPreferences.java:113
+Could not load Web UI settings
+= 无法加载网页界面设置
+
+// src/main/java/pit12/feature/webui/WebUiPreferences.java:286
+Could not save Web UI settings
+= 无法保存网页界面设置
+
+// src/main/java/pit12/feature/webui/WebUiServer.java:260
+Web UI settings are unavailable
+= 网页界面设置不可用
 
 // src/main/java/pit12/runtime/command/CommandRegistry.java:43
 12pit commands
@@ -1294,523 +1386,591 @@ Unknown command: {0}
 Usage: {0}
 = 用法：{0}
 
-// src/main/java/pit12/runtime/config/FeatureConfig.java:66
+// src/main/java/pit12/runtime/config/FeatureConfig.java:72
 Enabled
 = 启用
 
-// src/main/java/pit12/runtime/config/FeatureConfig.java:67
+// src/main/java/pit12/runtime/config/FeatureConfig.java:73
 Turns this feature on.
-= 启用此功能。
+= 开启此功能。
 
-// src/main/java/pit12/runtime/config/FeatureConfig.java:142
+// src/main/java/pit12/runtime/config/FeatureConfig.java:148, src/main/java/pit12/runtime/config/FeatureConfig.java:191
+HUD
+= HUD
+
+// src/main/java/pit12/runtime/config/FeatureConfig.java:155
 Text shadow
 = 文字阴影
 
-// src/main/java/pit12/runtime/config/FeatureConfig.java:143
+// src/main/java/pit12/runtime/config/FeatureConfig.java:156
 Draws a shadow behind HUD text.
-= 在 HUD 文字后方绘制阴影。
+= 在 HUD 文字后绘制阴影。
 
-// src/main/java/pit12/runtime/config/FeatureConfig.java:145
+// src/main/java/pit12/runtime/config/FeatureConfig.java:158
 Use monospace font
 = 使用等宽字体
 
-// src/main/java/pit12/runtime/config/FeatureConfig.java:146
+// src/main/java/pit12/runtime/config/FeatureConfig.java:159
 Uses the bundled Monocraft font for HUD text.
-= 用内置 Monocraft 字体显示 HUD 文字。
+= HUD 文字使用内置的 Monocraft 字体。
 
-// src/main/java/pit12/runtime/config/FeatureConfig.java:148
+// src/main/java/pit12/runtime/config/FeatureConfig.java:161
 Translate text
 = 翻译文字
 
-// src/main/java/pit12/runtime/config/FeatureConfig.java:149
+// src/main/java/pit12/runtime/config/FeatureConfig.java:162
 Translates HUD text into the selected language.
-= 将 HUD 文字翻译成所选语言。
+= 将 HUD 文字翻译为所选语言。
 
-// src/main/java/pit12/runtime/config/FeatureConfig.java:150
+// src/main/java/pit12/runtime/config/FeatureConfig.java:163, src/main/java/pit12/runtime/config/FeatureConfig.java:175
 Anchor
 = 锚点
 
-// src/main/java/pit12/runtime/config/FeatureConfig.java:153
+// src/main/java/pit12/runtime/config/FeatureConfig.java:164
+Auto chooses an anchor when the HUD is moved.
+= 选择自动时，移动 HUD 会自动确定锚点。
+
+// src/main/java/pit12/runtime/config/FeatureConfig.java:165
+Auto
+= 自动
+
+// src/main/java/pit12/runtime/config/FeatureConfig.java:166
+Top left
+= 左上
+
+// src/main/java/pit12/runtime/config/FeatureConfig.java:167
+Top center
+= 顶部居中
+
+// src/main/java/pit12/runtime/config/FeatureConfig.java:168
+Top right
+= 右上
+
+// src/main/java/pit12/runtime/config/FeatureConfig.java:169
+Center left
+= 左侧居中
+
+// src/main/java/pit12/runtime/config/FeatureConfig.java:170
+Center
+= 居中
+
+// src/main/java/pit12/runtime/config/FeatureConfig.java:171
+Center right
+= 右侧居中
+
+// src/main/java/pit12/runtime/config/FeatureConfig.java:172
+Bottom left
+= 左下
+
+// src/main/java/pit12/runtime/config/FeatureConfig.java:173
+Bottom center
+= 底部居中
+
+// src/main/java/pit12/runtime/config/FeatureConfig.java:174
+Bottom right
+= 右下
+
+// src/main/java/pit12/runtime/config/FeatureConfig.java:176
+Stores the anchor chosen by Auto.
+= 保存自动确定的锚点。
+
+// src/main/java/pit12/runtime/config/FeatureConfig.java:178
 Horizontal offset
 = 水平偏移
 
-// src/main/java/pit12/runtime/config/FeatureConfig.java:154
+// src/main/java/pit12/runtime/config/FeatureConfig.java:178, src/main/java/pit12/runtime/config/FeatureConfig.java:181
+Offset from the anchor, in GUI pixels.
+= 相对锚点的偏移量，单位为界面像素。
+
+// src/main/java/pit12/runtime/config/FeatureConfig.java:180
 Vertical offset
 = 垂直偏移
 
-// src/main/java/pit12/runtime/config/FeatureConfig.java:157
+// src/main/java/pit12/runtime/config/FeatureConfig.java:182
 Scale
 = 缩放
 
-// web-ui/src/api.ts:114, web-ui/src/App.vue:224
+// src/main/java/pit12/runtime/config/FeatureConfig.java:183
+HUD size, in percent.
+= HUD 大小，单位为百分比。
+
+// web-ui/src/api.ts:120:56, web-ui/src/useWebUiState.ts:84:60
 Request failed
 = 请求失败
 
-// web-ui/src/App.vue:121
-All
-= 全部
-
-// web-ui/src/App.vue:539
-This key cannot be bound
-= 无法绑定此按键
-
-// web-ui/src/App.vue:640
+// web-ui/src/App.vue:130:22
 Pages
 = 页面
 
-// web-ui/src/App.vue:649, web-ui/src/App.vue:736, web-ui/src/App.vue:837
+// web-ui/src/App.vue:139:14, web-ui/src/FeaturesPage.vue:133:14, web-ui/src/FeaturesPage.vue:200:16
 Features
 = 功能
 
-// web-ui/src/App.vue:656, web-ui/src/App.vue:954, web-ui/src/TransferDialog.vue:353
+// web-ui/src/App.vue:146:14, web-ui/src/ProfilesPage.vue:156:12, web-ui/src/TransferDialog.vue:382:20
 Profiles
 = 配置方案
 
-// web-ui/src/App.vue:663, web-ui/src/RelationsPage.vue:260, web-ui/src/TransferDialog.vue:400
+// web-ui/src/App.vue:153:14, web-ui/src/RelationsPage.vue:249:12, web-ui/src/TransferDialog.vue:431:20
 Relations
-= 关系列表
+= 玩家关系
 
-// web-ui/src/App.vue:723, web-ui/src/App.vue:724
+// web-ui/src/App.vue:263:21
 Dismiss error
 = 关闭错误提示
 
-// web-ui/src/App.vue:741, web-ui/src/App.vue:742
-Search features
-= 搜索功能
-
-// web-ui/src/App.vue:747, web-ui/src/App.vue:748, web-ui/src/RelationsPage.vue:297, web-ui/src/RelationsPage.vue:298
-Clear search
-= 清空搜索
-
-// web-ui/src/App.vue:758
-Category
-= 分类
-
-// web-ui/src/App.vue:809
-Enable {0}
-= 启用{0}
-
-// web-ui/src/App.vue:823
-No matching features.
-= 没有匹配的功能。
-
-// web-ui/src/App.vue:832
-Breadcrumb
-= 导航路径
-
-// web-ui/src/App.vue:855
-Subcategory
-= 子分类
-
-// web-ui/src/App.vue:913
-Edit HUD
-= 编辑 HUD
-
-// web-ui/src/App.vue:921, web-ui/src/TransferDialog.vue:558
-Export
-= 导出
-
-// web-ui/src/App.vue:929, web-ui/src/TransferDialog.vue:559
-Import
-= 导入
-
-// web-ui/src/App.vue:965, web-ui/src/App.vue:1050
-Profile name
-= 方案名称
-
-// web-ui/src/App.vue:966
-New profile name
-= 新方案名称
-
-// web-ui/src/App.vue:987
-Create
-= 创建
-
-// web-ui/src/App.vue:987
-New profile
-= 新建方案
-
-// web-ui/src/App.vue:993
-Loading profiles...
-= 正在加载配置方案…
-
-// web-ui/src/App.vue:1020, web-ui/src/App.vue:1041
-Delete
-= 删除
-
-// web-ui/src/App.vue:1032, web-ui/src/RelationsPage.vue:359, web-ui/src/RelationsPage.vue:516, web-ui/src/TransferDialog.vue:544
-Cancel
-= 取消
-
-// web-ui/src/App.vue:1059, web-ui/src/App.vue:1060
-Save name
-= 保存名称
-
-// web-ui/src/App.vue:1067, web-ui/src/App.vue:1068
-Cancel rename
-= 取消重命名
-
-// web-ui/src/App.vue:1090
-Switch
-= 切换
-
-// web-ui/src/App.vue:1095, web-ui/src/App.vue:1096
-Rename {0}
-= 重命名{0}
-
-// web-ui/src/App.vue:1116
-Cannot delete active profile
-= 无法删除当前配置方案
-
-// web-ui/src/App.vue:1117, web-ui/src/App.vue:1122
-Delete {0}
-= 删除{0}
-
-// web-ui/src/App.vue:1134
-No profiles.
-= 没有配置方案。
-
-// web-ui/src/ColorPicker.vue:206
+// web-ui/src/ColorPicker.vue:167:22
 Saturation and brightness
 = 饱和度与亮度
 
-// web-ui/src/ColorPicker.vue:221
+// web-ui/src/ColorPicker.vue:182:24
 Saturation
 = 饱和度
 
-// web-ui/src/ColorPicker.vue:233
+// web-ui/src/ColorPicker.vue:194:24
 Brightness
 = 亮度
 
-// web-ui/src/ColorPicker.vue:244, web-ui/src/ColorPicker.vue:248
+// web-ui/src/ColorPicker.vue:205:18, web-ui/src/ColorPicker.vue:209:24
 Hue
 = 色相
 
-// web-ui/src/ColorPicker.vue:259, web-ui/src/ColorPicker.vue:263
+// web-ui/src/ColorPicker.vue:220:18, web-ui/src/ColorPicker.vue:224:24
 Opacity
 = 不透明度
 
-// web-ui/src/ColorPicker.vue:275
+// web-ui/src/ColorPicker.vue:239:22
 Color format
 = 颜色格式
 
-// web-ui/src/ColorPicker.vue:303
+// web-ui/src/ColorPicker.vue:268:9
 Enter a valid Hex, RGBA or HSLA color.
 = 请输入有效的 Hex、RGBA 或 HSLA 颜色。
 
-// web-ui/src/languages.ts:37
+// web-ui/src/FeaturesPage.vue:81:11
+All
+= 全部
+
+// web-ui/src/FeaturesPage.vue:134:45
+Search features
+= 搜索功能
+
+// web-ui/src/FeaturesPage.vue:136:61
+Category
+= 分类
+
+// web-ui/src/FeaturesPage.vue:171:26
+Favorite {0}
+= 收藏 {0}
+
+// web-ui/src/FeaturesPage.vue:175:26
+Remove from favorites
+= 取消收藏
+
+// web-ui/src/FeaturesPage.vue:175:55
+Add to favorites
+= 添加收藏
+
+// web-ui/src/FeaturesPage.vue:184:21
+Enable {0}
+= 启用 {0}
+
+// web-ui/src/FeaturesPage.vue:190:14
+No matching features.
+= 没有匹配的功能。
+
+// web-ui/src/FeaturesPage.vue:196:61
+Breadcrumb
+= 导航路径
+
+// web-ui/src/FeaturesPage.vue:218:20
+Subcategory
+= 子分类
+
+// web-ui/src/languages.ts:34:43
 Could not load language
 = 无法加载语言
 
-// web-ui/src/PageScrollbar.vue:136
+// web-ui/src/PageScrollbar.vue:136:18
 Page scroll
-= 页面滚动条
+= 页面滚动
 
-// web-ui/src/RelationsPage.vue:91, web-ui/src/RelationsPage.vue:106
-Invalid player name
-= 无效的玩家名称
+// web-ui/src/ProfilesPage.vue:167:25, web-ui/src/ProfilesPage.vue:256:26
+Profile name
+= 配置方案名称
 
-// web-ui/src/RelationsPage.vue:93
-Duplicate entry skipped
-= 已跳过重复项
+// web-ui/src/ProfilesPage.vue:168:24
+New profile name
+= 新配置方案名称
 
-// web-ui/src/RelationsPage.vue:95
-Already on this list
-= 已在此列表中
+// web-ui/src/ProfilesPage.vue:191:17
+New profile
+= 新建配置方案
 
-// web-ui/src/RelationsPage.vue:268
+// web-ui/src/ProfilesPage.vue:196:17
+Create
+= 创建
+
+// web-ui/src/ProfilesPage.vue:203:8
+Loading profiles...
+= 正在加载配置方案…
+
+// web-ui/src/ProfilesPage.vue:227:17, web-ui/src/ProfilesPage.vue:247:18
+Delete
+= 删除
+
+// web-ui/src/ProfilesPage.vue:238:18, web-ui/src/RelationsPage.vue:337:22, web-ui/src/RelationsPage.vue:485:20, web-ui/src/TransferDialog.vue:579:14
+Cancel
+= 取消
+
+// web-ui/src/ProfilesPage.vue:265:28, web-ui/src/ProfilesPage.vue:266:23
+Save name
+= 保存名称
+
+// web-ui/src/ProfilesPage.vue:273:28, web-ui/src/ProfilesPage.vue:274:23
+Cancel rename
+= 取消重命名
+
+// web-ui/src/ProfilesPage.vue:300:20
+Switch
+= 切换
+
+// web-ui/src/ProfilesPage.vue:306:28, web-ui/src/ProfilesPage.vue:307:23
+Rename {0}
+= 重命名 {0}
+
+// web-ui/src/ProfilesPage.vue:316:21
+The active profile cannot be deleted
+= 无法删除当前使用的配置方案
+
+// web-ui/src/ProfilesPage.vue:325:23
+Cannot delete active profile
+= 无法删除当前使用的配置方案
+
+// web-ui/src/ProfilesPage.vue:326:23, web-ui/src/ProfilesPage.vue:331:23
+Delete {0}
+= 删除 {0}
+
+// web-ui/src/ProfilesPage.vue:343:10
+No profiles.
+= 暂无配置方案。
+
+// web-ui/src/RelationsPage.vue:257:20
 Relation type
 = 关系类型
 
-// web-ui/src/RelationsPage.vue:291, web-ui/src/RelationsPage.vue:292
+// web-ui/src/RelationsPage.vue:275:45
 Search MC ID or UUID
 = 搜索 MC ID 或 UUID
 
-// web-ui/src/RelationsPage.vue:314, web-ui/src/TransferDialog.vue:284, web-ui/src/TransferDialog.vue:285
-Close
-= 关闭
-
-// web-ui/src/RelationsPage.vue:314, web-ui/src/RelationsPage.vue:427
+// web-ui/src/RelationsPage.vue:288:15, web-ui/src/RelationsPage.vue:401:21
 Add players
 = 添加玩家
 
-// web-ui/src/RelationsPage.vue:319
-{0} selected
-= 已选择{0}名玩家
+// web-ui/src/RelationsPage.vue:291:15, web-ui/src/TransferDialog.vue:308:24, web-ui/src/TransferDialog.vue:309:19
+Close
+= 关闭
 
-// web-ui/src/RelationsPage.vue:324, web-ui/src/RelationsPage.vue:325
+// web-ui/src/RelationsPage.vue:297:13
+{0} selected
+= 已选择 {0} 人
+
+// web-ui/src/RelationsPage.vue:302:26, web-ui/src/RelationsPage.vue:303:21
 Clear selection
 = 清空选择
 
-// web-ui/src/RelationsPage.vue:338
+// web-ui/src/RelationsPage.vue:316:17
 Remove {0} selected players
-= 移除选中的{0}名玩家
+= 移除选中的 {0} 名玩家
 
-// web-ui/src/RelationsPage.vue:342
+// web-ui/src/RelationsPage.vue:320:21
 Select at most 100 players
 = 最多选择 100 名玩家
 
-// web-ui/src/RelationsPage.vue:343
+// web-ui/src/RelationsPage.vue:321:21
 Remove selected players
-= 移除选中的玩家
+= 移除所选玩家
 
-// web-ui/src/RelationsPage.vue:351
+// web-ui/src/RelationsPage.vue:329:20
 Remove {0} selected players?
-= 移除选中的{0}名玩家？
+= 移除选中的 {0} 名玩家？
 
-// web-ui/src/RelationsPage.vue:367, web-ui/src/RelationsPage.vue:524
+// web-ui/src/RelationsPage.vue:345:22, web-ui/src/RelationsPage.vue:493:20
 Remove
 = 移除
 
-// web-ui/src/RelationsPage.vue:386
+// web-ui/src/RelationsPage.vue:362:38
 Add friends
 = 添加好友
 
-// web-ui/src/RelationsPage.vue:386
+// web-ui/src/RelationsPage.vue:362:57
 Add enemies
 = 添加敌人
 
-// web-ui/src/RelationsPage.vue:392
+// web-ui/src/RelationsPage.vue:368:25
 MC IDs, separated by commas or new lines
-= MC ID，用逗号或换行分隔
+= MC ID，以逗号或换行分隔
 
-// web-ui/src/RelationsPage.vue:398
+// web-ui/src/RelationsPage.vue:374:14
 Invalid MC IDs:
 = 无效的 MC ID：
 
-// web-ui/src/RelationsPage.vue:405
+// web-ui/src/RelationsPage.vue:378:17
  and {0} more
-= ，另有{0}个
+= ，另有 {0} 个
 
-// web-ui/src/RelationsPage.vue:409
+// web-ui/src/RelationsPage.vue:383:14
 Add at most 100 players at a time.
-= 一次最多添加 100 名玩家。
+= 每次最多添加 100 名玩家。
 
-// web-ui/src/RelationsPage.vue:413
+// web-ui/src/RelationsPage.vue:387:13
 {0} ready to add
-= 准备添加{0}名玩家
+= {0} 名玩家待添加
 
-// web-ui/src/RelationsPage.vue:424
+// web-ui/src/RelationsPage.vue:398:19
 Add player
 = 添加玩家
 
-// web-ui/src/RelationsPage.vue:426
+// web-ui/src/RelationsPage.vue:400:21
 Add {0} players
-= 添加{0}名玩家
+= 添加 {0} 名玩家
 
-// web-ui/src/RelationsPage.vue:436
-Some players could not be updated.
-= 部分玩家无法更新。
-
-// web-ui/src/RelationsPage.vue:442, web-ui/src/RelationsPage.vue:443
+// web-ui/src/RelationsPage.vue:410:23
 Dismiss errors
 = 关闭错误提示
 
-// web-ui/src/RelationsPage.vue:459
+// web-ui/src/RelationsPage.vue:413:18
+Some players could not be updated.
+= 部分玩家信息无法更新。
+
+// web-ui/src/RelationsPage.vue:428:19
 Deselect visible players
 = 取消选择当前显示的玩家
 
-// web-ui/src/RelationsPage.vue:460
+// web-ui/src/RelationsPage.vue:429:19
 Select visible players
 = 选择当前显示的玩家
 
-// web-ui/src/RelationsPage.vue:464
+// web-ui/src/RelationsPage.vue:433:50
 MC ID
 = MC ID
 
-// web-ui/src/RelationsPage.vue:465
+// web-ui/src/RelationsPage.vue:434:50
 UUID
 = UUID
 
-// web-ui/src/RelationsPage.vue:478
+// web-ui/src/RelationsPage.vue:447:26
 Select {0}
-= 选择{0}
+= 选择 {0}
 
-// web-ui/src/RelationsPage.vue:483
+// web-ui/src/RelationsPage.vue:452:30
 Not yet known
-= 暂未获取
+= 尚未查询到
 
-// web-ui/src/RelationsPage.vue:492
+// web-ui/src/RelationsPage.vue:461:19
 Cancel removal of {0}
-= 取消移除{0}
+= 取消移除 {0}
 
-// web-ui/src/RelationsPage.vue:493, web-ui/src/RelationsPage.vue:498
+// web-ui/src/RelationsPage.vue:462:19, web-ui/src/RelationsPage.vue:467:19
 Remove {0}
-= 移除{0}
+= 移除 {0}
 
-// web-ui/src/RelationsPage.vue:497
+// web-ui/src/RelationsPage.vue:466:19
 Cancel removal
 = 取消移除
 
-// web-ui/src/RelationsPage.vue:508
+// web-ui/src/RelationsPage.vue:477:19
 Remove {0}?
-= 移除{0}？
+= 移除 {0}？
 
-// web-ui/src/RelationsPage.vue:532
+// web-ui/src/RelationsPage.vue:501:17
 No matching players.
 = 没有匹配的玩家。
 
-// web-ui/src/RelationsPage.vue:534
+// web-ui/src/RelationsPage.vue:503:19
 No friends yet.
-= 还没有好友。
+= 暂无好友。
 
-// web-ui/src/RelationsPage.vue:535
+// web-ui/src/RelationsPage.vue:504:19
 No enemies yet.
-= 还没有敌人。
+= 暂无敌人。
 
-// web-ui/src/SettingRow.vue:145
+// web-ui/src/SearchField.vue:50:20, web-ui/src/SearchField.vue:51:15
+Clear search
+= 清空搜索
+
+// web-ui/src/SettingRow.vue:136:34
 Right Shift
 = 右 Shift
 
-// web-ui/src/SettingRow.vue:146
+// web-ui/src/SettingRow.vue:137:34
 Left Shift
 = 左 Shift
 
-// web-ui/src/SettingRow.vue:147
+// web-ui/src/SettingRow.vue:138:29
 Unbound
 = 未绑定
 
-// web-ui/src/SettingRow.vue:189
+// web-ui/src/SettingRow.vue:176:26
 Value for {0}
-= {0}的值
+= {0} 的值
 
-// web-ui/src/SettingRow.vue:247
+// web-ui/src/SettingRow.vue:228:24
 Color #{0}
 = 颜色 #{0}
 
-// web-ui/src/SettingRow.vue:270
+// web-ui/src/SettingRow.vue:251:15
 Cancel capture for {0}
-= 取消录入{0}的按键
+= 取消为 {0} 录入按键
 
-// web-ui/src/SettingRow.vue:271
+// web-ui/src/SettingRow.vue:252:15
 Change {0}
-= 修改{0}
+= 更改 {0}
 
-// web-ui/src/SettingRow.vue:275
+// web-ui/src/SettingRow.vue:260:11
 Press a key
-= 按下一个按键
+= 按下按键
 
-// web-ui/src/TransferDialog.vue:144
+// web-ui/src/SettingsPage.vue:54:17
+Replaces the active profile configuration with defaults.
+= 将当前使用的配置方案恢复为默认设置。
+
+// web-ui/src/SettingsPage.vue:57:36
+Restore defaults
+= 恢复默认设置
+
+// web-ui/src/SettingsPage.vue:65:35, web-ui/src/TransferDialog.vue:591:35
+Export
+= 导出
+
+// web-ui/src/SettingsPage.vue:73:33, web-ui/src/TransferDialog.vue:591:49
+Import
+= 导入
+
+// web-ui/src/TransferDialog.vue:158:21
 File is too large
 = 文件过大
 
-// web-ui/src/TransferDialog.vue:151
+// web-ui/src/TransferDialog.vue:163:21
 File must be a JSON object
-= 文件必须是 JSON 对象
+= 文件内容必须为 JSON 对象
 
-// web-ui/src/TransferDialog.vue:157
+// web-ui/src/TransferDialog.vue:170:60
 Cannot read file
 = 无法读取文件
 
-// web-ui/src/TransferDialog.vue:182
+// web-ui/src/TransferDialog.vue:199:48
 Cannot preview file
 = 无法预览文件
 
-// web-ui/src/TransferDialog.vue:225
+// web-ui/src/TransferDialog.vue:242:60
 Transfer failed
-= 传输失败
+= 导入或导出失败
 
-// web-ui/src/TransferDialog.vue:232
+// web-ui/src/TransferDialog.vue:249:58
 Friend
 = 好友
 
-// web-ui/src/TransferDialog.vue:232
+// web-ui/src/TransferDialog.vue:249:72
 Enemy
 = 敌人
 
-// web-ui/src/TransferDialog.vue:237
+// web-ui/src/TransferDialog.vue:254:12
 Different group
 = 分组不同
 
-// web-ui/src/TransferDialog.vue:238
+// web-ui/src/TransferDialog.vue:255:15
 Different UUID
 = UUID 不同
 
-// web-ui/src/TransferDialog.vue:239
+// web-ui/src/TransferDialog.vue:256:11
 Different name
 = 名称不同
 
-// web-ui/src/TransferDialog.vue:275, web-ui/src/TransferDialog.vue:280
+// web-ui/src/TransferDialog.vue:299:40, web-ui/src/TransferDialog.vue:304:36
 Export data
 = 导出数据
 
-// web-ui/src/TransferDialog.vue:275, web-ui/src/TransferDialog.vue:280
+// web-ui/src/TransferDialog.vue:299:59, web-ui/src/TransferDialog.vue:304:55
 Import data
 = 导入数据
 
-// web-ui/src/TransferDialog.vue:312
+// web-ui/src/TransferDialog.vue:336:16
 Choose file
 = 选择文件
 
-// web-ui/src/TransferDialog.vue:319, web-ui/src/TransferDialog.vue:320
+// web-ui/src/TransferDialog.vue:345:26, web-ui/src/TransferDialog.vue:346:21
 Refresh preview
 = 刷新预览
 
-// web-ui/src/TransferDialog.vue:334
+// web-ui/src/TransferDialog.vue:363:28
 Toggle profiles
-= 展开或折叠配置方案
+= 展开或收起配置方案
 
-// web-ui/src/TransferDialog.vue:372
+// web-ui/src/TransferDialog.vue:402:17
 No profiles
-= 没有配置方案
+= 暂无配置方案
 
-// web-ui/src/TransferDialog.vue:381
+// web-ui/src/TransferDialog.vue:412:28
 Toggle relations
-= 展开或折叠关系列表
+= 展开或收起玩家关系
 
-// web-ui/src/TransferDialog.vue:422
+// web-ui/src/TransferDialog.vue:454:17
 No relations
-= 没有关系列表
+= 暂无玩家关系
 
-// web-ui/src/TransferDialog.vue:431
+// web-ui/src/TransferDialog.vue:464:20
 Swap bindings
-= 切换绑定
+= 换装绑定
 
-// web-ui/src/TransferDialog.vue:442
+// web-ui/src/TransferDialog.vue:475:26
 Relation import mode
-= 关系列表导入方式
+= 玩家关系导入方式
 
-// web-ui/src/TransferDialog.vue:451
+// web-ui/src/TransferDialog.vue:484:18
 Merge
 = 合并
 
-// web-ui/src/TransferDialog.vue:460
+// web-ui/src/TransferDialog.vue:493:18
 Replace
 = 替换
 
-// web-ui/src/TransferDialog.vue:467
+// web-ui/src/TransferDialog.vue:500:20
 Conflicts
 = 冲突
 
-// web-ui/src/TransferDialog.vue:479
+// web-ui/src/TransferDialog.vue:512:22
 Keep local for all
-= 全部保留本地
+= 全部保留本地数据
 
-// web-ui/src/TransferDialog.vue:490
+// web-ui/src/TransferDialog.vue:523:22
 Use file for all
-= 全部使用文件
+= 全部使用文件数据
 
-// web-ui/src/TransferDialog.vue:503
+// web-ui/src/TransferDialog.vue:536:19
 Local: {0}
 = 本地：{0}
 
-// web-ui/src/TransferDialog.vue:505
+// web-ui/src/TransferDialog.vue:538:27
 File: {0}
 = 文件：{0}
 
-// web-ui/src/TransferDialog.vue:509
+// web-ui/src/TransferDialog.vue:542:32
 Resolve {0}
-= 处理{0}的冲突
+= 处理 {0} 的冲突
 
-// web-ui/src/TransferDialog.vue:518
+// web-ui/src/TransferDialog.vue:551:24
 Keep local
-= 保留本地
+= 保留本地数据
 
-// web-ui/src/TransferDialog.vue:527
+// web-ui/src/TransferDialog.vue:560:24
 Use file
-= 使用文件
+= 使用文件数据
 
-// web-ui/src/TransferDialog.vue:556
+// web-ui/src/TransferDialog.vue:594:15
 Working...
 = 正在处理…
+
+// web-ui/src/useKeyCapture.ts:51:29
+This key cannot be bound
+= 此按键无法绑定
 

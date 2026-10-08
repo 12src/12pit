@@ -108,9 +108,9 @@ public final class SwapConfig extends FeatureConfig {
                 source("Shows why automatic swaps happened."), true);
         subsubcategory("venom", "Venom");
         venomArmor = booleanSetting("venom_armor", source("Swap diamond armor"),
-                source("Equips diamond leggings and boots when poisoned."), false);
+                source("Equips diamond leggings and boots when poisoned."), true);
         venomSpade = booleanSetting("venom_spade", source("Swap Combat Spade"),
-                source("Moves a Combat Spade to the selected hotbar slot when poisoned."), false);
+                source("Moves a Combat Spade to the selected hotbar slot when poisoned."), true);
         skipVenomPants = booleanSetting("skip_venom_pants", source("Skip while wearing Venom"),
                 source("Skips poison swaps while wearing Combo Venom leggings."), false);
         spadeSlot = integerSliderSetting("spade_slot", source("Combat Spade slot"),

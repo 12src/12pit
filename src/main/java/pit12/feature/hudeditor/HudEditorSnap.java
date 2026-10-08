@@ -20,16 +20,15 @@ package pit12.feature.hudeditor;
 
 import java.util.ArrayList;
 import java.util.List;
-import pit12.runtime.hud.HudBounds;
 
 final class HudEditorSnap {
     final Axis horizontal = new Axis();
     final Axis vertical = new Axis();
 
-    void prepare(Box moving, int screenWidth, int screenHeight, Iterable<HudBounds> others) {
+    void prepare(Box moving, int screenWidth, int screenHeight, Iterable<Box> others) {
         horizontal.prepare(moving.width, screenWidth);
         vertical.prepare(moving.height, screenHeight);
-        for (HudBounds other : others) {
+        for (Box other : others) {
             horizontal.addElement(moving.width, other.x, other.width, other.y,
                     other.y + other.height);
             vertical.addElement(moving.height, other.y, other.height, other.x,
@@ -60,14 +59,12 @@ final class HudEditorSnap {
         final int line;
         final int start;
         final int end;
-        final boolean gap;
 
-        private Target(int origin, int line, int start, int end, boolean gap) {
+        private Target(int origin, int line, int start, int end) {
             this.origin = origin;
             this.line = line;
             this.start = start;
             this.end = end;
-            this.gap = gap;
         }
     }
     static final class Axis {
@@ -79,24 +76,22 @@ final class HudEditorSnap {
             targets.clear();
             active = null;
             maximum = Math.max(0, screenLength - length);
-            add(0, 0, 0, 0, false);
-            add(screenLength - length, screenLength, 0, 0, false);
-            add(screenLength / 2 - length / 2, screenLength / 2, 0, 0, false);
+            add(0, 0, 0, 0);
+            add(screenLength - length, screenLength, 0, 0);
+            add(screenLength / 2 - length / 2, screenLength / 2, 0, 0);
         }
 
         private void addElement(int length, int origin, int otherLength, int start, int end) {
             for (int target : new int[] {origin, origin + otherLength / 2, origin + otherLength}) {
                 for (int offset : new int[] {0, length / 2, length}) {
-                    add(target - offset, target, start, end, false);
+                    add(target - offset, target, start, end);
                 }
             }
-            add(origin - 6 - length, origin, start, end, true);
-            add(origin + otherLength + 6, origin + otherLength, start, end, true);
         }
 
-        private void add(int origin, int line, int start, int end, boolean gap) {
+        private void add(int origin, int line, int start, int end) {
             if (origin >= 0 && origin <= maximum) {
-                targets.add(new Target(origin, line, start, end, gap));
+                targets.add(new Target(origin, line, start, end));
             }
         }
 
@@ -108,11 +103,11 @@ final class HudEditorSnap {
             }
             // Reaching a screen edge must break the previous snap.
             if (active != null && value > 0 && value < maximum
-                    && Math.abs(value - active.origin) <= 10) {
+                    && Math.abs(value - active.origin) <= 4) {
                 return active.origin;
             }
             active = null;
-            int nearest = 7;
+            int nearest = 3;
             for (Target target : targets) {
                 int distance = Math.abs(value - target.origin);
                 if (distance < nearest) {

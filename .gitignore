@@ -114,5 +114,8 @@ bin/*
 # Visual Studio Code extensions
 *.vsix
 
-# DevAuth
+# Client
 run
+
+# Python
+__pycache__/

@@ -28,6 +28,6 @@ public final class AutoSprintConfig extends FeatureConfig {
         super("autosprint", source("Auto Sprint"),
                 new ConfigCategory("player", source("Player"), 50),
                 source("Sprints automatically while moving forward, without holding the sprint key."),
-                true);
+                true, false);
     }
 }

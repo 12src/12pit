@@ -36,7 +36,7 @@ public final class AutoFishConfig extends FeatureConfig {
 
     public AutoFishConfig() {
         super("autofish", source("Auto Fish"), new ConfigCategory("utility", source("Utility"), 75),
-                source("Reels in when a fish bites and can cast again."), true, false);
+                source("Reels in when a fish bites and can cast again."));
         subsubcategory("general", source("General"));
         autoRecast = booleanSetting("auto_recast", source("Auto recast"),
                 source("Casts once after Auto Fish reels in."), true);

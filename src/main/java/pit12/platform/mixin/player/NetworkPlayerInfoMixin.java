@@ -28,7 +28,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import pit12.runtime.player.PlayerNameBinding;
 
 @Mixin(NetworkPlayerInfo.class)
-public abstract class NetworkPlayerInfoNameMixin implements PlayerNameBinding {
+public abstract class NetworkPlayerInfoMixin implements PlayerNameBinding {
     @Unique
     private Runnable pit12$nameObserver;
 
