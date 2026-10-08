@@ -135,17 +135,17 @@ final class SwapController {
         enqueue(new Request(0, binding), binding.identity);
     }
 
-    boolean enqueueAutomatic(List<Target> targets, BooleanSupplier ready) {
+    boolean enqueueAutomatic(List<Target> targets, String message, BooleanSupplier ready) {
         if (!idle() || !acceptsInput() || !ready.getAsBoolean())
             return false;
-        enqueue(new Request(0, null, targets, 0, ready), targets);
+        enqueue(new Request(0, null, targets, 0, message, ready), targets);
         return true;
     }
 
-    boolean enqueueAutomaticUnequip(int slot, BooleanSupplier ready) {
+    boolean enqueueAutomaticUnequip(int slot, String message, BooleanSupplier ready) {
         if (!idle() || !acceptsInput() || !ready.getAsBoolean())
             return false;
-        enqueue(new Request(0, null, null, slot, ready), slot);
+        enqueue(new Request(0, null, null, slot, message, ready), slot);
         return true;
     }
 
@@ -376,9 +376,15 @@ final class SwapController {
     }
 
     private void reportGroup() {
+        boolean automatic = current.automaticMessage != null;
+        if (automatic && !options.automaticMessages)
+            return;
         for (String problem : problems)
-            report.accept(Tone.WARNING, problem);
-        if (options.messages && !completed.isEmpty()) {
+            report.accept(Tone.WARNING,
+                    automatic ? language.format("Automatic swap: {0}", problem) : problem);
+        if (automatic && !completed.isEmpty()) {
+            report.accept(Tone.SUCCESS, current.automaticMessage);
+        } else if (!automatic && options.messages && !completed.isEmpty()) {
             report.accept(Tone.SUCCESS,
                     options.details ? language.format("Swapped: {0}", String.join(", ", completed))
                             : language.format("Swapped {0} item(s)", completed.size()));
@@ -607,7 +613,7 @@ final class SwapController {
         }
 
         private void complete() {
-            completed.add(binding.display(options.details));
+            completed.add(binding.display(current.automaticMessage == null && options.details));
             done = true;
         }
     }
@@ -616,19 +622,21 @@ final class SwapController {
         final SwapBinding direct;
         final List<Target> automatic;
         final int unequipSlot;
+        final String automaticMessage;
         final BooleanSupplier ready;
         boolean started;
 
         Request(int key, SwapBinding direct) {
-            this(key, direct, null, 0, null);
+            this(key, direct, null, 0, null, null);
         }
 
         Request(int key, SwapBinding direct, List<Target> automatic, int unequipSlot,
-                BooleanSupplier ready) {
+                String automaticMessage, BooleanSupplier ready) {
             this.key = key;
             this.direct = direct;
             this.automatic = automatic;
             this.unequipSlot = unequipSlot;
+            this.automaticMessage = automaticMessage;
             this.ready = ready;
         }
     }

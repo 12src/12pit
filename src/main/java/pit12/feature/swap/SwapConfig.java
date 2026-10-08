@@ -29,6 +29,7 @@ import pit12.runtime.config.IntegerSetting;
 public final class SwapConfig extends FeatureConfig {
     final BooleanSetting rightClick;
     final BooleanSetting autoSwap;
+    final BooleanSetting autoSwapMessages;
     final ChoiceSetting inventoryDisplay;
     final IntegerSetting workspace;
     final BooleanSetting restoreWorkspace;
@@ -103,6 +104,8 @@ public final class SwapConfig extends FeatureConfig {
         subcategory("automatic_swap", source("Automatic swap"));
         autoSwap = booleanSetting("auto_swap", source("Automatic swap"),
                 source("Automatically swaps items when poisoned or at low health."), false);
+        autoSwapMessages = booleanSetting("auto_swap_messages", source("Automatic swap messages"),
+                source("Shows why automatic swaps happened."), true);
         subsubcategory("venom", "Venom");
         venomArmor = booleanSetting("venom_armor", source("Swap diamond armor"),
                 source("Equips diamond leggings and boots when poisoned."), false);
@@ -154,6 +157,7 @@ public final class SwapConfig extends FeatureConfig {
         final int closeDelay;
         final boolean resumeInputNextTick;
         final boolean messages;
+        final boolean automaticMessages;
         final boolean details;
 
         Options(SwapConfig config) {
@@ -169,6 +173,7 @@ public final class SwapConfig extends FeatureConfig {
             closeDelay = config.closeDelay.get();
             resumeInputNextTick = config.resumeInputNextTick.get();
             messages = config.swapMessages.get();
+            automaticMessages = config.autoSwapMessages.get();
             details = config.messageDetails.get();
         }
     }

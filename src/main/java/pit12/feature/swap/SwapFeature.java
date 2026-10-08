@@ -77,7 +77,7 @@ public final class SwapFeature implements ClientLifecycle, ConfigChangeListener,
                 message -> report(Tone.ERROR, language.translate(message)));
         controller = new SwapController(minecraft, session, config, bindings, this::report,
                 this::lockInput, this::releaseInput, language);
-        automatic = new AutoSwapController(minecraft, config, controller, pit);
+        automatic = new AutoSwapController(minecraft, config, controller, pit, language);
         overlay = new SwapOverlay(minecraft, bindings, config);
         commands.register(
                 new SwapCommand(minecraft, bindings, config, automatic, language).definition(),
