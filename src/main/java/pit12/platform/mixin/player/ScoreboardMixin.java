@@ -30,7 +30,7 @@ import pit12.runtime.player.PlayerTeamBinding;
 import pit12.runtime.player.PlayerTeamObserver;
 
 @Mixin(Scoreboard.class)
-public abstract class ScoreboardNameMixin implements PlayerTeamBinding {
+public abstract class ScoreboardMixin implements PlayerTeamBinding {
     @Unique
     private PlayerTeamObserver pit12$teamObserver;
 
