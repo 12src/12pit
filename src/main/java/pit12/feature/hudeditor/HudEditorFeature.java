@@ -31,6 +31,7 @@ import pit12.feature.hudeditor.api.HudEditor;
 import pit12.feature.profile.api.Profiles;
 import pit12.runtime.command.CommandNode;
 import pit12.runtime.command.CommandRegistry;
+import pit12.runtime.config.BooleanSetting;
 import pit12.runtime.config.ConfigCatalog;
 import pit12.runtime.hud.HudRegistry;
 import pit12.runtime.languages.Languages;
@@ -43,6 +44,7 @@ public final class HudEditorFeature implements ClientLifecycle, HudEditor {
     private final Languages language;
     private IntSupplier interfaceKey;
     private Runnable webUiOpener;
+    private BooleanSetting showHint;
     private boolean started;
     private boolean pendingOpen;
 
@@ -55,9 +57,11 @@ public final class HudEditorFeature implements ClientLifecycle, HudEditor {
                 .executes((sender, args) -> requestOpen()).build(), true);
     }
 
-    public void setWebUiOpener(IntSupplier interfaceKey, Runnable webUiOpener) {
+    public void setWebUiOpener(IntSupplier interfaceKey, Runnable webUiOpener,
+            BooleanSetting showHint) {
         this.interfaceKey = interfaceKey;
         this.webUiOpener = webUiOpener;
+        this.showHint = showHint;
     }
 
     @Override
@@ -111,8 +115,7 @@ public final class HudEditorFeature implements ClientLifecycle, HudEditor {
                 && ((HudEditorScreen) minecraft.currentScreen).belongsTo(controller)) {
             return;
         }
-        minecraft.displayGuiScreen(
-                new HudEditorScreen(controller, minecraft.currentScreen, language, interfaceKey,
-                        webUiOpener));
+        minecraft.displayGuiScreen(new HudEditorScreen(controller, minecraft.currentScreen,
+                language, interfaceKey, webUiOpener, showHint));
     }
 }

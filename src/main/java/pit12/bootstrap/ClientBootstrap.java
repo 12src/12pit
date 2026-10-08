@@ -193,7 +193,7 @@ public final class ClientBootstrap {
         configs.register(config);
         WebUiFeature webUi = new WebUiFeature(featureConfigs, configs, profiles, relations,
                 hudEditor, swapBindings, config, language, path);
-        hudEditor.setWebUiOpener(config.keybind()::get, webUi::open);
+        hudEditor.setWebUiOpener(config.keybind()::get, webUi::open, config.hudEditorHint());
         components.add(webUi);
         return config.discordRpc();
     }
