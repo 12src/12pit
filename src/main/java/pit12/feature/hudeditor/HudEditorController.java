@@ -26,6 +26,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import net.minecraft.client.Minecraft;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraftforge.client.GuiIngameForge;
 import pit12.feature.profile.api.Profiles;
 import pit12.runtime.config.ConfigCatalog;
 import pit12.runtime.config.ConfigChangeListener;
@@ -44,6 +47,7 @@ final class HudEditorController {
         NONE, MOVE, MARQUEE, NUDGE
     }
 
+    private final Minecraft minecraft = Minecraft.getMinecraft();
     private final HudRegistry registry;
     private final ConfigCatalog configs;
     private final Profiles profiles;
@@ -257,11 +261,18 @@ final class HudEditorController {
             return;
         }
         captureOrigins();
-        List<HudBounds> others = new ArrayList<>();
+        List<HudEditorSnap.Box> others = new ArrayList<>();
         for (HudElement element : registry.elements()) {
             if (!selected.contains(element)) {
-                others.add(bounds(element));
+                HudBounds bounds = bounds(element);
+                others.add(new HudEditorSnap.Box(bounds.x, bounds.y, bounds.width, bounds.height));
             }
+        }
+        if (minecraft.thePlayer != null && !minecraft.gameSettings.hideGUI
+                && GuiIngameForge.renderHotbar && !minecraft.playerController.isSpectator()
+                && minecraft.getRenderViewEntity() instanceof EntityPlayer) {
+            // Match GuiIngame's hotbar background in scaled GUI coordinates.
+            others.add(new HudEditorSnap.Box(screenWidth / 2 - 91, screenHeight - 22, 182, 22));
         }
         snap.prepare(group, screenWidth, screenHeight, others);
         gesture = Gesture.MOVE;
@@ -501,10 +512,6 @@ final class HudEditorController {
         } else {
             renderer.rect(start, Math.min(screenHeight - 1, target.line), end - start, 1,
                     0xCC26CEAA);
-        }
-        if (target.gap) {
-            renderer.text("6", horizontal ? target.line + 2 : start + 2,
-                    horizontal ? start + 2 : target.line + 2, 0xFF26CEAA, true, false);
         }
     }
 
