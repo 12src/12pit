@@ -30,13 +30,9 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.RandomAccessFile;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashSet;
 import java.util.Locale;
@@ -60,20 +56,14 @@ final class DiscordRpcConnection implements Closeable {
     static DiscordRpcConnection open() throws IOException {
         if (System.getProperty("os.name").toLowerCase(Locale.ROOT).startsWith("windows")) {
             for (int index = 0; index < 10; index++) {
-                RandomAccessFile pipe;
                 try {
-                    pipe = new RandomAccessFile("\\\\?\\pipe\\discord-ipc-" + index, "rw");
-                } catch (FileNotFoundException unavailable) {
+                    WindowsPipeTransport pipe =
+                            new WindowsPipeTransport("\\\\?\\pipe\\discord-ipc-" + index);
+                    return new DiscordRpcConnection(pipe, new BufferedInputStream(pipe.input),
+                            new BufferedOutputStream(pipe.output));
+                } catch (IOException unavailable) {
                     LOGGER.log(Level.FINE, "Discord IPC endpoint " + index + " is unavailable",
                             unavailable);
-                    continue;
-                }
-                try {
-                    return new DiscordRpcConnection(pipe, new FileInputStream(pipe.getFD()),
-                            new FileOutputStream(pipe.getFD()));
-                } catch (IOException failure) {
-                    pipe.close();
-                    throw failure;
                 }
             }
             return null;
@@ -122,7 +112,7 @@ final class DiscordRpcConnection implements Closeable {
         }
         JsonObject activity = new JsonObject();
         activity.addProperty("type", 0);
-        activity.addProperty("details", "A free open-source pit mod");
+        activity.addProperty("details", "A free and open-source pit mod");
         JsonObject timestamps = new JsonObject();
         timestamps.addProperty("start", startedAt);
         activity.add("timestamps", timestamps);
