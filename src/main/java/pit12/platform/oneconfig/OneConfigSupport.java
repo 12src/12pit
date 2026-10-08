@@ -58,7 +58,7 @@ public final class OneConfigSupport implements ClientLifecycle {
         pending = false;
         MinecraftForge.EVENT_BUS.unregister(this);
         try {
-            // Keep OneConfig types inside the adapter so an absent mod cannot link them here.
+            // Keep OneConfig types in the adapter so this class can load when OneConfig is absent.
             adapter = new OneConfigAdapter(catalog);
             adapter.start();
         } catch (RuntimeException | LinkageError failure) {

@@ -25,8 +25,8 @@ public final class ConfigOption<T> {
 
     private final Setting<T> setting;
     private final Kind kind;
-    private final ConfigGroup subcategory;
-    private final ConfigGroup subsubcategory;
+    private ConfigGroup subcategory;
+    private ConfigGroup subsubcategory;
 
     ConfigOption(Setting<T> setting, Kind kind, ConfigGroup subcategory,
             ConfigGroup subsubcategory) {
@@ -42,6 +42,11 @@ public final class ConfigOption<T> {
 
     public Kind kind() {
         return kind;
+    }
+
+    void group(ConfigGroup subcategory, ConfigGroup subsubcategory) {
+        this.subcategory = subcategory;
+        this.subsubcategory = subsubcategory;
     }
 
     public ConfigGroup subcategory() {

@@ -35,6 +35,7 @@ import pit12.runtime.pit.PitSnapshot;
 import pit12.runtime.pit.SpawnState;
 import pit12.runtime.player.PlayerEquipmentAccess;
 import pit12.runtime.player.PlayerEquipmentSnapshot;
+import pit12.runtime.player.PlayerNameCache;
 
 final class PlayerListBuilder {
     private final Minecraft minecraft;
@@ -42,14 +43,16 @@ final class PlayerListBuilder {
     private final PitContext pitContext;
     private final PlayerListConfig config;
     private final RelationLookup relations;
+    private final PlayerNameCache playerNames;
 
     PlayerListBuilder(Minecraft minecraft, PlayerEquipmentAccess equipment, PitContext pitContext,
-            PlayerListConfig config, RelationLookup relations) {
+            PlayerListConfig config, RelationLookup relations, PlayerNameCache playerNames) {
         this.minecraft = minecraft;
         this.equipment = equipment;
         this.pitContext = pitContext;
         this.config = config;
         this.relations = relations;
+        this.playerNames = playerNames;
     }
 
     PlayerListSnapshot build() {
@@ -82,6 +85,11 @@ final class PlayerListBuilder {
             if (group == null || !config.showGroup(group)) {
                 continue;
             }
+            String name = config.shortPlayerNames() ? playerNames.shortName(playerId)
+                    : playerNames.displayName(playerId);
+            if (name == null) {
+                continue;
+            }
             EntityPlayer player = world.getPlayerEntityByUUID(playerId);
             boolean distanceKnown = localPlayer != null && player != null;
             boolean directionKnown =
@@ -94,15 +102,15 @@ final class PlayerListBuilder {
                     .spawnStateAt(player.posX, player.posY, player.posZ) == SpawnState.IN_SPAWN;
             String leggingsText = config.showLeggings() && playerEquipment != null
                     && playerEquipment.leggingsKnown()
-                            ? formatEnchantments(playerEquipment.leggingsEnchantments())
+                            ? formatEnchantments(playerEquipment.leggingsEnchantments(), config)
                             : null;
             String heldItemText = config.showHeldItem() && playerEquipment != null
                     && playerEquipment.heldItemKnown()
-                            ? formatEnchantments(playerEquipment.heldEnchantments())
+                            ? formatEnchantments(playerEquipment.heldEnchantments(), config)
                             : null;
             PlayerListEntry entry = new PlayerListEntry(playerId,
-                    player == null ? 0 : player.getEntityId(), nameOf(info), leggingsText,
-                    heldItemText, distance, direction, distanceKnown, directionKnown, spawn);
+                    player == null ? 0 : player.getEntityId(), name, leggingsText, heldItemText,
+                    distance, direction, distanceKnown, directionKnown, spawn);
             List<PlayerListEntry> groupEntries = groups.get(group);
             if (groupEntries == null) {
                 groupEntries = new ArrayList<PlayerListEntry>();
@@ -113,7 +121,7 @@ final class PlayerListBuilder {
         return PlayerListSnapshot.create(groups);
     }
 
-    private String formatEnchantments(PitEnchantments enchantments) {
+    static String formatEnchantments(PitEnchantments enchantments, PlayerListConfig config) {
         switch (config.enchantmentFormat()) {
             case PlayerListConfig.ENCHANTMENT_FORMAT_PLAIN_LEVELS:
                 return enchantments.formatDisplayNames();
@@ -122,22 +130,11 @@ final class PlayerListBuilder {
             case PlayerListConfig.ENCHANTMENT_FORMAT_NAMES_ONLY:
                 return enchantments.formatBoldDisplayNamesWithoutLevels();
             case PlayerListConfig.ENCHANTMENT_FORMAT_BOLD_LEVELS:
-            default:
                 return enchantments.formatBoldDisplayNames();
+            default:
+                throw new IllegalStateException(
+                        "Unknown enchantment format: " + config.enchantmentFormat());
         }
-    }
-
-    long tabSignature() {
-        if (minecraft.getNetHandler() == null) {
-            return 0L;
-        }
-        long signature = 1L;
-        for (NetworkPlayerInfo info : minecraft.getNetHandler().getPlayerInfoMap()) {
-            UUID id = info.getGameProfile().getId();
-            signature = 31L * signature + (id == null ? 0 : id.hashCode());
-            signature = 31L * signature + nameOf(info).hashCode();
-        }
-        return signature;
     }
 
     private static PlayerListGroup groupOf(Relation relation, PlayerEquipmentSnapshot equipment) {
@@ -157,15 +154,6 @@ final class PlayerListBuilder {
             return PlayerListGroup.DARK;
         }
         return equipment.hasGoldenLeggings() ? PlayerListGroup.BOUNTY_HUNTER : null;
-    }
-
-    private String nameOf(NetworkPlayerInfo info) {
-        String name = minecraft.ingameGUI.getTabList().getPlayerName(info);
-        int end = name.length();
-        while (end > 0 && Character.isWhitespace(name.charAt(end - 1))) {
-            end--;
-        }
-        return name.substring(0, end);
     }
 
     private static float distance(EntityPlayer localPlayer, EntityPlayer player) {

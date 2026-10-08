@@ -112,7 +112,12 @@ public final class TabPresenceTracker implements ClientLifecycle, TabPresence, T
         session.checkThread();
         Action action = packet.getAction();
         if (action == Action.UPDATE_DISPLAY_NAME) {
-            Listeners.notify(listeners, TabPresenceListener::onTabDisplayChanged);
+            for (AddPlayerData entry : packet.getEntries()) {
+                UUID playerId = entry.getProfile().getId();
+                if (playerId != null) {
+                    Listeners.notify(listeners, listener -> listener.onTabDisplayChanged(playerId));
+                }
+            }
             return;
         }
         if (action != Action.ADD_PLAYER && action != Action.REMOVE_PLAYER)

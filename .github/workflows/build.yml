@@ -18,6 +18,8 @@ jobs:
   build:
     name: Build (${{ matrix.platform }})
     runs-on: ${{ matrix.os }}
+    env:
+      GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
     strategy:
       fail-fast: false
       matrix:
@@ -47,9 +49,19 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb #v6.3.0
         with:
+          cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
           build-scan-publish: true
           build-scan-terms-of-use-url: https://gradle.com/help/legal-terms-of-use
           build-scan-terms-of-use-agree: yes
+
+      - name: Cache Gradle configuration
+        if: env.GRADLE_ENCRYPTION_KEY != ''
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .gradle/configuration-cache
+          key: cc-${{ runner.os }}-${{ github.workflow }}-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}-${{ github.sha }}
+          restore-keys: |
+            cc-${{ runner.os }}-${{ github.workflow }}-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}-
 
       - name: Build
         if: runner.os != 'Windows'

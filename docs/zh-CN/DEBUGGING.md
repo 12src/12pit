@@ -1,4 +1,4 @@
-<!-- Source: docs/DEBUGGING.md; Based on: 9e3455a4346e4997be2d01c6d78e031334c73fd5 -->
+<!-- Source: docs/DEBUGGING.md; Based on: 4bfcc66f9e73b7f077f9230deb600505a258acbb -->
 
 # 运行和调试 12pit
 
@@ -21,6 +21,8 @@
 ```
 
 开发游戏目录为 `run/`。查看 `run/logs/latest.log`，获取客户端错误和 Web UI 地址。
+
+开发客户端基于 [DevAuth](https://github.com/DJtheRedstoner/DevAuth)。要使用正版账号测试，启用 `devauth.enabled` JVM 属性，并遵循 [DevAuth 配置指南](https://github.com/DJtheRedstoner/DevAuth#configuration)。
 
 ## 开发网页界面
 
@@ -51,7 +53,6 @@ npm run dev --prefix web-ui
 ```powershell
 .\gradlew.bat check
 .\gradlew.bat assemble
-.\gradlew.bat spotlessCheck
 npm run format:check --prefix web-ui
 ```
 
@@ -70,5 +71,3 @@ npm run format:check --prefix web-ui
 保存的数据位于 Minecraft 游戏目录中的 `12pit/` 目录。配置方案存储在 `12pit/config/`，关系存储在 `12pit/relations.json`，切换绑定存储在 `12pit/swap-bindings.json`。
 
 为诊断加载错误而修改这些文件前，先创建备份。不要为了重置临时会话问题而删除已保存的数据。
-
-开发客户端基于 [DevAuth](https://github.com/DJtheRedstoner/DevAuth)。要使用正版账号测试，启用 `devauth.enabled` JVM 属性，并遵循 [DevAuth 配置指南](https://github.com/DJtheRedstoner/DevAuth#configuration)。

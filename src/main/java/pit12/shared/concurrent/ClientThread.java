@@ -21,7 +21,7 @@ package pit12.shared.concurrent;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 
-/** Live APIs belong to this thread. Workers may only submit copied results through execute. */
+/** Access live APIs on the client thread. Workers use execute to return copied results. */
 public final class ClientThread {
     private final BooleanSupplier current;
     private final Consumer<Runnable> dispatch;

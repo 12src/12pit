@@ -45,8 +45,7 @@ public abstract class EntityPlayerSPMixin extends AbstractClientPlayer
         pit12$sprintConfig = config;
     }
 
-    // Covers both keyBindSprint.isKeyDown() call sites in onLivingUpdate (double-tap window and
-    // held-key start), so vanilla's own sprint conditions keep gating auto sprint.
+    // Both sprint-key checks use this override, so vanilla still decides when sprinting is allowed.
     @Redirect(method = "onLivingUpdate", at = @At(value = "INVOKE",
             target = "Lnet/minecraft/client/settings/KeyBinding;isKeyDown()Z"))
     private boolean pit12$sprintAutomatically(KeyBinding key) {

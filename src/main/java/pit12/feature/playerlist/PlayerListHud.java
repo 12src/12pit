@@ -18,6 +18,7 @@
  */
 package pit12.feature.playerlist;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
@@ -26,12 +27,19 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Items;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.ResourceLocation;
 import pit12.Pit12;
 import pit12.runtime.config.HudConfig;
 import pit12.runtime.hud.HudElement;
 import pit12.runtime.hud.HudRenderer;
+import pit12.runtime.item.PitEnchantment;
+import pit12.runtime.item.PitEnchantmentReader;
 import pit12.runtime.languages.Languages;
+import pit12.shared.text.PlayerNameFormatter;
 
 final class PlayerListHud implements HudElement {
     private static final int GAP = 10;
@@ -43,13 +51,13 @@ final class PlayerListHud implements HudElement {
     private static final float FAR_DISTANCE = 50.0F;
     private static final ResourceLocation ARROW_TEXTURE =
             new ResourceLocation(Pit12.MOD_ID, "textures/gui/playerlist/arrow.png");
-    private static final PlayerListSnapshot SAMPLE = sampleSnapshot();
     private final PlayerListConfig config;
     private final HudConfig hudConfig;
     private final Minecraft minecraft;
     private final HudRenderer renderer;
     private final String[] groupNames = new String[PlayerListGroup.values().length];
     private PlayerListSnapshot snapshot = PlayerListSnapshot.empty();
+    private PlayerListSnapshot sample;
     private int nameWidth;
     private int leggingsWidth;
     private int heldItemWidth;
@@ -69,12 +77,14 @@ final class PlayerListHud implements HudElement {
     private double renderRightZ;
     private boolean renderDirectionReady;
     private boolean sampleLayout;
+    private boolean layoutDirty = true;
 
     PlayerListHud(PlayerListConfig config, HudRenderer renderer) {
         this.config = config;
         hudConfig = config.hud();
         minecraft = Minecraft.getMinecraft();
         this.renderer = renderer;
+        sample = sampleSnapshot();
     }
 
     void localize(Languages language) {
@@ -85,12 +95,19 @@ final class PlayerListHud implements HudElement {
                             ? language.translate(group.displayName(), translate)
                             : group.displayName();
         }
-        recalculateLayout(sampleLayout ? SAMPLE : snapshot);
+        recalculateLayout(sampleLayout ? sample : snapshot);
     }
 
     void snapshot(PlayerListSnapshot snapshot) {
         this.snapshot = snapshot;
-        recalculateLayout();
+        if (!sampleLayout) {
+            recalculateLayout(snapshot);
+        }
+    }
+
+    void configurationChanged() {
+        sample = sampleSnapshot();
+        layoutDirty = true;
     }
 
     void close() {
@@ -120,15 +137,14 @@ final class PlayerListHud implements HudElement {
 
     @Override
     public void resize(float pixelScale) {
-        float normalizedScale = Math.max(0.01F, pixelScale);
         boolean monospaceFont = hudConfig.useMonospaceFont().get();
-        if (Float.compare(this.pixelScale, normalizedScale) == 0
+        if (Float.compare(this.pixelScale, pixelScale) == 0
                 && this.monospaceFont == monospaceFont) {
             return;
         }
-        this.pixelScale = normalizedScale;
+        this.pixelScale = pixelScale;
         this.monospaceFont = monospaceFont;
-        renderer.resize(normalizedScale);
+        renderer.resize(pixelScale);
         recalculateLayout();
     }
 
@@ -140,10 +156,9 @@ final class PlayerListHud implements HudElement {
     @Override
     public void prepare(float pixelScale, boolean editing) {
         resize(pixelScale);
-        boolean sample = editing && snapshot.isEmpty();
-        if (sample != sampleLayout) {
-            recalculateLayout(sample ? SAMPLE : snapshot);
-            sampleLayout = sample;
+        if (layoutDirty || editing != sampleLayout) {
+            sampleLayout = editing;
+            recalculateLayout(editing ? sample : snapshot);
         }
     }
 
@@ -154,11 +169,8 @@ final class PlayerListHud implements HudElement {
 
     @Override
     public void render(float partialTicks, boolean editing) {
-        PlayerListSnapshot content = snapshot;
+        PlayerListSnapshot content = editing ? sample : snapshot;
         prepareRenderDirection(partialTicks);
-        if (editing && content.isEmpty()) {
-            content = SAMPLE;
-        }
         int y = EDGE_PADDING;
         boolean hasGroup = false;
         for (PlayerListGroup group : PlayerListGroup.values()) {
@@ -220,7 +232,7 @@ final class PlayerListHud implements HudElement {
     }
 
     private float interpolatedDirection(PlayerListEntry entry, float partialTicks) {
-        if (entry.playerId() == null || !entry.directionKnown() || !renderDirectionReady) {
+        if (entry.playerId() == null || !renderDirectionReady) {
             return entry.direction();
         }
         WorldClient world = minecraft.theWorld;
@@ -284,11 +296,11 @@ final class PlayerListHud implements HudElement {
     }
 
     private void recalculateLayout() {
-        sampleLayout = false;
-        recalculateLayout(snapshot);
+        recalculateLayout(sampleLayout ? sample : snapshot);
     }
 
     private void recalculateLayout(PlayerListSnapshot content) {
+        layoutDirty = false;
         nameWidth = 0;
         leggingsWidth = 0;
         heldItemWidth = 0;
@@ -383,13 +395,49 @@ final class PlayerListHud implements HudElement {
         return 0xFF000000 | red << 16 | green << 8;
     }
 
-    private static PlayerListSnapshot sampleSnapshot() {
+    private PlayerListSnapshot sampleSnapshot() {
+        String firstName = "§5[§f§l113§5] §6PlayerOne §e✫ §6300g";
+        String secondName = "§f[§e54§f] §aPlayerTwo §c♨";
+        String darkName = "§9[§320§9] §aPlayerThree §b400g";
+        if (config.shortPlayerNames()) {
+            firstName = PlayerNameFormatter.shorten(firstName);
+            secondName = PlayerNameFormatter.shorten(secondName);
+            darkName = PlayerNameFormatter.shorten(darkName);
+        }
         Map<PlayerListGroup, List<PlayerListEntry>> groups =
                 new EnumMap<PlayerListGroup, List<PlayerListEntry>>(PlayerListGroup.class);
-        groups.put(PlayerListGroup.REGULARITY, Collections.singletonList(new PlayerListEntry(null,
-                0, "ExamplePlayer", "§4REG 3", "§bSW 3", 12.0F, 18.0F, true, true, false)));
-        groups.put(PlayerListGroup.DARK, Collections.singletonList(new PlayerListEntry(null, 0,
-                "DarkPlayer", "§dDark 2", "", 28.0F, -42.0F, true, true, false)));
+        groups.put(PlayerListGroup.REGULARITY,
+                Arrays.asList(
+                        new PlayerListEntry(null, 0, firstName,
+                                sampleEnchantments(new PitEnchantment[] {PitEnchantment.Regularity,
+                                        PitEnchantment.Gotta_go_fast}, 3, 3),
+                                null, 45.0F, -135.0F, true, true, false),
+                        new PlayerListEntry(null, 0, secondName,
+                                sampleEnchantments(new PitEnchantment[] {PitEnchantment.Regularity,
+                                        PitEnchantment.Gotta_go_fast, PitEnchantment.Solitude}, 3,
+                                        3, 2),
+                                null, 0.0F, 0.0F, false, false, true)));
+        groups.put(PlayerListGroup.DARK,
+                Collections.singletonList(new PlayerListEntry(null, 0, darkName,
+                        sampleEnchantments(new PitEnchantment[] {PitEnchantment.Somber}, 1), null,
+                        0.0F, 0.0F, false, false, true)));
         return PlayerListSnapshot.create(groups);
+    }
+
+    private String sampleEnchantments(PitEnchantment[] enchantments, int... levels) {
+        NBTTagList entries = new NBTTagList();
+        for (int index = 0; index < enchantments.length; index++) {
+            NBTTagCompound entry = new NBTTagCompound();
+            entry.setString("Key", enchantments[index].getKey());
+            entry.setInteger("Level", levels[index]);
+            entries.appendTag(entry);
+        }
+        NBTTagCompound attributes = new NBTTagCompound();
+        attributes.setTag("CustomEnchants", entries);
+        NBTTagCompound tag = new NBTTagCompound();
+        tag.setTag("ExtraAttributes", attributes);
+        ItemStack stack = new ItemStack(Items.leather_leggings);
+        stack.setTagCompound(tag);
+        return PlayerListBuilder.formatEnchantments(PitEnchantmentReader.read(stack), config);
     }
 }

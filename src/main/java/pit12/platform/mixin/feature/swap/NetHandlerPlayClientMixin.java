@@ -61,7 +61,7 @@ public abstract class NetHandlerPlayClientMixin {
                     packet.func_148888_e());
     }
 
-    // TAIL runs after vanilla moves packet handling onto the client thread; audio settings do not affect it.
+    // Vanilla schedules this handler on the client thread. Sound packets reach TAIL even with audio muted.
     @Inject(method = "handleSoundEffect", at = @At("TAIL"))
     private void pit12$afterSoundEffect(S29PacketSoundEffect packet, CallbackInfo callback) {
         Minecraft minecraft = Minecraft.getMinecraft();

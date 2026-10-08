@@ -100,7 +100,7 @@ final class SwapOverlay {
         if (label == null || !config.highlight.get())
             return;
         int textX = label.equipment ? x + 14 - label.width : x + 2;
-        // These hooks share vanilla's item-overlay context and its depth/lighting restore contract.
+        // Vanilla expects lighting and depth to be enabled when this overlay returns.
         GlStateManager.disableLighting();
         GlStateManager.disableDepth();
         GlStateManager.disableBlend();

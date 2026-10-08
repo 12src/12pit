@@ -18,6 +18,8 @@
  */
 package pit12.feature.webui;
 
+import static pit12.runtime.languages.Languages.source;
+
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -54,7 +56,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import net.minecraft.client.Minecraft;
 import org.lwjgl.input.Keyboard;
-import pit12.bootstrap.BuildConfig;
 import pit12.feature.profile.api.ProfileCreateSession;
 import pit12.feature.profile.api.ProfileMutationResult;
 import pit12.feature.profile.api.ProfileSummary;
@@ -72,6 +73,7 @@ import pit12.runtime.config.FeatureConfig;
 import pit12.runtime.config.NumberSetting;
 import pit12.runtime.config.Setting;
 import pit12.runtime.languages.Languages;
+import pit12.shared.build.BuildConfig;
 import pit12.shared.result.OperationResult;
 
 final class WebUiServer {
@@ -173,11 +175,11 @@ final class WebUiServer {
         } catch (JsonParseException failure) {
             sendJson(exchange, 400, object("error", "Invalid JSON"));
         } catch (IllegalArgumentException failure) {
-            sendJson(exchange, 400, object("error", failure.getMessage()));
+            sendJson(exchange, 400, object("error", Languages.sourceText(failure.getMessage())));
         } catch (ExecutionException failure) {
             Throwable cause = failure.getCause();
             if (cause instanceof IllegalArgumentException) {
-                sendJson(exchange, 400, object("error", cause.getMessage()));
+                sendJson(exchange, 400, object("error", Languages.sourceText(cause.getMessage())));
             } else {
                 sendJson(exchange, 500, object("error", "Settings operation failed"));
             }
@@ -254,6 +256,8 @@ final class WebUiServer {
                 if (favorite == null || !favorite.isJsonPrimitive()
                         || !favorite.getAsJsonPrimitive().isBoolean())
                     throw new IllegalArgumentException("Expected a boolean");
+                if (!preferences.ready())
+                    throw new IllegalArgumentException(source("Web UI settings are unavailable"));
                 preferences.setFavorite(id, favorite.getAsBoolean());
             } else if ("/api/setting".equals(path)) {
                 changeSetting(request);
@@ -303,7 +307,7 @@ final class WebUiServer {
     }
 
     private <T> T onClient(Callable<T> action) throws ExecutionException, InterruptedException {
-        // ConfigCatalog and Profiles are confined to Minecraft's client thread.
+        // ConfigCatalog and Profiles require Minecraft's client thread.
         return minecraft.addScheduledTask(action).get();
     }
 
@@ -494,7 +498,8 @@ final class WebUiServer {
         return object("version", BUILD_LABEL, "language", language.locale(), "features", features,
                 "webui",
                 object("settings", featureState(config), "favorites", preferences.favorites(),
-                        "ready", preferences.ready(), "problem", preferences.problem()),
+                        "ready", preferences.ready(), "problem",
+                        Languages.sourceText(preferences.problem())),
                 "relations",
                 object("problem", relations.readinessProblem(), "lookupProblems",
                         relations.lookupProblems(), "entries", relationEntries),

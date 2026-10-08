@@ -1,4 +1,4 @@
-<!-- Source: docs/IMPLEMENTATION.md; Based on: 2232dc5e10013e89eb44cac454aa965c84b6ce20 -->
+<!-- Source: docs/IMPLEMENTATION.md; Based on: 08d27d075f5f28e811ea97e76a4ec893603d64f5 -->
 
 # 12pit 实现
 
@@ -6,7 +6,7 @@
 
 ## 生命周期
 
-`ClientLifecycle` 提供初始化资源的 `start()` 和释放资源的 `stop()`。管理资源的组件实现此接口。不管理资源的辅助工具不应实现它。
+`ClientLifecycle` 提供初始化资源的 `start()` 和释放资源的 `stop()`。管理资源的组件实现此接口。
 
 `ClientBootstrap` 在构造器中创建共享 runtime 组件。每个功能有一个私有的 `register...` 方法，负责按需创建和注册配置、创建功能并加入 `components`。依赖通过参数传入。只有后续装配方法需要使用时，才返回功能的 API。
 
@@ -68,13 +68,13 @@ public final class StatusConfig extends FeatureConfig {
                 source("Shows player names."), true);
     }
 
-    public boolean showNames() {
-        return showNames.get();
+    public BooleanSetting showNames() {
+        return showNames;
     }
 }
 ```
 
-`ConfigCategory` 提供分类 ID、显示名称和顺序编号。相关功能复用同一分类。Web UI 的 Features 页通过分类按钮和 All 按钮切换。All 显示分类标题。选中具体分类时，只显示该分类的功能，不重复显示标题。
+`ConfigCategory` 定义分类 ID、显示名称和顺序。相关功能复用同一分类。
 
 在 Web UI 中，`subcategory()` 将其后的设置放到功能页顶部的切换按钮下。`subsubcategory()` 在页面内分组。两层都可省略。不调用 `subcategory()` 时，分组直接显示在功能页中。未设置 subsubcategory 的选项不显示分组标题。第一个 subcategory 之前的设置在切换按钮后仍然可见。开始新的 subcategory 会清除当前 subsubcategory。设置和分组按定义顺序排列。
 
@@ -87,25 +87,25 @@ public final class StatusConfig extends FeatureConfig {
 - `keybindSetting` 存储从 `0` 到 `255` 的按键代码。功能负责处理输入。
 - `colorSetting` 将 RGB 颜色存储为 `0xRRGGBB`。`colorPickerSetting` 将 ARGB 颜色存储为 `0xAARRGGBB`。
 - `choiceSetting` 使用默认 ID 和具有稳定 ID 的 `ChoiceSetting.Choice` 实例创建选项设置。
-- `hudConfig` 为 HUD 添加锚点、偏移、缩放、文字阴影和等宽字体设置。
+- `hudConfig` 为 HUD 添加分组后的锚点、文字阴影、字体和翻译选项，并存储 HUD 编辑器使用的位置和缩放。分组和存储细节见 [HUD](#hud)。
 
-功能 ID 在目录中唯一。设置和 HUD 配置的 ID 在其功能中唯一。ID 以小写 ASCII 字母或数字开头；其余字符还可以是 `.`、`-` 或 `_`。改变显示名称时，保留已保存的 ID。HUD 配置 ID 是 `status.offset_x` 这样的前缀；不要创建 ID 与它们冲突的设置。
+功能 ID 在目录中唯一。设置和 HUD 配置的 ID 在其功能中唯一。ID 以小写 ASCII 字母或数字开头，其余字符还可以是 `.`、`-` 或 `_`。改变显示名称时，保留已保存的 ID。HUD 配置会占用其前缀下的设置 ID，例如 `status.offset_x`，不要定义与它们冲突的设置。
 
 在 Bootstrap 中该功能的 `register...` 方法内注册配置，再将同一个对象传给功能：
 
 ```java
-private void registerTooltip(ConfigCatalog configs) {
-    TooltipConfig config = new TooltipConfig();
+private void registerStatus(ConfigCatalog configs) {
+    StatusConfig config = new StatusConfig();
     configs.register(config);
-    components.add(new TooltipFeature(configs, config));
+    components.add(new StatusFeature(configs, config));
 }
 ```
 
 所有设置都应在注册前定义。注册会将它们的读写操作绑定到目录的客户端线程。Bootstrap 构造器在所有功能装配方法返回后统一调用一次 `configs.freeze()`。这会阻止新的配置注册，但仍允许修改设置。配置方案在 `start()` 中记录设置结构，此时目录已冻结。
 
-使用设置的 `get()` 和 `set()` 方法访问其实时值。`set()` 校验值，并在值发生变化时发送通知。`Setting` 的子类在初始化 `requireValue` 使用的字段后校验默认值。
+功能通过 `config.showNames().get()` 读取示例中的设置，通过 `config.showNames().set(false)` 修改它。设置的 `set()` 会校验值，并在值发生变化时通知监听器。实现 `Setting` 子类时，在初始化 `requireValue` 使用的字段后校验默认值。
 
-将配置监听器保存为字段，在 `start()` 中注册，在 `stop()` 中注销。显示数据变化时，监听器将快照标记为需要更新：
+将配置监听器保存为字段，在 `start()` 中调用 `configs.addListener(configListener)` 注册，在 `stop()` 中调用 `configs.removeListener(configListener)` 注销。监听器可以将显示数据标记为需要更新：
 
 ```java
 private boolean snapshotDirty = true;
@@ -116,7 +116,7 @@ private final ConfigChangeListener configListener = changes -> {
 };
 ```
 
-`ConfigChangeSet.affects(featureId, settingId)` 判断变更的 ID。监听器在变更处理后被调用。`snapshot()` 复制所有已注册的值。`apply(snapshot)` 在更新实时设置前校验所有已知值，然后为整组变更发送一次通知。缺失的已知值会重置为默认值；这是完整快照，不是补丁。未知 ID 会被忽略。空快照不会触发通知。
+`ConfigChangeSet.affects(featureId, settingId)` 判断哪些设置发生了变化。监听器在所有变更应用后被调用。`snapshot()` 复制所有已注册的值。`apply(snapshot)` 在修改实时设置前校验所有已知值，然后为整组变更发送一次通知。它应用完整快照，缺失的已知值会重置为默认值，未知 ID 会被忽略。空快照会将所有设置重置为默认值。只有最终值没有实际变化时，才不发送通知。
 
 `recoverSavedValues(snapshot, problems)` 将无效的已保存值恢复为默认值，并通过回调返回这些值。它创建规范化的快照，但不应用它。实时输入改用普通校验。配置方案功能负责保存和切换配置快照。
 
@@ -148,15 +148,15 @@ Bootstrap 通过注册表的 `Registrar` 提供 [ForgeCommandAdapter](../../src/
 
 ## 聊天回显
 
-本地聊天回显统一使用 [ChatFeedback](../../src/main/java/pit12/shared/chat/ChatFeedback.java)：`ChatFeedback.reply(sender, Tone.INFO, message)`。导入 `ChatFeedback.Tone`，按结果选择 `INFO`、`SUCCESS`、`WARNING` 或 `ERROR`。共享方法添加 `[12pit] »` 前缀，括号和分隔符为灰色，`12` 为亮青色加粗，`pit` 为深青色加粗。正文分别为白、绿、黄、红色。
+本地聊天回显统一使用 [ChatFeedback](../../src/main/java/pit12/shared/chat/ChatFeedback.java)：`ChatFeedback.reply(sender, Tone.INFO, message)`。导入 `ChatFeedback.Tone`，按结果选择 `INFO`、`SUCCESS`、`WARNING` 或 `ERROR`。共享方法统一添加前缀和消息类型对应的颜色。
 
-在客户端线程调用。命令之外的回显先检查本地玩家是否存在，再将它作为 sender 传入。功能只选择消息类型和文字，前缀与配色由共享方法维护。
+在客户端线程调用。命令之外的回显先检查本地玩家是否存在，再将该玩家作为 sender 传入。
 
 ## 语言
 
 Bootstrap 创建一个 [Languages](../../src/main/java/pit12/runtime/languages/Languages.java) 实例，并传给使用它的组件。`WebUiConfig` 将所选语言与其他设置一起保存。语言名称和稳定的设置值来自 `src/main/resources/assets/pit12/languages/languages.json`。每份译文首次使用时从 TXT 资源读取，随后缓存。
 
-名称、说明、选项标签、枚举标签和命令说明使用配置示例中的静态 `source(...)` 导入。它直接返回英文原文，并标记供脚本提取。配置类保留原文和翻译后的显示值。语言变化时，Bootstrap 通过 `ConfigCatalog.localize(language)` 更新显示值。`CommandRegistry` 在显示帮助时翻译命令说明。保留已保存的 ID、命令名称和别名。
+名称、说明、选项标签、枚举标签和命令说明使用配置示例中的静态 `source(...)` 导入。它返回英文原文，并保留使用位置供分开的译文识别。配置类保留原文和翻译后的显示值。语言变化时，Bootstrap 通过 `ConfigCatalog.localize(language)` 更新显示值。`CommandRegistry` 在显示帮助时翻译命令说明。保留已保存的 ID、命令名称和别名。
 
 运行时准备消息的组件通过构造器接收 `Languages`。固定文字使用 `translate(...)`，带参数的文字使用 `format(...)`：
 
@@ -166,11 +166,15 @@ ChatFeedback.reply(sender, Tone.SUCCESS,
         language.format("Bound {0} to {1}", itemName, keyName));
 ```
 
-第一个参数使用完整的英文字符串字面量，动态值放在后续参数中。`{0}` 对应第一个值，`{1}` 对应第二个值，以此类推。译文可以调整参数顺序。准备显示文字时翻译一次，再将结果交给渲染器或聊天回显方法。缺失或空译文使用英文。英文模式下，`translate(...)` 直接返回原文；`format(...)` 仍会填入参数。
+第一个参数使用完整的英文字符串字面量，动态值放在后续参数中。`{0}` 对应第一个值，`{1}` 对应第二个值，以此类推。译文可以调整参数顺序。准备显示文字时翻译一次，再将结果交给渲染器或聊天回显方法。缺失或空译文时，`translate(...)` 返回英文原文，`format(...)` 填入参数。
 
 HUD 缓存文字时，保留语言监听器，在 `start()` 中注册，在 `stop()` 中注销。`addListener(...)` 注册时立即调用监听器，此后在每次语言变化时调用。一起更新文字缓存和测量后的布局。动态文字在更新显示快照时准备，渲染回调读取准备好的文字。在客户端线程切换语言、注册或注销监听器。
 
 前端组件从 `./languages` 导入 `t`，调用 `t('Settings')` 或 `t('Remove {0} players', count)`。应用跟随服务器状态中的语言，每份译文只获取一次，并在语言变化时更新显示文字。
+
+分开的译文依赖编译调试信息中的 Java 源文件名和行号。同一原文的不同 Java 调用须写在不同行。在更新循环中反复翻译这类标签时，用 `source(...)` 标记一次并保留返回的字符串，避免重复查找调用位置。
+
+API 字段中的已标记文字如果会传给前端 `t(...)`，用 `Languages.sourceText(...)` 保留经过 JSON 传递的使用位置。
 
 新增或修改已标记的原文后，在仓库根目录运行 `python scripts/languages.py sync`。脚本提取 Java 的 `source(...)`、`translate(...)`、带编号参数的 `format(...)`，以及前端的 `t(...)`。它读取字面量和字面量拼接，不追踪变量中的值。同步会保留已有译文，新条目尚未翻译。`python scripts/languages.py status` 显示翻译进度和文件问题。编辑或添加语言时，参阅[贡献翻译](TRANSLATING.md)。
 
@@ -179,73 +183,111 @@ HUD 缓存文字时，保留语言监听器，在 `start()` 中注册，在 `sto
 [HudConfig](../../src/main/java/pit12/runtime/config/HudConfig.java) 存储 HUD 位置和缩放相关设置。在 FeatureConfig 子类的构造器中使用 `hudConfig` 定义它，并保留结果：
 
 ```java
-hud = hudConfig("status", source("Status"), HudAnchor.TOP_LEFT, 6, 6, true);
+hud = hudConfig("status", HudAnchor.TOP_LEFT, 6, 6, true);
 ```
 
-该辅助方法定义以下设置：`status.anchor`、`status.offset_x`、`status.offset_y`、`status.scale`、`status.text_shadow`、`status.use_monospace_font` 和 `status.translate_text`。缩放以百分比存储，默认值为 `100`。HUD 编辑器控制位置和缩放。文字阴影、字体和翻译开关作为 Web UI 和 OneConfig 中的设置提供。字体开关默认关闭，开启后使用内置的 Monocraft。翻译开关默认开启；准备 HUD 文字时使用 `language.translate(text, hud.translateText().get())`，切换后更新文字缓存和布局。
+参数依次为 ID、初始屏幕锚点、水平和垂直偏移，以及默认文字阴影。锚点将 HUD 与屏幕的对应位置对齐，偏移使用 GUI 像素。锚点模式默认使用 Auto。
 
-[HudElement](../../src/main/java/pit12/runtime/hud/HudElement.java) 的实现应满足以下契约：
-
-- `id()` 在 HUD 注册表中唯一，且在注册期间不变。`displayName()` 和 `config()` 不得为 null。
-- 实时 HUD 启用时，`enabled()` 返回 true。
-- `resize(pixelScale)` 接收 Minecraft GUI 缩放与 HUD 缩放设置的乘积。
-- `prepare(pixelScale, editing)` 在访问边界前准备实时或预览内容。其默认实现调用 `resize()`。
-- `width()` 和 `height()` 以低开销提供元素内容未经缩放的逻辑尺寸。
-- `render(partialTicks, editing)` 根据调用者的变换，从逻辑点 `0,0` 开始绘制元素。
-
-功能从 Bootstrap 获得 [HudRegistry](../../src/main/java/pit12/runtime/hud/HudRegistry.java)。它只创建一次元素，并在 `start()` 中注册：
+默认分组名称为 `HUD`。需要指定层级和名称时，使用以下重载：
 
 ```java
-hudRegistry.register(hud);
+hud = hudConfig("status", HudAnchor.TOP_LEFT, 6, 6, true,
+        HudGroup.SUBSUBCATEGORY, source("Status appearance"));
 ```
 
-在 `stop()` 中注销同一个元素：
+使用 `HudGroup.AUTO` 时，功能声明了其他 subcategory 就使用 subcategory，否则使用 subsubcategory。`SUBCATEGORY` 创建单独的 subcategory。`SUBSUBCATEGORY` 放在调用时的当前 subcategory 内，没有时直接放在功能根级。名称传 null 时使用 `HUD`。调用后保留后续设置的当前分组。
+
+返回的 `HudConfig` 通过 `textShadow()`、`useMonospaceFont()`、`translateText()` 和 `scale()` 提供设置对象，使用 `get()` 和 `set()` 读写其值。缩放使用百分比，默认值为 `100`。
+
+使用 `placement()` 读取当前位置。修改时，传入包含锚点、偏移和锚点模式的 [HudPlacement](../../src/main/java/pit12/runtime/config/HudPlacement.java)：
 
 ```java
-hudRegistry.unregister(hud);
+hud.placement(new HudPlacement(HudAnchor.TOP_RIGHT, -6, 6, true));
 ```
 
-注册使 HUD 编辑器能够访问元素。它不安排元素的常规渲染。功能拥有自己的叠加层回调和显示数据。根据输入变化生成显示快照，不要在渲染回调中执行开销大的解析、IO 操作和大范围世界扫描。
+最后一个参数为 true 时使用 Auto，为 false 时使用固定锚点。两种模式下，`HudPlacement.anchor()` 都返回实际使用的屏幕锚点。`fromOrigin(x, y, elementWidth, elementHeight, screenWidth, screenHeight)` 使用 GUI 坐标和元素缩放后的尺寸创建 Auto 位置。需要恢复默认位置和 Auto 模式时，调用 `hud.placement(hud.defaultPlacement())`。
 
-在字段中保留一个 [HudRenderer](../../src/main/java/pit12/runtime/hud/HudRenderer.java)：
+字体开关默认关闭，开启后使用内置的 Monocraft。翻译开关默认开启。准备 HUD 文字时使用 `language.translate(text, hud.translateText().get())`，切换后更新文字缓存和布局。
+
+在字段中保留一个 [HudRenderer](../../src/main/java/pit12/runtime/hud/HudRenderer.java)，并传给元素，用于绘制和测量内容：
 
 ```java
 private final HudRenderer hudRenderer = new HudRenderer();
 ```
 
+实现 [HudElement](../../src/main/java/pit12/runtime/hud/HudElement.java) 时，遵循以下契约：
+
+- `id()` 在 HUD 注册表中唯一，且在注册期间不变。`displayName()` 和 `config()` 不得为 null。
+- 实时 HUD 启用时，`enabled()` 返回 true。
+- `resize(pixelScale)` 接收 Minecraft GUI 缩放与 HUD 缩放设置的乘积。测量或绘制内容前，将该值传给渲染器的 `resize`。
+- `prepare(pixelScale, editing)` 在读取边界前准备内容。`editing=false` 时使用实时内容，`editing=true` 时使用示例内容。其默认实现调用 `resize()`。
+- `width()` 和 `height()` 以低开销提供元素内容未经缩放的逻辑尺寸。
+- `render(partialTicks, editing)` 根据调用者的变换，从逻辑点 `0,0` 开始绘制元素。
+
+使用渲染器的 `text`、`textWidth` 和 `fontHeight` 方法，并传入同一个 HUD 配置来绘制和测量文字。根据输入变化准备显示快照，不要在渲染回调中执行开销大的解析、IO 操作和大范围世界扫描。
+
+`editing=true` 时，准备并绘制固定示例内容，包括已禁用的 HUD。显示设置或语言变化后，更新示例文字和边界。测量的边界必须与实际绘制内容一致。
+
+功能从 Bootstrap 获得 [HudRegistry](../../src/main/java/pit12/runtime/hud/HudRegistry.java)。只创建一次元素，并在 `start()` 中注册：
+
+```java
+hudRegistry.register(element);
+```
+
+注册使 HUD 编辑器能够访问元素。功能仍负责自己的常规叠加层回调和显示数据。
+
 以下是常规叠加层路径，其中 `resolution` 和 `partialTicks` 来自叠加层事件：
 
 ```java
-if (!hudRegistry.editing() && hud.enabled()) {
-    HudBounds bounds = HudRenderer.layout(hud, resolution.getScaledWidth(),
+if (!hudRegistry.editing() && element.enabled()) {
+    HudBounds bounds = HudRenderer.layout(element, resolution.getScaledWidth(),
             resolution.getScaledHeight(), resolution.getScaleFactor(), false);
-    hudRenderer.render(hud, bounds, partialTicks, false);
+    hudRenderer.render(element, bounds, partialTicks, false);
 }
 ```
 
-`layout` 调用 `prepare`，应用位置和缩放，并在元素能放入屏幕时将计算得到的原点保持在屏幕内。`render` 应用变换，并在 `finally` 块中恢复 UI 渲染状态。常规叠加层应在编辑期间跳过渲染，因为编辑器会自行渲染元素。
+`layout` 调用 `prepare`，应用位置和缩放，并在元素能放入屏幕时将计算得到的原点保持在屏幕内。`render` 应用变换，并在 `finally` 块中恢复 UI 渲染状态。
 
-编辑时 `editing=true`。当实时数据为空或 HUD 被禁用时，提供预览内容，并确保测量的边界与内容一致。
+在 `stop()` 中注销同一个元素，并释放渲染器资源：
 
-[UiRenderer](../../src/main/java/pit12/shared/rendering/UiRenderer.java) 提供项目的文字、矩形和纹理。使用 `HudRenderer.text`、`textWidth` 和 `fontHeight`，传入 HUD 配置来绘制和测量其文字。将元素的像素缩放传给它的 `resize`。复用它。Monocraft 使用逻辑字号 `9` 来匹配像素网格，系统回退字体使用 `8`。自定义字形采用最近邻采样，并对齐到屏幕像素。绘制原点使用整数 GUI 坐标，再应用 HUD 缩放。当其所有者停止或释放这些资源时，对它调用 `close()`。它可以在调整大小后再次创建资源。对于 `HudRenderer` 之外的自定义 UI，使用 [UiRenderState](../../src/main/java/pit12/shared/rendering/UiRenderState.java) 的 `begin()`，并在 `finally` 块中配合调用 `end()`。恢复代码额外修改的渲染状态。
+```java
+hudRegistry.unregister(element);
+hudRenderer.close();
+```
+
+复用前清除元素缓存的渲染状态。渲染器可以在 `resize` 后重新创建资源。
+
+自定义 UI 使用 [UiRenderer](../../src/main/java/pit12/shared/rendering/UiRenderer.java) 绘制文字、矩形和纹理。构造时传入 Minecraft 和字体的 `ResourceLocation`。保留渲染器以供复用，测量或绘制前调用 `resize(pixelScale)`，所有者释放这些资源时调用 `close()`。
+
+Monocraft 使用逻辑字号 `9` 来匹配像素网格，系统回退字体使用 `8`。自定义字形采用最近邻采样，并对齐到屏幕像素。绘制原点使用整数 GUI 坐标，再应用 HUD 缩放。
+
+在 `HudRenderer.render` 之外绘制时，使用 [UiRenderState](../../src/main/java/pit12/shared/rendering/UiRenderState.java) 保护渲染状态。绘制前调用 `begin()`，在 `finally` 块中调用 `end()`。恢复代码额外修改的渲染状态。
 
 ## 游戏状态
 
-Bootstrap 为功能提供查询契约。其实时查询和订阅需要客户端线程。使用现有提供者，而不创建第二个跟踪器或会话所有者。
+Bootstrap 为功能提供查询契约。其实时查询和订阅需要客户端线程。
 
-[ClientSession](../../src/main/java/pit12/runtime/session/ClientSession.java) 提供 `connection()`、`world()` 和 `revision()`。连接和世界可以为 `null`。两个身份标识都会在监听器运行前更新。旧的断开连接和卸载事件都不能清除替换后的连接或世界。
+[ClientSession](../../src/main/java/pit12/runtime/session/ClientSession.java) 提供 `connection()`、`world()` 和 `revision()`。连接和世界可以为 `null`。两个身份标识都会在监听器运行前更新。
 
-在字段中保留用于会话变化的 `Runnable`。在 `start()` 中通过 `session.addListener(sessionListener)` 注册它，并读取一次当前状态；添加监听器不会触发初始回调。在 `stop()` 中通过 `session.removeListener(sessionListener)` 注销它。按状态的归属重置状态：连接数据的存续期与连接一致，世界数据的存续期与世界一致。不要在任何一种变化时删除用户数据。
+在字段中保留用于会话变化的 `Runnable`。在 `start()` 中通过 `session.addListener(sessionListener)` 注册它，并读取一次当前状态。在 `stop()` 中通过 `session.removeListener(sessionListener)` 注销它。按状态的归属重置状态：连接数据的存续期与连接一致，世界数据的存续期与世界一致。
 
-[TabPresence](../../src/main/java/pit12/runtime/player/TabPresence.java) 将成员关系与已知名称分开。使用 `contains(UUID)` 检查成员关系。使用 `players()` 获取当前 UUID 到档案名称的映射；如果玩家名称未知，玩家可能存在，但不在该映射中。[TabPresenceListener](../../src/main/java/pit12/runtime/player/TabPresenceListener.java) 报告已观察到的玩家、离开和显示变化。监听器由其所有者保存和注销。
+[TabPresence](../../src/main/java/pit12/runtime/player/TabPresence.java) 将成员关系与已知名称分开。使用 `contains(UUID)` 检查成员关系，使用 `players()` 获取当前 UUID 到档案名称的映射。名称未知的玩家可能存在，但不在该映射中。
 
-[PlayerEquipmentAccess](../../src/main/java/pit12/runtime/player/PlayerEquipmentAccess.java) 提供 `loadedEquipment(UUID)` 和装备监听器。如果实体未加载或尚未被观察到，查询返回 `null`。在快照中，将槽位视为空之前，先检查 `heldItemKnown()` 或 `leggingsKnown()`。`copyHeldItem()` 和 `copyLeggings()` 返回防御性副本，但 `null` 既可能表示未知槽位，也可能表示已知的空槽位。使用 `heldEnchantments()` 或 `leggingsEnchantments()` 获取已解析的数据。装备监听器报告变化、移除和重置。
+将 [TabPresenceListener](../../src/main/java/pit12/runtime/player/TabPresenceListener.java) 保存为字段。在 `start()` 中调用 `tabPresence.addListener(tabListener)` 注册，再读取当前状态。通过 `onPlayerSeen(playerId, name, joined)` 处理观察到的玩家，通过 `onPlayerLeft(playerId)` 处理离开，通过 `onTabDisplayChanged(playerId)` 处理显示变化。名称可能为 null，`joined=false` 表示条目之前已存在。在 `stop()` 中，将同一个监听器传给 `tabPresence.removeListener(tabListener)` 注销。
+
+[PlayerNameCache](../../src/main/java/pit12/runtime/player/PlayerNameCache.java) 通过 `displayName(UUID)` 和 `shortName(UUID)` 查询当前 Tab 条目的显示名和简洁名。条目不存在或名称未知时，两者都返回 `null`。显示名保留格式化代码。简洁名去除 Pit Supporter 和赏金后缀。玩家离开时移除条目，连接变化时清空缓存。
+
+在 `start()` 中通过 `addListener(Runnable)` 订阅名称变化，再读取当前名称。在 `stop()` 中通过 `removeListener(Runnable)` 注销同一个监听器。
+
+[PlayerEquipmentAccess](../../src/main/java/pit12/runtime/player/PlayerEquipmentAccess.java) 提供 `loadedEquipment(UUID)`。如果实体未加载或尚未被观察到，查询返回 `null`。在快照中，将槽位视为空之前，先检查 `heldItemKnown()` 或 `leggingsKnown()`。`copyHeldItem()` 和 `copyLeggings()` 返回防御性副本，`null` 既可能表示未知槽位，也可能表示已知的空槽位。使用 `heldEnchantments()` 或 `leggingsEnchantments()` 获取已解析的数据。
+
+将 [PlayerEquipmentListener](../../src/main/java/pit12/runtime/player/PlayerEquipmentListener.java) 保存为字段。在 `start()` 中调用 `equipment.addListener(equipmentListener)` 注册，再查询功能需要的当前玩家。在 `onPlayerEquipmentChanged(playerId, changedSlots, revision)` 中重新查询 `loadedEquipment(playerId)`，更新功能的数据。`changedSlots` 使用 `PlayerEquipmentCache.HELD_ITEM` 和 `PlayerEquipmentCache.LEGGINGS` 位标记。`onPlayerEquipmentRemoved(playerId)` 移除该玩家的装备数据，`onPlayerEquipmentReset()` 清除派生的装备数据。在 `stop()` 中，调用 `equipment.removeListener(equipmentListener)` 注销同一个监听器。
 
 [PitContext](../../src/main/java/pit12/runtime/pit/PitContext.java) 提供 `current()`。返回的 `PitSnapshot` 提供地图、Pit 状态、修订号和 `spawnStateAt(x, y, z)`。在地图被识别前，状态为 `UNKNOWN`。快照可以传给工作线程；实时提供者不可以。
 
 [PitEnchantmentReader](../../src/main/java/pit12/runtime/item/PitEnchantmentReader.java) 使用 `read`、`contains` 和 `levelOf` 读取任意物品堆叠。缺失数据会产生空结果或等级 `0`。缺少键或等级为非正数的条目会被忽略。如果装备快照的已解析附魔已经可用，就使用它们。
 
-玩家通过 UUID 标识。实体 ID 仅在其所在世界中有效。区分未知状态和已确认的不存在。为每个缓存指定所有者和重置规则；只有为了解决明确的问题才添加缓存。
+玩家通过 UUID 标识。实体 ID 仅在其所在世界中有效。区分未知状态和已确认的不存在。
 
 ## Mixin
 
@@ -266,7 +308,7 @@ components.add(new GammaFeature(configs, gammaConfig,
 
 ## 存储
 
-配置方案功能存储在 `ConfigCatalog` 中注册的设置。其他功能不重复存储设置。设置以外的数据由功能自己的存储拥有。Bootstrap 提供 Minecraft 游戏目录下的存储路径。
+配置方案功能存储在 `ConfigCatalog` 中注册的设置。设置以外的数据由功能自己的存储拥有。Bootstrap 提供 Minecraft 游戏目录下的存储路径。
 
 校验加载的数据。更改文件格式时，实现对旧格式的处理，并尽可能保留未知字段。加载失败时不得静默覆盖原始数据。写入失败后保留实时状态和未保存的改动，并报告错误。
 
@@ -276,9 +318,9 @@ components.add(new GammaFeature(configs, gammaConfig,
 AtomicFile.write(path, encodedJson);
 ```
 
-它创建父目录和目标附近的临时文件，以 UTF-8 写入，刷新并同步后替换目标。如果不支持原子移动，则回退为普通替换移动。发生错误时，它尝试删除临时文件并抛出异常；清理错误会附加到该错误上。
+它创建缺失的父目录，并以 UTF-8 写入。在支持原子移动时，原子替换目标文件，否则使用普通替换移动。失败时抛出异常，并附上清理过程中出现的错误。
 
-功能负责自己的工作线程和写入顺序。在客户端线程上复制待保存的数据，并传给工作线程。使用 `ClientThread.execute` 处理完成结果。核验产生结果的工作线程或代次。在清除未保存的改动前核验保存修订号，防止旧的完成结果清除较新的改动。只有依赖会话和世界的工作才需要检查它们；已保存的用户数据在断开连接后仍然保留。
+功能负责自己的工作线程和写入顺序。在客户端线程上复制待保存的数据，并传给工作线程。使用 `ClientThread.execute` 处理完成结果。核验产生结果的工作线程或代次。在清除未保存的改动前核验保存修订号，防止旧的完成结果清除较新的改动。只有依赖会话和世界的工作才需要检查它们。
 
 `stop()` 停止新工作，处理待完成的保存，并关闭工作线程。清理不得等待只能在同一个已被阻塞的客户端线程上调用的回调。存储和查找依赖必须能在测试中替换。
 
@@ -299,4 +341,4 @@ return OperationResult.failure(OperationResult.Status.INVALID_VALUE,
 Listeners.notify(listeners, Runnable::run);
 ```
 
-在通知监听器前完成所有状态变更。通知期间监听器集合的变化影响后续通知，不影响当前副本。监听器抛出的 `RuntimeException` 会被记录，通知继续传递。该辅助工具是同步的；它不在客户端线程上分派，也不会使集合具备线程安全性。所有者停止时必须移除订阅。本地查询和操作使用直接调用，多个使用者需要的变更通知使用监听器。
+在通知监听器前完成所有状态变更。通知期间监听器集合的变化影响后续通知，不影响当前副本。监听器抛出的 `RuntimeException` 会被记录，通知继续传递。该辅助工具在调用线程上同步执行。调用者负责线程分派和同步。本地查询和操作使用直接调用，多个使用者需要的变更通知使用监听器。

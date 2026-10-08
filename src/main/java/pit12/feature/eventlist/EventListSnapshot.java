@@ -23,7 +23,6 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import pit12.runtime.languages.Languages;
@@ -37,7 +36,7 @@ final class EventListSnapshot {
     final String message;
 
     private EventListSnapshot(List<Row> rows, String dayName, String dayTime, String message) {
-        this.rows = Collections.unmodifiableList(rows);
+        this.rows = rows;
         this.dayName = dayName;
         this.dayTime = dayTime;
         this.message = message;
@@ -59,10 +58,10 @@ final class EventListSnapshot {
             }
             long deadline = phase == PitEvent.Phase.FUTURE ? event.timestamp
                     : phase == PitEvent.Phase.PREPARING ? event.startsAt : event.endsAt;
-            String time = formatTime(deadline, now, config.timeFormat(), config.zeroPadding(),
-                    phase, language, translate);
+            String time = formatTime(deadline, now, config.timeFormat.get(),
+                    config.zeroPadding.get(), phase, language, translate);
             rows.add(new Row(event.type, phase, event.major, time));
-            if (rows.size() == config.eventCount()) {
+            if (rows.size() == config.eventCount.get()) {
                 break;
             }
         }
@@ -70,12 +69,12 @@ final class EventListSnapshot {
         long cycle = Math.floorMod(now / 1000L + 10L, 2160L);
         boolean day = cycle < 1440L;
         return new EventListSnapshot(rows,
-                config.showDayNight()
+                config.showDayNight.get()
                         ? (day ? language.translate("Day", translate)
                                 : language.translate("Night", translate))
                         : "",
-                config.showDayNight()
-                        ? formatDuration((day ? 1440L : 2160L) - cycle, config.zeroPadding())
+                config.showDayNight.get()
+                        ? formatDuration((day ? 1440L : 2160L) - cycle, config.zeroPadding.get())
                         : "",
                 rows.isEmpty()
                         ? (hasEvents ? language.translate("No events match the filters", translate)
@@ -84,14 +83,15 @@ final class EventListSnapshot {
     }
 
     static EventListSnapshot sample(EventListConfig config, Languages language) {
-        long now = System.currentTimeMillis();
+        // Keep countdowns and local times fixed while arranging the HUD.
+        long now = 1_791_460_800_000L;
         return build(
-                Arrays.asList(new PitEvent(EventType.BLOCKHEAD, now - 240_000L, true),
-                        new PitEvent(EventType.KOTH, now - 30_000L, false),
-                        new PitEvent(EventType.PIZZA, now - 20_000L, true),
-                        new PitEvent(EventType.DRAGON_EGG, now + 150_000L, false),
-                        new PitEvent(EventType.SPIRE, now + 540_000L, true),
-                        new PitEvent(EventType.DOUBLE_REWARDS, now + 780_000L, false)),
+                Arrays.asList(new PitEvent(EventType.SQUADS, now - 240_000L, true),
+                        new PitEvent(EventType.CARE_PACKAGE, now + 480_000L, false),
+                        new PitEvent(EventType.KOTH, now + 1_020_000L, false),
+                        new PitEvent(EventType.DOUBLE_REWARDS, now + 1_740_000L, false),
+                        new PitEvent(EventType.KOTL, now + 2_340_000L, false),
+                        new PitEvent(EventType.RAGE_PIT, now + 2_640_000L, true)),
                 config, now, "", false, language);
     }
 
@@ -100,10 +100,10 @@ final class EventListSnapshot {
         if (format == 1) {
             return CLOCK.format(Instant.ofEpochMilli(deadline));
         }
-        String relative = phase == PitEvent.Phase.PREPARING
-                ? language.translate("Preparing", translate)
-                : phase == PitEvent.Phase.ACTIVE ? language.translate("Active", translate)
-                        : formatDuration(Math.max(0L, deadline - now + 999L) / 1000L, padding);
+        String relative =
+                phase == PitEvent.Phase.PREPARING ? language.translate("Preparing", translate)
+                        : phase == PitEvent.Phase.ACTIVE ? language.translate("Active", translate)
+                                : formatDuration((deadline - now + 999L) / 1000L, padding);
         return format == 2 ? relative + " (" + CLOCK.format(Instant.ofEpochMilli(deadline)) + ")"
                 : relative;
     }

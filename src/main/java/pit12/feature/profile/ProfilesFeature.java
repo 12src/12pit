@@ -309,7 +309,7 @@ public final class ProfilesFeature
 
         @Override
         public void loaded(LoadedProfiles profiles) {
-            // Initialization returns before scheduled client tasks execute, so dependent features are started first.
+            // The scheduled task runs after dependent features have started.
             dispatchToClient(taskGeneration, () -> controller.applyLoaded(profiles));
         }
 

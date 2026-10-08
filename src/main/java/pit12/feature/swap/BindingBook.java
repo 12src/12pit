@@ -20,8 +20,11 @@ package pit12.feature.swap;
 
 import static pit12.runtime.languages.Languages.source;
 
+import com.google.gson.JsonParseException;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -70,19 +73,11 @@ final class BindingBook implements SwapBindings {
         });
         worker = started;
         started.execute(() -> {
+            List<SwapBinding> loaded;
             try {
-                List<SwapBinding> loaded = store.load();
-                client.execute(() -> {
-                    if (worker != started)
-                        return;
-                    bindings.clear();
-                    for (SwapBinding binding : loaded)
-                        bindings.put(binding.identity, binding);
-                    loading = false;
-                    problem = null;
-                    changed();
-                });
-            } catch (Exception failure) {
+                loaded = store.load();
+            } catch (IOException | SecurityException | JsonParseException
+                    | IllegalArgumentException failure) {
                 LOGGER.log(Level.WARNING, "Cannot load swap bindings", failure);
                 client.execute(() -> {
                     if (worker != started)
@@ -93,7 +88,18 @@ final class BindingBook implements SwapBindings {
                     report.accept(problem);
                     changed();
                 });
+                return;
             }
+            client.execute(() -> {
+                if (worker != started)
+                    return;
+                bindings.clear();
+                for (SwapBinding binding : loaded)
+                    bindings.put(binding.identity, binding);
+                loading = false;
+                problem = null;
+                changed();
+            });
         });
     }
 
@@ -115,9 +121,9 @@ final class BindingBook implements SwapBindings {
         loading = false;
     }
 
-    List<SwapBinding> entries() {
+    Collection<SwapBinding> entries() {
         client.check();
-        return new ArrayList<>(bindings.values());
+        return bindings.values();
     }
 
     List<SwapBinding> forKey(int key) {
@@ -177,12 +183,12 @@ final class BindingBook implements SwapBindings {
 
     private void persist() {
         changed();
-        List<SwapBinding> saved = entries();
+        List<SwapBinding> saved = new ArrayList<>(bindings.values());
         ExecutorService writer = worker;
         writer.execute(() -> {
             try {
                 store.write(saved);
-            } catch (Exception failure) {
+            } catch (IOException | SecurityException failure) {
                 LOGGER.log(Level.WARNING, "Cannot save swap bindings", failure);
                 client.execute(() -> {
                     if (worker == writer)
@@ -234,7 +240,7 @@ final class BindingBook implements SwapBindings {
         try {
             BindingStore.decode(data);
             return OperationResult.success(null);
-        } catch (RuntimeException failure) {
+        } catch (JsonParseException | IllegalArgumentException failure) {
             return OperationResult.failure(Status.INVALID_VALUE,
                     "Invalid swap bindings: " + failure.getMessage());
         }
@@ -242,10 +248,17 @@ final class BindingBook implements SwapBindings {
 
     @Override
     public OperationResult<Void> replaceBindings(String data) {
-        OperationResult<Void> validation = validateImport(data);
-        if (!validation.succeeded())
-            return validation;
-        List<SwapBinding> replacement = BindingStore.decode(data);
+        client.check();
+        if (worker == null || loading) {
+            return OperationResult.failure(Status.UNAVAILABLE, problem);
+        }
+        List<SwapBinding> replacement;
+        try {
+            replacement = BindingStore.decode(data);
+        } catch (JsonParseException | IllegalArgumentException failure) {
+            return OperationResult.failure(Status.INVALID_VALUE,
+                    "Invalid swap bindings: " + failure.getMessage());
+        }
         bindings.clear();
         for (SwapBinding binding : replacement)
             bindings.put(binding.identity, binding);

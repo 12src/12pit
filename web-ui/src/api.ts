@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-import { t } from './languages'
+import { t, type SourceText } from './languages'
 
 export interface Option {
   id: string
@@ -73,7 +73,7 @@ export interface State {
     settings: Feature
     favorites: string[]
     ready: boolean
-    problem: string | null
+    problem: SourceText | null
   }
   profiles: {
     loadState: 'LOADING' | 'READY' | 'DEGRADED'

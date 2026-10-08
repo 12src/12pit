@@ -1,4 +1,4 @@
-<!-- Source: docs/TRANSLATING.md; Based on: 2232dc5e10013e89eb44cac454aa965c84b6ce20 -->
+<!-- Source: docs/TRANSLATING.md; Based on: 08d27d075f5f28e811ea97e76a4ec893603d64f5 -->
 
 # 贡献翻译
 
@@ -10,7 +10,7 @@
 - 如果语言没有 ISO 639-1 代码，添加前须取得维护者同意。语言标签仍须符合 [RFC 5646](https://www.rfc-editor.org/rfc/rfc5646.html)。可以在议题中询问，或在 [Discord](https://discord.gg/e9PRKMUenc) 中 @维护者。
 - 建议只翻译成自己的母语。
 
-例如，`nl-NL` 使用 ISO 639-1 代码 `nl`，因此无需事先讨论。
+例如，`nl-NL` 使用 ISO 639-1 代码 `nl`。
 
 ## 贡献界面翻译
 
@@ -46,7 +46,7 @@ python scripts/languages.py sync --language nl-NL
 
 ### 填写译文
 
-打开 `src/main/resources/assets/pit12/languages/nl-NL.txt`。每个条目有两行：第一行是英文原文，第二行以 `=` 和一个空格开头，后面填写译文：
+打开 `src/main/resources/assets/pit12/languages/nl-NL.txt`。每个条目包含英文原文和译文行。用 `=` 和一个空格开头，表示所有使用位置共用一个译文：
 
 ```text
 Player List
@@ -59,7 +59,19 @@ Settings
 =
 ```
 
-第二行只保留 `=` 时使用英文。用正则表达式 `^= ?$` 搜索未翻译条目。不要删除前缀或修改英文原文。`//` 开头的行标明文字的使用位置。保留 `{0}` 等编号参数及其出现次数，可以调整顺序。保留 `§a` 等 Minecraft 格式代码。
+同一英文需要不同译文时，用 `==` 开头，在一行内用 `|` 分隔：
+
+```text
+// src/main/java/pit12/feature/eventlist/EventListSnapshot.java:106, web-ui/src/ProfilesPage.vue:290:21
+Active
+== Actief | Huidig
+```
+
+译文依次对应注释中的使用位置，数量须与位置数量一致。空段使用英文，例如 `== Actief |` 表示第二个位置未翻译。每段两侧的空白会被去掉。分开的译文中用 `\|` 表示竖线。`=` 后的竖线仍属于完整译文。
+
+只保留 `=` 时，所有位置使用英文。用正则表达式 `^= ?$` 搜索未填写的共用译文。不要修改英文原文和位置注释。Web UI 的位置包含列号，用于区分同一行的调用。每个译文都须保留 `{0}` 等编号参数及其出现次数，可以调整顺序。保留 `§a` 等 Minecraft 格式代码。
+
+同步会按每个文件内的顺序保留分开的译文。如果某个文件增加或减少了该原文的使用位置，该文件对应的译文段会留空，等待核对。移动或调整调用顺序后，也须核对分开的译文。状态报告会单独统计每个译文段。
 
 用 `\n` 表示换行，`\t` 表示制表符，`\\` 表示反斜杠。文件保存为 UTF-8。
 
@@ -71,7 +83,7 @@ Settings
 python scripts/languages.py status --language nl-NL
 ```
 
-状态会显示翻译进度，并报告条目缺失或过时、原文重复、非法转义和参数错误。
+状态会显示翻译进度，并报告条目缺失或过时、原文重复、非法转义、参数错误，以及分开译文的位置格式错误或位置变化。
 
 结合使用位置通读译文。需要在 Mod 中核对文字时，构建包含修改后资源的版本，再到 Settings 页面选择语言。
 
@@ -113,8 +125,6 @@ python scripts/languages.py status --language nl-NL
 ```sh
 git diff <原文提交号> -- docs/CONTRIBUTING.md
 ```
-
-没有输出，表示原文未变。有差异，表示需要核对译文。
 
 核对原文在该提交之后的所有改动，并按需更新译文。确认译文与原文一致后，记录原文最近一次提交的完整提交号：
 

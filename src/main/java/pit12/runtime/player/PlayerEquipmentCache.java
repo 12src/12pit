@@ -27,7 +27,7 @@ import net.minecraft.item.ItemStack;
 import pit12.runtime.item.PitEnchantmentReader;
 import pit12.runtime.item.PitEnchantments;
 
-/** All methods are client-thread confined because the source entities are client-owned. */
+/** Call these methods on the client thread because they read live player entities. */
 public final class PlayerEquipmentCache {
     public static final int HELD_ITEM = 1;
     public static final int LEGGINGS = 1 << 1;
@@ -41,7 +41,7 @@ public final class PlayerEquipmentCache {
         dirty.put(playerId, (previous == null ? 0 : previous) | slots);
     }
 
-    /** Draining at the Tick boundary coalesces multiple packets for one player. */
+    /** Draining once per tick combines equipment changes for each player. */
     public Map<UUID, Integer> drainDirty() {
         if (dirty.isEmpty()) {
             return Collections.emptyMap();

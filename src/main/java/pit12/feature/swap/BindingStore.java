@@ -31,9 +31,11 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.lwjgl.input.Keyboard;
 import pit12.shared.storage.AtomicFile;
 
 final class BindingStore {
@@ -53,7 +55,7 @@ final class BindingStore {
         AtomicFile.write(path, encode(bindings));
     }
 
-    static String encode(List<SwapBinding> bindings) {
+    static String encode(Collection<SwapBinding> bindings) {
         JsonObject root = new JsonObject();
         root.addProperty("schemaVersion", 1);
         JsonArray entries = new JsonArray();
@@ -104,14 +106,28 @@ final class BindingStore {
                 throw new IllegalArgumentException(source("Expected item identity"));
             }
             JsonObject identityData = identityValue.getAsJsonObject();
-            ItemIdentity identity =
-                    new ItemIdentity(string(identityData, "item"), integer(identityData, "variant"),
-                            ItemIdentity.Kind.valueOf(string(identityData, "kind")),
-                            string(identityData, "value"));
+            String item = string(identityData, "item");
+            int variant = integer(identityData, "variant");
+            ItemIdentity.Kind kind = ItemIdentity.Kind.valueOf(string(identityData, "kind"));
+            String signature = string(identityData, "value");
+            if (item.isEmpty() || kind != ItemIdentity.Kind.NAME && signature.isEmpty()
+                    || variant < 0
+                    || kind == ItemIdentity.Kind.NONCE && Long.parseLong(signature) < 10) {
+                throw new IllegalArgumentException(source("Invalid item identity"));
+            }
+            ItemIdentity identity = new ItemIdentity(item, variant, kind, signature);
             if (!identities.add(identity))
                 throw new IllegalArgumentException(source("Duplicate bound item"));
-            result.add(new SwapBinding(integer(entry, "key"), identity, "EQUIPMENT".equals(type),
-                    integer(entry, "target"), string(entry, "name"), string(entry, "details")));
+            int key = integer(entry, "key");
+            boolean equipment = "EQUIPMENT".equals(type);
+            int target = integer(entry, "target");
+            String name = string(entry, "name");
+            if (key <= 0 || key >= Keyboard.KEYBOARD_SIZE || Keyboard.getKeyName(key) == null
+                    || target < 1 || target > (equipment ? 4 : 9) || name.isEmpty()) {
+                throw new IllegalArgumentException(source("Invalid swap binding"));
+            }
+            result.add(new SwapBinding(key, identity, equipment, target, name,
+                    string(entry, "details")));
         }
         return result;
     }

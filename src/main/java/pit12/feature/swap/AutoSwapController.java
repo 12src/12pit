@@ -32,6 +32,7 @@ import net.minecraft.potion.Potion;
 import net.minecraftforge.common.util.Constants;
 import pit12.runtime.item.PitEnchantment;
 import pit12.runtime.item.PitEnchantmentReader;
+import pit12.runtime.languages.Languages;
 import pit12.runtime.pit.PitContext;
 import pit12.runtime.pit.SpawnState;
 
@@ -40,6 +41,7 @@ final class AutoSwapController {
     private final SwapConfig config;
     private final SwapController swaps;
     private final PitContext pit;
+    private final Languages language;
     private final EnumSet<PitEnchantment> used = EnumSet.noneOf(PitEnchantment.class);
     private EntityPlayerSP player;
     private long tick;
@@ -54,12 +56,13 @@ final class AutoSwapController {
     private ItemStack originalPants;
     private boolean canRestore;
 
-    AutoSwapController(Minecraft minecraft, SwapConfig config, SwapController swaps,
-            PitContext pit) {
+    AutoSwapController(Minecraft minecraft, SwapConfig config, SwapController swaps, PitContext pit,
+            Languages language) {
         this.minecraft = minecraft;
         this.config = config;
         this.swaps = swaps;
         this.pit = pit;
+        this.language = language;
     }
 
     void tick() {
@@ -117,7 +120,7 @@ final class AutoSwapController {
         if (tick < retryAt || minecraft.currentScreen != null || !minecraft.inGameHasFocus
                 || !swaps.acceptsInput())
             return;
-        // Enchanted leggings cannot help while poisoned, so poison swaps take priority.
+        // Poison disables leggings enchantments.
         if (poisoned) {
             if (venomPending)
                 swapVenom();
@@ -172,6 +175,7 @@ final class AutoSwapController {
             return;
         }
         if (swaps.enqueueAutomatic(targets,
+                language.translate("Swapped automatically because you were affected by venom"),
                 () -> canSwap(player) && player.isPotionActive(Potion.poison)
                         && (!config.skipVenomPants.get() || !PitEnchantmentReader
                                 .contains(leggings(), PitEnchantment.Combo_Venom)))) {
@@ -221,6 +225,8 @@ final class AutoSwapController {
         ItemIdentity wornIdentity = ItemIdentity.read(worn);
         ItemStack previous = canRestore ? originalPants : worn == null ? null : worn.copy();
         if (swaps.enqueueAutomatic(Collections.singletonList(target),
+                language.format("Swapped to {0} because of low health",
+                        type == PitEnchantment.Escape_Pod ? "escape pod" : "phoenix"),
                 () -> canSwap(player) && !player.isPotionActive(Potion.poison) && eligible(type)
                         && (wornIdentity == null ? leggings() == null
                                 : wornIdentity.matches(leggings())))) {
@@ -254,7 +260,7 @@ final class AutoSwapController {
         if (root == null || !root.hasKey("ExtraAttributes", Constants.NBT.TAG_COMPOUND))
             return -1;
         NBTTagCompound extra = root.getCompoundTag("ExtraAttributes");
-        // Missing numeric NBT reads as zero; keep unknown Lives below known values.
+        // Missing numeric NBT reads as zero. Use -1 to rank unknown Lives below known values.
         return extra.hasKey("Lives", Constants.NBT.TAG_ANY_NUMERIC)
                 ? Math.max(-1, extra.getInteger("Lives"))
                 : -1;
@@ -268,12 +274,16 @@ final class AutoSwapController {
     }
 
     private void restore() {
+        String message = config.pantsRestoreMode.get() == 1
+                ? language.format("Swapped back after {0} was used",
+                        activeType == PitEnchantment.Escape_Pod ? "escape pod" : "phoenix")
+                : language.translate("Swapped back after health recovered");
         if (originalPants == null) {
             if (player.inventory.getFirstEmptyStack() < 0) {
                 retryAt = tick + 10;
                 return;
             }
-            if (swaps.enqueueAutomaticUnequip(7, this::readyToRestore)) {
+            if (swaps.enqueueAutomaticUnequip(7, message, this::readyToRestore)) {
                 pending = new Pending(activeType, activePants, null, true);
                 automaticPending = true;
             }
@@ -289,13 +299,12 @@ final class AutoSwapController {
             source = findOriginalPants(expected);
         }
         if (source < 0) {
-            // A manual move or missing original must never cause us to restore a different item.
             clearActive();
             return;
         }
         ItemStack restored = expected;
         SwapController.Target target = new SwapController.Target(source, restored, 0);
-        if (swaps.enqueueAutomatic(Collections.singletonList(target),
+        if (swaps.enqueueAutomatic(Collections.singletonList(target), message,
                 () -> readyToRestore() && ItemStack.areItemStacksEqual(restored,
                         player.inventoryContainer.getSlot(target.source).getStack()))) {
             pending = new Pending(activeType, activePants, restored, true);
@@ -351,7 +360,7 @@ final class AutoSwapController {
             reset();
             player = current;
         }
-        // These server sound signatures report enchantment use and rearming, even with audio muted.
+        // Server sounds signal enchantment use and rearming even when audio is muted.
         if ("note.pling".equals(name) && near(volume, 8) && near(pitch, 4.05f)) {
             if (automaticPending)
                 swaps.cancel();

@@ -21,24 +21,26 @@ package pit12.platform.oneconfig;
 import cc.polyfrost.oneconfig.config.Config;
 import cc.polyfrost.oneconfig.config.core.ConfigUtils;
 import cc.polyfrost.oneconfig.config.core.OneColor;
+import cc.polyfrost.oneconfig.config.core.OneKeyBind;
 import cc.polyfrost.oneconfig.config.data.Mod;
 import cc.polyfrost.oneconfig.config.data.ModType;
 import cc.polyfrost.oneconfig.config.elements.BasicOption;
 import cc.polyfrost.oneconfig.config.elements.OptionSubcategory;
 import cc.polyfrost.oneconfig.config.elements.SubConfig;
+import cc.polyfrost.oneconfig.events.EventManager;
 import cc.polyfrost.oneconfig.gui.elements.config.ConfigColorElement;
 import cc.polyfrost.oneconfig.gui.elements.config.ConfigDropdown;
+import cc.polyfrost.oneconfig.gui.elements.config.ConfigKeyBind;
 import cc.polyfrost.oneconfig.gui.elements.config.ConfigNumber;
 import cc.polyfrost.oneconfig.gui.elements.config.ConfigSlider;
 import cc.polyfrost.oneconfig.gui.elements.config.ConfigSwitch;
 import cc.polyfrost.oneconfig.internal.config.core.ConfigCore;
 import java.util.ArrayList;
-import java.util.IdentityHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.minecraft.client.Minecraft;
+import org.lwjgl.input.Keyboard;
 import pit12.runtime.config.BooleanSetting;
 import pit12.runtime.config.ChoiceSetting;
 import pit12.runtime.config.ConfigCatalog;
@@ -55,6 +57,7 @@ public final class OneConfigAdapter implements ClientLifecycle, ConfigChangeList
     private static final Logger LOGGER = Logger.getLogger(OneConfigAdapter.class.getName());
     private final ConfigCatalog catalog;
     private final List<Mod> featureMods = new ArrayList<>();
+    private final List<ConfigKeyBind> keybindControls = new ArrayList<>();
     private RootView view;
 
     OneConfigAdapter(ConfigCatalog catalog) {
@@ -73,7 +76,6 @@ public final class OneConfigAdapter implements ClientLifecycle, ConfigChangeList
             buildPage(featureView, feature);
             featureMods.add(featureView.mod);
         }
-        // @SubConfig uses the same parent/child registry; settings stay bound to 12pit.
         ConfigCore.subMods.put(view.mod, new ArrayList<>(featureMods));
         ConfigCore.mods.addAll(featureMods);
         Config.register(view.mod);
@@ -84,6 +86,10 @@ public final class OneConfigAdapter implements ClientLifecycle, ConfigChangeList
     public void stop() {
         catalog.clientThread().check();
         catalog.removeListener(this);
+        for (ConfigKeyBind control : keybindControls) {
+            EventManager.INSTANCE.unregister(control);
+        }
+        keybindControls.clear();
         if (view != null) {
             ConfigCore.subMods.remove(view.mod);
             ConfigCore.mods.remove(view.mod);
@@ -104,18 +110,11 @@ public final class OneConfigAdapter implements ClientLifecycle, ConfigChangeList
     }
 
     private void buildPage(View target, FeatureConfig feature) {
-        Map<Setting<?>, ConfigOption<?>> options = new IdentityHashMap<>();
         for (ConfigOption<?> option : feature.options()) {
-            options.put(option.setting(), option);
-        }
-        for (Setting<?> setting : feature.settings()) {
-            if (feature.toggleable() && setting.id().equals("enabled")) {
-                continue;
-            }
-            ConfigOption<?> option = options.get(setting);
-            String category = option == null || option.subcategory() == null ? "General"
-                    : option.subcategory().originalDisplayName();
-            String subcategory = option == null || option.subsubcategory() == null ? ""
+            Setting<?> setting = option.setting();
+            String category =
+                    option.subcategory() == null ? "" : option.subcategory().originalDisplayName();
+            String subcategory = option.subsubcategory() == null ? ""
                     : option.subsubcategory().originalDisplayName();
             OptionSubcategory section =
                     ConfigUtils.getSubCategory(target.mod.defaultPage, category, subcategory);
@@ -163,11 +162,11 @@ public final class OneConfigAdapter implements ClientLifecycle, ConfigChangeList
 
         @Override
         public void initialize() {
-            // Base initialization loads files. This view only connects controls to 12pit settings.
+            // Skip OneConfig's file loading because 12pit owns these settings.
             mod.config = this;
         }
 
-        // Card clicks call save on the client thread; the save worker must not change live settings.
+        // OneConfig calls save from both card clicks and a worker. Live settings need the client thread.
         @Override
         public void save() {
             if (canToggle && Minecraft.getMinecraft().isCallingFromMinecraftThread()) {
@@ -189,11 +188,40 @@ public final class OneConfigAdapter implements ClientLifecycle, ConfigChangeList
 
     private BasicOption createOption(Setting<?> setting, ConfigOption<?> option, String category,
             String subcategory) {
-        ConfigOption.Kind kind = option == null ? null : option.kind();
+        ConfigOption.Kind kind = option.kind();
         String title = setting.originalDisplayName();
         if (kind == ConfigOption.Kind.KEYBIND) {
-            // 12pit stores one keyboard code; OneConfig keybinds also accept mouse buttons and chords.
-            title += " (key code)";
+            IntegerSetting keySetting = (IntegerSetting) setting;
+            KeybindValue binding = new KeybindValue();
+            try {
+                // ConfigKeyBind accesses its field before calling the overridden getter.
+                ConfigKeyBind control =
+                        new ConfigKeyBind(KeybindValue.class.getDeclaredField("value"), binding,
+                                title, setting.originalDescription(), category, subcategory, 2) {
+                            @Override
+                            public Object get() {
+                                int key = keySetting.get();
+                                List<Integer> keys = binding.value.getKeyBinds();
+                                if (key != (keys.isEmpty() ? 0 : keys.get(0))) {
+                                    binding.value.clearKeys();
+                                    if (key != 0) {
+                                        binding.value.addKey(key);
+                                    }
+                                }
+                                return binding.value;
+                            }
+
+                            @Override
+                            protected void set(Object value) {
+                                List<Integer> keys = ((OneKeyBind) value).getKeyBinds();
+                                setValue(keySetting, keys.isEmpty() ? 0 : keys.get(0));
+                            }
+                        };
+                keybindControls.add(control);
+                return control;
+            } catch (NoSuchFieldException failure) {
+                throw new IllegalStateException("OneConfig keybind field is missing", failure);
+            }
         }
         if (setting instanceof ChoiceSetting) {
             ChoiceSetting choices = (ChoiceSetting) setting;
@@ -237,12 +265,6 @@ public final class OneConfigAdapter implements ClientLifecycle, ConfigChangeList
                 }
             };
         }
-        if (setting.id().endsWith(".anchor")) {
-            return dropdown((IntegerSetting) setting,
-                    new String[] {"Top left", "Top center", "Top right", "Center left", "Center",
-                            "Center right", "Bottom left", "Bottom center", "Bottom right"},
-                    new int[] {0, 1, 2, 3, 4, 5, 6, 7, 8}, title, category, subcategory);
-        }
         NumberSetting<?> number = (NumberSetting<?>) setting;
         float minimum = (float) number.minimumValue();
         float maximum = (float) number.maximumValue();
@@ -271,6 +293,19 @@ public final class OneConfigAdapter implements ClientLifecycle, ConfigChangeList
             @Override
             protected void set(Object value) {
                 writeNumber(number, value);
+            }
+        };
+    }
+
+    private static final class KeybindValue {
+        private final OneKeyBind value = new OneKeyBind() {
+            @Override
+            public void addKey(int key, boolean mouse) {
+                if (mouse || key <= 0 || key >= Keyboard.KEYBOARD_SIZE) {
+                    return;
+                }
+                clearKeys();
+                super.addKey(key, false);
             }
         };
     }
@@ -304,13 +339,13 @@ public final class OneConfigAdapter implements ClientLifecycle, ConfigChangeList
         if (setting instanceof IntegerSetting) {
             return setting.get();
         }
-        // OneConfig decimal controls expect Float; 12pit stores Double.
+        // OneConfig decimal controls require Float values.
         return setting.get().floatValue();
     }
 
     private void writeNumber(NumberSetting<?> setting, Object value) {
         double number = ((Number) value).doubleValue();
-        // Float bounds can round past the exact limits held by 12pit.
+        // Float rounding can put OneConfig values outside 12pit's bounds.
         setValue(setting,
                 Math.max(setting.minimumValue(), Math.min(setting.maximumValue(), number)));
     }

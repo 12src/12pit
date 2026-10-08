@@ -70,7 +70,7 @@ const selectedProfiles = ref<string[]>(
 )
 const selectedRelations = ref<RelationType[]>(
   props.mode === 'export' && !props.state.relations.problem
-    ? [...relationTypes]
+    ? relationTypes
     : [],
 )
 const expandedProfiles = ref(false)
@@ -130,7 +130,7 @@ function toggleRelations() {
   selectedRelations.value =
     selectedRelations.value.length === availableRelations.value.length
       ? []
-      : [...availableRelations.value]
+      : availableRelations.value
 }
 
 function changeProfile(id: string) {

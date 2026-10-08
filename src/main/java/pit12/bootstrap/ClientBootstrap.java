@@ -66,6 +66,7 @@ import pit12.runtime.pit.PitContext;
 import pit12.runtime.pit.PitContextTracker;
 import pit12.runtime.player.PlayerEquipmentAccess;
 import pit12.runtime.player.PlayerEquipmentTracker;
+import pit12.runtime.player.PlayerNameCache;
 import pit12.runtime.player.TabPresence;
 import pit12.runtime.player.TabPresenceTracker;
 import pit12.runtime.session.ClientSession;
@@ -84,6 +85,7 @@ public final class ClientBootstrap {
     private boolean started;
 
     public ClientBootstrap() {
+        // BootstrapLayoutTest reads the section and category comments.
         // Shared runtime
         Minecraft minecraft = Minecraft.getMinecraft();
         client = new ClientThread(minecraft::isCallingFromMinecraftThread,
@@ -103,12 +105,14 @@ public final class ClientBootstrap {
         components.add(playerEquipment);
         TabPresenceTracker presence = new TabPresenceTracker(session);
         components.add(presence);
+        PlayerNameCache playerNames = new PlayerNameCache(minecraft, session, presence);
+        components.add(playerNames);
         HudRegistry hudRegistry = new HudRegistry(client);
         // Feature providers
         // Category: No config
-        HudEditorFeature hudEditor = registerHudEditor(hudRegistry, commands);
         Profiles profiles =
                 registerProfiles(configs, new File(minecraft.mcDataDir, "12pit/config").toPath());
+        HudEditorFeature hudEditor = registerHudEditor(hudRegistry, commands, configs, profiles);
         Relations relations = registerRelations(presence,
                 new File(minecraft.mcDataDir, "12pit/relations.json").toPath(), client, commands);
         // Category: Player
@@ -126,7 +130,8 @@ public final class ClientBootstrap {
         registerGamma(configs, (GammaBinding) minecraft.entityRenderer);
         registerItemEsp(configs, session);
         registerPlayerEsp(configs, session, presence, relations);
-        registerPlayerList(configs, playerEquipment, pitContext, hudRegistry, relations, presence);
+        registerPlayerList(configs, playerNames, playerEquipment, pitContext, hudRegistry,
+                relations, presence);
         registerTooltip(configs);
         // Category: Interface
         registerWebUi(webUiConfigs, configs, profiles, relations, hudEditor, swapBindings,
@@ -142,16 +147,18 @@ public final class ClientBootstrap {
 
     // Feature providers
     // Category: No config
-    private HudEditorFeature registerHudEditor(HudRegistry hudRegistry, CommandRegistry commands) {
-        HudEditorFeature hudEditor = new HudEditorFeature(hudRegistry, commands, language);
-        components.add(hudEditor);
-        return hudEditor;
-    }
-
     private Profiles registerProfiles(ConfigCatalog configs, Path directory) {
         ProfilesFeature profiles = new ProfilesFeature(configs, directory);
         components.add(profiles);
         return profiles;
+    }
+
+    private HudEditorFeature registerHudEditor(HudRegistry hudRegistry, CommandRegistry commands,
+            ConfigCatalog configs, Profiles profiles) {
+        HudEditorFeature hudEditor =
+                new HudEditorFeature(hudRegistry, commands, language, configs, profiles);
+        components.add(hudEditor);
+        return hudEditor;
     }
 
     private Relations registerRelations(TabPresence presence, Path path, ClientThread client,
@@ -222,13 +229,13 @@ public final class ClientBootstrap {
         components.add(new PlayerEspFeature(configs, config, session, presence, relations));
     }
 
-    private void registerPlayerList(ConfigCatalog configs, PlayerEquipmentAccess playerEquipment,
-            PitContext pitContext, HudRegistry hudRegistry, RelationLookup relations,
-            TabPresence presence) {
+    private void registerPlayerList(ConfigCatalog configs, PlayerNameCache playerNames,
+            PlayerEquipmentAccess playerEquipment, PitContext pitContext, HudRegistry hudRegistry,
+            RelationLookup relations, TabPresence presence) {
         PlayerListConfig config = new PlayerListConfig();
         configs.register(config);
-        components.add(new PlayerListFeature(configs, config, playerEquipment, pitContext,
-                hudRegistry, relations, presence, language));
+        components.add(new PlayerListFeature(configs, config, playerNames, playerEquipment,
+                pitContext, hudRegistry, relations, presence, language));
     }
 
     private void registerTooltip(ConfigCatalog configs) {
@@ -245,7 +252,6 @@ public final class ClientBootstrap {
         configs.register(config);
         WebUiFeature webUi = new WebUiFeature(featureConfigs, configs, profiles, relations,
                 hudEditor, swapBindings, config, language, path);
-        hudEditor.setWebUiOpener(webUi::open);
         components.add(webUi);
     }
 
@@ -256,7 +262,7 @@ public final class ClientBootstrap {
         }
         try {
             for (ClientLifecycle component : components) {
-                // A failed start may still acquire resources that rollback must release.
+                // A failed start may leave resources that stop() must release.
                 startedComponents.add(component);
                 component.start();
             }

@@ -189,7 +189,7 @@ public final class EventListFeature implements ClientLifecycle, ConfigChangeList
 
     private void fetch() {
         if (worker != null && worker.isShutdown()) {
-            // Java's HTTP reads may finish only at their timeout after interruption.
+            // Interrupting an HTTP read may still leave it running until its timeout.
             if (!worker.isTerminated()) {
                 return;
             }

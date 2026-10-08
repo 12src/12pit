@@ -20,6 +20,7 @@ package pit12.feature.eventlist;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -31,7 +32,6 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -88,7 +88,8 @@ final class EventFeedClient {
                 }
             }
             return new Result(parse(response.toString()), retryAt);
-        } catch (IOException | RuntimeException failure) {
+        } catch (IOException | JsonParseException | NumberFormatException
+                | ArithmeticException failure) {
             if (!Thread.currentThread().isInterrupted()) {
                 LOGGER.log(Level.WARNING, "Could not load the event schedule", failure);
             }
@@ -164,9 +165,9 @@ final class EventFeedClient {
         final List<PitEvent> events;
         final long retryAt;
 
-        // The worker transfers its parsed rows to the client through this result.
+        // The worker gives up ownership of events when returning this result.
         Result(List<PitEvent> events, long retryAt) {
-            this.events = events == null ? null : Collections.unmodifiableList(events);
+            this.events = events;
             this.retryAt = retryAt;
         }
     }

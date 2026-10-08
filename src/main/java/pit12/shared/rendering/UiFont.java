@@ -59,7 +59,7 @@ final class UiFont {
 
     UiFont(Minecraft minecraft, ResourceLocation fontLocation, float logicalFontSize,
             float pixelScale) {
-        float fontSize = Math.max(1.0F, logicalFontSize * pixelScale);
+        float fontSize = logicalFontSize * pixelScale;
         Font font = loadFont(minecraft, fontLocation, fontSize);
         boldOffset = Math.max(1, Math.round(pixelScale));
         BufferedImage metricsImage = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
@@ -120,7 +120,7 @@ final class UiFont {
         }
         height = lineHeight;
         graphics.dispose();
-        // TextureManager keeps deleted dynamic textures in its registry, so the font owns this texture directly.
+        // The font owns its texture because TextureManager retains deleted dynamic textures.
         try {
             texture = new DynamicTexture(atlas);
         } finally {
@@ -217,10 +217,10 @@ final class UiFont {
                     continue;
                 }
                 Glyph glyph = glyphs[character];
-                // Keep fractional advances until placement so small scale errors do not add up along a line.
+                // Rounding only at placement avoids accumulated spacing errors.
                 int cursorX = x + Math.round(cursor) + glyph.offsetX;
                 int glyphY = y + glyph.offsetY;
-                // Quad edges map to texel edges; pixel centers then sample texel centers without stretching.
+                // Matching quad edges to texel edges aligns pixel centers with texel centers.
                 float left = (float) glyph.x / atlasSize;
                 float top = (float) glyph.y / atlasSize;
                 float right = (float) (glyph.x + glyph.width) / atlasSize;

@@ -63,7 +63,6 @@ public final class ProfileCodec {
     }
 
     public DecodeResult decode(UUID expectedId, Reader reader) {
-        // Minecraft's Gson 2.2.4 predates the static parseReader helpers in newer Gson releases.
         JsonElement parsed = new JsonParser().parse(reader);
         if (!parsed.isJsonObject()) {
             throw new IllegalArgumentException("root must be a JSON object");

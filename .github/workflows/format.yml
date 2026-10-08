@@ -18,6 +18,8 @@ jobs:
   format-check:
     name: Check formatting
     runs-on: ubuntu-latest
+    env:
+      GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
 
     steps:
       - name: Checkout
@@ -38,6 +40,17 @@ jobs:
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb #v6.3.0
+        with:
+          cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+
+      - name: Cache Gradle configuration
+        if: env.GRADLE_ENCRYPTION_KEY != ''
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .gradle/configuration-cache
+          key: cc-${{ runner.os }}-${{ github.workflow }}-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}-${{ github.sha }}
+          restore-keys: |
+            cc-${{ runner.os }}-${{ github.workflow }}-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}-
 
       - name: Check formatting
         run: |

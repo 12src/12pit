@@ -20,6 +20,8 @@ On Linux/macOS, run:
 
 The development game directory is `run/`. Look into `run/logs/latest.log` for any client errors and Web UI address.
 
+[DevAuth](https://github.com/DJtheRedstoner/DevAuth) is provided in the development environment. To test with an authenticated account, enable the `devauth.enabled` JVM property and follow the [DevAuth configuration guide](https://github.com/DJtheRedstoner/DevAuth#configuration).
+
 ## Develop the web interface
 
 Start the game, then press Right Shift (the default key) to open the web interface. If the key does not open the browser, use the URL from the log.
@@ -49,7 +51,6 @@ On Windows, run the following commands from the repository root. On Linux or mac
 ```powershell
 .\gradlew.bat check
 .\gradlew.bat assemble
-.\gradlew.bat spotlessCheck
 npm run format:check --prefix web-ui
 ```
 
@@ -68,5 +69,3 @@ While reporting a failure, provide the relevant log messages and steps to reprod
 The saved data is in `12pit/` directory in the Minecraft game directory. Profiles are stored in `12pit/config/`, relations are stored in `12pit/relations.json`, and swap bindings are stored in `12pit/swap-bindings.json`.
 
 Create a backup copy of these files before changing them in order to diagnose a load error. Do not delete the saved data in order to reset a temporary session issue.
-
-[DevAuth](https://github.com/DJtheRedstoner/DevAuth) is provided in the development environment. To test with an authenticated account, enable the `devauth.enabled` JVM property and follow the [DevAuth configuration guide](https://github.com/DJtheRedstoner/DevAuth#configuration).

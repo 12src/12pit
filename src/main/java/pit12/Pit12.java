@@ -20,8 +20,8 @@ package pit12;
 
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
-import pit12.bootstrap.BuildConfig;
 import pit12.bootstrap.ClientBootstrap;
+import pit12.shared.build.BuildConfig;
 
 @Mod(modid = Pit12.MOD_ID, version = Pit12.VERSION, useMetadata = true,
         acceptedMinecraftVersions = "[1.8.9]", acceptableRemoteVersions = "*",

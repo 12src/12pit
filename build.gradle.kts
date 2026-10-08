@@ -52,24 +52,21 @@ loom {
 
     mixin {
         defaultRefmapName.set("mixins.$modId.refmap.json")
-        // Forge 1.8.9 needs Loom's legacy AP path for MCP mappings to reach Mixin.
+        // Mixin needs Loom's legacy annotation processor to read MCP mappings on Forge 1.8.9.
         useLegacyMixinAp.set(true)
     }
 }
-
-tasks.named<JavaExec>("runClient") { javaLauncher.set(legacyJavaLauncher) }
 
 val buildConfigProperties =
     mapOf(
         "modId" to modId,
         "modName" to modName,
         "modVersion" to modVersion,
-        "gitCommit" to providers.environmentVariable("GITHUB_SHA").getOrElse(""),
         "releaseBuild" to providers.gradleProperty("releaseBuild").getOrElse("false").toBoolean(),
     )
 val generatedBuildConfigDirectory = layout.buildDirectory.dir("generated/sources/buildConfig/java/main")
 val generateBuildConfig by
-    tasks.registering(Copy::class) {
+    tasks.registering(Sync::class) {
         inputs.properties(buildConfigProperties)
         filteringCharset = "UTF-8"
 
@@ -86,10 +83,19 @@ sourceSets.main {
     output.setResourcesDir(sourceSets.main.flatMap { it.java.classesDirectory })
 }
 
+val generateBuildInfo by
+    tasks.registering(WriteProperties::class) {
+        destinationFile.set(layout.buildDirectory.file("generated/resources/buildInfo/build.properties"))
+        property("gitCommit", providers.environmentVariable("GITHUB_SHA").orElse(""))
+    }
+
 tasks.compileJava { dependsOn(generateBuildConfig) }
 
-// Layout checks read comments that are absent from compiled classes.
-tasks.test { inputs.file("src/main/java/pit12/bootstrap/ClientBootstrap.java") }
+// Layout checks need the section comments from the source file.
+tasks.test {
+    inputs.file("src/main/java/pit12/bootstrap/ClientBootstrap.java")
+    notCompatibleWithConfigurationCache("Loom test classpath groups cannot be cached with Gradle 8.")
+}
 
 repositories {
     mavenCentral()
@@ -205,9 +211,15 @@ val buildWebUi by
         commandLine(npm, "run", "build", "--prefix", "web-ui")
     }
 
-tasks.processResources {
+tasks.named<JavaExec>("runClient") {
+    javaLauncher.set(legacyJavaLauncher)
     dependsOn(buildWebUi)
+}
+
+tasks.processResources {
+    mustRunAfter(buildWebUi)
     from("web-ui/dist") { into("assets/pit12/web") }
+    from(generateBuildInfo) { into("assets/pit12") }
     val properties =
         mapOf(
             "version" to project.version,
@@ -235,6 +247,7 @@ val remapJar by
 tasks.jar { enabled = false }
 
 tasks.shadowJar {
+    dependsOn(buildWebUi)
     destinationDirectory.set(layout.buildDirectory.dir("tmp/shadowJar"))
     archiveClassifier.set("dev-shadow")
     configurations = listOf(shaded)

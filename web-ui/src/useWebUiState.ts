@@ -28,7 +28,7 @@ import {
   type RelationType,
   type State,
 } from './api'
-import { applyLanguage, loadLanguage, t } from './languages'
+import { applyLanguage, loadLanguage, t, type Catalog } from './languages'
 
 type SettingEdit = {
   featureId: string
@@ -44,18 +44,17 @@ export function useWebUiState() {
   const sendingSetting = ref(false)
   const busy = computed(() => pending.value || sendingSetting.value)
   const features = computed(() => state.value?.features ?? [])
-  const settings = computed(() => state.value?.webui.settings)
-  const settingsOptions = computed(
-    () => settings.value?.sections.flatMap((section) => section.options) ?? [],
+  const settingsOptions = computed(() =>
+    state.value?.webui.settings.sections.flatMap((section) => section.options),
   )
   const color = computed(
     () =>
-      settingsOptions.value.find((option) => option.id === 'gui_color')?.value,
+      settingsOptions.value?.find((option) => option.id === 'gui_color')!.value,
   )
   const showDetails = computed(() =>
     Boolean(
-      settingsOptions.value.find((option) => option.id === 'show_details')
-        ?.value ?? false,
+      settingsOptions.value?.find((option) => option.id === 'show_details')!
+        .value,
     ),
   )
   const pendingSettings = new Map<string, SettingEdit>()
@@ -93,25 +92,24 @@ export function useWebUiState() {
   }
 
   function applySetting(next: State, edit: SettingEdit) {
+    // The server freezes the catalog before starting the UI.
     const feature =
       next.webui.settings.id === edit.featureId
         ? next.webui.settings
-        : next.features.find((item) => item.id === edit.featureId)
-    if (!feature) return
+        : next.features.find((item) => item.id === edit.featureId)!
     if (edit.optionId === 'enabled') {
       feature.enabled = Boolean(edit.value)
       return
     }
     const option = feature.sections
       .flatMap((section) => section.options)
-      .find((item) => item.id === edit.optionId)
-    if (!option) return
+      .find((item) => item.id === edit.optionId)!
     if (typeof edit.value === 'string') option.keyName = edit.value
     else option.value = edit.value
   }
 
   async function displayState(next: State, version: number, clearError = true) {
-    let catalog: Record<string, string> | null = null
+    let catalog: Catalog | null = null
     let languageError: unknown
     try {
       catalog = await loadLanguage(next.language)
@@ -205,7 +203,7 @@ export function useWebUiState() {
     const edit = { featureId, optionId, value }
     pendingSettings.set(key, edit)
     queuedSettings.set(key, edit)
-    if (state.value) applySetting(state.value, edit)
+    applySetting(state.value!, edit)
     void flushSettings()
   }
 
@@ -269,7 +267,6 @@ export function useWebUiState() {
     pending,
     busy,
     features,
-    settings,
     showDetails,
     favorites,
     toggleFavorite,

@@ -27,8 +27,10 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import pit12.feature.hudeditor.api.HudEditor;
+import pit12.feature.profile.api.Profiles;
 import pit12.runtime.command.CommandNode;
 import pit12.runtime.command.CommandRegistry;
+import pit12.runtime.config.ConfigCatalog;
 import pit12.runtime.hud.HudRegistry;
 import pit12.runtime.languages.Languages;
 import pit12.shared.lifecycle.ClientLifecycle;
@@ -38,28 +40,21 @@ public final class HudEditorFeature implements ClientLifecycle, HudEditor {
     private final HudEditorController controller;
     private final HudRegistry registry;
     private final Languages language;
-    private Runnable openWebUi;
     private boolean started;
     private boolean pendingOpen;
 
-    public HudEditorFeature(HudRegistry registry, CommandRegistry commands, Languages language) {
+    public HudEditorFeature(HudRegistry registry, CommandRegistry commands, Languages language,
+            ConfigCatalog configs, Profiles profiles) {
         this.registry = registry;
         this.language = language;
-        controller = new HudEditorController(registry);
+        controller = new HudEditorController(registry, configs, profiles);
         commands.register(CommandNode.command("hudeditor", source("Open the HUD editor"))
                 .executes((sender, args) -> requestOpen()).build(), true);
-    }
-
-    public void setWebUiOpener(Runnable openWebUi) {
-        this.openWebUi = openWebUi;
     }
 
     @Override
     public void start() {
         registry.checkThread();
-        if (openWebUi == null) {
-            throw new IllegalStateException("Web UI opener is not bound");
-        }
         started = true;
     }
 
@@ -88,7 +83,7 @@ public final class HudEditorFeature implements ClientLifecycle, HudEditor {
     @SubscribeEvent
     public void onClientTick(ClientTickEvent event) {
         registry.checkThread();
-        // GuiChat closes itself after dispatching a command, so wait until it is gone.
+        // GuiChat closes itself after dispatching a command.
         if (event.phase != Phase.END || !pendingOpen
                 || minecraft.currentScreen instanceof GuiChat) {
             return;
@@ -109,6 +104,6 @@ public final class HudEditorFeature implements ClientLifecycle, HudEditor {
             return;
         }
         minecraft.displayGuiScreen(
-                new HudEditorScreen(controller, minecraft.currentScreen, language, openWebUi));
+                new HudEditorScreen(controller, minecraft.currentScreen, language));
     }
 }

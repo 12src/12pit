@@ -23,7 +23,7 @@ import { t } from './languages'
 import SettingSections from './SettingSections.vue'
 
 defineProps<{
-  settings: Feature | undefined
+  settings: Feature
   profilesLoading: boolean
   busy: boolean
   pending: boolean
@@ -75,15 +75,14 @@ const emit = defineEmits<{
     </div>
   </div>
   <SettingSections
-    v-if="settings"
     :feature-id="settings.id"
     :sections="settings.sections"
     :capturing="capturing"
     :busy="pending"
     :show-details="showDetails"
     flat
-    @change="(id, value) => emit('change', settings!.id, id, value)"
-    @capture="emit('capture', settings!.id, $event)"
+    @change="(id, value) => emit('change', settings.id, id, value)"
+    @capture="emit('capture', settings.id, $event)"
     @cancel="emit('cancel')"
   />
 </template>

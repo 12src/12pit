@@ -22,10 +22,10 @@ import java.util.UUID;
 
 /** Queries and subscriptions require the client thread. Returned snapshots can be passed to workers. */
 public interface PlayerEquipmentAccess {
-    /** Returns null when the player's entity is not currently loaded or has not been observed. */
+    /** Returns null if the player's entity is unloaded or has not been observed. */
     PlayerEquipmentSnapshot loadedEquipment(UUID playerId);
 
-    /** Listeners are invoked on the client thread and must be removed with their owner. */
+    /** Listeners run on the client thread. Remove them when their owner stops. */
     void addListener(PlayerEquipmentListener listener);
 
     void removeListener(PlayerEquipmentListener listener);

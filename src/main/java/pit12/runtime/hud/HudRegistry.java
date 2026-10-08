@@ -40,7 +40,7 @@ public final class HudRegistry {
         client.check();
     }
 
-    /** Registration and reads are client-thread confined after features start. */
+    /** After features start, register and query elements on the client thread. */
     public void register(HudElement element) {
         client.check();
         String id = element.id();
@@ -71,7 +71,7 @@ public final class HudRegistry {
 
     public boolean contains(HudElement element) {
         client.check();
-        return element != null && elementsById.get(element.id()) == element;
+        return elementsById.get(element.id()) == element;
     }
 
     public boolean editing() {
