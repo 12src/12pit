@@ -78,7 +78,7 @@ jobs:
           else
             gh release create nightly build/libs/12pit.jar \
               --repo "${GITHUB_REPOSITORY}" \
-              --title Nightly \
+              --title "12pit Nightly" \
               --notes "${release_notes}" \
               --prerelease
           fi
