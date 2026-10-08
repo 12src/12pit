@@ -46,7 +46,10 @@ export function useKeyCapture(
       cancelCapture()
       return
     }
-    const name = keyName(event.code)
+    const name =
+      event.code === '' && event.key === 'Shift'
+        ? 'RSHIFT'
+        : keyName(event.code)
     if (!name) {
       reportError(new Error(t('This key cannot be bound')))
       cancelCapture()
