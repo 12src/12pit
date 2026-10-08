@@ -32,7 +32,7 @@ import pit12.runtime.languages.Languages;
 
 public final class WebUiConfig extends FeatureConfig {
     private final IntegerSetting keybind;
-    private final ChoiceSetting keybindAction;
+    private final BooleanSetting hudEditorHint;
     private final ChoiceSetting language;
     private final BooleanSetting discordRpc;
 
@@ -54,18 +54,18 @@ public final class WebUiConfig extends FeatureConfig {
         discordRpc = booleanSetting("discord_rpc", source("Discord RPC"),
                 source("Shows 12pit and elapsed time on your Discord profile."), true);
         keybind = keybindSetting("keybind", source("Interface key"),
-                source("Opens the selected interface."), Keyboard.KEY_RSHIFT);
-        keybindAction = choiceSetting("keybind_action", source("Key action"),
-                source("Chooses which interface the key opens."), 0,
-                new Choice(0, source("Web UI")), new Choice(1, source("HUD editor")));
+                source("Opens the HUD editor. Press again with no HUD selected to open settings."),
+                Keyboard.KEY_RSHIFT);
+        hudEditorHint = booleanSetting("hud_editor_hint", source("HUD editor hint"),
+                source("Shows how to open the Web UI from the HUD editor."), true);
     }
 
     public IntegerSetting keybind() {
         return keybind;
     }
 
-    public ChoiceSetting keybindAction() {
-        return keybindAction;
+    public BooleanSetting hudEditorHint() {
+        return hudEditorHint;
     }
 
     public ChoiceSetting language() {

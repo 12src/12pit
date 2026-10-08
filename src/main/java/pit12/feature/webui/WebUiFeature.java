@@ -107,11 +107,7 @@ public final class WebUiFeature implements ClientLifecycle, ConfigChangeListener
                 || Keyboard.getEventKey() != key) {
             return;
         }
-        if (config.keybindAction().get() == 1) {
-            hudEditor.open();
-        } else {
-            open();
-        }
+        hudEditor.open();
     }
 
     public void open() {
