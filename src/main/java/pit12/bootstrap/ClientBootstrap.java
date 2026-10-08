@@ -66,6 +66,7 @@ import pit12.runtime.pit.PitContext;
 import pit12.runtime.pit.PitContextTracker;
 import pit12.runtime.player.PlayerEquipmentAccess;
 import pit12.runtime.player.PlayerEquipmentTracker;
+import pit12.runtime.player.PlayerNameCache;
 import pit12.runtime.player.TabPresence;
 import pit12.runtime.player.TabPresenceTracker;
 import pit12.runtime.session.ClientSession;
@@ -104,6 +105,8 @@ public final class ClientBootstrap {
         components.add(playerEquipment);
         TabPresenceTracker presence = new TabPresenceTracker(session);
         components.add(presence);
+        PlayerNameCache playerNames = new PlayerNameCache(minecraft, session, presence);
+        components.add(playerNames);
         HudRegistry hudRegistry = new HudRegistry(client);
         // Feature providers
         // Category: No config
@@ -127,7 +130,8 @@ public final class ClientBootstrap {
         registerGamma(configs, (GammaBinding) minecraft.entityRenderer);
         registerItemEsp(configs, session);
         registerPlayerEsp(configs, session, presence, relations);
-        registerPlayerList(configs, playerEquipment, pitContext, hudRegistry, relations, presence);
+        registerPlayerList(configs, playerNames, playerEquipment, pitContext, hudRegistry,
+                relations, presence);
         registerTooltip(configs);
         // Category: Interface
         registerWebUi(webUiConfigs, configs, profiles, relations, hudEditor, swapBindings,
@@ -225,13 +229,13 @@ public final class ClientBootstrap {
         components.add(new PlayerEspFeature(configs, config, session, presence, relations));
     }
 
-    private void registerPlayerList(ConfigCatalog configs, PlayerEquipmentAccess playerEquipment,
-            PitContext pitContext, HudRegistry hudRegistry, RelationLookup relations,
-            TabPresence presence) {
+    private void registerPlayerList(ConfigCatalog configs, PlayerNameCache playerNames,
+            PlayerEquipmentAccess playerEquipment, PitContext pitContext, HudRegistry hudRegistry,
+            RelationLookup relations, TabPresence presence) {
         PlayerListConfig config = new PlayerListConfig();
         configs.register(config);
-        components.add(new PlayerListFeature(configs, config, playerEquipment, pitContext,
-                hudRegistry, relations, presence, language));
+        components.add(new PlayerListFeature(configs, config, playerNames, playerEquipment,
+                pitContext, hudRegistry, relations, presence, language));
     }
 
     private void registerTooltip(ConfigCatalog configs) {

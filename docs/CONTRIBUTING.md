@@ -38,7 +38,7 @@ Catch an exception only if you can do something with it, handle it or provide mo
 
 Avoid obvious waste, like parsing or scanning the whole world on every frame. Do not add any caches or specific cases for unmeasured gain. In case of small gain and complicated code use a simpler approach.
 
-Remove any unused code, including methods, fields, parameters, imports and classes. Prior to removing a public member search the entire repository for it, including tests, documentation and Mixin configuration. Do that for your own changeset code; other unrelated cleanup should go in a separate pull request.
+Remove unused code in your changes, including methods, fields, parameters, imports and classes. Before removing a public member, search the entire repository for it, including tests, documentation and Mixin configuration.
 
 Use plain forms provided by the language. Rely on autoboxing instead of performing boxing operations yourself, and prefer imports over fully qualified names.
 

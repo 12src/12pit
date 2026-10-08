@@ -18,13 +18,10 @@
  */
 package pit12.runtime.player;
 
-import java.util.UUID;
+import net.minecraft.scoreboard.ScorePlayerTeam;
 
-public interface TabPresenceListener {
-    /** The name can be null. A repeated ADD packet sets joined to false. */
-    void onPlayerSeen(UUID playerId, String name, boolean joined);
+public interface PlayerTeamObserver {
+    void onTeamChanged(ScorePlayerTeam team);
 
-    void onPlayerLeft(UUID playerId);
-
-    default void onTabDisplayChanged(UUID playerId) {}
+    void onTeamMemberChanged(String name);
 }

@@ -8,7 +8,7 @@ When adding a new language:
 - If the language has no ISO 639-1 code, get a maintainer's approval before adding it. Its language tag must still follow [RFC 5646](https://www.rfc-editor.org/rfc/rfc5646.html). Ask in an issue or mention a maintainer on [Discord](https://discord.gg/e9PRKMUenc).
 - We recommend translating only into your native language.
 
-For example, `nl-NL` uses the ISO 639-1 code `nl`, so it does not need prior discussion.
+For example, `nl-NL` uses the ISO 639-1 code `nl`.
 
 ## Contribute interface translations
 
@@ -123,8 +123,6 @@ From the repository root, compare the source with the commit in the header. Repl
 ```sh
 git diff <source-commit> -- docs/CONTRIBUTING.md
 ```
-
-No output means the source has not changed. If the diff shows changes, review the translation.
 
 Review every source change since the recorded commit, then update the translation as needed. Once they match, record the latest committed source version:
 

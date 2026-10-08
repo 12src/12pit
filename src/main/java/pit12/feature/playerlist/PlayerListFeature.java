@@ -40,6 +40,7 @@ import pit12.runtime.languages.Languages;
 import pit12.runtime.pit.PitContext;
 import pit12.runtime.player.PlayerEquipmentAccess;
 import pit12.runtime.player.PlayerEquipmentListener;
+import pit12.runtime.player.PlayerNameCache;
 import pit12.runtime.player.TabPresence;
 import pit12.runtime.player.TabPresenceListener;
 import pit12.shared.lifecycle.ClientLifecycle;
@@ -53,6 +54,7 @@ public final class PlayerListFeature implements ClientLifecycle, PlayerEquipment
     private final PlayerEquipmentAccess equipment;
     private final RelationLookup relations;
     private final TabPresence presence;
+    private final PlayerNameCache playerNames;
     private final PlayerListBuilder builder;
     private final PlayerListHud hud;
     private final Languages language;
@@ -60,23 +62,26 @@ public final class PlayerListFeature implements ClientLifecycle, PlayerEquipment
     private final HudRegistry hudRegistry;
     private final HudRenderer hudRenderer = new HudRenderer();
     private PlayerListSnapshot snapshot = PlayerListSnapshot.empty();
-    private long lastTabSignature;
     private boolean snapshotDirty = true;
+    private final Runnable namesChanged = () -> snapshotDirty = true;
     private int ticksSinceUpdate = UPDATE_INTERVAL_TICKS;
     private boolean started;
     private boolean active;
 
     public PlayerListFeature(ConfigCatalog configs, PlayerListConfig config,
-            PlayerEquipmentAccess equipment, PitContext pitContext, HudRegistry hudRegistry,
-            RelationLookup relations, TabPresence presence, Languages language) {
+            PlayerNameCache playerNames, PlayerEquipmentAccess equipment, PitContext pitContext,
+            HudRegistry hudRegistry, RelationLookup relations, TabPresence presence,
+            Languages language) {
         this.language = language;
         this.configs = configs;
         this.config = config;
         this.equipment = equipment;
         this.relations = relations;
         this.presence = presence;
+        this.playerNames = playerNames;
         this.hudRegistry = hudRegistry;
-        builder = new PlayerListBuilder(minecraft, equipment, pitContext, config, relations);
+        builder = new PlayerListBuilder(minecraft, equipment, pitContext, config, relations,
+                playerNames);
         hud = new PlayerListHud(config, hudRenderer);
         languageListener = () -> hud.localize(language);
     }
@@ -116,6 +121,7 @@ public final class PlayerListFeature implements ClientLifecycle, PlayerEquipment
             equipment.addListener(this);
             relations.addListener(this);
             presence.addListener(this);
+            playerNames.addListener(namesChanged);
             MinecraftForge.EVENT_BUS.register(this);
         } catch (RuntimeException failure) {
             deactivate();
@@ -130,6 +136,7 @@ public final class PlayerListFeature implements ClientLifecycle, PlayerEquipment
         active = false;
         MinecraftForge.EVENT_BUS.unregister(this);
         presence.removeListener(this);
+        playerNames.removeListener(namesChanged);
         relations.removeListener(this);
         equipment.removeListener(this);
         snapshot = PlayerListSnapshot.empty();
@@ -175,11 +182,6 @@ public final class PlayerListFeature implements ClientLifecycle, PlayerEquipment
     }
 
     @Override
-    public void onTabDisplayChanged() {
-        snapshotDirty = true;
-    }
-
-    @Override
     public void onConfigChanged(ConfigChangeSet changes) {
         if (!started) {
             return;
@@ -203,6 +205,7 @@ public final class PlayerListFeature implements ClientLifecycle, PlayerEquipment
         if (active && (changes.affects("playerlist", "show_held_item")
                 || changes.affects("playerlist", "show_leggings")
                 || changes.affects("playerlist", "enchantment_format")
+                || changes.affects("playerlist", "short_player_names")
                 || changes.affects("playerlist", "show_distance")
                 || changes.affects("playerlist", "show_direction")
                 || changes.affects("playerlist", "show_spawn")
@@ -235,17 +238,6 @@ public final class PlayerListFeature implements ClientLifecycle, PlayerEquipment
         if (snapshotDirty || movingColumns) {
             snapshot = builder.build();
             hud.snapshot(snapshot);
-            snapshotDirty = false;
-            if (!movingColumns) {
-                lastTabSignature = builder.tabSignature();
-            }
-            return;
-        }
-        long tabSignature = builder.tabSignature();
-        if (tabSignature != lastTabSignature) {
-            snapshot = builder.build();
-            hud.snapshot(snapshot);
-            lastTabSignature = tabSignature;
             snapshotDirty = false;
         }
     }

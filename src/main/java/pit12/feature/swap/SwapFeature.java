@@ -192,8 +192,7 @@ public final class SwapFeature implements ClientLifecycle, ConfigChangeListener,
 
     @Override
     public boolean inputLocked() {
-        return inputLocked
-                && (minecraft.currentScreen == null || controller.owns(minecraft.currentScreen));
+        return inputLocked;
     }
 
     @Override
@@ -278,13 +277,13 @@ public final class SwapFeature implements ClientLifecycle, ConfigChangeListener,
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void onKeyboard(GuiScreenEvent.KeyboardInputEvent.Pre event) {
-        if (controller.owns(event.gui))
+        if (inputLocked)
             event.setCanceled(true);
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void onMouse(GuiScreenEvent.MouseInputEvent.Pre event) {
-        if (controller.owns(event.gui))
+        if (inputLocked)
             event.setCanceled(true);
     }
 

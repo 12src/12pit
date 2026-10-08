@@ -4,7 +4,7 @@ This guide covers the project classes and their usage. For package responsibilit
 
 ## Lifecycle
 
-`ClientLifecycle` defines `start()` to initialize resources and `stop()` to release them. Components that manage resources implement this interface. Helpers with no managed resources do not need it.
+`ClientLifecycle` defines `start()` to initialize resources and `stop()` to release them. Components that manage resources implement this interface.
 
 `ClientBootstrap` creates the components in its constructor. Each feature has a private `register...` method that creates and registers its config when needed, creates the feature, and adds it to `components`. Pass dependencies as arguments. Return the feature's API only when a later registration method needs it.
 
@@ -164,7 +164,7 @@ ChatFeedback.reply(sender, Tone.SUCCESS,
         language.format("Bound {0} to {1}", itemName, keyName));
 ```
 
-Pass an English literal as the first argument to `format(...)` and `translate(...)`. Dynamic values go to the subsequent arguments. `{0}` corresponds to the first value, `{1}` to the second, and so on. Translations may reorder parameters. Translation is performed once when preparing display text and passed to the renderer or chat feedback helper. Absent or empty translation is equivalent to English. `translate(...)` will just return the original text in English; `format(...)` will still substitute its parameters.
+Pass an English literal as the first argument to `format(...)` and `translate(...)`. Dynamic values go to the subsequent arguments. `{0}` corresponds to the first value, `{1}` to the second, and so on. Translations may reorder parameters. Translation is performed once when preparing display text and passed to the renderer or chat feedback helper. For missing or empty translations, `translate(...)` returns the English source and `format(...)` substitutes its parameters.
 
 To update cached HUD text, hold a language listener, register it in `start()` and unregister in `stop()`. `addListener(...)` will immediately call the listener and again after every language change. Update both the cached text and its measured layout at the same time. Prepare dynamic texts while updating the display snapshot. Render callback receives prepared text. Language switch and listener registration/removal occur on the client thread.
 
@@ -184,7 +184,7 @@ After adding or changing marked source text, run `python scripts/languages.py sy
 hud = hudConfig("status", HudAnchor.TOP_LEFT, 6, 6, true);
 ```
 
-The arguments specify the ID, initial screen anchor, horizontal and vertical offsets, and default text shadow. The anchor aligns the same point of the HUD and the screen. Offsets are in GUI pixels. Anchor mode defaults to Auto. The supplied anchor and offsets define the initial position.
+The arguments specify the ID, initial screen anchor, horizontal and vertical offsets, and default text shadow. The anchor aligns the same point of the HUD and the screen. Offsets are in GUI pixels. Anchor mode defaults to Auto.
 
 The default group name is `HUD`. To specify the group level and name, use the overload:
 
@@ -244,7 +244,7 @@ if (!hudRegistry.editing() && element.enabled()) {
 }
 ```
 
-`layout` calls `prepare`, applies placement and scaling and keeps the resolved origin inside the screen if the element fits. `render` applies the transform and restores the UI rendering state in `finally` block. The regular overlay should skip rendering during editing, as the editor renders the elements itself.
+`layout` calls `prepare`, applies placement and scaling and keeps the resolved origin inside the screen if the element fits. `render` applies the transform and restores the UI rendering state in `finally` block.
 
 In `stop()`, unregister the same element and release the renderer's resources:
 
@@ -263,25 +263,29 @@ Outside `HudRenderer.render`, use [UiRenderState](../src/main/java/pit12/shared/
 
 ## Game state
 
-Bootstrap provides query contracts to features. Their live queries and subscriptions need the client thread. Use the existing providers instead of the second tracker or session owner.
+Bootstrap provides query contracts to features. Their live queries and subscriptions need the client thread.
 
-[ClientSession](../src/main/java/pit12/runtime/session/ClientSession.java) provides `connection()`, `world()` and `revision()`. The connection and world can be `null`. Both identities are updated before the listeners run. No old disconnect and unload events can clear a replacement connection or world.
+[ClientSession](../src/main/java/pit12/runtime/session/ClientSession.java) provides `connection()`, `world()` and `revision()`. The connection and world can be `null`. Both identities are updated before the listeners run.
 
-Keep `Runnable` in a field for session changes. Register it with `session.addListener(sessionListener)` in `start()` and read the current state once; adding a listener does not cause the initial callback. Unregister it with `session.removeListener(sessionListener)` in `stop()`. Reset the state according to what it belongs to: the connection data lives for the connection, and the world data lives for the world. Do not delete the user data on either change.
+Keep `Runnable` in a field for session changes. Register it with `session.addListener(sessionListener)` in `start()` and read the current state once. Unregister it with `session.removeListener(sessionListener)` in `stop()`. Reset the state according to what it belongs to: the connection data lives for the connection, and the world data lives for the world.
 
 [TabPresence](../src/main/java/pit12/runtime/player/TabPresence.java) separates membership from known names. Use `contains(UUID)` to check membership and `players()` to get the current UUID-to-profile-name map. A player with an unknown name may be present without appearing in that map.
 
-Keep a [TabPresenceListener](../src/main/java/pit12/runtime/player/TabPresenceListener.java) in a field. In `start()`, register it with `tabPresence.addListener(tabListener)`, then read the current state; registration does not report existing entries. Handle `onPlayerSeen(playerId, name, joined)` for observed players, `onPlayerLeft(playerId)` for departures, and `onTabDisplayChanged()` for display changes. The name may be null, and `joined=false` means the entry was already present. In `stop()`, call `tabPresence.removeListener(tabListener)` with the same listener.
+Keep a [TabPresenceListener](../src/main/java/pit12/runtime/player/TabPresenceListener.java) in a field. In `start()`, register it with `tabPresence.addListener(tabListener)`, then read the current state. Handle `onPlayerSeen(playerId, name, joined)` for observed players, `onPlayerLeft(playerId)` for departures, and `onTabDisplayChanged(playerId)` for display changes. The name may be null, and `joined=false` means the entry was already present. In `stop()`, call `tabPresence.removeListener(tabListener)` with the same listener.
+
+[PlayerNameCache](../src/main/java/pit12/runtime/player/PlayerNameCache.java) provides `displayName(UUID)` and `shortName(UUID)` for current Tab entries. Both return `null` when the entry is absent or its name is unknown. Display names keep formatting codes. Short names remove Pit Supporter and bounty suffixes. Departed players are removed, and connection changes clear the cache.
+
+Subscribe to name changes with `addListener(Runnable)` in `start()`, then read the current names. In `stop()`, pass the same listener to `removeListener(Runnable)`.
 
 [PlayerEquipmentAccess](../src/main/java/pit12/runtime/player/PlayerEquipmentAccess.java) provides `loadedEquipment(UUID)`. It returns `null` if the entity is unloaded or has not been observed yet. In a snapshot, check `heldItemKnown()` or `leggingsKnown()` before treating a slot as empty. `copyHeldItem()` and `copyLeggings()` return defensive copies. A `null` result may mean an unknown slot or a known empty slot. Use `heldEnchantments()` or `leggingsEnchantments()` for already parsed data.
 
-Keep a [PlayerEquipmentListener](../src/main/java/pit12/runtime/player/PlayerEquipmentListener.java) in a field. Register it with `equipment.addListener(equipmentListener)` in `start()`, then query the current players your feature needs; registration does not send an initial callback. In `onPlayerEquipmentChanged(playerId, changedSlots, revision)`, query `loadedEquipment(playerId)` again to update the feature's data. The `changedSlots` mask uses `PlayerEquipmentCache.HELD_ITEM` and `PlayerEquipmentCache.LEGGINGS`. Handle `onPlayerEquipmentRemoved(playerId)` by discarding that player's equipment data, and `onPlayerEquipmentReset()` by clearing derived equipment data. Unregister the same listener with `equipment.removeListener(equipmentListener)` in `stop()`.
+Keep a [PlayerEquipmentListener](../src/main/java/pit12/runtime/player/PlayerEquipmentListener.java) in a field. Register it with `equipment.addListener(equipmentListener)` in `start()`, then query the current players your feature needs. In `onPlayerEquipmentChanged(playerId, changedSlots, revision)`, query `loadedEquipment(playerId)` again to update the feature's data. The `changedSlots` mask uses `PlayerEquipmentCache.HELD_ITEM` and `PlayerEquipmentCache.LEGGINGS`. Handle `onPlayerEquipmentRemoved(playerId)` by discarding that player's equipment data, and `onPlayerEquipmentReset()` by clearing derived equipment data. Unregister the same listener with `equipment.removeListener(equipmentListener)` in `stop()`.
 
 [PitContext](../src/main/java/pit12/runtime/pit/PitContext.java) provides `current()`. The returned `PitSnapshot` provides the map, Pit state, revision and `spawnStateAt(x, y, z)`. The state is `UNKNOWN` until the map is identified. The snapshots can be passed to the workers; live providers cannot.
 
 [PitEnchantmentReader](../src/main/java/pit12/runtime/item/PitEnchantmentReader.java) reads the arbitrary item stacks with `read`, `contains` and `levelOf`. The missing data causes an empty result or level `0`. The entries with missing keys or non-positive levels are ignored. Use the equipment snapshot's parsed enchantments if they are already available.
 
-Players are identified with UUIDs. The entity IDs are valid only in their world. Separate the unknown state from the confirmed absence. Assign the owner and the reset rule to each cache; add one only to solve a clear problem.
+Players are identified with UUIDs. The entity IDs are valid only in their world. Separate the unknown state from the confirmed absence.
 
 ## Mixin
 
@@ -302,7 +306,7 @@ Register client Mixin names in the `client` list in [mixins.pit12.json](../src/m
 
 ## Storage
 
-Profile feature stores the settings registered in `ConfigCatalog`. Other features do not duplicate settings. Data other than the settings is owned by the feature's own store. Bootstrap provides storage paths under the Minecraft game directory.
+Profile feature stores the settings registered in `ConfigCatalog`. Data other than the settings is owned by the feature's own store. Bootstrap provides storage paths under the Minecraft game directory.
 
 Validate the data being loaded. Implement handling of older formats when changing file format and preserving unknown fields if possible. Failing loads must not overwrite the original data silently. Keep the live state and unsaved changes after a write failure and report the error.
 
@@ -312,9 +316,9 @@ Validate the data being loaded. Implement handling of older formats when changin
 AtomicFile.write(path, encodedJson);
 ```
 
-It creates parent directories and a temporary file near the target. It writes UTF-8, flushes and syncs the temporary file, then replaces the target. If atomic moves are unsupported, it falls back to a normal replacement move. On error it tries to delete the temporary file and throws; cleanup errors are attached to the error.
+It creates missing parent directories and writes UTF-8. It replaces the target atomically when supported, falling back to a regular replacement move otherwise. On failure, it throws with any cleanup errors attached.
 
-The feature is responsible for its worker and for the order of the writes. On the client thread make a copy of the data being saved and pass it to the worker. Handle completion with `ClientThread.execute`. Verify the worker or generation producing the result. Verify the save revisions before clearing the unsaved changes, so that an old completion could not clear newer changes. Session and world checks are needed only for work dependent on them; saved user data survives disconnections.
+The feature is responsible for its worker and for the order of the writes. On the client thread make a copy of the data being saved and pass it to the worker. Handle completion with `ClientThread.execute`. Verify the worker or generation producing the result. Verify the save revisions before clearing the unsaved changes, so that an old completion could not clear newer changes. Session and world checks are needed only for work dependent on them.
 
 `stop()` stops the new work, handles the pending saves and closes the worker. Cleanup must not wait for the callback, which can be called only on the same blocked client thread. Storage and lookup dependencies must be replaceable for tests.
 
@@ -335,4 +339,4 @@ return OperationResult.failure(OperationResult.Status.INVALID_VALUE,
 Listeners.notify(listeners, Runnable::run);
 ```
 
-Do all the state change before notifying the listeners. Changes in the listener collection during the notification affect future notifications, not the current copy. The thrown `RuntimeException` from a listener is logged and the delivery continues. The helper is synchronous; it doesn't dispatch on the client thread and doesn't make the collection thread-safe. Subscription removal is required for stopping the owner. Use direct calls for local queries and actions, and listeners for change notifications needed by several consumers.
+Do all the state change before notifying the listeners. Changes in the listener collection during the notification affect future notifications, not the current copy. The thrown `RuntimeException` from a listener is logged and the delivery continues. The helper runs synchronously on the calling thread. Callers handle thread dispatch and synchronization. Use direct calls for local queries and actions, and listeners for change notifications needed by several consumers.

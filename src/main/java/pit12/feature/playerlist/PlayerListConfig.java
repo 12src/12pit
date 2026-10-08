@@ -35,6 +35,7 @@ public final class PlayerListConfig extends FeatureConfig {
     private final BooleanSetting showHeldItem;
     private final BooleanSetting showLeggings;
     private final ChoiceSetting enchantmentFormat;
+    private final BooleanSetting shortPlayerNames;
     private final BooleanSetting showDistance;
     private final BooleanSetting showDirection;
     private final BooleanSetting showSpawn;
@@ -68,6 +69,8 @@ public final class PlayerListConfig extends FeatureConfig {
         showLeggings = booleanSetting("show_leggings", source("Show leggings enchantments"),
                 source("Shows the leggings' Pit enchantments."), true);
         subsubcategory("player_information", source("Player information"));
+        shortPlayerNames = booleanSetting("short_player_names", source("Short player names"),
+                source("Shows only the level and player name, keeping their formatting."), false);
         showDistance = booleanSetting("show_distance", source("Show player distance"),
                 source("Shows the distance to each loaded player."), true);
         showDirection = booleanSetting("show_direction", source("Show player direction"),
@@ -100,6 +103,10 @@ public final class PlayerListConfig extends FeatureConfig {
 
     public int enchantmentFormat() {
         return enchantmentFormat.get();
+    }
+
+    public boolean shortPlayerNames() {
+        return shortPlayerNames.get();
     }
 
     public boolean showDistance() {

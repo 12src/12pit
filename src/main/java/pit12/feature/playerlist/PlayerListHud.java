@@ -18,6 +18,7 @@
  */
 package pit12.feature.playerlist;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
@@ -27,7 +28,6 @@ import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Items;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -39,6 +39,7 @@ import pit12.runtime.hud.HudRenderer;
 import pit12.runtime.item.PitEnchantment;
 import pit12.runtime.item.PitEnchantmentReader;
 import pit12.runtime.languages.Languages;
+import pit12.shared.text.PlayerNameFormatter;
 
 final class PlayerListHud implements HudElement {
     private static final int GAP = 10;
@@ -395,31 +396,47 @@ final class PlayerListHud implements HudElement {
     }
 
     private PlayerListSnapshot sampleSnapshot() {
+        String firstName = "§5[§f§l113§5] §6PlayerOne §e✫ §6300g";
+        String secondName = "§f[§e54§f] §aPlayerTwo §c♨";
+        String darkName = "§9[§320§9] §aPlayerThree §b400g";
+        if (config.shortPlayerNames()) {
+            firstName = PlayerNameFormatter.shorten(firstName);
+            secondName = PlayerNameFormatter.shorten(secondName);
+            darkName = PlayerNameFormatter.shorten(darkName);
+        }
         Map<PlayerListGroup, List<PlayerListEntry>> groups =
                 new EnumMap<PlayerListGroup, List<PlayerListEntry>>(PlayerListGroup.class);
         groups.put(PlayerListGroup.REGULARITY,
-                Collections.singletonList(new PlayerListEntry(null, 0, "ExamplePlayer",
-                        sampleEnchantment(Items.leather_leggings, PitEnchantment.Regularity, 3),
-                        sampleEnchantment(Items.golden_sword, PitEnchantment.Sweaty, 3), 12.0F,
-                        18.0F, true, true, false)));
+                Arrays.asList(
+                        new PlayerListEntry(null, 0, firstName,
+                                sampleEnchantments(new PitEnchantment[] {PitEnchantment.Regularity,
+                                        PitEnchantment.Gotta_go_fast}, 3, 3),
+                                null, 45.0F, -135.0F, true, true, false),
+                        new PlayerListEntry(null, 0, secondName,
+                                sampleEnchantments(new PitEnchantment[] {PitEnchantment.Regularity,
+                                        PitEnchantment.Gotta_go_fast, PitEnchantment.Solitude}, 3,
+                                        3, 2),
+                                null, 0.0F, 0.0F, false, false, true)));
         groups.put(PlayerListGroup.DARK,
-                Collections.singletonList(new PlayerListEntry(null, 0, "DarkPlayer",
-                        sampleEnchantment(Items.leather_leggings, PitEnchantment.Somber, 1), null,
-                        28.0F, -42.0F, true, true, false)));
+                Collections.singletonList(new PlayerListEntry(null, 0, darkName,
+                        sampleEnchantments(new PitEnchantment[] {PitEnchantment.Somber}, 1), null,
+                        0.0F, 0.0F, false, false, true)));
         return PlayerListSnapshot.create(groups);
     }
 
-    private String sampleEnchantment(Item item, PitEnchantment enchantment, int level) {
-        NBTTagCompound entry = new NBTTagCompound();
-        entry.setString("Key", enchantment.getKey());
-        entry.setInteger("Level", level);
-        NBTTagList enchantments = new NBTTagList();
-        enchantments.appendTag(entry);
+    private String sampleEnchantments(PitEnchantment[] enchantments, int... levels) {
+        NBTTagList entries = new NBTTagList();
+        for (int index = 0; index < enchantments.length; index++) {
+            NBTTagCompound entry = new NBTTagCompound();
+            entry.setString("Key", enchantments[index].getKey());
+            entry.setInteger("Level", levels[index]);
+            entries.appendTag(entry);
+        }
         NBTTagCompound attributes = new NBTTagCompound();
-        attributes.setTag("CustomEnchants", enchantments);
+        attributes.setTag("CustomEnchants", entries);
         NBTTagCompound tag = new NBTTagCompound();
         tag.setTag("ExtraAttributes", attributes);
-        ItemStack stack = new ItemStack(item);
+        ItemStack stack = new ItemStack(Items.leather_leggings);
         stack.setTagCompound(tag);
         return PlayerListBuilder.formatEnchantments(PitEnchantmentReader.read(stack), config);
     }
