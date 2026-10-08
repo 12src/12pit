@@ -1302,59 +1302,67 @@ Move tooltip upward
 Moves the held item tooltip upward by this many pixels.
 = 手持物品提示向上移动的像素数。
 
-// src/main/java/pit12/feature/webui/WebUiConfig.java:38, web-ui/src/App.vue:161:14, web-ui/src/SettingsPage.vue:48:12
+// src/main/java/pit12/feature/webui/WebUiConfig.java:40, web-ui/src/App.vue:161:14, web-ui/src/SettingsPage.vue:63:12
 Settings
 = 设置
 
-// src/main/java/pit12/feature/webui/WebUiConfig.java:39
+// src/main/java/pit12/feature/webui/WebUiConfig.java:41
 Interface
 = 界面
 
-// src/main/java/pit12/feature/webui/WebUiConfig.java:46
+// src/main/java/pit12/feature/webui/WebUiConfig.java:48
 Language
 = 语言
 
-// src/main/java/pit12/feature/webui/WebUiConfig.java:47
+// src/main/java/pit12/feature/webui/WebUiConfig.java:49
 Sets the language for the interface, commands, and HUD.
 = 设置界面、命令回显和 HUD 的语言。
 
-// src/main/java/pit12/feature/webui/WebUiConfig.java:48
+// src/main/java/pit12/feature/webui/WebUiConfig.java:50
 Accent color
 = 主题色
 
-// src/main/java/pit12/feature/webui/WebUiConfig.java:48
+// src/main/java/pit12/feature/webui/WebUiConfig.java:50
 Controls the interface accent.
 = 设置界面的主题色。
 
-// src/main/java/pit12/feature/webui/WebUiConfig.java:50
+// src/main/java/pit12/feature/webui/WebUiConfig.java:52
 Show details
 = 显示详细说明
 
-// src/main/java/pit12/feature/webui/WebUiConfig.java:51
+// src/main/java/pit12/feature/webui/WebUiConfig.java:53
 Shows descriptions for features and settings.
 = 显示功能和设置的说明。
 
-// src/main/java/pit12/feature/webui/WebUiConfig.java:52
+// src/main/java/pit12/feature/webui/WebUiConfig.java:54
+Discord RPC
+= Discord RPC
+
+// src/main/java/pit12/feature/webui/WebUiConfig.java:55
+Shows 12pit and elapsed time on your Discord profile.
+= 在 Discord 个人资料中显示 12pit 和本次使用时长。
+
+// src/main/java/pit12/feature/webui/WebUiConfig.java:56
 Interface key
 = 界面快捷键
 
-// src/main/java/pit12/feature/webui/WebUiConfig.java:53
+// src/main/java/pit12/feature/webui/WebUiConfig.java:57
 Opens the selected interface.
 = 打开所选界面。
 
-// src/main/java/pit12/feature/webui/WebUiConfig.java:54
+// src/main/java/pit12/feature/webui/WebUiConfig.java:58
 Key action
 = 按键动作
 
-// src/main/java/pit12/feature/webui/WebUiConfig.java:55
+// src/main/java/pit12/feature/webui/WebUiConfig.java:59
 Chooses which interface the key opens.
 = 选择按键打开的界面。
 
-// src/main/java/pit12/feature/webui/WebUiConfig.java:56
+// src/main/java/pit12/feature/webui/WebUiConfig.java:60
 Web UI
 = 网页界面
 
-// src/main/java/pit12/feature/webui/WebUiConfig.java:56
+// src/main/java/pit12/feature/webui/WebUiConfig.java:60
 HUD editor
 = HUD 编辑器
 
@@ -1666,7 +1674,7 @@ Search MC ID or UUID
 Add players
 = 添加玩家
 
-// web-ui/src/RelationsPage.vue:291:15, web-ui/src/TransferDialog.vue:308:24, web-ui/src/TransferDialog.vue:309:19
+// web-ui/src/RelationsPage.vue:291:15, web-ui/src/SettingsPage.vue:114:22, web-ui/src/SettingsPage.vue:115:17, web-ui/src/TransferDialog.vue:308:24, web-ui/src/TransferDialog.vue:309:19
 Close
 = 关闭
 
@@ -1830,21 +1838,37 @@ Change {0}
 Press a key
 = 按下按键
 
-// web-ui/src/SettingsPage.vue:54:17
+// web-ui/src/SettingsPage.vue:69:17
 Replaces the active profile configuration with defaults.
 = 将当前使用的配置方案恢复为默认设置。
 
-// web-ui/src/SettingsPage.vue:57:36
+// web-ui/src/SettingsPage.vue:72:36
 Restore defaults
 = 恢复默认设置
 
-// web-ui/src/SettingsPage.vue:65:35, web-ui/src/TransferDialog.vue:591:35
+// web-ui/src/SettingsPage.vue:80:35, web-ui/src/TransferDialog.vue:591:35
 Export
 = 导出
 
-// web-ui/src/SettingsPage.vue:73:33, web-ui/src/TransferDialog.vue:591:49
+// web-ui/src/SettingsPage.vue:88:33, web-ui/src/TransferDialog.vue:591:49
 Import
 = 导入
+
+// web-ui/src/SettingsPage.vue:110:37
+Help others discover 12pit?
+= 愿意让更多人认识 12pit 吗？
+
+// web-ui/src/SettingsPage.vue:124:11
+Showing 12pit on Discord helps more players find us. If you’re comfortable sharing it, we’d love for you to keep it on 🥺
+= 在 Discord 上显示 12pit，能帮更多玩家发现我们。如果你愿意，希望你能保留它 🥺
+
+// web-ui/src/SettingsPage.vue:137:12
+Turn off
+= 关闭
+
+// web-ui/src/SettingsPage.vue:145:12
+Keep on
+= 保持开启
 
 // web-ui/src/TransferDialog.vue:158:21
 File is too large

@@ -1,4 +1,4 @@
-<!-- Source: README.md; Based on: 306579a2cf4e60eb1f2990c7a500cb13d1924511 -->
+<!-- Source: README.md; Based on: fddb5b4f0f5e68619c5b5b26101166901b09b72d -->
 
 # 12pit
 
@@ -53,9 +53,12 @@
 
 12pit 使用了以下第三方开源组件:
 
-- [SpongePowered Mixin](https://github.com/SpongePowered/Mixin)，MIT。许可证文本：[MIXIN-MIT.txt](../../src/main/resources/META-INF/third-party-licenses/MIXIN-MIT.txt)。
-- [Vue](https://vuejs.org/)，MIT。许可证文本：[VUE-MIT.txt](../../src/main/resources/META-INF/third-party-licenses/VUE-MIT.txt)。
-- [Lucide](https://lucide.dev/)，ISC。许可证文本：[LUCIDE-ISC.txt](../../src/main/resources/META-INF/third-party-licenses/LUCIDE-ISC.txt)。
-- [Monocraft](https://github.com/IdreesInc/Monocraft)，SIL Open Font License 1.1。字体：[monocraft.otf](../../src/main/resources/assets/pit12/fonts/monocraft.otf)。许可证文本：[MONOCRAFT-OFL.txt](../../src/main/resources/META-INF/third-party-licenses/MONOCRAFT-OFL.txt)。
+- [SpongePowered Mixin](https://github.com/SpongePowered/Mixin)，MIT。许可证文本：[MIXIN-MIT.txt](../../src/main/resources/META-INF/third-party-notices/MIXIN-MIT.txt)。
+- [ASM](https://asm.ow2.io/)，随 Mixin 打包，BSD 3-Clause。许可证文本：[ASM-BSD-3-CLAUSE.txt](../../src/main/resources/META-INF/third-party-notices/ASM-BSD-3-CLAUSE.txt)。
+- [Vue](https://vuejs.org/)，MIT。许可证文本：[VUE-MIT.txt](../../src/main/resources/META-INF/third-party-notices/VUE-MIT.txt)。
+- [Vite](https://vite.dev/)，用于 Web UI 模块预加载，MIT。许可证文本：[VITE-MIT.txt](../../src/main/resources/META-INF/third-party-notices/VITE-MIT.txt)。
+- [Rolldown](https://rolldown.rs/)，用于 Web UI 模块预加载，MIT。许可证文本：[ROLLDOWN-MIT.txt](../../src/main/resources/META-INF/third-party-notices/ROLLDOWN-MIT.txt)。
+- [Lucide](https://lucide.dev/)，ISC，包含采用 MIT 许可证的 Feather 图标。许可证文本：[LUCIDE-ISC.txt](../../src/main/resources/META-INF/third-party-notices/LUCIDE-ISC.txt)。
+- [Monocraft](https://github.com/IdreesInc/Monocraft)，SIL Open Font License 1.1。字体：[monocraft.otf](../../src/main/resources/assets/pit12/fonts/monocraft.otf)。许可证文本：[MONOCRAFT-OFL.txt](../../src/main/resources/META-INF/third-party-notices/MONOCRAFT-OFL.txt)。
 
 12pit 基于 [GPL-3.0-or-later](../../LICENSE) 协议开源。

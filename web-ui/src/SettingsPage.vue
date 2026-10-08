@@ -17,12 +17,13 @@ You should have received a copy of the GNU General Public License
 along with 12pit. If not, see <https://www.gnu.org/licenses/>.
 -->
 <script setup lang="ts">
-import { Download, RotateCcw, Upload } from '@lucide/vue'
+import { Download, RotateCcw, Upload, X } from '@lucide/vue'
+import { ref } from 'vue'
 import type { Feature } from './api'
 import { t } from './languages'
 import SettingSections from './SettingSections.vue'
 
-defineProps<{
+const props = defineProps<{
   settings: Feature
   profilesLoading: boolean
   busy: boolean
@@ -41,6 +42,20 @@ const emit = defineEmits<{
   capture: [featureId: string, settingId: string]
   cancel: []
 }>()
+const discordRpcDialog = ref<HTMLDialogElement | null>(null)
+
+function changeSetting(id: string, value: boolean | number | string) {
+  if (id === 'discord_rpc' && value === false) {
+    discordRpcDialog.value?.showModal()
+    return
+  }
+  emit('change', props.settings.id, id, value)
+}
+
+function disableDiscordRpc() {
+  discordRpcDialog.value?.close()
+  emit('change', props.settings.id, 'discord_rpc', false)
+}
 </script>
 
 <template>
@@ -81,8 +96,79 @@ const emit = defineEmits<{
     :busy="pending"
     :show-details="showDetails"
     flat
-    @change="(id, value) => emit('change', settings.id, id, value)"
+    @change="changeSetting"
     @capture="emit('capture', settings.id, $event)"
     @cancel="emit('cancel')"
   />
+  <dialog
+    ref="discordRpcDialog"
+    class="transfer-dialog discord-rpc-dialog"
+    aria-labelledby="discord-rpc-title"
+    aria-describedby="discord-rpc-description"
+  >
+    <header class="transfer-header">
+      <h2 id="discord-rpc-title">{{ t('Help others discover 12pit?') }}</h2>
+      <button
+        type="button"
+        class="icon-button"
+        :aria-label="t('Close')"
+        :title="t('Close')"
+        @click="discordRpcDialog?.close()"
+      >
+        <X :size="17" />
+      </button>
+    </header>
+    <div class="transfer-body">
+      <p id="discord-rpc-description">
+        {{
+          t(
+            'Showing 12pit on Discord helps more players find us. If you’re comfortable sharing it, we’d love for you to keep it on 🥺',
+          )
+        }}
+      </p>
+    </div>
+    <footer class="transfer-footer">
+      <button
+        type="button"
+        class="secondary"
+        :disabled="pending"
+        @click="disableDiscordRpc"
+      >
+        {{ t('Turn off') }}
+      </button>
+      <button
+        type="button"
+        class="primary"
+        autofocus
+        @click="discordRpcDialog?.close()"
+      >
+        {{ t('Keep on') }}
+      </button>
+    </footer>
+  </dialog>
 </template>
+
+<style scoped>
+.discord-rpc-dialog {
+  width: min(480px, calc(100vw - 40px));
+  padding: 0;
+  color: var(--text);
+  font: inherit;
+}
+
+.discord-rpc-dialog:not([open]) {
+  display: none;
+}
+
+.discord-rpc-dialog::backdrop {
+  background: #080a0bc9;
+}
+
+.discord-rpc-dialog .transfer-body {
+  overflow: auto;
+}
+
+.discord-rpc-dialog p {
+  margin: 0;
+}
+</style>

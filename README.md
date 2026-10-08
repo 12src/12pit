@@ -51,9 +51,12 @@ Install the recommended extensions if prompted. `Ctrl+Shift+B` runs `assemble` t
 
 12pit includes the following third-party components:
 
-- [SpongePowered Mixin](https://github.com/SpongePowered/Mixin), MIT. License text: [MIXIN-MIT.txt](src/main/resources/META-INF/third-party-licenses/MIXIN-MIT.txt).
-- [Vue](https://vuejs.org/), MIT. License text: [VUE-MIT.txt](src/main/resources/META-INF/third-party-licenses/VUE-MIT.txt).
-- [Lucide](https://lucide.dev/), ISC. License text: [LUCIDE-ISC.txt](src/main/resources/META-INF/third-party-licenses/LUCIDE-ISC.txt).
-- [Monocraft](https://github.com/IdreesInc/Monocraft), SIL Open Font License 1.1. Font: [monocraft.otf](src/main/resources/assets/pit12/fonts/monocraft.otf). License text: [MONOCRAFT-OFL.txt](src/main/resources/META-INF/third-party-licenses/MONOCRAFT-OFL.txt).
+- [SpongePowered Mixin](https://github.com/SpongePowered/Mixin), MIT. License text: [MIXIN-MIT.txt](src/main/resources/META-INF/third-party-notices/MIXIN-MIT.txt).
+- [ASM](https://asm.ow2.io/), bundled with Mixin, BSD 3-Clause. License text: [ASM-BSD-3-CLAUSE.txt](src/main/resources/META-INF/third-party-notices/ASM-BSD-3-CLAUSE.txt).
+- [Vue](https://vuejs.org/), MIT. License text: [VUE-MIT.txt](src/main/resources/META-INF/third-party-notices/VUE-MIT.txt).
+- [Vite](https://vite.dev/), used for module preloading in the Web UI, MIT. License text: [VITE-MIT.txt](src/main/resources/META-INF/third-party-notices/VITE-MIT.txt).
+- [Rolldown](https://rolldown.rs/), used for module preloading in the Web UI, MIT. License text: [ROLLDOWN-MIT.txt](src/main/resources/META-INF/third-party-notices/ROLLDOWN-MIT.txt).
+- [Lucide](https://lucide.dev/), ISC, with Feather icons under MIT. License texts: [LUCIDE-ISC.txt](src/main/resources/META-INF/third-party-notices/LUCIDE-ISC.txt).
+- [Monocraft](https://github.com/IdreesInc/Monocraft), SIL Open Font License 1.1. Font: [monocraft.otf](src/main/resources/assets/pit12/fonts/monocraft.otf). License text: [MONOCRAFT-OFL.txt](src/main/resources/META-INF/third-party-notices/MONOCRAFT-OFL.txt).
 
 12pit is licensed under [GPL-3.0-or-later](LICENSE).
