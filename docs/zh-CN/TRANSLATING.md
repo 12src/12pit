@@ -1,4 +1,4 @@
-<!-- Source: docs/TRANSLATING.md; Based on: 43ef53337babc1674dc33cc2eb2e23a4580bc33b -->
+<!-- Source: docs/TRANSLATING.md; Based on: 08d27d075f5f28e811ea97e76a4ec893603d64f5 -->
 
 # 贡献翻译
 
@@ -10,7 +10,7 @@
 - 如果语言没有 ISO 639-1 代码，添加前须取得维护者同意。语言标签仍须符合 [RFC 5646](https://www.rfc-editor.org/rfc/rfc5646.html)。可以在议题中询问，或在 [Discord](https://discord.gg/e9PRKMUenc) 中 @维护者。
 - 建议只翻译成自己的母语。
 
-例如，`nl-NL` 使用 ISO 639-1 代码 `nl`，因此无需事先讨论。
+例如，`nl-NL` 使用 ISO 639-1 代码 `nl`。
 
 ## 贡献界面翻译
 
@@ -125,8 +125,6 @@ python scripts/languages.py status --language nl-NL
 ```sh
 git diff <原文提交号> -- docs/CONTRIBUTING.md
 ```
-
-没有输出，表示原文未变。有差异，表示需要核对译文。
 
 核对原文在该提交之后的所有改动，并按需更新译文。确认译文与原文一致后，记录原文最近一次提交的完整提交号：
 

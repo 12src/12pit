@@ -1,4 +1,4 @@
-<!-- Source: docs/IMPLEMENTATION.md; Based on: 43ef53337babc1674dc33cc2eb2e23a4580bc33b -->
+<!-- Source: docs/IMPLEMENTATION.md; Based on: 08d27d075f5f28e811ea97e76a4ec893603d64f5 -->
 
 # 12pit 实现
 
@@ -6,7 +6,7 @@
 
 ## 生命周期
 
-`ClientLifecycle` 提供初始化资源的 `start()` 和释放资源的 `stop()`。管理资源的组件实现此接口。不管理资源的辅助工具不应实现它。
+`ClientLifecycle` 提供初始化资源的 `start()` 和释放资源的 `stop()`。管理资源的组件实现此接口。
 
 `ClientBootstrap` 在构造器中创建共享 runtime 组件。每个功能有一个私有的 `register...` 方法，负责按需创建和注册配置、创建功能并加入 `components`。依赖通过参数传入。只有后续装配方法需要使用时，才返回功能的 API。
 
@@ -166,7 +166,7 @@ ChatFeedback.reply(sender, Tone.SUCCESS,
         language.format("Bound {0} to {1}", itemName, keyName));
 ```
 
-第一个参数使用完整的英文字符串字面量，动态值放在后续参数中。`{0}` 对应第一个值，`{1}` 对应第二个值，以此类推。译文可以调整参数顺序。准备显示文字时翻译一次，再将结果交给渲染器或聊天回显方法。缺失或空译文使用英文。英文模式下，`translate(...)` 直接返回原文；`format(...)` 仍会填入参数。
+第一个参数使用完整的英文字符串字面量，动态值放在后续参数中。`{0}` 对应第一个值，`{1}` 对应第二个值，以此类推。译文可以调整参数顺序。准备显示文字时翻译一次，再将结果交给渲染器或聊天回显方法。缺失或空译文时，`translate(...)` 返回英文原文，`format(...)` 填入参数。
 
 HUD 缓存文字时，保留语言监听器，在 `start()` 中注册，在 `stop()` 中注销。`addListener(...)` 注册时立即调用监听器，此后在每次语言变化时调用。一起更新文字缓存和测量后的布局。动态文字在更新显示快照时准备，渲染回调读取准备好的文字。在客户端线程切换语言、注册或注销监听器。
 
@@ -186,7 +186,7 @@ API 字段中的已标记文字如果会传给前端 `t(...)`，用 `Languages.s
 hud = hudConfig("status", HudAnchor.TOP_LEFT, 6, 6, true);
 ```
 
-参数依次为 ID、初始屏幕锚点、水平和垂直偏移，以及默认文字阴影。锚点将 HUD 与屏幕的对应位置对齐，偏移使用 GUI 像素。锚点模式默认使用 Auto，传入的锚点和偏移定义初始位置。
+参数依次为 ID、初始屏幕锚点、水平和垂直偏移，以及默认文字阴影。锚点将 HUD 与屏幕的对应位置对齐，偏移使用 GUI 像素。锚点模式默认使用 Auto。
 
 默认分组名称为 `HUD`。需要指定层级和名称时，使用以下重载：
 
@@ -246,7 +246,7 @@ if (!hudRegistry.editing() && element.enabled()) {
 }
 ```
 
-`layout` 调用 `prepare`，应用位置和缩放，并在元素能放入屏幕时将计算得到的原点保持在屏幕内。`render` 应用变换，并在 `finally` 块中恢复 UI 渲染状态。常规叠加层应在编辑期间跳过渲染，因为编辑器会自行渲染元素。
+`layout` 调用 `prepare`，应用位置和缩放，并在元素能放入屏幕时将计算得到的原点保持在屏幕内。`render` 应用变换，并在 `finally` 块中恢复 UI 渲染状态。
 
 在 `stop()` 中注销同一个元素，并释放渲染器资源：
 
@@ -265,25 +265,29 @@ Monocraft 使用逻辑字号 `9` 来匹配像素网格，系统回退字体使�
 
 ## 游戏状态
 
-Bootstrap 为功能提供查询契约。其实时查询和订阅需要客户端线程。使用现有提供者，而不创建第二个跟踪器或会话所有者。
+Bootstrap 为功能提供查询契约。其实时查询和订阅需要客户端线程。
 
-[ClientSession](../../src/main/java/pit12/runtime/session/ClientSession.java) 提供 `connection()`、`world()` 和 `revision()`。连接和世界可以为 `null`。两个身份标识都会在监听器运行前更新。旧的断开连接和卸载事件都不能清除替换后的连接或世界。
+[ClientSession](../../src/main/java/pit12/runtime/session/ClientSession.java) 提供 `connection()`、`world()` 和 `revision()`。连接和世界可以为 `null`。两个身份标识都会在监听器运行前更新。
 
-在字段中保留用于会话变化的 `Runnable`。在 `start()` 中通过 `session.addListener(sessionListener)` 注册它，并读取一次当前状态；添加监听器不会触发初始回调。在 `stop()` 中通过 `session.removeListener(sessionListener)` 注销它。按状态的归属重置状态：连接数据的存续期与连接一致，世界数据的存续期与世界一致。不要在任何一种变化时删除用户数据。
+在字段中保留用于会话变化的 `Runnable`。在 `start()` 中通过 `session.addListener(sessionListener)` 注册它，并读取一次当前状态。在 `stop()` 中通过 `session.removeListener(sessionListener)` 注销它。按状态的归属重置状态：连接数据的存续期与连接一致，世界数据的存续期与世界一致。
 
 [TabPresence](../../src/main/java/pit12/runtime/player/TabPresence.java) 将成员关系与已知名称分开。使用 `contains(UUID)` 检查成员关系，使用 `players()` 获取当前 UUID 到档案名称的映射。名称未知的玩家可能存在，但不在该映射中。
 
-将 [TabPresenceListener](../../src/main/java/pit12/runtime/player/TabPresenceListener.java) 保存为字段。在 `start()` 中调用 `tabPresence.addListener(tabListener)` 注册，再读取当前状态，注册不会报告已有条目。通过 `onPlayerSeen(playerId, name, joined)` 处理观察到的玩家，通过 `onPlayerLeft(playerId)` 处理离开，通过 `onTabDisplayChanged()` 处理显示变化。名称可能为 null，`joined=false` 表示条目之前已存在。在 `stop()` 中，将同一个监听器传给 `tabPresence.removeListener(tabListener)` 注销。
+将 [TabPresenceListener](../../src/main/java/pit12/runtime/player/TabPresenceListener.java) 保存为字段。在 `start()` 中调用 `tabPresence.addListener(tabListener)` 注册，再读取当前状态。通过 `onPlayerSeen(playerId, name, joined)` 处理观察到的玩家，通过 `onPlayerLeft(playerId)` 处理离开，通过 `onTabDisplayChanged(playerId)` 处理显示变化。名称可能为 null，`joined=false` 表示条目之前已存在。在 `stop()` 中，将同一个监听器传给 `tabPresence.removeListener(tabListener)` 注销。
+
+[PlayerNameCache](../../src/main/java/pit12/runtime/player/PlayerNameCache.java) 通过 `displayName(UUID)` 和 `shortName(UUID)` 查询当前 Tab 条目的显示名和简洁名。条目不存在或名称未知时，两者都返回 `null`。显示名保留格式化代码。简洁名去除 Pit Supporter 和赏金后缀。玩家离开时移除条目，连接变化时清空缓存。
+
+在 `start()` 中通过 `addListener(Runnable)` 订阅名称变化，再读取当前名称。在 `stop()` 中通过 `removeListener(Runnable)` 注销同一个监听器。
 
 [PlayerEquipmentAccess](../../src/main/java/pit12/runtime/player/PlayerEquipmentAccess.java) 提供 `loadedEquipment(UUID)`。如果实体未加载或尚未被观察到，查询返回 `null`。在快照中，将槽位视为空之前，先检查 `heldItemKnown()` 或 `leggingsKnown()`。`copyHeldItem()` 和 `copyLeggings()` 返回防御性副本，`null` 既可能表示未知槽位，也可能表示已知的空槽位。使用 `heldEnchantments()` 或 `leggingsEnchantments()` 获取已解析的数据。
 
-将 [PlayerEquipmentListener](../../src/main/java/pit12/runtime/player/PlayerEquipmentListener.java) 保存为字段。在 `start()` 中调用 `equipment.addListener(equipmentListener)` 注册，再查询功能需要的当前玩家，注册不会触发初始回调。在 `onPlayerEquipmentChanged(playerId, changedSlots, revision)` 中重新查询 `loadedEquipment(playerId)`，更新功能的数据。`changedSlots` 使用 `PlayerEquipmentCache.HELD_ITEM` 和 `PlayerEquipmentCache.LEGGINGS` 位标记。`onPlayerEquipmentRemoved(playerId)` 移除该玩家的装备数据，`onPlayerEquipmentReset()` 清除派生的装备数据。在 `stop()` 中，调用 `equipment.removeListener(equipmentListener)` 注销同一个监听器。
+将 [PlayerEquipmentListener](../../src/main/java/pit12/runtime/player/PlayerEquipmentListener.java) 保存为字段。在 `start()` 中调用 `equipment.addListener(equipmentListener)` 注册，再查询功能需要的当前玩家。在 `onPlayerEquipmentChanged(playerId, changedSlots, revision)` 中重新查询 `loadedEquipment(playerId)`，更新功能的数据。`changedSlots` 使用 `PlayerEquipmentCache.HELD_ITEM` 和 `PlayerEquipmentCache.LEGGINGS` 位标记。`onPlayerEquipmentRemoved(playerId)` 移除该玩家的装备数据，`onPlayerEquipmentReset()` 清除派生的装备数据。在 `stop()` 中，调用 `equipment.removeListener(equipmentListener)` 注销同一个监听器。
 
 [PitContext](../../src/main/java/pit12/runtime/pit/PitContext.java) 提供 `current()`。返回的 `PitSnapshot` 提供地图、Pit 状态、修订号和 `spawnStateAt(x, y, z)`。在地图被识别前，状态为 `UNKNOWN`。快照可以传给工作线程；实时提供者不可以。
 
 [PitEnchantmentReader](../../src/main/java/pit12/runtime/item/PitEnchantmentReader.java) 使用 `read`、`contains` 和 `levelOf` 读取任意物品堆叠。缺失数据会产生空结果或等级 `0`。缺少键或等级为非正数的条目会被忽略。如果装备快照的已解析附魔已经可用，就使用它们。
 
-玩家通过 UUID 标识。实体 ID 仅在其所在世界中有效。区分未知状态和已确认的不存在。为每个缓存指定所有者和重置规则；只有为了解决明确的问题才添加缓存。
+玩家通过 UUID 标识。实体 ID 仅在其所在世界中有效。区分未知状态和已确认的不存在。
 
 ## Mixin
 
@@ -304,7 +308,7 @@ components.add(new GammaFeature(configs, gammaConfig,
 
 ## 存储
 
-配置方案功能存储在 `ConfigCatalog` 中注册的设置。其他功能不重复存储设置。设置以外的数据由功能自己的存储拥有。Bootstrap 提供 Minecraft 游戏目录下的存储路径。
+配置方案功能存储在 `ConfigCatalog` 中注册的设置。设置以外的数据由功能自己的存储拥有。Bootstrap 提供 Minecraft 游戏目录下的存储路径。
 
 校验加载的数据。更改文件格式时，实现对旧格式的处理，并尽可能保留未知字段。加载失败时不得静默覆盖原始数据。写入失败后保留实时状态和未保存的改动，并报告错误。
 
@@ -314,9 +318,9 @@ components.add(new GammaFeature(configs, gammaConfig,
 AtomicFile.write(path, encodedJson);
 ```
 
-它创建父目录和目标附近的临时文件，以 UTF-8 写入，刷新并同步后替换目标。如果不支持原子移动，则回退为普通替换移动。发生错误时，它尝试删除临时文件并抛出异常；清理错误会附加到该错误上。
+它创建缺失的父目录，并以 UTF-8 写入。在支持原子移动时，原子替换目标文件，否则使用普通替换移动。失败时抛出异常，并附上清理过程中出现的错误。
 
-功能负责自己的工作线程和写入顺序。在客户端线程上复制待保存的数据，并传给工作线程。使用 `ClientThread.execute` 处理完成结果。核验产生结果的工作线程或代次。在清除未保存的改动前核验保存修订号，防止旧的完成结果清除较新的改动。只有依赖会话和世界的工作才需要检查它们；已保存的用户数据在断开连接后仍然保留。
+功能负责自己的工作线程和写入顺序。在客户端线程上复制待保存的数据，并传给工作线程。使用 `ClientThread.execute` 处理完成结果。核验产生结果的工作线程或代次。在清除未保存的改动前核验保存修订号，防止旧的完成结果清除较新的改动。只有依赖会话和世界的工作才需要检查它们。
 
 `stop()` 停止新工作，处理待完成的保存，并关闭工作线程。清理不得等待只能在同一个已被阻塞的客户端线程上调用的回调。存储和查找依赖必须能在测试中替换。
 
@@ -337,4 +341,4 @@ return OperationResult.failure(OperationResult.Status.INVALID_VALUE,
 Listeners.notify(listeners, Runnable::run);
 ```
 
-在通知监听器前完成所有状态变更。通知期间监听器集合的变化影响后续通知，不影响当前副本。监听器抛出的 `RuntimeException` 会被记录，通知继续传递。该辅助工具是同步的；它不在客户端线程上分派，也不会使集合具备线程安全性。所有者停止时必须移除订阅。本地查询和操作使用直接调用，多个使用者需要的变更通知使用监听器。
+在通知监听器前完成所有状态变更。通知期间监听器集合的变化影响后续通知，不影响当前副本。监听器抛出的 `RuntimeException` 会被记录，通知继续传递。该辅助工具在调用线程上同步执行。调用者负责线程分派和同步。本地查询和操作使用直接调用，多个使用者需要的变更通知使用监听器。
