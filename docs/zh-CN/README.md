@@ -1,11 +1,8 @@
-<!-- Source: README.md; Based on: 2232dc5e10013e89eb44cac454aa965c84b6ce20 -->
+<!-- Source: README.md; Based on: 306579a2cf4e60eb1f2990c7a500cb13d1924511 -->
 
 # 12pit
 
 [English](../../README.md) | 简体中文
-
-> [!WARNING]
-> 12pit 仍处于初始开发阶段。
 
 12pit 是一款基于 Forge、专为 Minecraft 1.8.9 The Pit 打造的轻量级开源模组，自带控制界面，并兼容 [OneConfig](https://github.com/Polyfrost/OneConfig)。
 
