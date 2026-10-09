@@ -24,11 +24,11 @@ import net.minecraft.init.Blocks;
 
 public enum PitMap {
     UNKNOWN(0, 0, null, 0),
-    GENESIS(86, 26, Blocks.wool, 7),
-    CASTLE(95, 20, Blocks.double_wooden_slab, 5),
-    CORALS(114, 23, Blocks.stained_hardened_clay, 12),
-    SEASONS(114, 23, Blocks.stone, 3),
-    ELEMENTS(114, 23, Blocks.dirt, 0);
+    GENESIS(86, 26, Blocks.air, 0),
+    CASTLE(95, 20, Blocks.stained_glass, 11),
+    CORALS(114, 23, Blocks.gold_block, 0),
+    SEASONS(114, 23, Blocks.sandstone, 2),
+    ELEMENTS(114, 23, Blocks.planks, 5);
 
     private final int spawnY;
     private final int spawnRadius;

@@ -20,6 +20,7 @@ package pit12.runtime.pit;
 
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.multiplayer.WorldClient;
+import net.minecraft.init.Blocks;
 import net.minecraft.util.BlockPos;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -102,28 +103,25 @@ public final class PitContextTracker implements ClientLifecycle, PitContext {
     }
 
     private void detect(WorldClient world) {
-        boolean surfaceFound = false;
         for (PitMap candidate : PitMap.values()) {
             if (candidate == PitMap.UNKNOWN) {
                 continue;
             }
-            BlockPos position = new BlockPos(ORIGIN_X, candidate.spawnY(), ORIGIN_Z);
-            while (position.getY() >= 0 && world.isAirBlock(position)) {
-                position = position.down();
+            IBlockState surface = Blocks.air.getDefaultState();
+            for (BlockPos position = new BlockPos(ORIGIN_X, candidate.spawnY(), ORIGIN_Z); position
+                    .getY() < world.getHeight(); position = position.up()) {
+                IBlockState state = world.getBlockState(position);
+                if (state.getBlock() == Blocks.air || state.getBlock() == Blocks.barrier) {
+                    continue;
+                }
+                surface = state;
+                break;
             }
-            if (position.getY() < 0) {
-                continue;
-            }
-            surfaceFound = true;
-            IBlockState surface = world.getBlockState(position);
             if (!candidate.matchesSurface(surface)) {
                 continue;
             }
             replaceSnapshot(candidate);
             detectionComplete = true;
-            return;
-        }
-        if (!surfaceFound) {
             return;
         }
         replaceSnapshot(PitMap.UNKNOWN);
