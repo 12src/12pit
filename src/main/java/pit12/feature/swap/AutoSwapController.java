@@ -24,6 +24,7 @@ import java.util.EnumSet;
 import java.util.List;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -41,6 +42,7 @@ final class AutoSwapController {
     private final SwapConfig config;
     private final SwapController swaps;
     private final PitContext pit;
+    private final DarkTargets darkTargets;
     private final Languages language;
     private final EnumSet<PitEnchantment> used = EnumSet.noneOf(PitEnchantment.class);
     private EntityPlayerSP player;
@@ -57,11 +59,12 @@ final class AutoSwapController {
     private boolean canRestore;
 
     AutoSwapController(Minecraft minecraft, SwapConfig config, SwapController swaps, PitContext pit,
-            Languages language) {
+            DarkTargets darkTargets, Languages language) {
         this.minecraft = minecraft;
         this.config = config;
         this.swaps = swaps;
         this.pit = pit;
+        this.darkTargets = darkTargets;
         this.language = language;
     }
 
@@ -94,7 +97,13 @@ final class AutoSwapController {
         if (player.getHealth() <= 0) {
             if (automaticPending)
                 swaps.cancel();
+            reset();
             return;
+        }
+        if (!config.dark.get()) {
+            darkTargets.reset();
+            if (pending != null && pending.type == PitEnchantment.Somber)
+                swaps.cancel();
         }
         boolean nowPoisoned = player.isPotionActive(Potion.poison);
         if (nowPoisoned && !poisoned) {
@@ -115,7 +124,8 @@ final class AutoSwapController {
             if (poisoned && venomPending)
                 retryAt = tick;
         }
-        if (activePants != null && !activePants.matches(leggings()))
+        if (activeType == PitEnchantment.Somber && !config.dark.get()
+                || activePants != null && !activePants.matches(leggings()))
             clearActive();
         if (tick < retryAt || minecraft.currentScreen != null || !minecraft.inGameHasFocus
                 || !swaps.acceptsInput())
@@ -126,19 +136,18 @@ final class AutoSwapController {
                 swapVenom();
             return;
         }
-        if (activeType != null) {
-            if (canRestore && config.restorePants.get() && shouldRestore()) {
-                restore();
-                return;
-            }
-            if (!used.contains(activeType))
-                return;
+        PitEnchantment requested = requestedType();
+        if (requested != null) {
+            if (requested != activeType)
+                equip(requested);
+            return;
         }
-        PitEnchantment first = config.pantsPriority.get() == 0 ? PitEnchantment.Escape_Pod
-                : PitEnchantment.Phoenix;
-        PitEnchantment second = first == PitEnchantment.Escape_Pod ? PitEnchantment.Phoenix
-                : PitEnchantment.Escape_Pod;
-        if (!equip(first) && !equip(second) && (eligible(first) || eligible(second)))
+        if (readyToRestore()) {
+            restore();
+            return;
+        }
+        if (eligible(PitEnchantment.Escape_Pod) || eligible(PitEnchantment.Phoenix)
+                || darkTargets.needed())
             retryAt = tick + 10;
     }
 
@@ -154,6 +163,16 @@ final class AutoSwapController {
 
     private ItemStack leggings() {
         return player.inventory.armorInventory[1];
+    }
+
+    void attack(EntityPlayer target) {
+        if (player != minecraft.thePlayer) {
+            if (automaticPending)
+                swaps.cancel();
+            reset();
+            player = minecraft.thePlayer;
+        }
+        darkTargets.attack(target);
     }
 
     private void swapVenom() {
@@ -207,31 +226,51 @@ final class AutoSwapController {
                 : config.phoenixThreshold.get();
     }
 
-    private boolean equip(PitEnchantment type) {
-        if (!eligible(type))
-            return false;
+    private PitEnchantment requestedType() {
+        boolean darkNeeded = darkTargets.needed();
+        if (darkNeeded && config.darkPriority.get() == 1 && available(PitEnchantment.Somber))
+            return PitEnchantment.Somber;
+        if (activeType != null && activeType != PitEnchantment.Somber && !used.contains(activeType)
+                && !shouldRestore())
+            return activeType;
+        PitEnchantment first = config.pantsPriority.get() == 0 ? PitEnchantment.Escape_Pod
+                : PitEnchantment.Phoenix;
+        PitEnchantment second = first == PitEnchantment.Escape_Pod ? PitEnchantment.Phoenix
+                : PitEnchantment.Escape_Pod;
+        if (eligible(first) && available(first))
+            return first;
+        if (eligible(second) && available(second))
+            return second;
+        return darkNeeded && available(PitEnchantment.Somber) ? PitEnchantment.Somber : null;
+    }
+
+    private boolean available(PitEnchantment type) {
+        return PitEnchantmentReader.contains(leggings(), type) || findPants(type) >= 0;
+    }
+
+    private void equip(PitEnchantment type) {
         ItemStack worn = leggings();
         if (PitEnchantmentReader.contains(worn, type)) {
             activeType = type;
             activePants = ItemIdentity.read(worn);
-            return true;
+            return;
         }
         int source = findPants(type);
         if (source < 0)
-            return false;
+            return;
         SwapController.Target target = new SwapController.Target(source,
                 player.inventoryContainer.getSlot(source).getStack(), 0);
         ItemIdentity wornIdentity = ItemIdentity.read(worn);
         ItemStack previous = canRestore ? originalPants : worn == null ? null : worn.copy();
         if (swaps.enqueueAutomatic(Collections.singletonList(target),
-                language.translate("low health"),
-                () -> canSwap(player) && !player.isPotionActive(Potion.poison) && eligible(type)
-                        && (wornIdentity == null ? leggings() == null
+                type == PitEnchantment.Somber ? language.translate("low target health")
+                        : language.translate("low health"),
+                () -> canSwap(player) && !player.isPotionActive(Potion.poison)
+                        && requestedType() == type && (wornIdentity == null ? leggings() == null
                                 : wornIdentity.matches(leggings())))) {
             pending = new Pending(type, target.binding.identity, previous, false);
             automaticPending = true;
         }
-        return true;
     }
 
     private int findPants(PitEnchantment type) {
@@ -265,6 +304,8 @@ final class AutoSwapController {
     }
 
     private boolean shouldRestore() {
+        if (activeType == PitEnchantment.Somber)
+            return darkTargets.ready() && !darkTargets.needed();
         if (config.pantsRestoreMode.get() == 1)
             return used.contains(activeType);
         return player.getHealth() >= config.pantsRestoreThreshold.get()
@@ -272,10 +313,13 @@ final class AutoSwapController {
     }
 
     private void restore() {
-        String reason = config.pantsRestoreMode.get() == 1
-                ? language.format("{0} activation",
-                        activeType == PitEnchantment.Escape_Pod ? "escape pod" : "phoenix")
-                : language.translate("health recovery");
+        String reason =
+                activeType == PitEnchantment.Somber ? language.translate("no dark targets")
+                        : config.pantsRestoreMode.get() == 1
+                                ? language.format("{0} activation",
+                                        activeType == PitEnchantment.Escape_Pod ? "escape pod"
+                                                : "phoenix")
+                                : language.translate("health recovery");
         if (originalPants == null) {
             if (player.inventory.getFirstEmptyStack() < 0) {
                 retryAt = tick + 10;
@@ -319,8 +363,11 @@ final class AutoSwapController {
     }
 
     private boolean readyToRestore() {
-        return canSwap(player) && !player.isPotionActive(Potion.poison) && config.restorePants.get()
-                && activePants != null && activePants.matches(leggings()) && shouldRestore();
+        return canSwap(player) && !player.isPotionActive(Potion.poison) && canRestore
+                && (activeType == PitEnchantment.Somber ? config.restoreDark.get()
+                        : config.restorePants.get())
+                && activePants != null && activePants.matches(leggings()) && shouldRestore()
+                && requestedType() == null;
     }
 
     private void finishPending() {
@@ -407,6 +454,7 @@ final class AutoSwapController {
     }
 
     void reset() {
+        darkTargets.reset();
         player = null;
         retryAt = 0;
         inSpawn = false;

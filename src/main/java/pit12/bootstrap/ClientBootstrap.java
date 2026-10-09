@@ -122,7 +122,8 @@ public final class ClientBootstrap {
                 new File(minecraft.mcDataDir, "12pit/relations.json").toPath(), client, commands);
         // Category: Player
         SwapBindings swapBindings = registerSwap(minecraft, client, configs, session, pitContext,
-                commands, new File(minecraft.mcDataDir, "12pit/swap-bindings.json").toPath(),
+                playerEquipment, relations, commands,
+                new File(minecraft.mcDataDir, "12pit/swap-bindings.json").toPath(),
                 (SwapHooksBinding) minecraft);
         // Category: Interface
         BooleanSetting discordRpc =
@@ -180,11 +181,12 @@ public final class ClientBootstrap {
     // Category: Player
     private SwapBindings registerSwap(Minecraft minecraft, ClientThread client,
             ConfigCatalog configs, ClientSession session, PitContext pitContext,
+            PlayerEquipmentAccess playerEquipment, RelationLookup relations,
             CommandRegistry commands, Path path, SwapHooksBinding binding) {
         SwapConfig config = new SwapConfig();
         configs.register(config);
         SwapFeature swap = new SwapFeature(minecraft, client, configs, config, session, pitContext,
-                commands, path, binding, language);
+                playerEquipment, relations, commands, path, binding, language);
         components.add(swap);
         return swap.bindings();
     }
