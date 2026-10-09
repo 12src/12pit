@@ -47,6 +47,9 @@ import pit12.feature.quickmath.AutoQuickMathFeature;
 import pit12.feature.relation.RelationFeature;
 import pit12.feature.relation.api.RelationLookup;
 import pit12.feature.relation.api.Relations;
+import pit12.feature.smartblock.SmartBlockBinding;
+import pit12.feature.smartblock.SmartBlockConfig;
+import pit12.feature.smartblock.SmartBlockFeature;
 import pit12.feature.sprint.AutoSprintConfig;
 import pit12.feature.sprint.AutoSprintFeature;
 import pit12.feature.swap.SwapConfig;
@@ -130,6 +133,7 @@ public final class ClientBootstrap {
         registerDiscordRpc(webUiConfigs, discordRpc);
         // Category: Player
         registerAutoSprint(configs);
+        registerSmartBlock(minecraft, configs, session, (SmartBlockBinding) minecraft);
         // Category: Utility
         registerAutoFish(configs, session, (MinecraftActions) minecraft);
         registerAutoQuickMath(configs);
@@ -209,6 +213,13 @@ public final class ClientBootstrap {
         AutoSprintConfig config = new AutoSprintConfig();
         configs.register(config);
         components.add(new AutoSprintFeature(config));
+    }
+
+    private void registerSmartBlock(Minecraft minecraft, ConfigCatalog configs,
+            ClientSession session, SmartBlockBinding binding) {
+        SmartBlockConfig config = new SmartBlockConfig();
+        configs.register(config);
+        components.add(new SmartBlockFeature(minecraft, configs, config, session, binding));
     }
 
     // Category: Utility
