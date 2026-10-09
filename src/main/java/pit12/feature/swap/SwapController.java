@@ -420,21 +420,28 @@ final class SwapController {
         ItemStack item = stack(slot);
         if (item != null) {
             String enchantments = PitEnchantmentReader.read(item).formatBoldDisplayNames();
-            return (enchantments == null ? item.getDisplayName() : enchantments)
+            return EnumChatFormatting.RESET
+                    + (enchantments == null ? item.getDisplayName() : enchantments)
                     + EnumChatFormatting.RESET + EnumChatFormatting.GREEN;
         }
         switch (slot) {
             case 5:
-                return language.translate("Helmet slot");
+                return EnumChatFormatting.RESET + language.translate("Helmet slot")
+                        + EnumChatFormatting.GREEN;
             case 6:
-                return language.translate("Chestplate slot");
+                return EnumChatFormatting.RESET + language.translate("Chestplate slot")
+                        + EnumChatFormatting.GREEN;
             case 7:
-                return language.translate("Leggings slot");
+                return EnumChatFormatting.RESET + language.translate("Leggings slot")
+                        + EnumChatFormatting.GREEN;
             case 8:
-                return language.translate("Boots slot");
+                return EnumChatFormatting.RESET + language.translate("Boots slot")
+                        + EnumChatFormatting.GREEN;
             default:
-                return slot >= 36 ? language.format("Hotbar slot {0}", slot - 35)
-                        : language.format("Inventory slot {0}", slot - 8);
+                return EnumChatFormatting.RESET
+                        + (slot >= 36 ? language.format("Hotbar slot {0}", slot - 35)
+                                : language.format("Inventory slot {0}", slot - 8))
+                        + EnumChatFormatting.GREEN;
         }
     }
 
