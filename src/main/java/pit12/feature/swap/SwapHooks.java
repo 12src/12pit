@@ -25,6 +25,8 @@ public interface SwapHooks {
 
     boolean key(int key, boolean pressed, boolean repeat);
 
+    boolean rightClick();
+
     // 0 = tick start, 1-3 = input phases.
     void inventoryTick(int phase);
 

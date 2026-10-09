@@ -26,7 +26,6 @@ import net.minecraft.util.MovingObjectPosition;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
@@ -214,13 +213,14 @@ public final class SwapFeature implements ClientLifecycle, ConfigChangeListener,
         return true;
     }
 
-    private boolean rightClick() {
+    @Override
+    public boolean rightClick() {
         if (inputLocked())
             return true;
         if (rightClickHeld)
             return true;
         if (!config.enabled() || !controller.rightClickEnabled() || minecraft.currentScreen != null
-                || !controller.acceptsInput())
+                || !controller.acceptsInput() || minecraft.playerController.getIsHittingBlock())
             return false;
         ItemStack held = minecraft.thePlayer.getHeldItem();
         int target = SwapBinding.armorTarget(held);
@@ -291,14 +291,6 @@ public final class SwapFeature implements ClientLifecycle, ConfigChangeListener,
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void onGameMouse(MouseEvent event) {
         if (inputLocked()) {
-            event.setCanceled(true);
-        }
-    }
-
-    @SubscribeEvent(priority = EventPriority.LOWEST)
-    public void onInteract(PlayerInteractEvent event) {
-        if (event.entityPlayer == minecraft.thePlayer
-                && event.action == PlayerInteractEvent.Action.RIGHT_CLICK_AIR && rightClick()) {
             event.setCanceled(true);
         }
     }

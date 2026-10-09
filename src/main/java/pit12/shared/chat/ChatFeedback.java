@@ -48,7 +48,7 @@ public final class ChatFeedback {
         ChatComponentText prefix = new ChatComponentText("[");
         prefix.getChatStyle().setColor(EnumChatFormatting.GRAY);
         ChatComponentText number = new ChatComponentText("12");
-        number.getChatStyle().setColor(EnumChatFormatting.BLUE).setBold(true);
+        number.getChatStyle().setColor(EnumChatFormatting.WHITE).setBold(true);
         ChatComponentText name = new ChatComponentText("pit");
         name.getChatStyle().setColor(EnumChatFormatting.AQUA).setBold(true);
         ChatComponentText version = new ChatComponentText(" " + BUILD_LABEL);
