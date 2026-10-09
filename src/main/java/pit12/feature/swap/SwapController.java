@@ -28,6 +28,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.BiConsumer;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
@@ -63,6 +64,8 @@ final class SwapController {
     private long sessionRevision;
     private long tick;
     private long lastClickTick;
+    private int clickPhase = -1;
+    private long resumeAt;
     private long closeAt = -1;
     private boolean clicked;
     private GuiInventory screen;
@@ -163,25 +166,30 @@ final class SwapController {
         closeAt = -1;
     }
 
-    void tick() {
-        tick++;
-        if (options == null)
-            return;
+    boolean tick(int phase) {
+        if (phase == 0) {
+            tick++;
+            return false;
+        }
+        if (options == null || phase < 3 && (waitingToResume || !randomClickTiming()))
+            return false;
         try {
-            advance();
+            advance(phase);
         } catch (RuntimeException failure) {
             fail(failure.getMessage() == null ? language.translate("Unexpected error")
                     : failure.getMessage());
             if (options != null && !waitingToResume)
                 finishQueue();
         }
+        return true;
     }
 
-    private void advance() {
+    private void advance(int phase) {
         if (rejection != null)
             throw new IllegalStateException(rejection);
         if (waitingToResume) {
-            finish(false);
+            if (tick >= resumeAt)
+                finish(false);
             return;
         }
         if (session.revision() != sessionRevision || minecraft.thePlayer != player) {
@@ -192,7 +200,7 @@ final class SwapController {
             throw new IllegalStateException(language.translate("Inventory changed"));
         }
         if (cancelling) {
-            finishCancellation();
+            finishCancellation(phase);
             return;
         }
         while (options != null && !cancelling) {
@@ -210,6 +218,7 @@ final class SwapController {
                 return;
             }
             if (actions.isEmpty()) {
+                clickPhase = -1;
                 reportProblems();
                 current = null;
                 continue;
@@ -218,6 +227,7 @@ final class SwapController {
             if (action.stage == 0 && action.binding != null
                     && action.binding.identity.matches(stack(action.binding.guiTarget()))) {
                 actions.removeFirst();
+                clickPhase = -1;
                 continue;
             }
             if (screen == null) {
@@ -236,14 +246,33 @@ final class SwapController {
             if (!clicked) {
                 delay = options.openDelay;
             }
-            if (tick - lastClickTick < delay)
+            if (!clickReady(delay, phase))
                 return;
+            clickPhase = -1;
             action.step();
             if (options == null || cancelling)
                 return;
             if (action.done)
                 actions.removeFirst();
         }
+    }
+
+    private boolean randomClickTiming() {
+        Request request = current == null ? queue.peekFirst() : current;
+        if (request == null)
+            return false;
+        return request.automaticReason != null ? options.autoRandomClickTiming
+                : request.key != 0 ? options.bindingRandomClickTiming : options.randomClickTiming;
+    }
+
+    private boolean clickReady(int delay, int phase) {
+        if (tick - lastClickTick < delay)
+            return false;
+        if (!randomClickTiming())
+            return phase == 3;
+        if (clickPhase < 0)
+            clickPhase = ThreadLocalRandom.current().nextInt(phase, 4);
+        return phase >= clickPhase;
     }
 
     void clickSent(int windowId, short actionNumber) {
@@ -391,21 +420,28 @@ final class SwapController {
         ItemStack item = stack(slot);
         if (item != null) {
             String enchantments = PitEnchantmentReader.read(item).formatBoldDisplayNames();
-            return (enchantments == null ? item.getDisplayName() : enchantments)
+            return EnumChatFormatting.RESET
+                    + (enchantments == null ? item.getDisplayName() : enchantments)
                     + EnumChatFormatting.RESET + EnumChatFormatting.GREEN;
         }
         switch (slot) {
             case 5:
-                return language.translate("Helmet slot");
+                return EnumChatFormatting.RESET + language.translate("Helmet slot")
+                        + EnumChatFormatting.GREEN;
             case 6:
-                return language.translate("Chestplate slot");
+                return EnumChatFormatting.RESET + language.translate("Chestplate slot")
+                        + EnumChatFormatting.GREEN;
             case 7:
-                return language.translate("Leggings slot");
+                return EnumChatFormatting.RESET + language.translate("Leggings slot")
+                        + EnumChatFormatting.GREEN;
             case 8:
-                return language.translate("Boots slot");
+                return EnumChatFormatting.RESET + language.translate("Boots slot")
+                        + EnumChatFormatting.GREEN;
             default:
-                return slot >= 36 ? language.format("Hotbar slot {0}", slot - 35)
-                        : language.format("Inventory slot {0}", slot - 8);
+                return EnumChatFormatting.RESET
+                        + (slot >= 36 ? language.format("Hotbar slot {0}", slot - 35)
+                                : language.format("Inventory slot {0}", slot - 8))
+                        + EnumChatFormatting.GREEN;
         }
     }
 
@@ -423,6 +459,7 @@ final class SwapController {
             return;
         cancelling = true;
         restoreOnCancel = true;
+        clickPhase = -1;
         queue.clear();
         closeAt = -1;
     }
@@ -440,13 +477,14 @@ final class SwapController {
         report.accept(Tone.ERROR, language.format("Swap failed: {0}", message));
     }
 
-    private void finishCancellation() {
+    private void finishCancellation(int phase) {
         if (restoreOnCancel) {
             Action action = actions.peekFirst();
             if (action != null && options.restore && action.restorable()) {
                 int delay = current.key == 0 ? options.swapDelay : options.bindingDelay;
-                if (tick - lastClickTick < delay)
+                if (!clickReady(delay, phase))
                     return;
+                clickPhase = -1;
                 action.swap(action.source, action.work);
             }
             restoreOnCancel = false;
@@ -491,6 +529,7 @@ final class SwapController {
                 if (allowDelay && options != null && options.resumeInputNextTick
                         && (failed || closingInventory && minecraft.currentScreen == null)) {
                     waitingToResume = true;
+                    resumeAt = tick + 1;
                 } else {
                     reset();
                 }
@@ -515,6 +554,7 @@ final class SwapController {
         screen = null;
         current = null;
         clicked = false;
+        clickPhase = -1;
         closeAt = -1;
         cancelling = false;
         restoreOnCancel = false;

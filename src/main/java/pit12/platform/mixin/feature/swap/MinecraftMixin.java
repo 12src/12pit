@@ -45,7 +45,37 @@ public abstract class MinecraftMixin implements SwapHooksBinding {
         return pit12$swapHooks;
     }
 
-    // This point follows GUI input and precedes movement, even when the inventory pauses the world.
+    // Block interaction packets are sent before Forge's right-click-air event.
+    @Inject(method = "rightClickMouse", at = @At("HEAD"), cancellable = true)
+    private void pit12$swapRightClick(CallbackInfo callback) {
+        if (pit12$swapHooks != null && pit12$swapHooks.rightClick())
+            callback.cancel();
+    }
+
+    @Inject(method = "runTick",
+            at = @At(value = "INVOKE",
+                    target = "Lnet/minecraftforge/fml/common/FMLCommonHandler;onPreClientTick()V",
+                    shift = At.Shift.AFTER, remap = false))
+    private void pit12$startSwapTick(CallbackInfo callback) {
+        if (pit12$swapHooks != null)
+            pit12$swapHooks.inventoryTick(0);
+    }
+
+    @Inject(method = "runTick", at = @At(value = "INVOKE",
+            target = "Lnet/minecraft/client/gui/GuiScreen;handleInput()V", shift = At.Shift.AFTER))
+    private void pit12$afterGuiInput(CallbackInfo callback) {
+        if (pit12$swapHooks != null)
+            pit12$swapHooks.inventoryTick(1);
+    }
+
+    @Inject(method = "runTick", at = @At(value = "INVOKE",
+            target = "Lnet/minecraft/client/gui/GuiScreen;updateScreen()V", shift = At.Shift.AFTER))
+    private void pit12$afterGuiUpdate(CallbackInfo callback) {
+        if (pit12$swapHooks != null)
+            pit12$swapHooks.inventoryTick(2);
+    }
+
+    // After GUI input, before movement.
     @Inject(method = "runTick",
             slice = @Slice(from = @At(value = "INVOKE",
                     target = "Lnet/minecraft/client/Minecraft;sendClickBlockToController(Z)V")),
@@ -54,16 +84,16 @@ public abstract class MinecraftMixin implements SwapHooksBinding {
                     ordinal = 0))
     private void pit12$afterInput(CallbackInfo callback) {
         if (pit12$swapHooks != null)
-            pit12$swapHooks.inventoryTick();
+            pit12$swapHooks.inventoryTick(3);
     }
 
     @Redirect(method = "runTick",
             at = @At(value = "INVOKE", target = "Lorg/lwjgl/input/Keyboard;next()Z", remap = false))
     private boolean pit12$nextKeyboardEvent() {
-        if (pit12$swapHooks == null || !pit12$swapHooks.inputLocked()) {
-            return Keyboard.next();
-        }
         while (Keyboard.next()) {
+            if (pit12$swapHooks == null || !pit12$swapHooks.key(Keyboard.getEventKey(),
+                    Keyboard.getEventKeyState(), Keyboard.isRepeatEvent()))
+                return true;
         }
         return false;
     }
@@ -75,12 +105,9 @@ public abstract class MinecraftMixin implements SwapHooksBinding {
                 && Keyboard.isKeyDown(key);
     }
 
-    @Redirect(method = {"runTick", "dispatchKeypresses"}, at = @At(value = "INVOKE",
-            target = "Lorg/lwjgl/input/Keyboard;getEventKeyState()Z", remap = false))
-    private boolean pit12$swapKeyState() {
-        boolean pressed = Keyboard.getEventKeyState();
-        return (pit12$swapHooks == null
-                || !pit12$swapHooks.key(Keyboard.getEventKey(), pressed, Keyboard.isRepeatEvent()))
-                && pressed;
+    @Inject(method = "dispatchKeypresses", at = @At("HEAD"), cancellable = true)
+    private void pit12$blockSwapKeypresses(CallbackInfo callback) {
+        if (pit12$swapHooks != null && pit12$swapHooks.inputLocked())
+            callback.cancel();
     }
 }
