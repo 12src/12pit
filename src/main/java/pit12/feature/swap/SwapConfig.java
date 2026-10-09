@@ -29,8 +29,7 @@ import pit12.runtime.config.IntegerSetting;
 public final class SwapConfig extends FeatureConfig {
     final BooleanSetting rightClick;
     final BooleanSetting randomClickTiming;
-    final BooleanSetting bindingRandomClickTiming;
-    final BooleanSetting autoRandomClickTiming;
+    final BooleanSetting shiftClick;
     final BooleanSetting autoSwap;
     final BooleanSetting autoSwapMessages;
     final ChoiceSetting inventoryDisplay;
@@ -67,8 +66,10 @@ public final class SwapConfig extends FeatureConfig {
         rightClick = booleanSetting("right_click", source("Right click swap"),
                 source("Right-click held armor to replace the armor in its slot."), true);
         randomClickTiming = booleanSetting("random_click_timing", source("Random click timing"),
-                source("Uses a random input phase before player updates for right click swaps."),
+                source("Uses a random input phase before player updates for all swaps and unequipping."),
                 true);
+        shiftClick = booleanSetting("shift_click", source("Shift click swap"),
+                source("Use shift clicks instead of number keys to swap armor."), false);
         inventoryDisplay = choiceSetting("inventory_display", source("Inventory visibility"),
                 source("Shows or hides the inventory during swaps."), 0,
                 new ChoiceSetting.Choice(0, source("Hidden")),
@@ -79,7 +80,7 @@ public final class SwapConfig extends FeatureConfig {
         swapDelay = integerSliderSetting("swap_delay", source("Swap delay"),
                 source("Ticks between clicks for right click and automatic swaps."), 1, 0, 10, 1);
         closeDelay = integerSliderSetting("close_delay", source("Close delay"), source(
-                "Ticks to wait after the last request finishes before closing the inventory."), 1,
+                "Ticks to wait after the last request finishes before closing the inventory."), 2,
                 0, 10, 1);
         resumeInputNextTick = booleanSetting("resume_input_next_tick",
                 source("Resume input next tick"),
@@ -96,10 +97,6 @@ public final class SwapConfig extends FeatureConfig {
                 source("Uses the first empty hotbar slot as the transfer slot. Otherwise uses the selected transfer slot."),
                 true);
         subcategory("bindings", source("Bindings"));
-        bindingRandomClickTiming = booleanSetting("binding_random_click_timing",
-                source("Random click timing"),
-                source("Uses a random input phase before player updates for bindings and unequipping."),
-                true);
         unequipKey = keybindSetting("unequip_all_key", source("Unequip all"),
                 source("Moves worn armor into free inventory slots."), 0);
         bindingDelay = integerSliderSetting("binding_delay", source("Binding delay"),
@@ -111,10 +108,6 @@ public final class SwapConfig extends FeatureConfig {
         subcategory("automatic_swap", source("Automatic swap"));
         autoSwap = booleanSetting("auto_swap", source("Automatic swap"),
                 source("Automatically swaps items when poisoned or at low health."), false);
-        autoRandomClickTiming = booleanSetting("auto_random_click_timing",
-                source("Random click timing"),
-                source("Uses a random input phase before player updates for automatic swaps."),
-                true);
         autoSwapMessages = booleanSetting("auto_swap_messages", source("Automatic swap messages"),
                 source("Shows why automatic swaps happened."), true);
         subsubcategory("venom", "Venom");
@@ -158,8 +151,7 @@ public final class SwapConfig extends FeatureConfig {
     static final class Options {
         final boolean rightClick;
         final boolean randomClickTiming;
-        final boolean bindingRandomClickTiming;
-        final boolean autoRandomClickTiming;
+        final boolean shiftClick;
         final int unequipKey;
         final boolean visible;
         final int workspace;
@@ -176,8 +168,7 @@ public final class SwapConfig extends FeatureConfig {
         Options(SwapConfig config) {
             rightClick = config.rightClick.get();
             randomClickTiming = config.randomClickTiming.get();
-            bindingRandomClickTiming = config.bindingRandomClickTiming.get();
-            autoRandomClickTiming = config.autoRandomClickTiming.get();
+            shiftClick = config.shiftClick.get();
             unequipKey = config.unequipKey.get();
             visible = config.inventoryDisplay.get() == 1;
             workspace = config.workspace.get() - 1;

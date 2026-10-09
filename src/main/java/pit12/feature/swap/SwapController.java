@@ -258,11 +258,7 @@ final class SwapController {
     }
 
     private boolean randomClickTiming() {
-        Request request = current == null ? queue.peekFirst() : current;
-        if (request == null)
-            return false;
-        return request.automaticReason != null ? options.autoRandomClickTiming
-                : request.key != 0 ? options.bindingRandomClickTiming : options.randomClickTiming;
+        return options.randomClickTiming && (current != null || !queue.isEmpty());
     }
 
     private boolean clickReady(int delay, int phase) {
@@ -351,7 +347,7 @@ final class SwapController {
         ordered.sort(Comparator.comparingInt(
                 (Action action) -> action.binding.equipment ? (action.source >= 36 ? 0 : 1) : 2)
                 .thenComparingInt(action -> action.binding.guiTarget()));
-        groupWorkspace = workspace();
+        groupWorkspace = -1;
         actions.addAll(ordered);
     }
 
@@ -385,6 +381,14 @@ final class SwapController {
                     return hotbar;
         }
         return options.workspace;
+    }
+
+    private int firstEmptyInventorySlot() {
+        // Armor shift clicks fill the main inventory before the hotbar.
+        for (int slot = 9; slot <= 44; slot++)
+            if (stack(slot) == null)
+                return slot;
+        return -1;
     }
 
     private void click(int slot, int button, int mode) {
@@ -480,12 +484,20 @@ final class SwapController {
     private void finishCancellation(int phase) {
         if (restoreOnCancel) {
             Action action = actions.peekFirst();
-            if (action != null && options.restore && action.restorable()) {
+            if (action != null && (action.stage == 3 || options.restore) && action.restorable()) {
                 int delay = current.key == 0 ? options.swapDelay : options.bindingDelay;
                 if (!clickReady(delay, phase))
                     return;
                 clickPhase = -1;
-                action.swap(action.source, action.work);
+                if (action.stage == 3) {
+                    click(action.shiftedArmorSlot, 0, 1);
+                    if (!ItemStack.areItemStacksEqual(stack(action.binding.guiTarget()),
+                            action.originalArmor)) {
+                        throw new IllegalStateException(
+                                language.translate("Armor could not be equipped"));
+                    }
+                } else
+                    action.swap(action.source, action.work);
             }
             restoreOnCancel = false;
         }
@@ -578,6 +590,8 @@ final class SwapController {
         int work;
         ItemStack originalWorkspace;
         ItemStack expectedWorkspace;
+        int shiftedArmorSlot;
+        ItemStack originalArmor;
         String message;
         boolean done;
 
@@ -589,11 +603,8 @@ final class SwapController {
         void step() {
             if (binding == null) {
                 ItemStack armor = stack(unequipSlot);
-                if (armor != null && player.inventory.getFirstEmptyStack() >= 0) {
-                    // Armor shift clicks fill the main inventory before the hotbar.
-                    int target = 9;
-                    while (stack(target) != null)
-                        target++;
+                int target = armor == null ? -1 : firstEmptyInventorySlot();
+                if (target >= 0) {
                     message = swapMessage(unequipSlot, target);
                     click(unequipSlot, 0, 1);
                     if (stack(unequipSlot) == null) {
@@ -604,6 +615,15 @@ final class SwapController {
                 } else if (armor != null)
                     problems.add(language.translate("Not enough inventory space to unequip armor"));
                 done = true;
+                return;
+            }
+            if (stage == 3) {
+                if (stack(binding.guiTarget()) != null
+                        || !binding.identity.matches(stack(source))) {
+                    throw new IllegalStateException(language.translate("Inventory changed"));
+                }
+                click(source, 0, 1);
+                verifyAndComplete();
                 return;
             }
             if (stage == 1) {
@@ -642,10 +662,34 @@ final class SwapController {
                         .isItemValid(stack(source))) {
                     problems.add(language.format("Item does not fit: {0}", binding.name));
                     done = true;
-                } else if (source >= 36) {
+                    return;
+                }
+                if (options.shiftClick) {
+                    ItemStack armor = stack(binding.guiTarget());
+                    if (armor == null) {
+                        click(source, 0, 1);
+                        verifyAndComplete();
+                        return;
+                    }
+                    shiftedArmorSlot = firstEmptyInventorySlot();
+                    if (shiftedArmorSlot >= 0) {
+                        originalArmor = copy(armor);
+                        click(binding.guiTarget(), 0, 1);
+                        if (stack(binding.guiTarget()) != null || !ItemStack
+                                .areItemStacksEqual(stack(shiftedArmorSlot), originalArmor)) {
+                            throw new IllegalStateException(language
+                                    .translate("Armor could not be moved to the inventory"));
+                        }
+                        stage = 3;
+                        return;
+                    }
+                }
+                if (source >= 36) {
                     swap(binding.guiTarget(), source - 36);
                     verifyAndComplete();
                 } else {
+                    if (groupWorkspace < 0)
+                        groupWorkspace = workspace();
                     work = groupWorkspace;
                     originalWorkspace = copy(stack(36 + work));
                     swap(source, work);
@@ -672,6 +716,9 @@ final class SwapController {
         }
 
         private boolean restorable() {
+            if (stage == 3)
+                return stack(binding.guiTarget()) == null
+                        && ItemStack.areItemStacksEqual(stack(shiftedArmorSlot), originalArmor);
             return stage > 0 && ItemStack.areItemStacksEqual(stack(source), originalWorkspace)
                     && ItemStack.areItemStacksEqual(stack(36 + work), expectedWorkspace);
         }
