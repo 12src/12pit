@@ -247,10 +247,11 @@ public final class SwapFeature implements ClientLifecycle, ConfigChangeListener,
     }
 
     @Override
-    public void inventoryTick() {
-        controller.tick();
-        updateMouseGrab();
-        updateListening();
+    public void inventoryTick(int phase) {
+        if (controller.tick(phase)) {
+            updateMouseGrab();
+            updateListening();
+        }
     }
 
     @SubscribeEvent
