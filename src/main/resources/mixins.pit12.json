@@ -19,6 +19,8 @@
     "player.WorldClientEquipmentMixin",
     "feature.gamma.EntityRendererMixin",
     "feature.sprint.EntityPlayerSPMixin",
+    "feature.smartblock.EntityArrowAccessor",
+    "feature.smartblock.MinecraftMixin",
     "feature.tooltip.HeldItemTooltipMixin",
     "feature.swap.MinecraftMixin",
     "feature.swap.NetHandlerPlayClientMixin",
