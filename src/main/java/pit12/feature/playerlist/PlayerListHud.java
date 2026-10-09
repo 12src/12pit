@@ -37,6 +37,7 @@ import pit12.runtime.config.HudConfig;
 import pit12.runtime.hud.HudElement;
 import pit12.runtime.hud.HudRenderer;
 import pit12.runtime.item.PitEnchantment;
+import pit12.runtime.item.PitEnchantmentFormat;
 import pit12.runtime.item.PitEnchantmentReader;
 import pit12.runtime.languages.Languages;
 import pit12.shared.text.PlayerNameFormatter;
@@ -438,6 +439,7 @@ final class PlayerListHud implements HudElement {
         tag.setTag("ExtraAttributes", attributes);
         ItemStack stack = new ItemStack(Items.leather_leggings);
         stack.setTagCompound(tag);
-        return PlayerListBuilder.formatEnchantments(PitEnchantmentReader.read(stack), config);
+        return PitEnchantmentFormat.format(PitEnchantmentReader.read(stack),
+                config.enchantmentFormat());
     }
 }
