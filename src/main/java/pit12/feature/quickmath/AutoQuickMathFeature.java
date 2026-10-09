@@ -110,7 +110,7 @@ public final class AutoQuickMathFeature implements ClientLifecycle {
         String answer = pendingAnswer;
         clearPendingAnswer();
         try {
-            player.sendChatMessage(answer);
+            player.sendChatMessage("/ac " + answer);
             LOGGER.info("Sent Quick Math answer: " + answer);
         } catch (RuntimeException failure) {
             LOGGER.log(Level.WARNING, "Failed to send Quick Math answer: " + answer, failure);
