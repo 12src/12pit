@@ -1,3 +1,4 @@
+import net.fabricmc.loom.task.RemapJarTask
 import org.apache.commons.lang3.SystemUtils
 
 plugins {
@@ -8,22 +9,22 @@ plugins {
     id("com.gradleup.shadow")
 }
 
-val modId: String by project
-val modName: String by project
-val modVersion: String by project
-val modGroup: String by project
-val minecraftVersion: String by project
-val forgeVersion: String by project
-val mappingsVersion: String by project
-val minecraftGsonVersion: String by project
-val mixinRuntimeVersion: String by project
-val mixinProcessorVersion: String by project
-val devAuthVersion: String by project
-val archUnitVersion: String by project
-val oneConfigVersion: String by project
-val ktfmtVersion: String by project
-val licenseHeaderPath: String by project
-val eclipseFormatterConfigPath: String by project
+val modId = providers.gradleProperty("modId").get()
+val modName = providers.gradleProperty("modName").get()
+val modVersion = providers.gradleProperty("modVersion").get()
+val modGroup = providers.gradleProperty("modGroup").get()
+val minecraftVersion = providers.gradleProperty("minecraftVersion").get()
+val forgeVersion = providers.gradleProperty("forgeVersion").get()
+val mappingsVersion = providers.gradleProperty("mappingsVersion").get()
+val minecraftGsonVersion = providers.gradleProperty("minecraftGsonVersion").get()
+val mixinRuntimeVersion = providers.gradleProperty("mixinRuntimeVersion").get()
+val mixinProcessorVersion = providers.gradleProperty("mixinProcessorVersion").get()
+val devAuthVersion = providers.gradleProperty("devAuthVersion").get()
+val archUnitVersion = providers.gradleProperty("archUnitVersion").get()
+val oneConfigVersion = providers.gradleProperty("oneConfigVersion").get()
+val ktfmtVersion = providers.gradleProperty("ktfmtVersion").get()
+val licenseHeaderPath = providers.gradleProperty("licenseHeaderPath").get()
+val eclipseFormatterConfigPath = providers.gradleProperty("eclipseFormatterConfigPath").get()
 
 group = modGroup
 
@@ -65,8 +66,8 @@ val buildConfigProperties =
         "releaseBuild" to providers.gradleProperty("releaseBuild").getOrElse("false").toBoolean(),
     )
 val generatedBuildConfigDirectory = layout.buildDirectory.dir("generated/sources/buildConfig/java/main")
-val generateBuildConfig by
-    tasks.registering(Sync::class) {
+val generateBuildConfig =
+    tasks.register<Sync>("generateBuildConfig") {
         inputs.properties(buildConfigProperties)
         filteringCharset = "UTF-8"
 
@@ -83,8 +84,8 @@ sourceSets.main {
     output.setResourcesDir(sourceSets.main.flatMap { it.java.classesDirectory })
 }
 
-val generateBuildInfo by
-    tasks.registering(WriteProperties::class) {
+val generateBuildInfo =
+    tasks.register<WriteProperties>("generateBuildInfo") {
         destinationFile.set(layout.buildDirectory.file("generated/resources/buildInfo/build.properties"))
         property("gitCommit", providers.environmentVariable("GITHUB_SHA").orElse(""))
     }
@@ -94,7 +95,6 @@ tasks.compileJava { dependsOn(generateBuildConfig) }
 // Layout checks need the section comments from the source file.
 tasks.test {
     inputs.file("src/main/java/pit12/bootstrap/ClientBootstrap.java")
-    notCompatibleWithConfigurationCache("Loom test classpath groups cannot be cached with Gradle 8.")
 }
 
 repositories {
@@ -106,10 +106,11 @@ repositories {
     maven("https://pkgs.dev.azure.com/djtheredstoner/DevAuth/_packaging/public/maven/v1")
 }
 
-val shaded: Configuration by configurations.creating {
-    isCanBeConsumed = false
-    configurations.implementation.get().extendsFrom(this)
-}
+val shaded =
+    configurations.create("shaded") {
+        isCanBeConsumed = false
+        configurations.implementation.get().extendsFrom(this)
+    }
 
 dependencies {
     minecraft("com.mojang:minecraft:$minecraftVersion")
@@ -190,14 +191,14 @@ tasks.withType<Jar> {
 }
 
 val npm = if (SystemUtils.IS_OS_WINDOWS) "npm.cmd" else "npm"
-val installWebUi by
-    tasks.registering(Exec::class) {
+val installWebUi =
+    tasks.register<Exec>("installWebUi") {
         inputs.files("web-ui/package.json", "web-ui/package-lock.json")
         outputs.file("web-ui/node_modules/.package-lock.json")
         commandLine(npm, "ci", "--prefix", "web-ui")
     }
-val buildWebUi by
-    tasks.registering(Exec::class) {
+val buildWebUi =
+    tasks.register<Exec>("buildWebUi") {
         dependsOn(installWebUi)
         inputs.files(
             fileTree("web-ui/src"),
@@ -235,8 +236,8 @@ tasks.processResources {
     filesMatching(listOf("mcmod.info", "mixins.$modId.json")) { expand(properties) }
 }
 
-val remapJar by
-    tasks.named<net.fabricmc.loom.task.RemapJarTask>("remapJar") {
+val remapJar =
+    tasks.named<RemapJarTask>("remapJar") {
         dependsOn(tasks.shadowJar)
         archiveBaseName.set(modName)
         archiveVersion.set("")
@@ -259,4 +260,4 @@ tasks.shadowJar {
     exclude("META-INF/*.DSA", "META-INF/*.RSA", "META-INF/*.SF")
 }
 
-tasks.assemble.get().dependsOn(tasks.remapJar)
+tasks.assemble { dependsOn(remapJar) }
