@@ -25,6 +25,9 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.minecraft.client.Minecraft;
+import pit12.feature.autoclick.AutoClickBinding;
+import pit12.feature.autoclick.AutoClickConfig;
+import pit12.feature.autoclick.AutoClickFeature;
 import pit12.feature.autofish.AutoFishConfig;
 import pit12.feature.autofish.AutoFishFeature;
 import pit12.feature.discordrpc.DiscordRpcFeature;
@@ -132,6 +135,8 @@ public final class ClientBootstrap {
         // Category: No config
         registerDiscordRpc(webUiConfigs, discordRpc);
         // Category: Player
+        registerAutoClick(minecraft, configs, session, (AutoClickBinding) minecraft,
+                (MinecraftActions) minecraft);
         registerAutoSprint(configs);
         registerSmartBlock(minecraft, configs, session, (SmartBlockBinding) minecraft);
         // Category: Utility
@@ -209,6 +214,13 @@ public final class ClientBootstrap {
     }
 
     // Category: Player
+    private void registerAutoClick(Minecraft minecraft, ConfigCatalog configs,
+            ClientSession session, AutoClickBinding binding, MinecraftActions actions) {
+        AutoClickConfig config = new AutoClickConfig();
+        configs.register(config);
+        components.add(new AutoClickFeature(minecraft, configs, config, session, binding, actions));
+    }
+
     private void registerAutoSprint(ConfigCatalog configs) {
         AutoSprintConfig config = new AutoSprintConfig();
         configs.register(config);

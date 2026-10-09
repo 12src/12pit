@@ -20,12 +20,21 @@ package pit12.platform.mixin.accessor;
 
 import net.minecraft.client.Minecraft;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.gen.Invoker;
 import pit12.shared.input.MinecraftActions;
 
 @Mixin(Minecraft.class)
 public interface MinecraftAccessor extends MinecraftActions {
     @Override
+    @Invoker("clickMouse")
+    void pit12$leftClick();
+
+    @Override
     @Invoker("rightClickMouse")
     void pit12$rightClick();
+
+    @Override
+    @Accessor("leftClickCounter")
+    void pit12$setLeftClickCounter(int ticks);
 }

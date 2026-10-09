@@ -16,12 +16,8 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.shared.input;
+package pit12.feature.autoclick;
 
-public interface MinecraftActions {
-    void pit12$leftClick();
-
-    void pit12$rightClick();
-
-    void pit12$setLeftClickCounter(int ticks);
+public interface AutoClickBinding {
+    void pit12$bindAutoClick(AutoClickFeature feature);
 }

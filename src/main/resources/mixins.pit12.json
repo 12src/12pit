@@ -17,6 +17,7 @@
     "player.NetworkPlayerInfoMixin",
     "player.ScoreboardMixin",
     "player.WorldClientEquipmentMixin",
+    "feature.autoclick.MinecraftMixin",
     "feature.gamma.EntityRendererMixin",
     "feature.sprint.EntityPlayerSPMixin",
     "feature.smartblock.EntityArrowAccessor",
