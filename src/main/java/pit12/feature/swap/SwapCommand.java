@@ -63,7 +63,8 @@ final class SwapCommand {
                 })).child(operation("status", source("Show automatic swap state"), this::status))
                 .child(operation("reset", source("Reset automatic swap state"), (sender, args) -> {
                     automatic.manualReset();
-                    reply(sender, Tone.SUCCESS, language.translate("Reset automatic swap state"));
+                    reply(sender, Tone.SUCCESS,
+                            language.translate("Automatic swap state has been reset"));
                 })).build();
     }
 
@@ -96,12 +97,8 @@ final class SwapCommand {
                 SwapBinding.create(key(args[0]), minecraft.thePlayer.getHeldItem(), target);
         bindings.bind(binding);
         if (config.bindingMessages.get())
-            reply(sender, Tone.SUCCESS,
-                    config.messageDetails.get()
-                            ? language.format("Bound {0} to {1} ({2})", binding.display(true),
-                                    Keyboard.getKeyName(binding.key), binding.targetName())
-                            : language.format("Bound {0} ({1})", Keyboard.getKeyName(binding.key),
-                                    binding.targetName()));
+            reply(sender, Tone.SUCCESS, language.format("Bound {0} to {1} ({2})", binding.display(),
+                    Keyboard.getKeyName(binding.key), binding.targetName()));
     }
 
     private void unbind(ICommandSender sender, String[] args) {
@@ -124,8 +121,8 @@ final class SwapCommand {
             throw new IllegalArgumentException(bindings.readinessProblem());
         reply(sender, Tone.INFO, language.format("Swap bindings: {0}", bindings.count()));
         for (SwapBinding entry : bindings.entries())
-            reply(sender, Tone.INFO, Keyboard.getKeyName(entry.key) + ": "
-                    + entry.display(config.messageDetails.get()) + " -> " + entry.targetName());
+            reply(sender, Tone.INFO, Keyboard.getKeyName(entry.key) + ": " + entry.display()
+                    + " -> " + entry.targetName());
     }
 
     private void status(ICommandSender sender, String[] args) {
