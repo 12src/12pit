@@ -38,6 +38,8 @@ import net.minecraft.client.gui.inventory.GuiInventory;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.play.client.C16PacketClientStatus;
+import net.minecraft.util.EnumChatFormatting;
+import pit12.runtime.item.PitEnchantmentReader;
 import pit12.runtime.languages.Languages;
 import pit12.runtime.session.ClientSession;
 import pit12.shared.chat.ChatFeedback.Tone;
@@ -55,7 +57,6 @@ final class SwapController {
     private final Set<Object> accepted = new HashSet<>();
     private final Deque<Action> actions = new ArrayDeque<>();
     private final Set<String> problems = new LinkedHashSet<>();
-    private final List<String> completed = new ArrayList<>();
     private final Set<Short> pendingClicks = new HashSet<>();
     private SwapConfig.Options options;
     private EntityPlayerSP player;
@@ -135,17 +136,17 @@ final class SwapController {
         enqueue(new Request(0, binding), binding.identity);
     }
 
-    boolean enqueueAutomatic(List<Target> targets, String message, BooleanSupplier ready) {
+    boolean enqueueAutomatic(List<Target> targets, String reason, BooleanSupplier ready) {
         if (!idle() || !acceptsInput() || !ready.getAsBoolean())
             return false;
-        enqueue(new Request(0, null, targets, 0, message, ready), targets);
+        enqueue(new Request(0, null, targets, 0, reason, ready), targets);
         return true;
     }
 
-    boolean enqueueAutomaticUnequip(int slot, String message, BooleanSupplier ready) {
+    boolean enqueueAutomaticUnequip(int slot, String reason, BooleanSupplier ready) {
         if (!idle() || !acceptsInput() || !ready.getAsBoolean())
             return false;
-        enqueue(new Request(0, null, null, slot, message, ready), slot);
+        enqueue(new Request(0, null, null, slot, reason, ready), slot);
         return true;
     }
 
@@ -209,7 +210,7 @@ final class SwapController {
                 return;
             }
             if (actions.isEmpty()) {
-                reportGroup();
+                reportProblems();
                 current = null;
                 continue;
             }
@@ -262,7 +263,6 @@ final class SwapController {
 
     private void prepare() {
         problems.clear();
-        completed.clear();
         if (current.unequipSlot != 0) {
             if (stack(current.unequipSlot) != null)
                 actions.addLast(new Action(null, current.unequipSlot));
@@ -375,20 +375,47 @@ final class SwapController {
         lastClickTick = tick;
     }
 
-    private void reportGroup() {
-        boolean automatic = current.automaticMessage != null;
+    private String swapMessage(int first, int second) {
+        if (current.automaticReason != null) {
+            return options.automaticMessages
+                    ? language.format("Swapped {0} with {1} due to {2}", itemName(first),
+                            itemName(second), current.automaticReason)
+                    : null;
+        }
+        return options.messages
+                ? language.format("Swapped {0} with {1}", itemName(first), itemName(second))
+                : null;
+    }
+
+    private String itemName(int slot) {
+        ItemStack item = stack(slot);
+        if (item != null) {
+            String enchantments = PitEnchantmentReader.read(item).formatBoldDisplayNames();
+            return (enchantments == null ? item.getDisplayName() : enchantments)
+                    + EnumChatFormatting.RESET + EnumChatFormatting.GREEN;
+        }
+        switch (slot) {
+            case 5:
+                return language.translate("Helmet slot");
+            case 6:
+                return language.translate("Chestplate slot");
+            case 7:
+                return language.translate("Leggings slot");
+            case 8:
+                return language.translate("Boots slot");
+            default:
+                return slot >= 36 ? language.format("Hotbar slot {0}", slot - 35)
+                        : language.format("Inventory slot {0}", slot - 8);
+        }
+    }
+
+    private void reportProblems() {
+        boolean automatic = current.automaticReason != null;
         if (automatic && !options.automaticMessages)
             return;
         for (String problem : problems)
             report.accept(Tone.WARNING,
                     automatic ? language.format("Automatic swap: {0}", problem) : problem);
-        if (automatic && !completed.isEmpty()) {
-            report.accept(Tone.SUCCESS, current.automaticMessage);
-        } else if (!automatic && options.messages && !completed.isEmpty()) {
-            report.accept(Tone.SUCCESS,
-                    options.details ? language.format("Swapped: {0}", String.join(", ", completed))
-                            : language.format("Swapped {0} item(s)", completed.size()));
-        }
     }
 
     void cancel() {
@@ -482,7 +509,6 @@ final class SwapController {
         accepted.clear();
         actions.clear();
         problems.clear();
-        completed.clear();
         pendingClicks.clear();
         options = null;
         player = null;
@@ -512,6 +538,7 @@ final class SwapController {
         int work;
         ItemStack originalWorkspace;
         ItemStack expectedWorkspace;
+        String message;
         boolean done;
 
         Action(SwapBinding binding, int unequipSlot) {
@@ -523,13 +550,17 @@ final class SwapController {
             if (binding == null) {
                 ItemStack armor = stack(unequipSlot);
                 if (armor != null && player.inventory.getFirstEmptyStack() >= 0) {
-                    String name = armor.getDisplayName();
+                    // Armor shift clicks fill the main inventory before the hotbar.
+                    int target = 9;
+                    while (stack(target) != null)
+                        target++;
+                    message = swapMessage(unequipSlot, target);
                     click(unequipSlot, 0, 1);
-                    if (stack(unequipSlot) == null)
-                        completed.add(name);
-                    else
-                        problems.add(
-                                language.translate("Armor could not be moved to the inventory"));
+                    if (stack(unequipSlot) == null) {
+                        complete();
+                        return;
+                    }
+                    problems.add(language.translate("Armor could not be moved to the inventory"));
                 } else if (armor != null)
                     problems.add(language.translate("Not enough inventory space to unequip armor"));
                 done = true;
@@ -565,6 +596,7 @@ final class SwapController {
                 done = true;
                 return;
             }
+            message = swapMessage(binding.guiTarget(), source);
             if (binding.equipment) {
                 if (!player.inventoryContainer.getSlot(binding.guiTarget())
                         .isItemValid(stack(source))) {
@@ -613,8 +645,9 @@ final class SwapController {
         }
 
         private void complete() {
-            completed.add(binding.display(current.automaticMessage == null && options.details));
             done = true;
+            if (message != null)
+                report.accept(Tone.SUCCESS, message);
         }
     }
     private static final class Request {
@@ -622,7 +655,7 @@ final class SwapController {
         final SwapBinding direct;
         final List<Target> automatic;
         final int unequipSlot;
-        final String automaticMessage;
+        final String automaticReason;
         final BooleanSupplier ready;
         boolean started;
 
@@ -631,12 +664,12 @@ final class SwapController {
         }
 
         Request(int key, SwapBinding direct, List<Target> automatic, int unequipSlot,
-                String automaticMessage, BooleanSupplier ready) {
+                String automaticReason, BooleanSupplier ready) {
             this.key = key;
             this.direct = direct;
             this.automatic = automatic;
             this.unequipSlot = unequipSlot;
-            this.automaticMessage = automaticMessage;
+            this.automaticReason = automaticReason;
             this.ready = ready;
         }
     }

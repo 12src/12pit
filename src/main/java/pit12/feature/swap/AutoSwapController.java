@@ -174,8 +174,7 @@ final class AutoSwapController {
             retryAt = tick + 10;
             return;
         }
-        if (swaps.enqueueAutomatic(targets,
-                language.translate("Swapped automatically because you were affected by venom"),
+        if (swaps.enqueueAutomatic(targets, language.translate("venom"),
                 () -> canSwap(player) && player.isPotionActive(Potion.poison)
                         && (!config.skipVenomPants.get() || !PitEnchantmentReader
                                 .contains(leggings(), PitEnchantment.Combo_Venom)))) {
@@ -225,8 +224,7 @@ final class AutoSwapController {
         ItemIdentity wornIdentity = ItemIdentity.read(worn);
         ItemStack previous = canRestore ? originalPants : worn == null ? null : worn.copy();
         if (swaps.enqueueAutomatic(Collections.singletonList(target),
-                language.format("Swapped to {0} because of low health",
-                        type == PitEnchantment.Escape_Pod ? "escape pod" : "phoenix"),
+                language.translate("low health"),
                 () -> canSwap(player) && !player.isPotionActive(Potion.poison) && eligible(type)
                         && (wornIdentity == null ? leggings() == null
                                 : wornIdentity.matches(leggings())))) {
@@ -274,16 +272,16 @@ final class AutoSwapController {
     }
 
     private void restore() {
-        String message = config.pantsRestoreMode.get() == 1
-                ? language.format("Swapped back after {0} was used",
+        String reason = config.pantsRestoreMode.get() == 1
+                ? language.format("{0} activation",
                         activeType == PitEnchantment.Escape_Pod ? "escape pod" : "phoenix")
-                : language.translate("Swapped back after health recovered");
+                : language.translate("health recovery");
         if (originalPants == null) {
             if (player.inventory.getFirstEmptyStack() < 0) {
                 retryAt = tick + 10;
                 return;
             }
-            if (swaps.enqueueAutomaticUnequip(7, message, this::readyToRestore)) {
+            if (swaps.enqueueAutomaticUnequip(7, reason, this::readyToRestore)) {
                 pending = new Pending(activeType, activePants, null, true);
                 automaticPending = true;
             }
@@ -304,7 +302,7 @@ final class AutoSwapController {
         }
         ItemStack restored = expected;
         SwapController.Target target = new SwapController.Target(source, restored, 0);
-        if (swaps.enqueueAutomatic(Collections.singletonList(target), message,
+        if (swaps.enqueueAutomatic(Collections.singletonList(target), reason,
                 () -> readyToRestore() && ItemStack.areItemStacksEqual(restored,
                         player.inventoryContainer.getSlot(target.source).getStack()))) {
             pending = new Pending(activeType, activePants, restored, true);

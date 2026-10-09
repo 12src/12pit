@@ -70,8 +70,8 @@ final class SwapBinding {
         return equipment ? 9 - target : 35 + target;
     }
 
-    String display(boolean detailed) {
-        return detailed && !details.isEmpty() ? name + " (" + details + "\u00a7r)" : name;
+    String display() {
+        return details.isEmpty() ? name : name + " (" + details + "\u00a7r)";
     }
 
     String targetName() {

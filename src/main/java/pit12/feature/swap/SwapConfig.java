@@ -42,7 +42,6 @@ public final class SwapConfig extends FeatureConfig {
     final IntegerSetting unequipKey;
     final BooleanSetting bindingMessages;
     final BooleanSetting swapMessages;
-    final BooleanSetting messageDetails;
     final BooleanSetting highlight;
     final BooleanSetting venomArmor;
     final BooleanSetting venomSpade;
@@ -97,8 +96,6 @@ public final class SwapConfig extends FeatureConfig {
                 source("Ticks between clicks for bindings and unequipping."), 1, 0, 10, 1);
         bindingMessages = booleanSetting("binding_messages", source("Binding messages"),
                 source("Shows messages when bindings are added, removed or cleared."), true);
-        messageDetails = booleanSetting("message_details", source("Details"),
-                source("Shows item names and enchantments in binding and swap messages."), false);
         highlight = booleanSetting("highlight_bindings", source("Show binding keys"),
                 source("Shows keys on bound items outside their target slots."), true);
         subcategory("automatic_swap", source("Automatic swap"));
@@ -158,7 +155,6 @@ public final class SwapConfig extends FeatureConfig {
         final boolean resumeInputNextTick;
         final boolean messages;
         final boolean automaticMessages;
-        final boolean details;
 
         Options(SwapConfig config) {
             rightClick = config.rightClick.get();
@@ -174,7 +170,6 @@ public final class SwapConfig extends FeatureConfig {
             resumeInputNextTick = config.resumeInputNextTick.get();
             messages = config.swapMessages.get();
             automaticMessages = config.autoSwapMessages.get();
-            details = config.messageDetails.get();
         }
     }
 }
