@@ -58,10 +58,20 @@ public final class SwapConfig extends FeatureConfig {
     final BooleanSetting restorePants;
     final ChoiceSetting pantsRestoreMode;
     final IntegerSetting pantsRestoreThreshold;
+    final BooleanSetting dark;
+    final ChoiceSetting darkTriggerMode;
+    final IntegerSetting darkThreshold;
+    final IntegerSetting darkRange;
+    final BooleanSetting restoreDark;
+    final IntegerSetting darkRestoreThreshold;
+    final BooleanSetting skipLowPod;
+    final BooleanSetting darkEnemiesOnly;
+    final BooleanSetting darkIgnoreFriends;
+    final ChoiceSetting darkPriority;
 
     public SwapConfig() {
-        super("swap", source("Swap"), new ConfigCategory("player", source("Player"), 50),
-                source("Swaps armor and hotbar items manually, when poisoned or at low health."));
+        super("swap", source("Swap"), new ConfigCategory("player", source("Player"), 50), source(
+                "Swaps armor and hotbar items manually, when poisoned or when players have low health."));
         subcategory("general", source("General"));
         rightClick = booleanSetting("right_click", source("Right click swap"),
                 source("Right-click held armor to replace the armor in its slot."), true);
@@ -106,8 +116,9 @@ public final class SwapConfig extends FeatureConfig {
         highlight = booleanSetting("highlight_bindings", source("Show binding keys"),
                 source("Shows keys on bound items outside their target slots."), true);
         subcategory("automatic_swap", source("Automatic swap"));
-        autoSwap = booleanSetting("auto_swap", source("Automatic swap"),
-                source("Automatically swaps items when poisoned or at low health."), false);
+        autoSwap = booleanSetting("auto_swap", source("Automatic swap"), source(
+                "Automatically swaps items when poisoned or when you or a dark target have low health."),
+                false);
         autoSwapMessages = booleanSetting("auto_swap_messages", source("Automatic swap messages"),
                 source("Shows why automatic swaps happened."), true);
         subsubcategory("venom", "Venom");
@@ -146,6 +157,40 @@ public final class SwapConfig extends FeatureConfig {
                 source("Restore threshold"),
                 source("Health points needed to restore leggings in Health mode. Health must also exceed the trigger threshold."),
                 6, 0, 20, 1);
+        subsubcategory("dark", source("Dark"));
+        dark = booleanSetting("use_dark", source("Use dark"), source(
+                "Equips Somber leggings against players with low health wearing Escape Pod or Phoenix."),
+                false);
+        darkTriggerMode = choiceSetting("dark_trigger_mode", source("Trigger mode"), source(
+                "Checks the last player you attacked or all nearby players within range. Friend and enemy filters apply to both modes."),
+                0, new ChoiceSetting.Choice(0, source("Last attacked target")),
+                new ChoiceSetting.Choice(1, source("Nearby players")));
+        darkThreshold = integerSliderSetting("dark_threshold", source("Target health threshold"),
+                source("Equips dark when a target's health is at or below this value. Uses entity health without absorption."),
+                10, 0, 20, 1);
+        darkRange = integerSliderSetting("dark_range", source("Target range"),
+                source("Maximum straight-line distance to targets in both trigger modes."), 6, 1,
+                32, 1);
+        restoreDark = booleanSetting("restore_dark", source("Restore leggings"), source(
+                "Restores the leggings worn before the automatic swap when no targets in the selected mode need dark."),
+                true);
+        darkRestoreThreshold = integerSliderSetting("dark_restore_threshold",
+                source("Restore threshold"),
+                source("Stops tracking a recovered target at or above this value. Health must also exceed the equip threshold."),
+                10, 0, 20, 1);
+        skipLowPod = booleanSetting("dark_skip_low_pod",
+                source("Skip Escape Pod players below 2 hearts"),
+                source("Skips Escape Pod targets below 2 hearts in both trigger modes. Phoenix still qualifies."),
+                false);
+        darkEnemiesOnly = booleanSetting("dark_enemies_only", source("Enemies only"),
+                source("Only checks players in your enemy list."), false);
+        darkIgnoreFriends = booleanSetting("dark_ignore_friends", source("Ignore friends"), source(
+                "Skips friends in both trigger modes. Attacking a friend keeps the previous target."),
+                true);
+        darkPriority = choiceSetting("dark_priority", source("Swap priority"), source(
+                "Chooses between dark and your own Escape Pod or Phoenix when both are needed. Poison swaps take priority."),
+                0, new ChoiceSetting.Choice(0, source("Pod/Phoenix first")),
+                new ChoiceSetting.Choice(1, source("Dark first")));
     }
 
     static final class Options {

@@ -134,6 +134,12 @@ final class SwapCommand {
                 state(PitEnchantment.Escape_Pod, config.escapePod.get())));
         reply(sender, Tone.INFO, language.format("Phoenix: {0}",
                 state(PitEnchantment.Phoenix, config.phoenix.get())));
+        reply(sender, Tone.INFO,
+                language.format("Dark: {0}",
+                        !config.dark.get() ? language.translate("disabled")
+                                : automatic.active(PitEnchantment.Somber)
+                                        ? language.translate("equipped")
+                                        : language.translate("waiting")));
     }
 
     private void requirePlayer() {

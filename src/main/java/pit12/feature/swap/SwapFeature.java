@@ -21,17 +21,20 @@ package pit12.feature.swap;
 import java.nio.file.Path;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.player.AttackEntityEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.Display;
+import pit12.feature.relation.api.RelationLookup;
 import pit12.feature.swap.api.SwapBindings;
 import pit12.runtime.command.CommandRegistry;
 import pit12.runtime.config.ConfigCatalog;
@@ -41,6 +44,7 @@ import pit12.runtime.item.PitEnchantment;
 import pit12.runtime.item.PitEnchantmentReader;
 import pit12.runtime.languages.Languages;
 import pit12.runtime.pit.PitContext;
+import pit12.runtime.player.PlayerEquipmentAccess;
 import pit12.runtime.session.ClientSession;
 import pit12.shared.chat.ChatFeedback;
 import pit12.shared.chat.ChatFeedback.Tone;
@@ -65,7 +69,8 @@ public final class SwapFeature implements ClientLifecycle, ConfigChangeListener,
     private boolean inputLocked;
 
     public SwapFeature(Minecraft minecraft, ClientThread client, ConfigCatalog configs,
-            SwapConfig config, ClientSession session, PitContext pit, CommandRegistry commands,
+            SwapConfig config, ClientSession session, PitContext pit,
+            PlayerEquipmentAccess equipment, RelationLookup relations, CommandRegistry commands,
             Path path, SwapHooksBinding hookBinding, Languages language) {
         this.minecraft = minecraft;
         this.configs = configs;
@@ -76,7 +81,9 @@ public final class SwapFeature implements ClientLifecycle, ConfigChangeListener,
                 message -> report(Tone.ERROR, language.translate(message)));
         controller = new SwapController(minecraft, session, config, bindings, this::report,
                 this::lockInput, this::releaseInput, language);
-        automatic = new AutoSwapController(minecraft, config, controller, pit, language);
+        DarkTargets darkTargets = new DarkTargets(minecraft, config, equipment, relations);
+        automatic =
+                new AutoSwapController(minecraft, config, controller, pit, darkTargets, language);
         overlay = new SwapOverlay(minecraft, bindings, config);
         commands.register(
                 new SwapCommand(minecraft, bindings, config, automatic, language).definition(),
@@ -263,6 +270,14 @@ public final class SwapFeature implements ClientLifecycle, ConfigChangeListener,
         automatic.tick();
         updateMouseGrab();
         overlay.refresh();
+    }
+
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    public void onAttack(AttackEntityEvent event) {
+        if (event.entityPlayer != minecraft.thePlayer || !(event.target instanceof EntityPlayer))
+            return;
+        session.checkThread();
+        automatic.attack((EntityPlayer) event.target);
     }
 
     private void updateMouseGrab() {
