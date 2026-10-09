@@ -46,13 +46,13 @@ public final class ChatFeedback {
 
     public static void reply(ICommandSender sender, Tone tone, String message) {
         ChatComponentText prefix = new ChatComponentText("[");
-        prefix.getChatStyle().setColor(EnumChatFormatting.DARK_GRAY);
+        prefix.getChatStyle().setColor(EnumChatFormatting.GRAY);
         ChatComponentText number = new ChatComponentText("12");
-        number.getChatStyle().setColor(EnumChatFormatting.DARK_AQUA).setBold(true);
+        number.getChatStyle().setColor(EnumChatFormatting.AQUA).setBold(true);
         ChatComponentText name = new ChatComponentText("pit");
-        name.getChatStyle().setColor(EnumChatFormatting.AQUA).setBold(true);
+        name.getChatStyle().setColor(EnumChatFormatting.BLUE).setBold(true);
         ChatComponentText version = new ChatComponentText(" " + BUILD_LABEL);
-        version.getChatStyle().setColor(EnumChatFormatting.GRAY);
+        version.getChatStyle().setColor(EnumChatFormatting.GOLD);
         ChatComponentText body = new ChatComponentText(message);
         body.getChatStyle().setColor(tone.color);
         prefix.appendSibling(number).appendSibling(name).appendSibling(version).appendText("] » ")
