@@ -1,0 +1,46 @@
+name: CurseForge
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  upload:
+    if: github.repository == '12src/12pit' && github.event.release.tag_name != 'nightly'
+    runs-on: ubuntu-latest
+
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          gh release download "$RELEASE_TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --pattern 12pit.jar
+
+          jq '.release | {
+            displayName: .name,
+            changelog: (.body // ""),
+            changelogType: "markdown",
+            gameVersionNames: ["Client", "Forge", "1.8.9"],
+            releaseType: "release",
+            relations: {
+              projects: [{
+                slug: "oneconfig",
+                type: "optionalDependency"
+              }]
+            }
+          }' "$GITHUB_EVENT_PATH" > metadata.json
+
+          curl --fail-with-body --silent --show-error \
+            --header "X-Api-Token: $CURSEFORGE_TOKEN" \
+            --form "metadata=<metadata.json" \
+            --form "file=@12pit.jar" \
+            https://minecraft.curseforge.com/api/projects/1733511/upload-file \
+            | jq -e '.id // error(tostring)'
