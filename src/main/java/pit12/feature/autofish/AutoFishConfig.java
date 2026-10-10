@@ -35,7 +35,7 @@ public final class AutoFishConfig extends FeatureConfig {
     final IntegerSetting missHookChance;
 
     public AutoFishConfig() {
-        super("autofish", source("Auto Fish"), new ConfigCategory("utility", source("Utility"), 75),
+        super("autofish", source("Auto Fish"), new ConfigCategory("player", source("Player"), 50),
                 source("Reels in when a fish bites and can cast again."));
         subsubcategory("general", source("General"));
         autoRecast = booleanSetting("auto_recast", source("Auto recast"),

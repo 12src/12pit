@@ -39,7 +39,7 @@ public final class AutoClickConfig extends FeatureConfig {
 
     public AutoClickConfig() {
         super("auto_click", source("Auto Click"),
-                new ConfigCategory("player", source("Player"), 50),
+                new ConfigCategory("combat", source("Combat"), 25),
                 source("Clicks repeatedly while holding a mouse button."), true, false);
         subcategory("left", source("Left click"));
         leftEnabled = booleanSetting("left_enabled", source("Left click enabled"),
