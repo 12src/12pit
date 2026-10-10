@@ -1,6 +1,6 @@
 # 12pit implementation
 
-This guide covers the project classes and their usage. For package responsibilities, see [Architecture](ARCHITECTURE.md).
+This guide covers the shared APIs, calling conventions, and lifecycle rules used to develop features. For package responsibilities, see [Architecture](ARCHITECTURE.md).
 
 ## Lifecycle
 
@@ -8,7 +8,7 @@ This guide covers the project classes and their usage. For package responsibilit
 
 `ClientBootstrap` creates the components in its constructor. Each feature has a private `register...` method that creates and registers its config when needed, creates the feature, and adds it to `components`. Pass dependencies as arguments. Return the feature's API only when a later registration method needs it.
 
-Organize the constructor into shared runtime, feature providers, other features, and platform integrations. Create runtime components and platform adapters directly in their sections. Order feature registration calls and method declarations by `ConfigCategory.displayOrder()`, then alphabetically by method name. Put features without config in the first `Category: No config` group. Use matching group and category comments in both places. Dependency order takes priority over category and name. Bootstrap starts components in list order and stops them in reverse. Registration methods only create and register objects. Register listeners and start workers in `start()`.
+Organize the constructor into shared runtime, feature providers, other features, and platform integrations. Create runtime components and platform adapters directly in their sections. Order feature registration calls and method declarations by `ConfigCategory.displayOrder()`, then `ConfigCategory.id()`, then alphabetically by method name. Put features without config in the first `Category: No config` group. Use matching group and category comments in both places. Dependency order takes priority over category and name. Bootstrap starts components in list order and stops them in reverse. Registration methods only create and register objects. Register listeners and start workers in `start()`.
 
 Bootstrap registers the component and calls its `start()` method. If `start()` causes an exception, then Bootstrap will stop this component and all components that were started before it. `stop()` should release resources in any case, including partial initialization and even if it was called multiple times. An exception thrown by one of the components in `stop()` will be logged but all the others will be stopped.
 
@@ -99,7 +99,7 @@ private void registerStatus(ConfigCatalog configs) {
 }
 ```
 
-Define all settings before registering the config. Registration binds their reads and writes to the catalog's client thread. Bootstrap calls `configs.freeze()` once after all feature registration methods return. This prevents new config registrations while allowing setting changes. Profiles capture the settings schema in `start()` after the catalog is frozen.
+Define all settings before registering the config. Registration binds their reads and writes to the catalog's client thread. Bootstrap calls `configs.freeze()` once after all feature registration methods return. This prevents new config registrations while allowing setting changes.
 
 The feature reads the example setting with `config.showNames().get()` and changes it with `config.showNames().set(false)`. A setting's `set()` validates the value and notifies listeners if it changed. When implementing a `Setting` subclass, validate its default value after initializing the fields used by `requireValue`.
 
@@ -152,7 +152,7 @@ Call it on the client thread. Outside a command, check that the local player exi
 
 ## Languages
 
-Bootstrap uses one [Languages](../src/main/java/pit12/runtime/languages/Languages.java) instance and passes it to its consumers. `WebUiConfig` stores the selected language along with other settings. Language names and stable setting values are defined in `src/main/resources/assets/pit12/languages/languages.json`. Each translation catalog is loaded from its respective TXT resource on first use and cached.
+Bootstrap creates one [Languages](../src/main/java/pit12/runtime/languages/Languages.java) instance and passes it to components that need it.
 
 Import the static `source(...)` method as shown in the config example for names, descriptions, choice labels, enum labels, and command descriptions. It returns the English text and retains its usage location for split translations. Config classes store the original text and its translated version separately. Bootstrap updates those values via `ConfigCatalog.localize(language)` whenever language is changed. Command registry translates command descriptions when displaying help. Do not modify saved IDs, command names, and aliases.
 
@@ -168,7 +168,7 @@ Pass an English literal as the first argument to `format(...)` and `translate(..
 
 To update cached HUD text, hold a language listener, register it in `start()` and unregister in `stop()`. `addListener(...)` will immediately call the listener and again after every language change. Update both the cached text and its measured layout at the same time. Prepare dynamic texts while updating the display snapshot. Render callback receives prepared text. Language switch and listener registration/removal occur on the client thread.
 
-Frontend components import `t` from `./languages` and call `t('Settings')` or `t('Remove {0} players', count)`. Application will follow the server state language, load catalogs once, and update display text when language changes.
+Frontend components import `t` from `./languages` and call `t('Settings')` or `t('Remove {0} players', count)`. Use these calls in reactive display code so the text updates when the selected language changes.
 
 Split translations need Java source filenames and line numbers in compiler debug information. Put separate uses of the same Java source on separate lines. For a split label translated repeatedly in an update loop, mark it once with `source(...)` and retain the returned string to avoid repeated caller lookups.
 
@@ -244,7 +244,7 @@ if (!hudRegistry.editing() && element.enabled()) {
 }
 ```
 
-`layout` calls `prepare`, applies placement and scaling and keeps the resolved origin inside the screen if the element fits. `render` applies the transform and restores the UI rendering state in `finally` block.
+`layout` calls `prepare`, applies placement and scaling and keeps the resolved origin inside the screen if the element fits. `render` applies the transform and restores the UI rendering state.
 
 In `stop()`, unregister the same element and release the renderer's resources:
 
@@ -257,7 +257,7 @@ Clear the element's cached rendering state before reuse. The renderer can create
 
 For custom UI, [UiRenderer](../src/main/java/pit12/shared/rendering/UiRenderer.java) provides text, rectangles, and textures. Construct it with Minecraft and a font `ResourceLocation`. Keep the renderer for reuse, call `resize(pixelScale)` before measuring or drawing, and call `close()` when its owner releases those resources.
 
-Monocraft uses logical size `9` to match its pixel grid. System fallback text uses `8`. Custom glyphs use nearest-neighbor sampling and screen-pixel positions. Keep the render origin in integer GUI coordinates before applying HUD scale.
+Keep the render origin in integer GUI coordinates before applying HUD scale.
 
 Outside `HudRenderer.render`, use [UiRenderState](../src/main/java/pit12/shared/rendering/UiRenderState.java) to protect rendering state. Call `begin()` before drawing and `end()` in a `finally` block. Restore any extra rendering state your code changes.
 

@@ -224,7 +224,7 @@ final class SwapController {
                 continue;
             }
             Action action = actions.peekFirst();
-            if (action.stage == 0 && action.binding != null
+            if (action.stage == ActionStage.START && action.binding != null
                     && action.binding.identity.matches(stack(action.binding.guiTarget()))) {
                 actions.removeFirst();
                 clickPhase = -1;
@@ -484,12 +484,14 @@ final class SwapController {
     private void finishCancellation(int phase) {
         if (restoreOnCancel) {
             Action action = actions.peekFirst();
-            if (action != null && (action.stage == 3 || options.restore) && action.restorable()) {
+            if (action != null
+                    && (action.stage == ActionStage.EQUIP_WITH_SHIFT_CLICK || options.restore)
+                    && action.restorable()) {
                 int delay = current.key == 0 ? options.swapDelay : options.bindingDelay;
                 if (!clickReady(delay, phase))
                     return;
                 clickPhase = -1;
-                if (action.stage == 3) {
+                if (action.stage == ActionStage.EQUIP_WITH_SHIFT_CLICK) {
                     click(action.shiftedArmorSlot, 0, 1);
                     if (!ItemStack.areItemStacksEqual(stack(action.binding.guiTarget()),
                             action.originalArmor)) {
@@ -582,10 +584,13 @@ final class SwapController {
         return stack == null ? null : stack.copy();
     }
 
+    private enum ActionStage {
+        START, EQUIP_FROM_HOTBAR, RESTORE_HOTBAR, EQUIP_WITH_SHIFT_CLICK
+    }
     private final class Action {
         final SwapBinding binding;
         final int unequipSlot;
-        int stage;
+        ActionStage stage = ActionStage.START;
         int source = -1;
         int work;
         ItemStack originalWorkspace;
@@ -617,7 +622,7 @@ final class SwapController {
                 done = true;
                 return;
             }
-            if (stage == 3) {
+            if (stage == ActionStage.EQUIP_WITH_SHIFT_CLICK) {
                 if (stack(binding.guiTarget()) != null
                         || !binding.identity.matches(stack(source))) {
                     throw new IllegalStateException(language.translate("Inventory changed"));
@@ -626,7 +631,7 @@ final class SwapController {
                 verifyAndComplete();
                 return;
             }
-            if (stage == 1) {
+            if (stage == ActionStage.EQUIP_FROM_HOTBAR) {
                 if (!binding.identity.matches(stack(36 + work))
                         || !ItemStack.areItemStacksEqual(stack(source), originalWorkspace)) {
                     throw new IllegalStateException(language.translate("Transfer slot changed"));
@@ -637,12 +642,12 @@ final class SwapController {
                             language.translate("Armor could not be equipped"));
                 }
                 expectedWorkspace = copy(stack(36 + work));
-                stage = 2;
+                stage = ActionStage.RESTORE_HOTBAR;
                 if (!options.restore)
                     complete();
                 return;
             }
-            if (stage == 2) {
+            if (stage == ActionStage.RESTORE_HOTBAR) {
                 if (!restorable())
                     throw new IllegalStateException(language.translate("Transfer slot changed"));
                 swap(source, work);
@@ -680,7 +685,7 @@ final class SwapController {
                             throw new IllegalStateException(language
                                     .translate("Armor could not be moved to the inventory"));
                         }
-                        stage = 3;
+                        stage = ActionStage.EQUIP_WITH_SHIFT_CLICK;
                         return;
                     }
                 }
@@ -694,7 +699,7 @@ final class SwapController {
                     originalWorkspace = copy(stack(36 + work));
                     swap(source, work);
                     expectedWorkspace = copy(stack(36 + work));
-                    stage = 1;
+                    stage = ActionStage.EQUIP_FROM_HOTBAR;
                 }
             } else {
                 Slot sourceSlot = player.inventoryContainer.getSlot(source);
@@ -716,10 +721,11 @@ final class SwapController {
         }
 
         private boolean restorable() {
-            if (stage == 3)
+            if (stage == ActionStage.EQUIP_WITH_SHIFT_CLICK)
                 return stack(binding.guiTarget()) == null
                         && ItemStack.areItemStacksEqual(stack(shiftedArmorSlot), originalArmor);
-            return stage > 0 && ItemStack.areItemStacksEqual(stack(source), originalWorkspace)
+            return stage != ActionStage.START
+                    && ItemStack.areItemStacksEqual(stack(source), originalWorkspace)
                     && ItemStack.areItemStacksEqual(stack(36 + work), expectedWorkspace);
         }
 

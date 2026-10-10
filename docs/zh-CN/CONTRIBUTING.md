@@ -1,4 +1,4 @@
-<!-- Source: docs/CONTRIBUTING.md; Based on: 08d27d075f5f28e811ea97e76a4ec893603d64f5 -->
+<!-- Source: docs/CONTRIBUTING.md; Based on: d04a7ca1216285f12f66c013303f500f98080369 -->
 
 # 为 12pit 贡献
 
@@ -20,9 +20,11 @@
 
 每个提交应只代表一项改动。推荐使用符合[约定式提交格式](https://www.conventionalcommits.org/)的提交信息：`fix: correct profile loading`、`docs: clarify build steps` 等。拉取请求通常应只有一个目标。如果少量改动便于一起审查，也可以包含它们。
 
-[架构指南](https://github.com/12src/12pit/blob/main/docs/zh-CN/ARCHITECTURE.md)概述了包的职责和依赖。[实现指南](https://github.com/12src/12pit/blob/main/docs/zh-CN/IMPLEMENTATION.md)概述了生命周期、配置、命令、HUD 和其他项目相关类。[调试指南](https://github.com/12src/12pit/blob/main/docs/zh-CN/DEBUGGING.md)概述了开发客户端和检查。
+[架构指南](https://github.com/12src/12pit/blob/main/docs/zh-CN/ARCHITECTURE.md)概述了包的职责和依赖。[实现指南](https://github.com/12src/12pit/blob/main/docs/zh-CN/IMPLEMENTATION.md)介绍开发功能时需要的共用接口和调用约定。[调试指南](https://github.com/12src/12pit/blob/main/docs/zh-CN/DEBUGGING.md)概述了开发客户端和检查。
 
 阅读相关代码，并在适当时使用现有辅助工具。将所有新行为保留在其功能内。只有确实必要时才提取共享代码。不要在拉取请求中加入无关的代码清理。
+
+[BootstrapLayoutTest](../../src/test/java/pit12/architecture/BootstrapLayoutTest.java) 会创建配置对象，检查它们的分类。不需要注入依赖的配置使用 public 无参构造器。新配置需要注入依赖时，更新该测试中对应的构造方式。
 
 项目中的所有说明文字都使用短句。使用常用词，并在有助于清晰、自然、简洁地解释内容时使用项目术语。
 
