@@ -1,16 +1,108 @@
+// src/main/java/pit12/feature/autoclick/AutoClickConfig.java:41
+Auto Click
+= 连点器
+
+// src/main/java/pit12/feature/autoclick/AutoClickConfig.java:42, src/main/java/pit12/feature/smartblock/SmartBlockConfig.java:42, src/main/java/pit12/feature/swap/SwapConfig.java:73
+Combat
+= 战斗
+
+// src/main/java/pit12/feature/autoclick/AutoClickConfig.java:43
+Clicks repeatedly while holding a mouse button.
+= 按住鼠标按键时连点。
+
+// src/main/java/pit12/feature/autoclick/AutoClickConfig.java:44
+Left click
+= 左键
+
+// src/main/java/pit12/feature/autoclick/AutoClickConfig.java:45
+Left click enabled
+= 启用左键连点
+
+// src/main/java/pit12/feature/autoclick/AutoClickConfig.java:46
+Repeats left clicks while holding the attack button.
+= 按住攻击键时连续左键点击。
+
+// src/main/java/pit12/feature/autoclick/AutoClickConfig.java:47, src/main/java/pit12/feature/autoclick/AutoClickConfig.java:59
+Minimum CPS
+= 最低 CPS
+
+// src/main/java/pit12/feature/autoclick/AutoClickConfig.java:48
+Lowest left click rate, in clicks per second.
+= 左键每秒点击次数的下限。
+
+// src/main/java/pit12/feature/autoclick/AutoClickConfig.java:49, src/main/java/pit12/feature/autoclick/AutoClickConfig.java:61
+Maximum CPS
+= 最高 CPS
+
+// src/main/java/pit12/feature/autoclick/AutoClickConfig.java:50
+Highest left click rate, in clicks per second.
+= 左键每秒点击次数的上限。
+
+// src/main/java/pit12/feature/autoclick/AutoClickConfig.java:51
+Weapon only
+= 仅武器
+
+// src/main/java/pit12/feature/autoclick/AutoClickConfig.java:51
+Allows left clicks with swords and tools. Turn off both filters to allow any item.
+= 手持剑或工具时允许左键连点。关闭两个筛选选项后，手持任何物品都可连点。
+
+// src/main/java/pit12/feature/autoclick/AutoClickConfig.java:54
+Only fist
+= 仅空手
+
+// src/main/java/pit12/feature/autoclick/AutoClickConfig.java:55
+Allows left clicks with an empty hand.
+= 空手时允许左键连点。
+
+// src/main/java/pit12/feature/autoclick/AutoClickConfig.java:56
+Right click
+= 右键
+
+// src/main/java/pit12/feature/autoclick/AutoClickConfig.java:57
+Right click enabled
+= 启用右键连点
+
+// src/main/java/pit12/feature/autoclick/AutoClickConfig.java:58
+Repeats right clicks while holding the use button.
+= 按住使用键时连续右键点击。
+
+// src/main/java/pit12/feature/autoclick/AutoClickConfig.java:60
+Lowest right click rate, in clicks per second.
+= 右键每秒点击次数的下限。
+
+// src/main/java/pit12/feature/autoclick/AutoClickConfig.java:62
+Highest right click rate, in clicks per second.
+= 右键每秒点击次数的上限。
+
+// src/main/java/pit12/feature/autoclick/AutoClickConfig.java:63
+Only blocks
+= 仅方块
+
+// src/main/java/pit12/feature/autoclick/AutoClickConfig.java:63
+Allows right clicks while holding a block. Turn off both filters to allow any item.
+= 手持方块时允许右键连点。关闭两个筛选选项后，手持任何物品都可连点。
+
+// src/main/java/pit12/feature/autoclick/AutoClickConfig.java:66
+Only cake
+= 仅蛋糕
+
+// src/main/java/pit12/feature/autoclick/AutoClickConfig.java:67
+Allows right clicks while pointing at cake.
+= 指向蛋糕时允许右键连点。
+
 // src/main/java/pit12/feature/autofish/AutoFishConfig.java:38
 Auto Fish
 = 自动钓鱼
 
-// src/main/java/pit12/feature/autofish/AutoFishConfig.java:38, src/main/java/pit12/feature/quickmath/AutoQuickMathConfig.java:32
-Utility
-= 实用工具
+// src/main/java/pit12/feature/autofish/AutoFishConfig.java:38, src/main/java/pit12/feature/sprint/AutoSprintConfig.java:29
+Player
+= 玩家
 
 // src/main/java/pit12/feature/autofish/AutoFishConfig.java:39
 Reels in when a fish bites and can cast again.
 = 鱼咬钩时自动收竿，也可再次抛竿。
 
-// src/main/java/pit12/feature/autofish/AutoFishConfig.java:40, src/main/java/pit12/feature/swap/SwapConfig.java:64
+// src/main/java/pit12/feature/autofish/AutoFishConfig.java:40, src/main/java/pit12/feature/swap/SwapConfig.java:75
 General
 = 常规
 
@@ -94,7 +186,7 @@ Unknown event: {0}
 Event List
 = 事件列表
 
-// src/main/java/pit12/feature/eventlist/EventListConfig.java:48, src/main/java/pit12/feature/gamma/GammaConfig.java:31, src/main/java/pit12/feature/itemesp/ItemEspConfig.java:35, src/main/java/pit12/feature/playeresp/PlayerEspConfig.java:43, src/main/java/pit12/feature/playerlist/PlayerListConfig.java:52, src/main/java/pit12/feature/tooltip/TooltipConfig.java:34
+// src/main/java/pit12/feature/eventlist/EventListConfig.java:48, src/main/java/pit12/feature/gamma/GammaConfig.java:31, src/main/java/pit12/feature/itemesp/ItemEspConfig.java:35, src/main/java/pit12/feature/nametag/NametagConfig.java:38, src/main/java/pit12/feature/playeresp/PlayerEspConfig.java:43, src/main/java/pit12/feature/playerlist/PlayerListConfig.java:49, src/main/java/pit12/feature/tooltip/TooltipConfig.java:34
 Render
 = 渲染
 
@@ -102,7 +194,7 @@ Render
 Shows upcoming Pit events and their current stages.
 = 显示即将到来的 Pit 事件及其当前阶段。
 
-// src/main/java/pit12/feature/eventlist/EventListConfig.java:50, src/main/java/pit12/feature/playerlist/PlayerListConfig.java:54
+// src/main/java/pit12/feature/eventlist/EventListConfig.java:50, src/main/java/pit12/feature/nametag/NametagConfig.java:48, src/main/java/pit12/feature/playerlist/PlayerListConfig.java:51
 Display
 = 显示
 
@@ -198,15 +290,15 @@ Show minor events
 Shows minor events in the list.
 = 在列表中显示小型事件。
 
-// src/main/java/pit12/feature/eventlist/EventListFeature.java:251
+// src/main/java/pit12/feature/eventlist/EventListFeature.java:252
 Could not load events
 = 无法加载事件
 
-// src/main/java/pit12/feature/eventlist/EventListFeature.java:252
+// src/main/java/pit12/feature/eventlist/EventListFeature.java:253
 Event schedule has ended
 = 事件时间表已结束
 
-// src/main/java/pit12/feature/eventlist/EventListFeature.java:253
+// src/main/java/pit12/feature/eventlist/EventListFeature.java:254
 Loading events…
 = 正在加载事件…
 
@@ -244,7 +336,7 @@ Raffle
 
 // src/main/java/pit12/feature/eventlist/EventType.java:27
 Care Package
-= 空投补给
+= 空投
 
 // src/main/java/pit12/feature/eventlist/EventType.java:28
 All bounty
@@ -318,41 +410,53 @@ Gamma value
 Controls brightness. Minecraft's normal range is 0 to 1.
 = 控制亮度。Minecraft 的常规范围为 0 到 1。
 
-// src/main/java/pit12/feature/hudeditor/HudEditorFeature.java:51
+// src/main/java/pit12/feature/hudeditor/HudEditorFeature.java:56
 Open the HUD editor
 = 打开 HUD 编辑器
 
-// src/main/java/pit12/feature/hudeditor/HudEditorScreen.java:61
+// src/main/java/pit12/feature/hudeditor/HudEditorScreen.java:78
 Hold Alt to disable snapping.
 = 按住 Alt 暂时关闭吸附。
 
-// src/main/java/pit12/feature/hudeditor/HudEditorScreen.java:62
+// src/main/java/pit12/feature/hudeditor/HudEditorScreen.java:79
 Drag to move. Drag empty space to select.
 = 拖动 HUD 可移动，拖动空白区域可框选。
 
-// src/main/java/pit12/feature/hudeditor/HudEditorScreen.java:63
+// src/main/java/pit12/feature/hudeditor/HudEditorScreen.java:80
 Ctrl+click to select multiple HUDs.
 = 按住 Ctrl 点击可选择多个 HUD。
 
-// src/main/java/pit12/feature/hudeditor/HudEditorScreen.java:64
+// src/main/java/pit12/feature/hudeditor/HudEditorScreen.java:81
 Scroll to resize. Hold Shift for smaller steps.
 = 滚动鼠标滚轮可缩放，按住 Shift 可微调。
 
-// src/main/java/pit12/feature/hudeditor/HudEditorScreen.java:65
+// src/main/java/pit12/feature/hudeditor/HudEditorScreen.java:82
 Arrow keys move by 1 px. Shift moves by 10 px.
 = 方向键每次移动 1 像素，按住 Shift 每次移动 10 像素。
 
-// src/main/java/pit12/feature/hudeditor/HudEditorScreen.java:66
+// src/main/java/pit12/feature/hudeditor/HudEditorScreen.java:83
 Ctrl+Z to undo. Ctrl+Y to redo.
 = Ctrl+Z 撤销，Ctrl+Y 重做。
 
-// src/main/java/pit12/feature/hudeditor/HudEditorScreen.java:67
+// src/main/java/pit12/feature/hudeditor/HudEditorScreen.java:84
 R to restore selection. Shift+R to restore all.
 = R 重置所选 HUD，Shift+R 重置全部 HUD。
 
-// src/main/java/pit12/feature/hudeditor/HudEditorScreen.java:68
+// src/main/java/pit12/feature/hudeditor/HudEditorScreen.java:85
 Hold Space to preview live HUDs.
 = 按住空格键预览实时 HUD。
+
+// src/main/java/pit12/feature/hudeditor/HudEditorScreen.java:88
+When no HUD is selected, press {0} again to open the Web UI.
+= 未选中 HUD 时，再按一次 {0} 即可打开网页界面。
+
+// src/main/java/pit12/feature/hudeditor/HudEditorScreen.java:98
+Got it
+= 知道了
+
+// src/main/java/pit12/feature/hudeditor/HudEditorScreen.java:100
+Don't show again
+= 不再显示
 
 // src/main/java/pit12/feature/itemesp/ItemEspConfig.java:35
 Item ESP
@@ -393,6 +497,58 @@ Marks dropped gold ingots.
 // src/main/java/pit12/feature/itemesp/ItemEspConfig.java:46
 Gold ingot color
 = 金锭颜色
+
+// src/main/java/pit12/feature/nametag/NametagConfig.java:38
+Nametag
+= 名称标签
+
+// src/main/java/pit12/feature/nametag/NametagConfig.java:39
+Shows Pit enchantments above player nametags.
+= 在玩家名称标签上方显示 Pit 附魔。
+
+// src/main/java/pit12/feature/nametag/NametagConfig.java:40, src/main/java/pit12/feature/playerlist/PlayerListConfig.java:53, src/main/java/pit12/feature/smartblock/SmartBlockConfig.java:45
+Enchantments
+= 附魔
+
+// src/main/java/pit12/feature/nametag/NametagConfig.java:41, src/main/java/pit12/feature/playerlist/PlayerListConfig.java:54
+Enchantment format
+= 附魔格式
+
+// src/main/java/pit12/feature/nametag/NametagConfig.java:42, src/main/java/pit12/feature/playerlist/PlayerListConfig.java:55
+Controls how enchantment names and levels are shown.
+= 设置附魔名称和等级的显示方式。
+
+// src/main/java/pit12/feature/nametag/NametagConfig.java:44, src/main/java/pit12/feature/playerlist/PlayerListConfig.java:57
+Show held item enchantments
+= 显示手持物品附魔
+
+// src/main/java/pit12/feature/nametag/NametagConfig.java:45, src/main/java/pit12/feature/playerlist/PlayerListConfig.java:58
+Shows the held item's Pit enchantments.
+= 显示手持物品的 Pit 附魔。
+
+// src/main/java/pit12/feature/nametag/NametagConfig.java:46, src/main/java/pit12/feature/playerlist/PlayerListConfig.java:59
+Show leggings enchantments
+= 显示护腿附魔
+
+// src/main/java/pit12/feature/nametag/NametagConfig.java:47, src/main/java/pit12/feature/playerlist/PlayerListConfig.java:60
+Shows the leggings' Pit enchantments.
+= 显示护腿的 Pit 附魔。
+
+// src/main/java/pit12/feature/nametag/NametagConfig.java:49
+Display distance
+= 显示距离
+
+// src/main/java/pit12/feature/nametag/NametagConfig.java:50
+Shows enchantments within this distance, in blocks.
+= 显示此距离内玩家的附魔，单位为方块。
+
+// src/main/java/pit12/feature/nametag/NametagConfig.java:51
+Upward offset
+= 向上偏移
+
+// src/main/java/pit12/feature/nametag/NametagConfig.java:52
+Moves enchantments above the nametag, in hundredths of a block.
+= 附魔在名称标签上方的偏移距离，单位为百分之一方块。
 
 // src/main/java/pit12/feature/playeresp/PlayerEspConfig.java:42
 Player ESP
@@ -478,127 +634,99 @@ Full color distance
 Uses full color at or above the larger distance.
 = 距离不小于两个距离设置中的较大值时，完整显示方框。
 
-// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:51
+// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:48
 Player List
 = 玩家列表
 
-// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:53
+// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:50
 Shows loaded player equipment and direction in a compact HUD.
 = 在紧凑的 HUD 中显示已加载玩家的装备和方向。
 
-// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:56
-Enchantments
-= 附魔
-
-// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:57
-Enchantment format
-= 附魔格式
-
-// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:58
-Controls how enchantment names and levels are shown.
-= 设置附魔名称和等级的显示方式。
-
-// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:67
-Show held item enchantments
-= 显示手持物品附魔
-
-// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:68
-Shows the held item's Pit enchantments.
-= 显示手持物品的 Pit 附魔。
-
-// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:69
-Show leggings enchantments
-= 显示护腿附魔
-
-// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:70
-Shows the leggings' Pit enchantments.
-= 显示护腿的 Pit 附魔。
-
-// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:71
+// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:61
 Player information
 = 玩家信息
 
-// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:72
+// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:62
 Short player names
 = 精简玩家名称
 
-// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:73
+// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:63
 Shows only the level and player name, keeping their formatting.
 = 仅显示等级和玩家名称，保留原有文字格式。
 
-// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:74
+// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:64
 Show player distance
 = 显示玩家距离
 
-// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:75
+// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:65
 Shows the distance to each loaded player.
 = 显示与每个已加载玩家的距离。
 
-// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:76
+// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:66
 Show player direction
 = 显示玩家方向
 
-// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:77
+// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:67
 Shows the continuous direction to each loaded player.
 = 显示每个已加载玩家的方向，随方位连续变化。
 
-// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:78
+// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:68
 Show spawn marker
 = 显示出生点标记
 
-// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:79
+// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:69
 Shows SPAWN instead of distance and direction for players in spawn.
 = 对出生点内的玩家显示 SPAWN，替代距离和方向。
 
-// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:81
+// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:71
 Groups
 = 分组
 
-// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:82
+// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:72
 Show group names
 = 显示分组名称
 
-// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:83
+// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:73
 Shows the name above each equipment group.
 = 在各装备分组上方显示分组名称。
 
-// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:84
+// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:74
 Show Friend group
 = 显示好友分组
 
-// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:85
+// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:75
 Shows friends in the player list.
 = 在玩家列表中显示好友。
 
-// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:86
+// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:76
 Show Enemy group
 = 显示敌人分组
 
-// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:87
+// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:77
 Shows enemies in the player list.
 = 在玩家列表中显示敌人。
 
-// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:88
+// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:78
 Show Regularity group
 = 显示 Regularity 分组
 
-// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:89
+// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:79
 Shows the Regularity equipment group.
 = 显示 Regularity 装备分组。
 
-// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:90
+// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:80
 Show Dark group
 = 显示暗黑分组
 
-// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:91
+// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:81
 Shows the Dark equipment group.
 = 显示暗黑装备分组。
 
-// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:92
+// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:82
 Show Bounty Hunter group
 = 显示赏金猎人分组
 
-// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:93
+// src/main/java/pit12/feature/playerlist/PlayerListConfig.java:83
 Shows the Bounty Hunter equipment group.
 = 显示赏金猎人装备分组。
 
@@ -613,6 +741,10 @@ Shows the Bounty Hunter equipment group.
 // src/main/java/pit12/feature/quickmath/AutoQuickMathConfig.java:31
 Auto Quick Math
 = 自动速算
+
+// src/main/java/pit12/feature/quickmath/AutoQuickMathConfig.java:32
+Misc
+= 杂项
 
 // src/main/java/pit12/feature/quickmath/AutoQuickMathConfig.java:33
 Solves the QUICK MATHS! expression and answers in chat automatically.
@@ -714,7 +846,7 @@ Remove a player
  (UUID {0})
 =  （UUID {0}）
 
-// src/main/java/pit12/feature/relation/RelationCommand.java:112
+// src/main/java/pit12/feature/relation/RelationCommand.java:112, src/main/java/pit12/feature/swap/SwapCommand.java:142
 waiting
 = 等待查询
 
@@ -758,33 +890,129 @@ Relations are still loading
 Duplicate relation identity
 = 玩家关系中存在重复身份
 
+// src/main/java/pit12/feature/smartblock/SmartBlockConfig.java:41
+Smart Block
+= 智能格挡
+
+// src/main/java/pit12/feature/smartblock/SmartBlockConfig.java:43
+Selects a Bullet Time or Bruiser sword from the hotbar while blocking.
+= 格挡时切换到快捷栏中的 Bullet Time 或 Bruiser 剑。
+
+// src/main/java/pit12/feature/smartblock/SmartBlockConfig.java:46
+Use Bullet Time
+= 使用 Bullet Time
+
+// src/main/java/pit12/feature/smartblock/SmartBlockConfig.java:47
+Selects swords with Bullet Time.
+= 选择带有 Bullet Time 的剑。
+
+// src/main/java/pit12/feature/smartblock/SmartBlockConfig.java:48
+Use Bruiser
+= 使用 Bruiser
+
+// src/main/java/pit12/feature/smartblock/SmartBlockConfig.java:49
+Selects swords with Bruiser.
+= 选择带有 Bruiser 的剑。
+
+// src/main/java/pit12/feature/smartblock/SmartBlockConfig.java:50
+Enchantment priority
+= 附魔优先级
+
+// src/main/java/pit12/feature/smartblock/SmartBlockConfig.java:50
+Chooses the highest level of this enchantment. Ties use the other enabled enchantment's level.
+= 优先选择此附魔等级最高的剑。等级相同时，再比较另一种已启用附魔的等级。
+
+// src/main/java/pit12/feature/smartblock/SmartBlockConfig.java:52
+Bullet Time first
+= 优先 Bullet Time
+
+// src/main/java/pit12/feature/smartblock/SmartBlockConfig.java:53
+Bruiser first
+= 优先 Bruiser
+
+// src/main/java/pit12/feature/smartblock/SmartBlockConfig.java:55
+Prefer Bullet Time near arrows
+= 附近有箭时优先 Bullet Time
+
+// src/main/java/pit12/feature/smartblock/SmartBlockConfig.java:56
+Switches to a Bullet Time sword when a flying arrow is within the detection range.
+= 检测范围内有飞行中的箭时，切换到 Bullet Time 剑。
+
+// src/main/java/pit12/feature/smartblock/SmartBlockConfig.java:58
+Arrow detection range
+= 箭矢检测范围
+
+// src/main/java/pit12/feature/smartblock/SmartBlockConfig.java:59
+Detects flying arrows within this distance, in blocks.
+= 检测此距离内飞行中的箭，单位为方块。
+
+// src/main/java/pit12/feature/smartblock/SmartBlockConfig.java:60
+Switching
+= 切换
+
+// src/main/java/pit12/feature/smartblock/SmartBlockConfig.java:61
+Trigger with fist
+= 空手触发
+
+// src/main/java/pit12/feature/smartblock/SmartBlockConfig.java:62
+Also starts Smart Block when holding use with an empty hand.
+= 空手按住使用键时也可触发智能格挡。
+
+// src/main/java/pit12/feature/smartblock/SmartBlockConfig.java:63
+Prevent manual slot changes
+= 阻止手动切换槽位
+
+// src/main/java/pit12/feature/smartblock/SmartBlockConfig.java:63
+Blocks hotbar keys, scrolling and pick block during Smart Block. Otherwise, changing slots ends the current switch.
+= 智能格挡期间禁用快捷栏按键、滚轮和选取方块操作。关闭后，手动切换槽位会结束本次切换。
+
+// src/main/java/pit12/feature/smartblock/SmartBlockConfig.java:66
+Switch delay
+= 切换延迟
+
+// src/main/java/pit12/feature/smartblock/SmartBlockConfig.java:67
+Waits this many ticks before selecting the blocking sword.
+= 切换到格挡用剑前的等待时间，单位为游戏刻。
+
+// src/main/java/pit12/feature/smartblock/SmartBlockConfig.java:68
+Restore delay
+= 恢复延迟
+
+// src/main/java/pit12/feature/smartblock/SmartBlockConfig.java:68
+Waits this many ticks after releasing use before restoring the original slot.
+= 松开使用键后到恢复原槽位的等待时间，单位为游戏刻。
+
 // src/main/java/pit12/feature/sprint/AutoSprintConfig.java:28
 Auto Sprint
 = 自动疾跑
-
-// src/main/java/pit12/feature/sprint/AutoSprintConfig.java:29, src/main/java/pit12/feature/swap/SwapConfig.java:62
-Player
-= 玩家
 
 // src/main/java/pit12/feature/sprint/AutoSprintConfig.java:30
 Sprints automatically while moving forward, without holding the sprint key.
 = 向前移动时自动疾跑，无需按住疾跑键。
 
-// src/main/java/pit12/feature/swap/AutoSwapController.java:178
-Swapped automatically because you were affected by venom
-= 因受到毒液影响，已自动换装
+// src/main/java/pit12/feature/swap/AutoSwapController.java:196
+venom
+= 中毒
 
-// src/main/java/pit12/feature/swap/AutoSwapController.java:228
-Swapped to {0} because of low health
-= 因血量过低，已换上 {0}
+// src/main/java/pit12/feature/swap/AutoSwapController.java:266
+low target health
+= 目标血量低
 
-// src/main/java/pit12/feature/swap/AutoSwapController.java:278
-Swapped back after {0} was used
-= {0} 触发后，已换回原护腿
+// src/main/java/pit12/feature/swap/AutoSwapController.java:267
+low health
+= 血量低
 
-// src/main/java/pit12/feature/swap/AutoSwapController.java:280
-Swapped back after health recovered
-= 血量恢复后，已换回原护腿
+// src/main/java/pit12/feature/swap/AutoSwapController.java:317
+no dark targets
+= 没有需要 Dark 的目标
+
+// src/main/java/pit12/feature/swap/AutoSwapController.java:319
+{0} activation
+= {0} 触发
+
+// src/main/java/pit12/feature/swap/AutoSwapController.java:322
+health recovery
+= 血量恢复
 
 // src/main/java/pit12/feature/swap/BindingBook.java:54, src/main/java/pit12/feature/swap/BindingBook.java:68
 Swap bindings are loading
@@ -874,407 +1102,535 @@ Cleared swap bindings
 Show automatic swap state
 = 查看自动换装状态
 
-// src/main/java/pit12/feature/swap/SwapCommand.java:64, src/main/java/pit12/feature/swap/SwapCommand.java:66
+// src/main/java/pit12/feature/swap/SwapCommand.java:64
 Reset automatic swap state
 = 重置自动换装状态
 
-// src/main/java/pit12/feature/swap/SwapCommand.java:89, src/main/java/pit12/feature/swap/SwapCommand.java:92
+// src/main/java/pit12/feature/swap/SwapCommand.java:67
+Automatic swap state has been reset
+= 已重置自动换装状态
+
+// src/main/java/pit12/feature/swap/SwapCommand.java:90, src/main/java/pit12/feature/swap/SwapCommand.java:93
 Hotbar slot must be from 1 to 9
 = 快捷栏槽位必须为 1 到 9
 
-// src/main/java/pit12/feature/swap/SwapCommand.java:101
+// src/main/java/pit12/feature/swap/SwapCommand.java:100
 Bound {0} to {1} ({2})
 = 已将 {0} 绑定到 {1}（{2}）
 
-// src/main/java/pit12/feature/swap/SwapCommand.java:103
-Bound {0} ({1})
-= 已绑定 {0}（{1}）
-
-// src/main/java/pit12/feature/swap/SwapCommand.java:113
+// src/main/java/pit12/feature/swap/SwapCommand.java:110
 Hold an item to unbind
 = 请手持要解绑的物品
 
-// src/main/java/pit12/feature/swap/SwapCommand.java:118
+// src/main/java/pit12/feature/swap/SwapCommand.java:115
 No matching bindings
 = 没有匹配的绑定
 
-// src/main/java/pit12/feature/swap/SwapCommand.java:119
+// src/main/java/pit12/feature/swap/SwapCommand.java:116
 Removed {0} binding(s)
 = 已移除 {0} 项绑定
 
-// src/main/java/pit12/feature/swap/SwapCommand.java:125
+// src/main/java/pit12/feature/swap/SwapCommand.java:122
 Swap bindings: {0}
 = 换装绑定：{0}
 
-// src/main/java/pit12/feature/swap/SwapCommand.java:133, src/main/java/pit12/feature/swap/SwapController.java:384
+// src/main/java/pit12/feature/swap/SwapCommand.java:130, src/main/java/pit12/feature/swap/SwapController.java:458
 Automatic swap: {0}
 == 自动换装：{0} | 自动换装遇到问题：{0}
 
-// src/main/java/pit12/feature/swap/SwapCommand.java:134
+// src/main/java/pit12/feature/swap/SwapCommand.java:131
 enabled
 = 已启用
 
-// src/main/java/pit12/feature/swap/SwapCommand.java:135, src/main/java/pit12/feature/swap/SwapCommand.java:149
+// src/main/java/pit12/feature/swap/SwapCommand.java:132, src/main/java/pit12/feature/swap/SwapCommand.java:139, src/main/java/pit12/feature/swap/SwapCommand.java:152
 disabled
 = 已禁用
 
-// src/main/java/pit12/feature/swap/SwapCommand.java:136
+// src/main/java/pit12/feature/swap/SwapCommand.java:133
 Escape Pod: {0}
 = Escape Pod：{0}
 
-// src/main/java/pit12/feature/swap/SwapCommand.java:138
+// src/main/java/pit12/feature/swap/SwapCommand.java:135
 Phoenix: {0}
 = Phoenix：{0}
 
-// src/main/java/pit12/feature/swap/SwapCommand.java:144
-Join a world first
-= 请先进入世界
+// src/main/java/pit12/feature/swap/SwapCommand.java:138
+Dark: {0}
+= Dark：{0}
 
-// src/main/java/pit12/feature/swap/SwapCommand.java:151
-used
-= 已触发
-
-// src/main/java/pit12/feature/swap/SwapCommand.java:153
+// src/main/java/pit12/feature/swap/SwapCommand.java:141, src/main/java/pit12/feature/swap/SwapCommand.java:156
 equipped
 = 已装备
 
+// src/main/java/pit12/feature/swap/SwapCommand.java:147
+Join a world first
+= 请先进入世界
+
 // src/main/java/pit12/feature/swap/SwapCommand.java:154
+used
+= 已触发
+
+// src/main/java/pit12/feature/swap/SwapCommand.java:157
 unused
 = 未触发
 
-// src/main/java/pit12/feature/swap/SwapCommand.java:160
+// src/main/java/pit12/feature/swap/SwapCommand.java:163
 Unknown keyboard key: {0}
 = 未知键盘按键：{0}
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:62
+// src/main/java/pit12/feature/swap/SwapConfig.java:73
 Swap
 = 换装
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:63
-Swaps armor and hotbar items manually, when poisoned or at low health.
-= 手动更换盔甲和快捷栏物品，也可在中毒或低血量时自动更换。
+// src/main/java/pit12/feature/swap/SwapConfig.java:73
+Swaps armor and hotbar items manually, when poisoned or when players have low health.
+= 手动更换盔甲和快捷栏物品，或在中毒、玩家血量低时自动更换。
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:65
+// src/main/java/pit12/feature/swap/SwapConfig.java:76
 Right click swap
 = 右键换装
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:66
+// src/main/java/pit12/feature/swap/SwapConfig.java:77
 Right-click held armor to replace the armor in its slot.
 = 右键点击手持盔甲，替换对应部位的盔甲。
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:67
+// src/main/java/pit12/feature/swap/SwapConfig.java:78
+Random click timing
+= 随机点击时机
+
+// src/main/java/pit12/feature/swap/SwapConfig.java:79
+Uses a random input phase before player updates for all swaps and unequipping.
+= 所有换装和卸甲操作都在玩家更新前的随机输入阶段执行。
+
+// src/main/java/pit12/feature/swap/SwapConfig.java:81
+Shift click swap
+= Shift 点击换装
+
+// src/main/java/pit12/feature/swap/SwapConfig.java:82
+Use shift clicks instead of number keys to swap armor.
+= 使用 Shift 点击代替数字键进行盔甲换装。
+
+// src/main/java/pit12/feature/swap/SwapConfig.java:83
 Inventory visibility
 = 背包可见性
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:68
+// src/main/java/pit12/feature/swap/SwapConfig.java:84
 Shows or hides the inventory during swaps.
 = 换装时显示或隐藏背包界面。
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:69
+// src/main/java/pit12/feature/swap/SwapConfig.java:85
 Hidden
 = 隐藏
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:70
+// src/main/java/pit12/feature/swap/SwapConfig.java:86
 Visible
 = 显示
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:71
+// src/main/java/pit12/feature/swap/SwapConfig.java:87
 Open delay
 = 打开延迟
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:71
+// src/main/java/pit12/feature/swap/SwapConfig.java:87
 Ticks to wait after opening the inventory before the first click. Set to 0 for no wait.
 = 打开背包后到首次点击的等待时间，单位为游戏刻。设为 0 则不等待。
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:74
+// src/main/java/pit12/feature/swap/SwapConfig.java:90
 Swap delay
 = 换装延迟
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:75
+// src/main/java/pit12/feature/swap/SwapConfig.java:91
 Ticks between clicks for right click and automatic swaps.
 = 右键换装和自动换装时的点击间隔，单位为游戏刻。
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:76
+// src/main/java/pit12/feature/swap/SwapConfig.java:92
 Close delay
 = 关闭延迟
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:76
+// src/main/java/pit12/feature/swap/SwapConfig.java:92
 Ticks to wait after the last request finishes before closing the inventory.
 = 最后一次请求完成后到关闭背包的等待时间，单位为游戏刻。
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:80
+// src/main/java/pit12/feature/swap/SwapConfig.java:96
 Resume input next tick
 = 下一游戏刻恢复输入
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:81
+// src/main/java/pit12/feature/swap/SwapConfig.java:97
 Keeps all input locked until the next tick after closing the inventory.
 = 关闭背包后，保持所有输入锁定，直到下一游戏刻。
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:83
+// src/main/java/pit12/feature/swap/SwapConfig.java:99
 Swap messages
 = 换装消息
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:84
+// src/main/java/pit12/feature/swap/SwapConfig.java:100
 Shows a message after items are swapped or unequipped.
 = 更换或卸下物品后显示消息。
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:85
+// src/main/java/pit12/feature/swap/SwapConfig.java:101
 Transfer slot
 = 中转槽位
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:86
+// src/main/java/pit12/feature/swap/SwapConfig.java:102
 Hotbar slot used to move armor from the inventory.
 = 用于从背包移动盔甲的快捷栏槽位。
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:87
+// src/main/java/pit12/feature/swap/SwapConfig.java:103
 Restore transfer slot
 = 恢复中转槽位
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:88
+// src/main/java/pit12/feature/swap/SwapConfig.java:104
 Restores the transfer slot's contents after moving armor. Slot bindings take priority.
 = 移动盔甲后恢复中转槽位中的物品，槽位绑定优先。
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:90
+// src/main/java/pit12/feature/swap/SwapConfig.java:106
 Prefer empty hotbar slot
 = 优先使用空快捷栏槽位
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:91
+// src/main/java/pit12/feature/swap/SwapConfig.java:107
 Uses the first empty hotbar slot as the transfer slot. Otherwise uses the selected transfer slot.
 = 优先用快捷栏中第一个空槽位中转，否则使用指定的中转槽位。
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:93
+// src/main/java/pit12/feature/swap/SwapConfig.java:109
 Bindings
 = 绑定
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:94
+// src/main/java/pit12/feature/swap/SwapConfig.java:110
 Unequip all
 = 卸下全部盔甲
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:95
+// src/main/java/pit12/feature/swap/SwapConfig.java:111
 Moves worn armor into free inventory slots.
 = 将身上的盔甲移入背包空槽位。
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:96
+// src/main/java/pit12/feature/swap/SwapConfig.java:112
 Binding delay
 = 绑定换装延迟
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:97
+// src/main/java/pit12/feature/swap/SwapConfig.java:113
 Ticks between clicks for bindings and unequipping.
 = 通过绑定换装或卸下盔甲时的点击间隔，单位为游戏刻。
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:98
+// src/main/java/pit12/feature/swap/SwapConfig.java:114
 Binding messages
 = 绑定消息
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:99
+// src/main/java/pit12/feature/swap/SwapConfig.java:115
 Shows messages when bindings are added, removed or cleared.
 = 添加、移除或清空绑定时显示消息。
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:100
-Details
-= 详细信息
-
-// src/main/java/pit12/feature/swap/SwapConfig.java:101
-Shows item names and enchantments in binding and swap messages.
-= 在绑定和换装消息中显示物品名称与附魔。
-
-// src/main/java/pit12/feature/swap/SwapConfig.java:102
+// src/main/java/pit12/feature/swap/SwapConfig.java:116
 Show binding keys
 = 显示绑定按键
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:103
+// src/main/java/pit12/feature/swap/SwapConfig.java:117
 Shows keys on bound items outside their target slots.
 = 在未处于目标槽位的绑定物品上显示按键。
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:104, src/main/java/pit12/feature/swap/SwapConfig.java:105
+// src/main/java/pit12/feature/swap/SwapConfig.java:118, src/main/java/pit12/feature/swap/SwapConfig.java:119
 Automatic swap
 = 自动换装
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:106
-Automatically swaps items when poisoned or at low health.
-= 中毒或血量过低时自动更换物品。
+// src/main/java/pit12/feature/swap/SwapConfig.java:119
+Automatically swaps items when poisoned or when you or a dark target have low health.
+= 中毒、自身血量低或 Dark 目标血量低时，自动更换物品。
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:107
+// src/main/java/pit12/feature/swap/SwapConfig.java:122
 Automatic swap messages
 = 自动换装消息
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:108
+// src/main/java/pit12/feature/swap/SwapConfig.java:123
 Shows why automatic swaps happened.
 = 显示自动换装的原因。
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:110
+// src/main/java/pit12/feature/swap/SwapConfig.java:125
 Swap diamond armor
 = 换上钻石盔甲
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:111
+// src/main/java/pit12/feature/swap/SwapConfig.java:126
 Equips diamond leggings and boots when poisoned.
 = 中毒时换上钻石护腿和靴子。
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:112
+// src/main/java/pit12/feature/swap/SwapConfig.java:127
 Swap Combat Spade
 = 换上 Combat Spade
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:113
+// src/main/java/pit12/feature/swap/SwapConfig.java:128
 Moves a Combat Spade to the selected hotbar slot when poisoned.
 = 中毒时将 Combat Spade 移至指定的快捷栏槽位。
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:114
+// src/main/java/pit12/feature/swap/SwapConfig.java:129
 Skip while wearing Venom
 = 穿着 Venom 护腿时跳过
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:115
+// src/main/java/pit12/feature/swap/SwapConfig.java:130
 Skips poison swaps while wearing Combo Venom leggings.
 = 穿着 Combo Venom 护腿时，跳过中毒换装。
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:116
+// src/main/java/pit12/feature/swap/SwapConfig.java:131
 Combat Spade slot
 = Combat Spade 槽位
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:117
+// src/main/java/pit12/feature/swap/SwapConfig.java:132
 Hotbar slot for the Combat Spade.
 = Combat Spade 使用的快捷栏槽位。
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:119
+// src/main/java/pit12/feature/swap/SwapConfig.java:134
 Use Escape Pod
 = 使用 Escape Pod
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:120
+// src/main/java/pit12/feature/swap/SwapConfig.java:135
 Equips Escape Pod leggings at or below their health threshold.
 = 血量不高于设定阈值时，换上 Escape Pod 护腿。
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:121
+// src/main/java/pit12/feature/swap/SwapConfig.java:136
 Escape Pod threshold
 = Escape Pod 血量阈值
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:122
+// src/main/java/pit12/feature/swap/SwapConfig.java:137
 Health points for Escape Pod swaps. Two points equal one heart.
 = 触发 Escape Pod 换装的生命值，2 点等于 1 颗心。
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:124
+// src/main/java/pit12/feature/swap/SwapConfig.java:139
 Use Phoenix
 = 使用 Phoenix
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:125
+// src/main/java/pit12/feature/swap/SwapConfig.java:140
 Equips Phoenix leggings at or below their health threshold.
 = 血量不高于设定阈值时，换上 Phoenix 护腿。
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:126
+// src/main/java/pit12/feature/swap/SwapConfig.java:141
 Phoenix threshold
 = Phoenix 血量阈值
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:127
+// src/main/java/pit12/feature/swap/SwapConfig.java:142
 Health points for Phoenix swaps. Two points equal one heart.
 = 触发 Phoenix 换装的生命值，2 点等于 1 颗心。
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:129
+// src/main/java/pit12/feature/swap/SwapConfig.java:144
 Prefer first
 = 优先选择
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:129
+// src/main/java/pit12/feature/swap/SwapConfig.java:144
 Chooses which unused enchantment to equip when both are available and eligible.
 = 两种附魔均可用且满足条件时，选择优先装备哪种尚未触发的附魔。
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:133
+// src/main/java/pit12/feature/swap/SwapConfig.java:148
 Prefer high Lives
 = 优先选择高寿命护腿
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:134
+// src/main/java/pit12/feature/swap/SwapConfig.java:149
 Chooses Phoenix leggings with the most remaining Lives.
 = 选择剩余寿命最多的 Phoenix 护腿。
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:135
+// src/main/java/pit12/feature/swap/SwapConfig.java:150, src/main/java/pit12/feature/swap/SwapConfig.java:174
 Restore leggings
 = 换回原护腿
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:136
+// src/main/java/pit12/feature/swap/SwapConfig.java:151
 Restores the leggings worn before an automatic health swap.
 = 换回因低血量自动换装前穿着的护腿。
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:137
+// src/main/java/pit12/feature/swap/SwapConfig.java:152
 Restore mode
 = 换回模式
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:137
+// src/main/java/pit12/feature/swap/SwapConfig.java:152
 Restores leggings after health recovers or the equipped enchantment triggers.
 = 血量恢复或当前装备的附魔触发后，换回原护腿。
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:139
+// src/main/java/pit12/feature/swap/SwapConfig.java:154
 Health
 = 血量恢复
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:140
+// src/main/java/pit12/feature/swap/SwapConfig.java:155
 Used
 = 附魔触发
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:142
+// src/main/java/pit12/feature/swap/SwapConfig.java:157, src/main/java/pit12/feature/swap/SwapConfig.java:178
 Restore threshold
 = 换回血量阈值
 
-// src/main/java/pit12/feature/swap/SwapConfig.java:143
+// src/main/java/pit12/feature/swap/SwapConfig.java:158
 Health points needed to restore leggings in Health mode. Health must also exceed the trigger threshold.
 = 血量恢复模式下换回原护腿所需的生命值。血量还须高于换装触发阈值。
 
-// src/main/java/pit12/feature/swap/SwapController.java:172
+// src/main/java/pit12/feature/swap/SwapConfig.java:160
+Dark
+= Dark
+
+// src/main/java/pit12/feature/swap/SwapConfig.java:161
+Use dark
+= 使用 Dark
+
+// src/main/java/pit12/feature/swap/SwapConfig.java:161
+Equips Somber leggings against players with low health wearing Escape Pod or Phoenix.
+= 面对穿着 Escape Pod 或 Phoenix 护腿的低血量玩家时，换上 Somber 护腿。
+
+// src/main/java/pit12/feature/swap/SwapConfig.java:164
+Trigger mode
+= 触发模式
+
+// src/main/java/pit12/feature/swap/SwapConfig.java:164
+Checks the last player you attacked or all nearby players within range. Friend and enemy filters apply to both modes.
+= 检查上次攻击的玩家，或范围内的所有玩家。两种模式都遵循好友和敌人的筛选设置。
+
+// src/main/java/pit12/feature/swap/SwapConfig.java:166
+Last attacked target
+= 上次攻击的目标
+
+// src/main/java/pit12/feature/swap/SwapConfig.java:167
+Nearby players
+= 附近玩家
+
+// src/main/java/pit12/feature/swap/SwapConfig.java:168
+Target health threshold
+= 目标血量阈值
+
+// src/main/java/pit12/feature/swap/SwapConfig.java:169
+Equips dark when a target's health is at or below this value. Uses entity health without absorption.
+= 目标血量不高于此值时，换上 Dark 护腿。血量不包含伤害吸收提供的额外生命值。
+
+// src/main/java/pit12/feature/swap/SwapConfig.java:171
+Target range
+= 目标范围
+
+// src/main/java/pit12/feature/swap/SwapConfig.java:172
+Maximum straight-line distance to targets in both trigger modes.
+= 两种触发模式下与目标的最大直线距离。
+
+// src/main/java/pit12/feature/swap/SwapConfig.java:174
+Restores the leggings worn before the automatic swap when no targets in the selected mode need dark.
+= 当前模式下没有需要 Dark 的目标时，换回自动换装前穿着的护腿。
+
+// src/main/java/pit12/feature/swap/SwapConfig.java:179
+Stops tracking a recovered target at or above this value. Health must also exceed the equip threshold.
+= 目标血量恢复到此值或更高时，停止跟踪。血量还须高于换装触发阈值。
+
+// src/main/java/pit12/feature/swap/SwapConfig.java:182
+Skip Escape Pod players below 2 hearts
+= 跳过血量低于 2 颗心的 Escape Pod 玩家
+
+// src/main/java/pit12/feature/swap/SwapConfig.java:183
+Skips Escape Pod targets below 2 hearts in both trigger modes. Phoenix still qualifies.
+= 两种触发模式都跳过血量低于 2 颗心的 Escape Pod 目标。Phoenix 目标仍可触发换装。
+
+// src/main/java/pit12/feature/swap/SwapConfig.java:185
+Enemies only
+= 仅敌人
+
+// src/main/java/pit12/feature/swap/SwapConfig.java:186
+Only checks players in your enemy list.
+= 只检查敌人列表中的玩家。
+
+// src/main/java/pit12/feature/swap/SwapConfig.java:187
+Ignore friends
+= 忽略好友
+
+// src/main/java/pit12/feature/swap/SwapConfig.java:187
+Skips friends in both trigger modes. Attacking a friend keeps the previous target.
+= 两种触发模式都跳过好友。攻击好友时保留原目标。
+
+// src/main/java/pit12/feature/swap/SwapConfig.java:190
+Swap priority
+= 换装优先级
+
+// src/main/java/pit12/feature/swap/SwapConfig.java:190
+Chooses between dark and your own Escape Pod or Phoenix when both are needed. Poison swaps take priority.
+= 同时需要 Dark 和自身的 Escape Pod 或 Phoenix 时，选择优先换上哪种护腿。中毒换装优先。
+
+// src/main/java/pit12/feature/swap/SwapConfig.java:192
+Pod/Phoenix first
+= 优先 Pod/Phoenix
+
+// src/main/java/pit12/feature/swap/SwapConfig.java:193
+Dark first
+= 优先 Dark
+
+// src/main/java/pit12/feature/swap/SwapController.java:179
 Unexpected error
 = 意外错误
 
-// src/main/java/pit12/feature/swap/SwapController.java:191, src/main/java/pit12/feature/swap/SwapController.java:364
+// src/main/java/pit12/feature/swap/SwapController.java:200, src/main/java/pit12/feature/swap/SwapController.java:397, src/main/java/pit12/feature/swap/SwapController.java:628
 Inventory changed
 = 背包内容已变化
 
-// src/main/java/pit12/feature/swap/SwapController.java:230
+// src/main/java/pit12/feature/swap/SwapController.java:241
 Inventory did not open
 = 背包未打开
 
-// src/main/java/pit12/feature/swap/SwapController.java:260
+// src/main/java/pit12/feature/swap/SwapController.java:286
 Server rejected the inventory click
 = 服务器拒绝了背包点击操作
 
-// src/main/java/pit12/feature/swap/SwapController.java:308, src/main/java/pit12/feature/swap/SwapController.java:564
+// src/main/java/pit12/feature/swap/SwapController.java:333, src/main/java/pit12/feature/swap/SwapController.java:660
 Missing item: {0}
 = 找不到物品：{0}
 
-// src/main/java/pit12/feature/swap/SwapController.java:389
-Swapped: {0}
-= 已更换：{0}
+// src/main/java/pit12/feature/swap/SwapController.java:414
+Swapped {0} with {1} due to {2}
+= 因{2}，已将 {0} 与 {1} 互换
 
-// src/main/java/pit12/feature/swap/SwapController.java:390
-Swapped {0} item(s)
-= 已更换 {0} 件物品
+// src/main/java/pit12/feature/swap/SwapController.java:419
+Swapped {0} with {1}
+= 已将 {0} 与 {1} 互换
 
-// src/main/java/pit12/feature/swap/SwapController.java:413
+// src/main/java/pit12/feature/swap/SwapController.java:433
+Helmet slot
+= 头盔槽位
+
+// src/main/java/pit12/feature/swap/SwapController.java:436
+Chestplate slot
+= 胸甲槽位
+
+// src/main/java/pit12/feature/swap/SwapController.java:439
+Leggings slot
+= 护腿槽位
+
+// src/main/java/pit12/feature/swap/SwapController.java:442
+Boots slot
+= 靴子槽位
+
+// src/main/java/pit12/feature/swap/SwapController.java:446
+Hotbar slot {0}
+= 快捷栏槽位 {0}
+
+// src/main/java/pit12/feature/swap/SwapController.java:447
+Inventory slot {0}
+= 背包槽位 {0}
+
+// src/main/java/pit12/feature/swap/SwapController.java:481
 Swap failed: {0}
 = 换装失败：{0}
 
-// src/main/java/pit12/feature/swap/SwapController.java:459
-Inventory could not be closed
-= 无法关闭背包
-
-// src/main/java/pit12/feature/swap/SwapController.java:532
-Armor could not be moved to the inventory
-= 无法将盔甲移入背包
-
-// src/main/java/pit12/feature/swap/SwapController.java:534
-Not enough inventory space to unequip armor
-= 背包空间不足，无法卸下盔甲
-
-// src/main/java/pit12/feature/swap/SwapController.java:541, src/main/java/pit12/feature/swap/SwapController.java:556
-Transfer slot changed
-= 中转槽位内容已变化
-
-// src/main/java/pit12/feature/swap/SwapController.java:546
+// src/main/java/pit12/feature/swap/SwapController.java:499, src/main/java/pit12/feature/swap/SwapController.java:642
 Armor could not be equipped
 = 无法装备盔甲
 
-// src/main/java/pit12/feature/swap/SwapController.java:571
+// src/main/java/pit12/feature/swap/SwapController.java:538
+Inventory could not be closed
+= 无法关闭背包
+
+// src/main/java/pit12/feature/swap/SwapController.java:619, src/main/java/pit12/feature/swap/SwapController.java:686
+Armor could not be moved to the inventory
+= 无法将盔甲移入背包
+
+// src/main/java/pit12/feature/swap/SwapController.java:621
+Not enough inventory space to unequip armor
+= 背包空间不足，无法卸下盔甲
+
+// src/main/java/pit12/feature/swap/SwapController.java:637, src/main/java/pit12/feature/swap/SwapController.java:652
+Transfer slot changed
+= 中转槽位内容已变化
+
+// src/main/java/pit12/feature/swap/SwapController.java:668
 Item does not fit: {0}
 = 物品无法放入目标槽位：{0}
 
-// src/main/java/pit12/feature/swap/SwapController.java:589
+// src/main/java/pit12/feature/swap/SwapController.java:710
 Not enough inventory space for {0}
 = 背包空间不足，无法放入 {0}
 
-// src/main/java/pit12/feature/swap/SwapController.java:610
+// src/main/java/pit12/feature/swap/SwapController.java:735
 Item could not be swapped: {0}
 = 无法更换物品：{0}
 
@@ -1347,24 +1703,16 @@ Interface key
 = 界面快捷键
 
 // src/main/java/pit12/feature/webui/WebUiConfig.java:57
-Opens the selected interface.
-= 打开所选界面。
-
-// src/main/java/pit12/feature/webui/WebUiConfig.java:58
-Key action
-= 按键动作
+Opens the HUD editor. Press again with no HUD selected to open settings.
+= 打开 HUD 编辑器。未选中 HUD 时，再按一次即可打开设置。
 
 // src/main/java/pit12/feature/webui/WebUiConfig.java:59
-Chooses which interface the key opens.
-= 选择按键打开的界面。
+HUD editor hint
+= HUD 编辑器提示
 
 // src/main/java/pit12/feature/webui/WebUiConfig.java:60
-Web UI
-= 网页界面
-
-// src/main/java/pit12/feature/webui/WebUiConfig.java:60
-HUD editor
-= HUD 编辑器
+Shows how to open the Web UI from the HUD editor.
+= 显示从 HUD 编辑器打开网页界面的方法。
 
 // src/main/java/pit12/feature/webui/WebUiPreferences.java:106, src/main/java/pit12/feature/webui/WebUiPreferences.java:113
 Could not load Web UI settings
@@ -1994,7 +2342,7 @@ Use file
 Working...
 = 正在处理…
 
-// web-ui/src/useKeyCapture.ts:51:29
+// web-ui/src/useKeyCapture.ts:54:29
 This key cannot be bound
 = 此按键无法绑定
 
