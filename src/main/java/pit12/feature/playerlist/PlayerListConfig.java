@@ -26,12 +26,9 @@ import pit12.runtime.config.ConfigCategory;
 import pit12.runtime.config.FeatureConfig;
 import pit12.runtime.config.HudAnchor;
 import pit12.runtime.config.HudConfig;
+import pit12.runtime.item.PitEnchantmentFormat;
 
 public final class PlayerListConfig extends FeatureConfig {
-    static final int ENCHANTMENT_FORMAT_BOLD_LEVELS = 0;
-    static final int ENCHANTMENT_FORMAT_PLAIN_LEVELS = 1;
-    static final int ENCHANTMENT_FORMAT_HIDE_LEVEL_THREE = 2;
-    static final int ENCHANTMENT_FORMAT_NAMES_ONLY = 3;
     private final BooleanSetting showHeldItem;
     private final BooleanSetting showLeggings;
     private final ChoiceSetting enchantmentFormat;
@@ -56,14 +53,7 @@ public final class PlayerListConfig extends FeatureConfig {
         subsubcategory("enchantments", source("Enchantments"));
         enchantmentFormat = choiceSetting("enchantment_format", source("Enchantment format"),
                 source("Controls how enchantment names and levels are shown."),
-                ENCHANTMENT_FORMAT_BOLD_LEVELS,
-                new ChoiceSetting.Choice(ENCHANTMENT_FORMAT_BOLD_LEVELS,
-                        "§4§lREG §f§l3§7 / §6§lABS §f§l2"),
-                new ChoiceSetting.Choice(ENCHANTMENT_FORMAT_PLAIN_LEVELS,
-                        "§4REG §f3§7 / §6ABS §f2"),
-                new ChoiceSetting.Choice(ENCHANTMENT_FORMAT_HIDE_LEVEL_THREE,
-                        "§4§lREG§7 / §6§lABS §f§l2"),
-                new ChoiceSetting.Choice(ENCHANTMENT_FORMAT_NAMES_ONLY, "§4§lREG§7 / §6§lABS"));
+                PitEnchantmentFormat.BOLD_LEVELS, PitEnchantmentFormat.choices());
         showHeldItem = booleanSetting("show_held_item", source("Show held item enchantments"),
                 source("Shows the held item's Pit enchantments."), false);
         showLeggings = booleanSetting("show_leggings", source("Show leggings enchantments"),

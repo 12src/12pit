@@ -29,7 +29,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import pit12.feature.relation.api.Relation;
 import pit12.feature.relation.api.RelationLookup;
 import pit12.runtime.item.PitEnchantment;
-import pit12.runtime.item.PitEnchantments;
+import pit12.runtime.item.PitEnchantmentFormat;
 import pit12.runtime.pit.PitContext;
 import pit12.runtime.pit.PitSnapshot;
 import pit12.runtime.pit.SpawnState;
@@ -102,11 +102,13 @@ final class PlayerListBuilder {
                     .spawnStateAt(player.posX, player.posY, player.posZ) == SpawnState.IN_SPAWN;
             String leggingsText = config.showLeggings() && playerEquipment != null
                     && playerEquipment.leggingsKnown()
-                            ? formatEnchantments(playerEquipment.leggingsEnchantments(), config)
+                            ? PitEnchantmentFormat.format(playerEquipment.leggingsEnchantments(),
+                                    config.enchantmentFormat())
                             : null;
             String heldItemText = config.showHeldItem() && playerEquipment != null
                     && playerEquipment.heldItemKnown()
-                            ? formatEnchantments(playerEquipment.heldEnchantments(), config)
+                            ? PitEnchantmentFormat.format(playerEquipment.heldEnchantments(),
+                                    config.enchantmentFormat())
                             : null;
             PlayerListEntry entry = new PlayerListEntry(playerId,
                     player == null ? 0 : player.getEntityId(), name, leggingsText, heldItemText,
@@ -119,22 +121,6 @@ final class PlayerListBuilder {
             groupEntries.add(entry);
         }
         return PlayerListSnapshot.create(groups);
-    }
-
-    static String formatEnchantments(PitEnchantments enchantments, PlayerListConfig config) {
-        switch (config.enchantmentFormat()) {
-            case PlayerListConfig.ENCHANTMENT_FORMAT_PLAIN_LEVELS:
-                return enchantments.formatDisplayNames();
-            case PlayerListConfig.ENCHANTMENT_FORMAT_HIDE_LEVEL_THREE:
-                return enchantments.formatBoldDisplayNamesWithoutLevelThree();
-            case PlayerListConfig.ENCHANTMENT_FORMAT_NAMES_ONLY:
-                return enchantments.formatBoldDisplayNamesWithoutLevels();
-            case PlayerListConfig.ENCHANTMENT_FORMAT_BOLD_LEVELS:
-                return enchantments.formatBoldDisplayNames();
-            default:
-                throw new IllegalStateException(
-                        "Unknown enchantment format: " + config.enchantmentFormat());
-        }
     }
 
     private static PlayerListGroup groupOf(Relation relation, PlayerEquipmentSnapshot equipment) {

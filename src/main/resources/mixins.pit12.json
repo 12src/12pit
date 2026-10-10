@@ -19,6 +19,7 @@
     "player.WorldClientEquipmentMixin",
     "feature.autoclick.MinecraftMixin",
     "feature.gamma.EntityRendererMixin",
+    "feature.nametag.RendererLivingEntityAccessor",
     "feature.sprint.EntityPlayerSPMixin",
     "feature.smartblock.EntityArrowAccessor",
     "feature.smartblock.MinecraftMixin",

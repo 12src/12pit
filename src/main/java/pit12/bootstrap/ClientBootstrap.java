@@ -39,6 +39,8 @@ import pit12.feature.gamma.GammaFeature;
 import pit12.feature.hudeditor.HudEditorFeature;
 import pit12.feature.itemesp.ItemEspConfig;
 import pit12.feature.itemesp.ItemEspFeature;
+import pit12.feature.nametag.NametagConfig;
+import pit12.feature.nametag.NametagFeature;
 import pit12.feature.playeresp.PlayerEspConfig;
 import pit12.feature.playeresp.PlayerEspFeature;
 import pit12.feature.playerlist.PlayerListConfig;
@@ -147,6 +149,7 @@ public final class ClientBootstrap {
         registerEventList(configs, hudRegistry, commands);
         registerGamma(configs, (GammaBinding) minecraft.entityRenderer);
         registerItemEsp(configs, session);
+        registerNametag(minecraft, configs, session, playerEquipment);
         registerPlayerEsp(configs, session, presence, relations);
         registerPlayerList(configs, playerNames, playerEquipment, pitContext, hudRegistry,
                 relations, presence);
@@ -268,6 +271,13 @@ public final class ClientBootstrap {
         ItemEspConfig config = new ItemEspConfig();
         configs.register(config);
         components.add(new ItemEspFeature(configs, config, session));
+    }
+
+    private void registerNametag(Minecraft minecraft, ConfigCatalog configs, ClientSession session,
+            PlayerEquipmentAccess equipment) {
+        NametagConfig config = new NametagConfig();
+        configs.register(config);
+        components.add(new NametagFeature(minecraft, configs, config, session, equipment));
     }
 
     private void registerPlayerEsp(ConfigCatalog configs, ClientSession session,
