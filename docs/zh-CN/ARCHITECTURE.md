@@ -1,8 +1,8 @@
-<!-- Source: docs/ARCHITECTURE.md; Based on: 2232dc5e10013e89eb44cac454aa965c84b6ce20 -->
+<!-- Source: docs/ARCHITECTURE.md; Based on: d04a7ca1216285f12f66c013303f500f98080369 -->
 
 # 12pit 架构
 
-[实现](IMPLEMENTATION.md)介绍项目中的基础类及其使用方式。
+[实现](IMPLEMENTATION.md)介绍开发功能时需要的共用接口和调用约定。
 
 ## 组件
 
@@ -22,7 +22,7 @@
 
 ## 依赖
 
-`Pit12` 依赖 Bootstrap。Bootstrap 可以依赖 `platform`、`runtime`、`feature` 和 `shared`。它连接组件之间的依赖；不存在全局服务查找。
+`Pit12` 依赖 Bootstrap，并读取 `shared.build.BuildConfig` 中的编译期构建常量。Bootstrap 可以依赖 `platform`、`runtime`、`feature` 和 `shared`。它连接组件之间的依赖；不存在全局服务查找。
 
 功能可以依赖 `runtime` 和 `shared`。一个功能只能通过另一个功能的公开 `api` 包使用该功能。`runtime` 可以依赖 `shared`。`shared` 不依赖项目的其他层。
 

@@ -1,8 +1,8 @@
-<!-- Source: docs/IMPLEMENTATION.md; Based on: 08d27d075f5f28e811ea97e76a4ec893603d64f5 -->
+<!-- Source: docs/IMPLEMENTATION.md; Based on: 1596fd2d6ad227d4f04bc832cdbb136469e6446e -->
 
 # 12pit 实现
 
-本文介绍项目中的类及其使用规则。包的职责见[架构](ARCHITECTURE.md)。
+本文介绍开发功能时需要的共用接口、调用约定和生命周期规则。包的职责见[架构](ARCHITECTURE.md)。
 
 ## 生命周期
 
@@ -10,7 +10,7 @@
 
 `ClientBootstrap` 在构造器中创建共享 runtime 组件。每个功能有一个私有的 `register...` 方法，负责按需创建和注册配置、创建功能并加入 `components`。依赖通过参数传入。只有后续装配方法需要使用时，才返回功能的 API。
 
-构造器分为共享 runtime、功能提供方、其余功能和平台适配四段。runtime 组件和平台适配器在各自的段内直接创建。功能调用和方法声明先按 `ConfigCategory.displayOrder()` 分组，再按方法名 A–Z 排列。没有配置的功能放在最前面的 `Category: No config` 段。两处使用一致的组别和分类注释。依赖先后优先于分类和名称顺序。Bootstrap 按列表顺序启动组件，并按逆序停止。装配方法只创建和注册对象；监听器和工作线程放在 `start()` 中。
+构造器分为共享 runtime、功能提供方、其余功能和平台适配四段。runtime 组件和平台适配器在各自的段内直接创建。功能调用和方法声明依次按 `ConfigCategory.displayOrder()`、`ConfigCategory.id()` 和方法名 A–Z 排列。没有配置的功能放在最前面的 `Category: No config` 段。两处使用一致的组别和分类注释。依赖先后优先于分类和名称顺序。Bootstrap 按列表顺序启动组件，并按逆序停止。装配方法只创建和注册对象；监听器和工作线程放在 `start()` 中。
 
 Bootstrap 注册组件并调用其 `start()` 方法。如果 `start()` 引发异常，Bootstrap 会停止此组件和之前已启动的所有组件。`stop()` 应在任何情况下释放资源，包括仅完成部分初始化或被调用多次的情况。如果某个组件在 `stop()` 中抛出异常，该异常会被记录，但其他所有组件仍会停止。
 
@@ -101,7 +101,7 @@ private void registerStatus(ConfigCatalog configs) {
 }
 ```
 
-所有设置都应在注册前定义。注册会将它们的读写操作绑定到目录的客户端线程。Bootstrap 构造器在所有功能装配方法返回后统一调用一次 `configs.freeze()`。这会阻止新的配置注册，但仍允许修改设置。配置方案在 `start()` 中记录设置结构，此时目录已冻结。
+所有设置都应在注册前定义。注册会将它们的读写操作绑定到目录的客户端线程。Bootstrap 构造器在所有功能装配方法返回后统一调用一次 `configs.freeze()`。这会阻止新的配置注册，但仍允许修改设置。
 
 功能通过 `config.showNames().get()` 读取示例中的设置，通过 `config.showNames().set(false)` 修改它。设置的 `set()` 会校验值，并在值发生变化时通知监听器。实现 `Setting` 子类时，在初始化 `requireValue` 使用的字段后校验默认值。
 
@@ -154,7 +154,7 @@ Bootstrap 通过注册表的 `Registrar` 提供 [ForgeCommandAdapter](../../src/
 
 ## 语言
 
-Bootstrap 创建一个 [Languages](../../src/main/java/pit12/runtime/languages/Languages.java) 实例，并传给使用它的组件。`WebUiConfig` 将所选语言与其他设置一起保存。语言名称和稳定的设置值来自 `src/main/resources/assets/pit12/languages/languages.json`。每份译文首次使用时从 TXT 资源读取，随后缓存。
+Bootstrap 创建一个 [Languages](../../src/main/java/pit12/runtime/languages/Languages.java) 实例，并传给使用它的组件。
 
 名称、说明、选项标签、枚举标签和命令说明使用配置示例中的静态 `source(...)` 导入。它返回英文原文，并保留使用位置供分开的译文识别。配置类保留原文和翻译后的显示值。语言变化时，Bootstrap 通过 `ConfigCatalog.localize(language)` 更新显示值。`CommandRegistry` 在显示帮助时翻译命令说明。保留已保存的 ID、命令名称和别名。
 
@@ -170,7 +170,7 @@ ChatFeedback.reply(sender, Tone.SUCCESS,
 
 HUD 缓存文字时，保留语言监听器，在 `start()` 中注册，在 `stop()` 中注销。`addListener(...)` 注册时立即调用监听器，此后在每次语言变化时调用。一起更新文字缓存和测量后的布局。动态文字在更新显示快照时准备，渲染回调读取准备好的文字。在客户端线程切换语言、注册或注销监听器。
 
-前端组件从 `./languages` 导入 `t`，调用 `t('Settings')` 或 `t('Remove {0} players', count)`。应用跟随服务器状态中的语言，每份译文只获取一次，并在语言变化时更新显示文字。
+前端组件从 `./languages` 导入 `t`，调用 `t('Settings')` 或 `t('Remove {0} players', count)`。在响应式显示代码中调用，确保所选语言变化时更新文字。
 
 分开的译文依赖编译调试信息中的 Java 源文件名和行号。同一原文的不同 Java 调用须写在不同行。在更新循环中反复翻译这类标签时，用 `source(...)` 标记一次并保留返回的字符串，避免重复查找调用位置。
 
@@ -246,7 +246,7 @@ if (!hudRegistry.editing() && element.enabled()) {
 }
 ```
 
-`layout` 调用 `prepare`，应用位置和缩放，并在元素能放入屏幕时将计算得到的原点保持在屏幕内。`render` 应用变换，并在 `finally` 块中恢复 UI 渲染状态。
+`layout` 调用 `prepare`，应用位置和缩放，并在元素能放入屏幕时将计算得到的原点保持在屏幕内。`render` 应用变换，并恢复 UI 渲染状态。
 
 在 `stop()` 中注销同一个元素，并释放渲染器资源：
 
@@ -259,7 +259,7 @@ hudRenderer.close();
 
 自定义 UI 使用 [UiRenderer](../../src/main/java/pit12/shared/rendering/UiRenderer.java) 绘制文字、矩形和纹理。构造时传入 Minecraft 和字体的 `ResourceLocation`。保留渲染器以供复用，测量或绘制前调用 `resize(pixelScale)`，所有者释放这些资源时调用 `close()`。
 
-Monocraft 使用逻辑字号 `9` 来匹配像素网格，系统回退字体使用 `8`。自定义字形采用最近邻采样，并对齐到屏幕像素。绘制原点使用整数 GUI 坐标，再应用 HUD 缩放。
+绘制原点使用整数 GUI 坐标，再应用 HUD 缩放。
 
 在 `HudRenderer.render` 之外绘制时，使用 [UiRenderState](../../src/main/java/pit12/shared/rendering/UiRenderState.java) 保护渲染状态。绘制前调用 `begin()`，在 `finally` 块中调用 `end()`。恢复代码额外修改的渲染状态。
 
