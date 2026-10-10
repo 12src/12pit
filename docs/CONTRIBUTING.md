@@ -18,9 +18,11 @@ Leave a comment when you start working on an issue. If your contribution may ove
 
 Each commit should represent one change only. Messages that follow the [conventional commit format](https://www.conventionalcommits.org/) are preferred: `fix: correct profile loading`, `docs: clarify build steps`, etc. A pull request should generally have one goal. A couple of changes are okay if they are easy to review together.
 
-The [architecture guide](https://github.com/12src/12pit/blob/main/docs/ARCHITECTURE.md) outlines package roles and dependencies. The [implementation guide](https://github.com/12src/12pit/blob/main/docs/IMPLEMENTATION.md) outlines lifecycle, configuration, commands, HUDs, and other project-related classes. The [debugging guide](https://github.com/12src/12pit/blob/main/docs/DEBUGGING.md) outlines the development client and checks.
+The [architecture guide](https://github.com/12src/12pit/blob/main/docs/ARCHITECTURE.md) outlines package roles and dependencies. The [implementation guide](https://github.com/12src/12pit/blob/main/docs/IMPLEMENTATION.md) covers the shared APIs and calling conventions used to develop features. The [debugging guide](https://github.com/12src/12pit/blob/main/docs/DEBUGGING.md) outlines the development client and checks.
 
 Read through the relevant code and use existing helpers when appropriate. Keep all new behavior within its feature. Extract any shared code when really necessary. Do not add any unrelated code cleanup in the pull request.
+
+[BootstrapLayoutTest](../src/test/java/pit12/architecture/BootstrapLayoutTest.java) constructs configs to check their categories. Configs without injected dependencies use a public no-argument constructor. If a new config needs injected dependencies, update its construction in that test.
 
 Write short sentences in all prose in the project. Use common words and project terminology where it helps to explain things clearly, naturally, and concisely.
 

@@ -1,6 +1,6 @@
 # 12pit architecture
 
-[Implementation](IMPLEMENTATION.md) covers the project classes and their APIs.
+[Implementation](IMPLEMENTATION.md) covers the shared APIs and calling conventions used to develop features.
 
 ## Components
 
@@ -20,7 +20,7 @@ Commands definitions and actions are owned by features. `runtime.command` owns r
 
 ## Dependencies
 
-`Pit12` depends on Bootstrap. Bootstrap may depend on `platform`, `runtime`, `feature`, and `shared`. It wires dependencies between the components; there is no global service lookup.
+`Pit12` depends on Bootstrap and reads compile-time build constants from `shared.build.BuildConfig`. Bootstrap may depend on `platform`, `runtime`, `feature`, and `shared`. It wires dependencies between the components; there is no global service lookup.
 
 Features may depend on `runtime` and `shared`. A feature may use another feature only through the public `api` package of that feature. `runtime` may depend on `shared`. `shared` does not depend on other project layers.
 
