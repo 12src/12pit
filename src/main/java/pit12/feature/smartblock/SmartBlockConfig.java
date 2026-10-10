@@ -39,7 +39,7 @@ public final class SmartBlockConfig extends FeatureConfig {
 
     public SmartBlockConfig() {
         super("smart_block", source("Smart Block"),
-                new ConfigCategory("player", source("Player"), 50),
+                new ConfigCategory("combat", source("Combat"), 25),
                 source("Selects a Bullet Time or Bruiser sword from the hotbar while blocking."),
                 true, false);
         subsubcategory("enchantments", source("Enchantments"));

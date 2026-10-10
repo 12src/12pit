@@ -70,7 +70,7 @@ public final class SwapConfig extends FeatureConfig {
     final ChoiceSetting darkPriority;
 
     public SwapConfig() {
-        super("swap", source("Swap"), new ConfigCategory("player", source("Player"), 50), source(
+        super("swap", source("Swap"), new ConfigCategory("combat", source("Combat"), 25), source(
                 "Swaps armor and hotbar items manually, when poisoned or when players have low health."));
         subcategory("general", source("General"));
         rightClick = booleanSetting("right_click", source("Right click swap"),

@@ -125,7 +125,7 @@ public final class ClientBootstrap {
         HudEditorFeature hudEditor = registerHudEditor(hudRegistry, commands, configs, profiles);
         Relations relations = registerRelations(presence,
                 new File(minecraft.mcDataDir, "12pit/relations.json").toPath(), client, commands);
-        // Category: Player
+        // Category: Combat
         SwapBindings swapBindings = registerSwap(minecraft, client, configs, session, pitContext,
                 playerEquipment, relations, commands,
                 new File(minecraft.mcDataDir, "12pit/swap-bindings.json").toPath(),
@@ -137,14 +137,13 @@ public final class ClientBootstrap {
         // Features
         // Category: No config
         registerDiscordRpc(webUiConfigs, discordRpc);
-        // Category: Player
+        // Category: Combat
         registerAutoClick(minecraft, configs, session, (AutoClickBinding) minecraft,
                 (MinecraftActions) minecraft);
-        registerAutoSprint(configs);
         registerSmartBlock(minecraft, configs, session, (SmartBlockBinding) minecraft);
-        // Category: Utility
+        // Category: Player
         registerAutoFish(configs, session, (MinecraftActions) minecraft);
-        registerAutoQuickMath(configs);
+        registerAutoSprint(configs);
         // Category: Render
         registerEventList(configs, hudRegistry, commands);
         registerGamma(configs, (GammaBinding) minecraft.entityRenderer);
@@ -154,6 +153,8 @@ public final class ClientBootstrap {
         registerPlayerList(configs, playerNames, playerEquipment, pitContext, hudRegistry,
                 relations, presence);
         registerTooltip(configs);
+        // Category: Misc
+        registerAutoQuickMath(configs);
         // Platform integrations
         OneConfigSupport oneConfig = new OneConfigSupport(configs);
         components.add(oneConfig);
@@ -186,7 +187,7 @@ public final class ClientBootstrap {
         return relations;
     }
 
-    // Category: Player
+    // Category: Combat
     private SwapBindings registerSwap(Minecraft minecraft, ClientThread client,
             ConfigCatalog configs, ClientSession session, PitContext pitContext,
             PlayerEquipmentAccess playerEquipment, RelationLookup relations,
@@ -218,18 +219,12 @@ public final class ClientBootstrap {
         components.add(new DiscordRpcFeature(configs, enabled));
     }
 
-    // Category: Player
+    // Category: Combat
     private void registerAutoClick(Minecraft minecraft, ConfigCatalog configs,
             ClientSession session, AutoClickBinding binding, MinecraftActions actions) {
         AutoClickConfig config = new AutoClickConfig();
         configs.register(config);
         components.add(new AutoClickFeature(minecraft, configs, config, session, binding, actions));
-    }
-
-    private void registerAutoSprint(ConfigCatalog configs) {
-        AutoSprintConfig config = new AutoSprintConfig();
-        configs.register(config);
-        components.add(new AutoSprintFeature(config));
     }
 
     private void registerSmartBlock(Minecraft minecraft, ConfigCatalog configs,
@@ -239,7 +234,7 @@ public final class ClientBootstrap {
         components.add(new SmartBlockFeature(minecraft, configs, config, session, binding));
     }
 
-    // Category: Utility
+    // Category: Player
     private void registerAutoFish(ConfigCatalog configs, ClientSession session,
             MinecraftActions actions) {
         AutoFishConfig config = new AutoFishConfig();
@@ -247,10 +242,10 @@ public final class ClientBootstrap {
         components.add(new AutoFishFeature(configs, config, session, actions));
     }
 
-    private void registerAutoQuickMath(ConfigCatalog configs) {
-        AutoQuickMathConfig config = new AutoQuickMathConfig();
+    private void registerAutoSprint(ConfigCatalog configs) {
+        AutoSprintConfig config = new AutoSprintConfig();
         configs.register(config);
-        components.add(new AutoQuickMathFeature(config));
+        components.add(new AutoSprintFeature(config));
     }
 
     // Category: Render
@@ -300,6 +295,13 @@ public final class ClientBootstrap {
         TooltipConfig config = new TooltipConfig();
         configs.register(config);
         components.add(new TooltipFeature(configs, config));
+    }
+
+    // Category: Misc
+    private void registerAutoQuickMath(ConfigCatalog configs) {
+        AutoQuickMathConfig config = new AutoQuickMathConfig();
+        configs.register(config);
+        components.add(new AutoQuickMathFeature(config));
     }
 
     public void start() {
