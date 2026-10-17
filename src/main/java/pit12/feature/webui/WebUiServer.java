@@ -65,6 +65,7 @@ import pit12.feature.relation.api.Relations;
 import pit12.feature.swap.api.SwapBindings;
 import pit12.runtime.config.ChoiceSetting;
 import pit12.runtime.config.ConfigCatalog;
+import pit12.runtime.config.ConfigCategory;
 import pit12.runtime.config.ConfigChangeListener;
 import pit12.runtime.config.ConfigOption;
 import pit12.runtime.config.FeatureConfig;
@@ -547,10 +548,11 @@ final class WebUiServer {
             List<Object> options = (List<Object>) section.get("options");
             options.add(optionState(option));
         }
+        ConfigCategory category = feature.category();
         return object("id", feature.id(), "name", feature.displayName(), "description",
-                feature.description(), "categoryId", feature.category().id(), "category",
-                feature.category().displayName(), "toggleable", feature.toggleable(), "enabled",
-                feature.enabled(), "sections", sections);
+                feature.description(), "categoryId", category == null ? "" : category.id(),
+                "category", category == null ? "" : category.displayName(), "toggleable",
+                feature.toggleable(), "enabled", feature.enabled(), "sections", sections);
     }
 
     private static String buildLabel() {

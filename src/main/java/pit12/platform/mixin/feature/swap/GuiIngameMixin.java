@@ -21,7 +21,9 @@ package pit12.platform.mixin.feature.swap;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiIngame;
 import net.minecraft.entity.player.EntityPlayer;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -30,10 +32,14 @@ import pit12.feature.swap.SwapHooksBinding;
 
 @Mixin(GuiIngame.class)
 public abstract class GuiIngameMixin {
+    @Shadow
+    @Final
+    protected Minecraft mc;
+
     @Inject(method = "renderHotbarItem", at = @At("TAIL"))
     private void pit12$drawBinding(int index, int x, int y, float partialTicks, EntityPlayer player,
             CallbackInfo ci) {
-        SwapHooks hooks = ((SwapHooksBinding) Minecraft.getMinecraft()).pit12$swapHooks();
+        SwapHooks hooks = ((SwapHooksBinding) mc).pit12$swapHooks();
         if (hooks != null) {
             hooks.drawBinding(player.inventory.getStackInSlot(index), x, y);
         }

@@ -23,7 +23,9 @@ import net.minecraft.client.network.NetworkPlayerInfo;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import pit12.feature.denick.DenickNamesBinding;
 import pit12.feature.denick.api.DenickNames;
 
@@ -31,17 +33,38 @@ import pit12.feature.denick.api.DenickNames;
 public abstract class GuiPlayerTabOverlayMixin implements DenickNamesBinding {
     @Unique
     private DenickNames pit12$denickNames;
+    @Unique
+    private boolean pit12$renderingName;
 
     @Override
     public void pit12$bindDenickNames(DenickNames names) {
         pit12$denickNames = names;
     }
 
-    @Redirect(method = "renderPlayerlist", at = @At(value = "INVOKE",
+    // Only decorate render calls. PlayerNameCache also calls getPlayerName.
+    @Inject(method = "renderPlayerlist", at = @At(value = "INVOKE",
             target = "Lnet/minecraft/client/gui/GuiPlayerTabOverlay;getPlayerName(Lnet/minecraft/client/network/NetworkPlayerInfo;)Ljava/lang/String;"))
-    private String pit12$displayName(GuiPlayerTabOverlay overlay, NetworkPlayerInfo player) {
-        String original = overlay.getPlayerName(player);
-        return pit12$denickNames == null ? original
-                : pit12$denickNames.listName(player.getGameProfile().getId(), original);
+    private void pit12$beginName(CallbackInfo callback) {
+        pit12$renderingName = true;
+    }
+
+    @Inject(method = "renderPlayerlist", at = @At(value = "INVOKE",
+            target = "Lnet/minecraft/client/gui/GuiPlayerTabOverlay;getPlayerName(Lnet/minecraft/client/network/NetworkPlayerInfo;)Ljava/lang/String;",
+            shift = At.Shift.AFTER))
+    private void pit12$endName(CallbackInfo callback) {
+        pit12$renderingName = false;
+    }
+
+    @Inject(method = "getPlayerName", at = @At("RETURN"), cancellable = true)
+    private void pit12$displayName(NetworkPlayerInfo player,
+            CallbackInfoReturnable<String> callback) {
+        if (!pit12$renderingName || pit12$denickNames == null) {
+            return;
+        }
+        String original = callback.getReturnValue();
+        String name = pit12$denickNames.listName(player.getGameProfile().getId(), original);
+        if (!name.equals(original)) {
+            callback.setReturnValue(name);
+        }
     }
 }

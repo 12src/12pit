@@ -229,7 +229,9 @@ public abstract class FeatureConfig {
     void localize(Languages language) {
         displayName = language.translate(originalDisplayName);
         description = language.translate(originalDescription);
-        category.localize(language);
+        if (category != null) {
+            category.localize(language);
+        }
         for (Setting<?> setting : settings) {
             setting.localize(language);
         }
@@ -255,6 +257,7 @@ public abstract class FeatureConfig {
         return originalDisplayName;
     }
 
+    /** Returns null for global settings. */
     public final ConfigCategory category() {
         return category;
     }

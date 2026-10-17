@@ -25,6 +25,7 @@ import net.minecraft.network.play.client.C0EPacketClickWindow;
 import net.minecraft.network.play.server.S29PacketSoundEffect;
 import net.minecraft.network.play.server.S32PacketConfirmTransaction;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -33,14 +34,17 @@ import pit12.feature.swap.SwapHooksBinding;
 
 @Mixin(NetHandlerPlayClient.class)
 public abstract class NetHandlerPlayClientMixin {
+    @Shadow
+    private Minecraft gameController;
+
     @Inject(method = "addToSendQueue", at = @At("HEAD"))
     private void pit12$beforeWindowClick(Packet<?> packet, CallbackInfo callback) {
         if (!(packet instanceof C0EPacketClickWindow))
             return;
-        Minecraft minecraft = Minecraft.getMinecraft();
-        if (!minecraft.isCallingFromMinecraftThread() || (Object) this != minecraft.getNetHandler())
+        if (!gameController.isCallingFromMinecraftThread()
+                || (Object) this != gameController.getNetHandler())
             return;
-        SwapHooks hooks = ((SwapHooksBinding) minecraft).pit12$swapHooks();
+        SwapHooks hooks = ((SwapHooksBinding) gameController).pit12$swapHooks();
         if (hooks != null) {
             C0EPacketClickWindow click = (C0EPacketClickWindow) packet;
             hooks.clickSent(click.getWindowId(), click.getActionNumber());
@@ -51,10 +55,9 @@ public abstract class NetHandlerPlayClientMixin {
     @Inject(method = "handleConfirmTransaction", at = @At("TAIL"))
     private void pit12$afterInventoryConfirmation(S32PacketConfirmTransaction packet,
             CallbackInfo callback) {
-        Minecraft minecraft = Minecraft.getMinecraft();
-        if ((Object) this != minecraft.getNetHandler())
+        if ((Object) this != gameController.getNetHandler())
             return;
-        SwapHooks hooks = ((SwapHooksBinding) minecraft).pit12$swapHooks();
+        SwapHooks hooks = ((SwapHooksBinding) gameController).pit12$swapHooks();
         if (hooks != null)
             hooks.confirmClick(packet.getWindowId(), packet.getActionNumber(),
                     packet.func_148888_e());
@@ -63,10 +66,9 @@ public abstract class NetHandlerPlayClientMixin {
     // We're on the client thread here. Muted sounds still reach TAIL!
     @Inject(method = "handleSoundEffect", at = @At("TAIL"))
     private void pit12$afterSoundEffect(S29PacketSoundEffect packet, CallbackInfo callback) {
-        Minecraft minecraft = Minecraft.getMinecraft();
-        if ((Object) this != minecraft.getNetHandler())
+        if ((Object) this != gameController.getNetHandler())
             return;
-        SwapHooks hooks = ((SwapHooksBinding) minecraft).pit12$swapHooks();
+        SwapHooks hooks = ((SwapHooksBinding) gameController).pit12$swapHooks();
         if (hooks != null)
             hooks.sound(packet.getSoundName(), packet.getX(), packet.getY(), packet.getZ(),
                     packet.getVolume(), packet.getPitch());

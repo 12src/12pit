@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.minecraft.client.Minecraft;
+import net.minecraftforge.fml.client.FMLClientHandler;
 import pit12.feature.autoclick.AutoClickBinding;
 import pit12.feature.autoclick.AutoClickConfig;
 import pit12.feature.autoclick.AutoClickFeature;
@@ -66,8 +67,14 @@ import pit12.feature.quickmath.AutoQuickMathFeature;
 import pit12.feature.relation.RelationFeature;
 import pit12.feature.relation.api.RelationLookup;
 import pit12.feature.relation.api.Relations;
+import pit12.feature.resourceleakfix.ResourceLeakFixBinding;
+import pit12.feature.resourceleakfix.ResourceLeakFixConfig;
+import pit12.feature.resourceleakfix.ResourceLeakFixFeature;
 import pit12.feature.ringhelper.RingHelperConfig;
 import pit12.feature.ringhelper.RingHelperFeature;
+import pit12.feature.scoreboardfix.ScoreboardFixBinding;
+import pit12.feature.scoreboardfix.ScoreboardFixConfig;
+import pit12.feature.scoreboardfix.ScoreboardFixFeature;
 import pit12.feature.smartblock.SmartBlockBinding;
 import pit12.feature.smartblock.SmartBlockConfig;
 import pit12.feature.smartblock.SmartBlockFeature;
@@ -163,14 +170,14 @@ public final class ClientBootstrap {
                 playerEquipment, relations, commands,
                 new File(minecraft.mcDataDir, "12pit/swap-bindings.json").toPath(),
                 (SwapHooksBinding) minecraft, input);
+        // Category: No config
+        BooleanSetting discordRpc =
+                registerWebUi(webUiConfigs, configs, profiles, relations, hudEditor, swapBindings,
+                        new File(minecraft.mcDataDir, "12pit/webui.json").toPath());
         // Category: Misc
         DenickNames denickNames = registerDenick(minecraft, configs, session, pitContext, presence,
                 playerNames, nicks, players, playerEquipment, commands,
                 new File(minecraft.mcDataDir, "12pit/denick-cache.json").toPath());
-        // Category: Interface
-        BooleanSetting discordRpc =
-                registerWebUi(webUiConfigs, configs, profiles, relations, hudEditor, swapBindings,
-                        new File(minecraft.mcDataDir, "12pit/webui.json").toPath());
         // Features
         // Category: No config
         registerDiscordRpc(webUiConfigs, discordRpc);
@@ -199,6 +206,12 @@ public final class ClientBootstrap {
         // Category: Misc
         registerAutoQuickMath(configs);
         registerBanAlert(minecraft, configs, session, presence);
+        // Category: Patch
+        if (FMLClientHandler.instance().hasOptifine()) {
+            registerResourceLeakFix(configs,
+                    (ResourceLeakFixBinding) minecraft.getTextureMapBlocks());
+        }
+        registerScoreboardFix(configs, (ScoreboardFixBinding) minecraft);
         // Platform integrations
         OneConfigSupport oneConfig = new OneConfigSupport(configs);
         components.add(oneConfig);
@@ -244,6 +257,19 @@ public final class ClientBootstrap {
         return swap.bindings();
     }
 
+    // Category: No config
+    private BooleanSetting registerWebUi(ConfigCatalog configs, ConfigCatalog featureConfigs,
+            Profiles profiles, Relations relations, HudEditorFeature hudEditor,
+            SwapBindings swapBindings, Path path) {
+        WebUiConfig config = new WebUiConfig(language);
+        configs.register(config);
+        WebUiFeature webUi = new WebUiFeature(featureConfigs, configs, profiles, relations,
+                hudEditor, swapBindings, config, language, path);
+        hudEditor.setWebUiOpener(config.keybind()::get, webUi::open, config.hudEditorHint());
+        components.add(webUi);
+        return config.discordRpc();
+    }
+
     // Category: Misc
     private DenickNames registerDenick(Minecraft minecraft, ConfigCatalog configs,
             ClientSession session, PitContext pitContext, TabPresence presence,
@@ -257,19 +283,6 @@ public final class ClientBootstrap {
                         .pit12$bindDenickNames(names));
         components.add(denick);
         return denick;
-    }
-
-    // Category: Interface
-    private BooleanSetting registerWebUi(ConfigCatalog configs, ConfigCatalog featureConfigs,
-            Profiles profiles, Relations relations, HudEditorFeature hudEditor,
-            SwapBindings swapBindings, Path path) {
-        WebUiConfig config = new WebUiConfig(language);
-        configs.register(config);
-        WebUiFeature webUi = new WebUiFeature(featureConfigs, configs, profiles, relations,
-                hudEditor, swapBindings, config, language, path);
-        hudEditor.setWebUiOpener(config.keybind()::get, webUi::open, config.hudEditorHint());
-        components.add(webUi);
-        return config.discordRpc();
     }
 
     // Features
@@ -405,6 +418,19 @@ public final class ClientBootstrap {
         configs.register(config);
         components
                 .add(new BanAlertFeature(minecraft, configs, config, session, presence, language));
+    }
+
+    // Category: Patch
+    private void registerResourceLeakFix(ConfigCatalog configs, ResourceLeakFixBinding binding) {
+        ResourceLeakFixConfig config = new ResourceLeakFixConfig();
+        configs.register(config);
+        components.add(new ResourceLeakFixFeature(config, binding));
+    }
+
+    private void registerScoreboardFix(ConfigCatalog configs, ScoreboardFixBinding binding) {
+        ScoreboardFixConfig config = new ScoreboardFixConfig();
+        configs.register(config);
+        components.add(new ScoreboardFixFeature(config, binding));
     }
 
     public void start() {

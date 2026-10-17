@@ -21,6 +21,7 @@ package pit12.architecture;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.nio.charset.StandardCharsets;
@@ -73,8 +74,7 @@ public final class BootstrapLayoutTest {
             String name = imported.group(1);
             imports.put(name.substring(name.lastIndexOf('.') + 1), name);
         }
-        List<String> categories =
-                Arrays.asList("", "combat", "player", "render", "misc", "interface");
+        List<String> categories = Arrays.asList("", "combat", "player", "render", "misc", "patch");
         Map<String, Registration> registrations = new LinkedHashMap<>();
         Set<String> configTypes = new HashSet<>();
         Matcher declarations = Pattern
@@ -84,19 +84,22 @@ public final class BootstrapLayoutTest {
             String body = code.substring(declarations.end(), bodyEnd(code, declarations.end() - 1));
             ConfigCategory category = null;
             Matcher config = Pattern.compile("\\bnew\\s+(\\w+Config)\\s*\\(").matcher(body);
-            if (config.find()) {
+            boolean hasConfig = config.find();
+            if (hasConfig) {
                 String type = imports.get(config.group(1));
                 assertNotNull("Missing config import in " + name, type);
                 assertTrue("Config is constructed twice: " + type, configTypes.add(type));
                 if (WebUiConfig.class.getName().equals(type)) {
                     category = new WebUiConfig(new Languages(ClientThread.current())).category();
+                    assertNull("Global settings have no feature category", category);
                 } else {
                     category = FeatureConfig.class
                             .cast(Class.forName(type).getDeclaredConstructor().newInstance())
                             .category();
+                    assertNotNull("Missing config category in " + name, category);
+                    assertTrue("Unknown config category in " + name,
+                            categories.contains(category.id()));
                 }
-                assertTrue("Unknown config category in " + name,
-                        categories.contains(category.id()));
                 assertFalse("Multiple configs in " + name, config.find());
             }
             Registration registration =
@@ -105,7 +108,7 @@ public final class BootstrapLayoutTest {
                     sectionAt(source, declarations.start()));
             assertEquals("Component registrations in " + name, 1,
                     calls(body, "components\\.add").size());
-            assertEquals("Config registrations in " + name, category == null ? 0 : 1,
+            assertEquals("Config registrations in " + name, hasConfig ? 1 : 0,
                     calls(body, "configs\\.register").size());
             assertTrue("Config freeze belongs in the constructor: " + name,
                     calls(body, "configs\\.freeze").isEmpty());

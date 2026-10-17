@@ -18,7 +18,7 @@
  */
 package pit12.platform.mixin.feature.swap;
 
-import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.inventory.Slot;
 import org.spongepowered.asm.mixin.Mixin;
@@ -29,10 +29,10 @@ import pit12.feature.swap.SwapHooks;
 import pit12.feature.swap.SwapHooksBinding;
 
 @Mixin(GuiContainer.class)
-public abstract class GuiContainerMixin {
+public abstract class GuiContainerMixin extends GuiScreen {
     @Inject(method = "drawSlot", at = @At("TAIL"))
     private void pit12$drawBinding(Slot slot, CallbackInfo ci) {
-        SwapHooks hooks = ((SwapHooksBinding) Minecraft.getMinecraft()).pit12$swapHooks();
+        SwapHooks hooks = ((SwapHooksBinding) mc).pit12$swapHooks();
         if (hooks != null) {
             hooks.drawBinding(slot.getStack(), slot.xDisplayPosition, slot.yDisplayPosition);
         }

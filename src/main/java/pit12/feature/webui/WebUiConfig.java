@@ -25,7 +25,6 @@ import org.lwjgl.input.Keyboard;
 import pit12.runtime.config.BooleanSetting;
 import pit12.runtime.config.ChoiceSetting;
 import pit12.runtime.config.ChoiceSetting.Choice;
-import pit12.runtime.config.ConfigCategory;
 import pit12.runtime.config.FeatureConfig;
 import pit12.runtime.config.KeybindSetting;
 import pit12.runtime.languages.Languages;
@@ -38,8 +37,7 @@ public final class WebUiConfig extends FeatureConfig {
     private final BooleanSetting discordRpc;
 
     public WebUiConfig(Languages languages) {
-        super("webui", source("Settings"), new ConfigCategory("interface", source("Interface")), "",
-                false);
+        super("webui", source("Settings"), null, "", false);
         Map<Integer, String> names = languages.names();
         Choice[] choices = new Choice[names.size()];
         int index = 0;
