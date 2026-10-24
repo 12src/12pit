@@ -30,7 +30,7 @@ import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import org.lwjgl.opengl.GL11;
 
 public final class BoxRenderer {
-    private final LunarTextureState textures = new LunarTextureState();
+    private final TextureState textures;
     private final List<Box> boxes = new ArrayList<>();
     private Frustum frustum;
     private Tessellator tessellator;
@@ -40,6 +40,10 @@ public final class BoxRenderer {
     private int count;
     private boolean fills;
     private boolean outlines;
+
+    public BoxRenderer(TextureState textures) {
+        this.textures = textures;
+    }
 
     public void beginFrame(double cameraX, double cameraY, double cameraZ) {
         this.cameraX = cameraX;

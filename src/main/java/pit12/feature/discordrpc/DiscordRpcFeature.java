@@ -18,9 +18,10 @@
  */
 package pit12.feature.discordrpc;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
-import java.lang.management.RuntimeMXBean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import pit12.runtime.config.BooleanSetting;
@@ -32,12 +33,15 @@ import pit12.shared.lifecycle.ClientLifecycle;
 public final class DiscordRpcFeature implements ClientLifecycle, ConfigChangeListener {
     private final ConfigCatalog configs;
     private final BooleanSetting enabled;
+    private final DiscordRpcConnection.Factory connections;
     private boolean started;
     private RpcWorker worker;
 
-    public DiscordRpcFeature(ConfigCatalog configs, BooleanSetting enabled) {
+    public DiscordRpcFeature(ConfigCatalog configs, BooleanSetting enabled,
+            DiscordRpcConnection.Factory connections) {
         this.configs = configs;
         this.enabled = enabled;
+        this.connections = connections;
     }
 
     @Override
@@ -48,7 +52,7 @@ public final class DiscordRpcFeature implements ClientLifecycle, ConfigChangeLis
         }
         started = true;
         configs.addListener(this);
-        worker = new RpcWorker(enabled.get());
+        worker = new RpcWorker(enabled.get(), connections);
         worker.start();
     }
 
@@ -71,16 +75,43 @@ public final class DiscordRpcFeature implements ClientLifecycle, ConfigChangeLis
         }
     }
 
+    private static JsonObject createActivity(long startedAt) {
+        JsonObject activity = new JsonObject();
+        activity.addProperty("type", 0);
+        activity.addProperty("details", "A free and open-source pit mod");
+        JsonObject timestamps = new JsonObject();
+        timestamps.addProperty("start", startedAt);
+        activity.add("timestamps", timestamps);
+        JsonObject assets = new JsonObject();
+        assets.addProperty("large_image", "12");
+        assets.addProperty("large_text", "12pit");
+        activity.add("assets", assets);
+        JsonArray buttons = new JsonArray();
+        buttons.add(button("GitHub", "https://github.com/12src/12pit"));
+        buttons.add(button("Discord", "https://discord.gg/e9PRKMUenc"));
+        activity.add("buttons", buttons);
+        return activity;
+    }
+
+    private static JsonObject button(String label, String url) {
+        JsonObject button = new JsonObject();
+        button.addProperty("label", label);
+        button.addProperty("url", url);
+        return button;
+    }
+
     private static final class RpcWorker extends Thread {
         private static final Logger LOGGER = Logger.getLogger(RpcWorker.class.getName());
+        private final DiscordRpcConnection.Factory connections;
         // The client thread also uses these during shutdown, so keep them under the monitor.
         private boolean enabled;
         private boolean stopping;
         private DiscordRpcConnection connection;
 
-        private RpcWorker(boolean enabled) {
+        private RpcWorker(boolean enabled, DiscordRpcConnection.Factory connections) {
             super("12pit-discord-rpc");
             this.enabled = enabled;
+            this.connections = connections;
             setDaemon(true);
         }
 
@@ -111,13 +142,9 @@ public final class DiscordRpcFeature implements ClientLifecycle, ConfigChangeLis
         @Override
         public void run() {
             try {
-                RuntimeMXBean runtime = ManagementFactory.getRuntimeMXBean();
-                // Java 8 HotSpot gives us pid@hostname here.
-                String process = runtime.getName();
-                int pid = Integer.parseInt(process.substring(0, process.indexOf('@')));
-                long startedAt = runtime.getStartTime() / 1000L;
+                long startedAt = ManagementFactory.getRuntimeMXBean().getStartTime() / 1000L;
                 while (awaitEnabled()) {
-                    try (DiscordRpcConnection opened = DiscordRpcConnection.open()) {
+                    try (DiscordRpcConnection opened = connections.open()) {
                         if (opened != null) {
                             synchronized (this) {
                                 if (stopping || !enabled) {
@@ -125,7 +152,7 @@ public final class DiscordRpcFeature implements ClientLifecycle, ConfigChangeLis
                                 }
                                 connection = opened;
                             }
-                            opened.publish(pid, startedAt);
+                            opened.publish("1553780738573213716", createActivity(startedAt));
                             opened.listen();
                         }
                     } catch (IOException failure) {

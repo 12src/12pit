@@ -37,7 +37,7 @@ import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.ResourceLocation;
 import org.lwjgl.opengl.GL11;
 import pit12.shared.rendering.FontWidths;
-import pit12.shared.rendering.LunarTextureState;
+import pit12.shared.rendering.TextureState;
 
 final class TelebowRenderer {
     private static final ResourceLocation BEAM_TEXTURE =
@@ -52,16 +52,17 @@ final class TelebowRenderer {
     }
     private final Minecraft minecraft;
     private final TelebowConfig config;
-    private final LunarTextureState textures = new LunarTextureState();
+    private final TextureState textures;
     private final Map<TelebowPath, Mesh> meshes = new IdentityHashMap<>();
     private final List<Mesh> visible = new ArrayList<>();
     private final List<TelebowAim.Target> visibleAims = new ArrayList<>();
     private ClippingHelper clipping;
     private Frustum frustum;
 
-    TelebowRenderer(Minecraft minecraft, TelebowConfig config) {
+    TelebowRenderer(Minecraft minecraft, TelebowConfig config, TextureState textures) {
         this.minecraft = minecraft;
         this.config = config;
+        this.textures = textures;
     }
 
     void render(Collection<TelebowPath> paths, Collection<TelebowAim.Target> aims, long now) {
@@ -166,6 +167,7 @@ final class TelebowRenderer {
         if (visible.isEmpty() && visibleAims.isEmpty())
             return;
         boolean alphaEnabled = drawNames && GL11.glIsEnabled(GL11.GL_ALPHA_TEST);
+        boolean textureEnabled = drawNames && GL11.glIsEnabled(GL11.GL_TEXTURE_2D);
         GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT
                 | GL11.GL_LINE_BIT | GL11.GL_CURRENT_BIT | GL11.GL_TEXTURE_BIT);
         textures.begin();
@@ -188,7 +190,7 @@ final class TelebowRenderer {
             double beamX = Math.cos(angle) * 0.22;
             double beamZ = Math.sin(angle) * 0.22;
             if (drawBeams) {
-                GlStateManager.enableTexture2D();
+                textures.setEnabled(true);
                 minecraft.getTextureManager().bindTexture(BEAM_TEXTURE);
                 GL11.glBegin(GL11.GL_QUADS);
                 try {
@@ -204,7 +206,7 @@ final class TelebowRenderer {
                     GL11.glEnd();
                 }
             }
-            GlStateManager.disableTexture2D();
+            textures.setEnabled(false);
             for (Mesh mesh : visible) {
                 TelebowPath path = mesh.path;
                 if (mesh.geometryVisible) {
@@ -234,6 +236,10 @@ final class TelebowRenderer {
             // Keep the cached binding in sync with the state restored by glPopAttrib.
             GlStateManager.bindTexture(boundTexture);
             if (drawNames) {
+                if (textureEnabled)
+                    GlStateManager.enableTexture2D();
+                else
+                    GlStateManager.disableTexture2D();
                 if (alphaEnabled)
                     GlStateManager.enableAlpha();
                 else
@@ -255,7 +261,7 @@ final class TelebowRenderer {
             GlStateManager.rotate(minecraft.gameSettings.thirdPersonView == 2 ? -camera.playerViewX
                     : camera.playerViewX, 1, 0, 0);
             GlStateManager.scale(-target.scale, -target.scale, target.scale);
-            GlStateManager.disableTexture2D();
+            textures.setEnabled(false);
             GL11.glDisable(GL11.GL_ALPHA_TEST);
             int color = target.color;
             float alpha = target.alpha;
@@ -399,8 +405,8 @@ final class TelebowRenderer {
         }
     }
 
-    private static void drawLabel(String name, int width, FontRenderer font, float alpha) {
-        GlStateManager.disableTexture2D();
+    private void drawLabel(String name, int width, FontRenderer font, float alpha) {
+        textures.setEnabled(false);
         GL11.glColor4f(0, 0, 0, alpha * 0.5F);
         GL11.glBegin(GL11.GL_QUADS);
         try {
@@ -411,6 +417,8 @@ final class TelebowRenderer {
         } finally {
             GL11.glEnd();
         }
+        textures.setEnabled(true);
+        // FontRenderer uses this cache for text decorations too.
         GlStateManager.enableTexture2D();
         GL11.glEnable(GL11.GL_ALPHA_TEST);
         GL11.glAlphaFunc(GL11.GL_GREATER, 0.001F);

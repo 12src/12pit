@@ -66,9 +66,10 @@ public final class ArchitectureTest {
     @ArchTest
     public static final ArchRule APPLICATION_ENTRY_POINT_DEPENDENCIES =
             classes().that().resideInAPackage("pit12").should().onlyDependOnClassesThat()
-                    .resideInAnyPackage("pit12", "pit12.bootstrap..", "java..",
-                            "net.minecraftforge.fml.common..")
-                    .because("the entry point only passes Forge events to Bootstrap");
+                    .resideInAnyPackage("pit12", "pit12.bootstrap..", "pit12.shared.build..",
+                            "java..", "net.minecraftforge.fml.common..")
+                    .because("the entry point only connects Forge to Bootstrap and reads "
+                            + "build constants");
     @ArchTest
     public static final ArchRule TOP_LEVEL_DEPENDENCIES = layeredArchitecture()
             .consideringOnlyDependenciesInLayers().layer("Application").definedBy("pit12")
@@ -85,6 +86,15 @@ public final class ArchitectureTest {
             noClasses().that().resideInAPackage("pit12.runtime.command..").should()
                     .dependOnClassesThat().resideInAPackage("net.minecraftforge..")
                     .because("Forge command registration belongs to the platform adapter");
+    @ArchTest
+    public static final ArchRule EXTERNAL_APIS_BELONG_TO_PLATFORM = noClasses().that()
+            .resideInAnyPackage("pit12.bootstrap..", "pit12.runtime..", "pit12.feature..",
+                    "pit12.shared..")
+            .should().dependOnClassesThat()
+            .resideOutsideOfPackages("pit12..", "java..", "javax..", "com.sun.net.httpserver..",
+                    "net.minecraft..", "net.minecraftforge..", "com.mojang..", "com.google..",
+                    "org.lwjgl..", "org.apache.http..")
+            .because("optional client and native API access belongs to platform adapters");
     @ArchTest
     public static final ArchRule MODULES_MUST_BE_FREE_OF_CYCLES =
             slices().matching("pit12.(*).(*)..").should().beFreeOfCycles();
@@ -108,7 +118,7 @@ public final class ArchitectureTest {
             .because("ordinary classes in the configured Mixin tree cannot be loaded directly");
 
     @ArchTest
-    public static void FEATURE_MIXINS_MUST_MIRROR_FEATURE_PACKAGES(JavaClasses classes) {
+    public static void FEATURE_MIXINS_MUST_RESPECT_FEATURE_BOUNDARIES(JavaClasses classes) {
         Set<String> featureNames = new TreeSet<String>();
         for (JavaClass javaClass : classes) {
             String featureName = featureNameOf(javaClass);
@@ -122,31 +132,26 @@ public final class ArchitectureTest {
                 continue;
             }
             String declaredFeature = mixinFeatureNameOf(javaClass);
-            Set<String> dependencies = new TreeSet<String>();
-            for (Dependency dependency : javaClass.getDirectDependenciesFromSelf()) {
-                String dependencyFeature = featureNameOf(dependency.getTargetClass());
-                if (dependencyFeature != null) {
-                    dependencies.add(dependencyFeature);
-                }
-            }
-            if (declaredFeature == null) {
-                if (!dependencies.isEmpty()) {
-                    violations.add(javaClass.getName() + " depends on feature(s) " + dependencies
-                            + " outside platform.mixin.feature");
-                }
-                continue;
-            }
-            if (!featureNames.contains(declaredFeature)) {
+            if (declaredFeature != null && !featureNames.contains(declaredFeature)) {
                 violations.add(javaClass.getName() + " mirrors missing feature " + declaredFeature);
             }
-            dependencies.remove(declaredFeature);
-            if (!dependencies.isEmpty()) {
-                violations
-                        .add(javaClass.getName() + " depends on other feature(s) " + dependencies);
+            for (Dependency dependency : javaClass.getDirectDependenciesFromSelf()) {
+                JavaClass target = dependency.getTargetClass();
+                String dependencyFeature = featureNameOf(target);
+                if (dependencyFeature == null || dependencyFeature.equals(declaredFeature)) {
+                    continue;
+                }
+                if (declaredFeature == null) {
+                    violations.add(javaClass.getName() + " depends on feature " + dependencyFeature
+                            + " outside platform.mixin.feature");
+                } else if (!isFeatureApi(target, dependencyFeature)) {
+                    violations.add(javaClass.getName() + " depends on internal classes of feature "
+                            + dependencyFeature);
+                }
             }
         }
         if (!violations.isEmpty()) {
-            throw new AssertionError("Feature Mixin ownership mismatch: " + violations);
+            throw new AssertionError("Feature Mixin boundary mismatch: " + violations);
         }
     }
 

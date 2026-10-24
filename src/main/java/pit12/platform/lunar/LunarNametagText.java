@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.platform.nametag;
+package pit12.platform.lunar;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;

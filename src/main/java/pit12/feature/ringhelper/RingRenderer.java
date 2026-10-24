@@ -26,12 +26,16 @@ import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.util.BlockPos;
 import org.lwjgl.opengl.GL11;
-import pit12.shared.rendering.LunarTextureState;
+import pit12.shared.rendering.TextureState;
 
 final class RingRenderer {
-    private final LunarTextureState textures = new LunarTextureState();
+    private final TextureState textures;
     private int displayList;
     private long compiledRevision = -1;
+
+    RingRenderer(TextureState textures) {
+        this.textures = textures;
+    }
 
     void render(Minecraft minecraft, List<BlockPos> blocks, int color, long revision) {
         if (minecraft.getRenderViewEntity() == null || (color >>> 24) == 0) {

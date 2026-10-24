@@ -23,13 +23,15 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.entity.player.EntityPlayer;
 import pit12.shared.rendering.BoxRenderer;
+import pit12.shared.rendering.TextureState;
 
 final class PlayerEspRenderer {
     private final PlayerEspConfig config;
-    private final BoxRenderer boxes = new BoxRenderer();
+    private final BoxRenderer boxes;
 
-    PlayerEspRenderer(PlayerEspConfig config) {
+    PlayerEspRenderer(PlayerEspConfig config, TextureState textures) {
         this.config = config;
+        boxes = new BoxRenderer(textures);
     }
 
     void render(Minecraft minecraft, List<PlayerEspFeature.Target> targets, float partialTicks) {

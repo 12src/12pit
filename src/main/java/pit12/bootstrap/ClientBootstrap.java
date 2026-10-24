@@ -22,6 +22,7 @@ import java.io.File;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.minecraft.client.Minecraft;
@@ -95,8 +96,11 @@ import pit12.feature.tooltip.TooltipConfig;
 import pit12.feature.tooltip.TooltipFeature;
 import pit12.feature.webui.WebUiConfig;
 import pit12.feature.webui.WebUiFeature;
-import pit12.platform.command.ForgeCommandAdapter;
-import pit12.platform.input.LwjglInputDevice;
+import pit12.platform.discord.DiscordIpcConnection;
+import pit12.platform.forge.ForgeCommandAdapter;
+import pit12.platform.lunar.LunarSupport;
+import pit12.platform.lunar.LunarTextureState;
+import pit12.platform.lwjgl.LwjglInputDevice;
 import pit12.platform.oneconfig.OneConfigSupport;
 import pit12.runtime.arrow.ArrowTracker;
 import pit12.runtime.command.CommandRegistry;
@@ -123,6 +127,8 @@ import pit12.shared.concurrent.ClientThread;
 import pit12.shared.input.MinecraftActions;
 import pit12.shared.lifecycle.ClientLifecycle;
 import pit12.shared.lifecycle.ClientShutdownBinding;
+import pit12.shared.rendering.OpenGlTextureState;
+import pit12.shared.rendering.TextureState;
 
 public final class ClientBootstrap {
     private static final Logger LOGGER = Logger.getLogger(ClientBootstrap.class.getName());
@@ -170,6 +176,8 @@ public final class ClientBootstrap {
         components.add(sidebar);
         components.add(new DailyUsageReporter(client, pitContext));
         HudRegistry hudRegistry = new HudRegistry(client);
+        Supplier<TextureState> textureStates =
+                LunarSupport.isLoaded() ? LunarTextureState::new : OpenGlTextureState::new;
         // Feature providers
         // Category: No config
         Profiles profiles =
@@ -187,8 +195,8 @@ public final class ClientBootstrap {
                 registerWebUi(webUiConfigs, configs, profiles, relations, hudEditor, swapBindings,
                         new File(minecraft.mcDataDir, "12pit/webui.json").toPath());
         // Category: Render
-        TelebowCooldowns telebowCooldowns =
-                registerTelebow(minecraft, configs, session, arrows, relations);
+        TelebowCooldowns telebowCooldowns = registerTelebow(minecraft, configs, session, arrows,
+                relations, textureStates.get());
         PlayerTimers timers = registerTimers(minecraft, configs, session, arrows, relations,
                 playerNames, hudRegistry, telebowCooldowns, players, playerEquipment);
         // Category: Misc
@@ -213,12 +221,12 @@ public final class ClientBootstrap {
         // Category: Render
         registerEventList(configs, hudRegistry, commands);
         registerGamma(configs, (GammaBinding) minecraft.entityRenderer);
-        registerItemEsp(configs, session);
+        registerItemEsp(configs, session, textureStates.get());
         registerNametag(minecraft, configs, session, playerEquipment, denickNames, nicks, timers);
-        registerPlayerEsp(configs, session, presence, relations);
+        registerPlayerEsp(configs, session, presence, relations, textureStates.get());
         registerPlayerList(configs, playerNames, players, playerEquipment, pitContext, hudRegistry,
                 relations, presence, denickNames, nicks);
-        registerRingHelper(minecraft, configs, session, pitContext);
+        registerRingHelper(minecraft, configs, session, pitContext, textureStates.get());
         registerTooltip(configs);
         // Category: Misc
         registerAutoQuickMath(configs);
@@ -289,11 +297,12 @@ public final class ClientBootstrap {
 
     // Category: Render
     private TelebowCooldowns registerTelebow(Minecraft minecraft, ConfigCatalog configs,
-            ClientSession session, ArrowTracker arrows, RelationLookup relations) {
+            ClientSession session, ArrowTracker arrows, RelationLookup relations,
+            TextureState textures) {
         TelebowConfig config = new TelebowConfig();
         configs.register(config);
-        TelebowFeature feature =
-                new TelebowFeature(minecraft, configs, config, session, arrows, relations);
+        TelebowFeature feature = new TelebowFeature(minecraft, configs, config, session, arrows,
+                relations, textures);
         components.add(feature);
         return feature.cooldowns();
     }
@@ -327,7 +336,7 @@ public final class ClientBootstrap {
     // Features
     // Category: No config
     private void registerDiscordRpc(ConfigCatalog configs, BooleanSetting enabled) {
-        components.add(new DiscordRpcFeature(configs, enabled));
+        components.add(new DiscordRpcFeature(configs, enabled, DiscordIpcConnection::open));
     }
 
     // Category: Combat
@@ -397,10 +406,11 @@ public final class ClientBootstrap {
         components.add(new GammaFeature(configs, config, binding));
     }
 
-    private void registerItemEsp(ConfigCatalog configs, ClientSession session) {
+    private void registerItemEsp(ConfigCatalog configs, ClientSession session,
+            TextureState textures) {
         ItemEspConfig config = new ItemEspConfig();
         configs.register(config);
-        components.add(new ItemEspFeature(configs, config, session));
+        components.add(new ItemEspFeature(configs, config, session, textures));
     }
 
     private void registerNametag(Minecraft minecraft, ConfigCatalog configs, ClientSession session,
@@ -413,10 +423,11 @@ public final class ClientBootstrap {
     }
 
     private void registerPlayerEsp(ConfigCatalog configs, ClientSession session,
-            TabPresence presence, RelationLookup relations) {
+            TabPresence presence, RelationLookup relations, TextureState textures) {
         PlayerEspConfig config = new PlayerEspConfig();
         configs.register(config);
-        components.add(new PlayerEspFeature(configs, config, session, presence, relations));
+        components
+                .add(new PlayerEspFeature(configs, config, session, presence, relations, textures));
     }
 
     private void registerPlayerList(ConfigCatalog configs, PlayerNameCache playerNames,
@@ -430,10 +441,11 @@ public final class ClientBootstrap {
     }
 
     private void registerRingHelper(Minecraft minecraft, ConfigCatalog configs,
-            ClientSession session, PitContext pitContext) {
+            ClientSession session, PitContext pitContext, TextureState textures) {
         RingHelperConfig config = new RingHelperConfig();
         configs.register(config);
-        components.add(new RingHelperFeature(minecraft, configs, config, session, pitContext));
+        components.add(
+                new RingHelperFeature(minecraft, configs, config, session, pitContext, textures));
     }
 
     private void registerTooltip(ConfigCatalog configs) {

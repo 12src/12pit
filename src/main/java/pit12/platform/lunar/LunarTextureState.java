@@ -16,19 +16,20 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.shared.rendering;
+package pit12.platform.lunar;
 
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
+import pit12.shared.rendering.TextureState;
 
-public final class LunarTextureState {
+public final class LunarTextureState implements TextureState {
     private int activeTexture;
     private boolean textureEnabled;
     private boolean lightmapEnabled;
 
-    /** Call after glPushAttrib, then call end() after glPopAttrib. */
+    @Override
     public void begin() {
         activeTexture = GL11.glGetInteger(GL13.GL_ACTIVE_TEXTURE);
         GlStateManager.setActiveTexture(OpenGlHelper.lightmapTexUnit);
@@ -39,6 +40,16 @@ public final class LunarTextureState {
         GlStateManager.disableTexture2D();
     }
 
+    @Override
+    public void setEnabled(boolean enabled) {
+        if (enabled) {
+            GlStateManager.enableTexture2D();
+        } else {
+            GlStateManager.disableTexture2D();
+        }
+    }
+
+    @Override
     public void end() {
         // Lunar needs these calls even when glPopAttrib has restored the real state.
         GlStateManager.setActiveTexture(OpenGlHelper.lightmapTexUnit);

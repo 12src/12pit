@@ -1,4 +1,4 @@
-<!-- Source: docs/ARCHITECTURE.md; Based on: 5c8bce221aa767a7dad58c3d23b817d9c07395d9 -->
+<!-- Source: docs/ARCHITECTURE.md; Based on: f59d0c6d77b5f37fe9637bea07f2965f1fbdd33c -->
 
 # 12pit 架构
 
@@ -12,9 +12,9 @@
 
 `shared` 提供线程、监听器、渲染和文件写入所需的小型辅助接口和工具。实时游戏状态由 runtime 和功能组件管理。
 
-`platform` 适配 Forge 命令和 Mixin 等外部机制。适配器通过小接口将外部请求转发给负责处理的组件，也可以实现 `ClientLifecycle`，管理自己的订阅和注册。
+`platform` 适配外部框架、客户端扩展和原生服务，负责注册、协议细节和兼容处理。适配器按目标系统分包，通过功能、runtime 或 shared 定义的接口转发外部请求，也可以实现 `ClientLifecycle`，管理自己的订阅和注册。
 
-功能负责定义命令和操作。`runtime.command` 负责命令路由、帮助、补全和可用性。`platform.command` 负责向 Forge 注册命令。
+功能负责定义命令和操作。`runtime.command` 负责命令路由、帮助、补全和可用性。`platform.forge` 负责向 Forge 注册命令。
 
 `feature.webui` 管理本地 HTTP 服务器，将配置界面连接到配置和功能 API。`web-ui` 存放浏览器页面。
 
@@ -24,7 +24,7 @@
 
 `runtime` 和 `shared` 可供功能使用。功能之间通过对方公开的 `api` 包交互。`runtime` 可以依赖 `shared`。`shared` 独立于项目的其他层。
 
-`platform` 可以依赖 `runtime`、`feature` 和 `shared`。功能和 runtime 代码依赖绑定接口，与 platform 类解耦。命令 runtime 代码与 Forge 解耦。
+`platform` 可以依赖 `runtime`、`feature` 和 `shared`。功能、runtime 和 shared 通过各自的接口使用平台服务并绑定钩子，与 platform 类解耦。原生 API 和可选框架类型的使用集中在平台适配器中。命令 runtime 代码与 Forge 解耦。
 
 项目层的直接子包构成模块，模块依赖应保持无环。功能专用的 Mixin 归属对应功能，通过公开 API 访问其他功能。
 

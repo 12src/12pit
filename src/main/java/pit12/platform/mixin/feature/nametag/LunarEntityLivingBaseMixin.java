@@ -30,7 +30,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import pit12.feature.nametag.NametagNamesBinding;
-import pit12.platform.nametag.LunarNametagText;
+import pit12.platform.lunar.LunarNametagText;
 
 // Run after Lunar adds the component getter at priority 200.
 @Mixin(value = EntityLivingBase.class, priority = 100)

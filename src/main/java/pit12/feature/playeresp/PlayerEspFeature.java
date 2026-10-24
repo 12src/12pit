@@ -45,6 +45,7 @@ import pit12.runtime.player.TabPresence;
 import pit12.runtime.player.TabPresenceListener;
 import pit12.runtime.session.ClientSession;
 import pit12.shared.lifecycle.ClientLifecycle;
+import pit12.shared.rendering.TextureState;
 
 public final class PlayerEspFeature
         implements ClientLifecycle, ConfigChangeListener, RelationListener, TabPresenceListener {
@@ -64,13 +65,13 @@ public final class PlayerEspFeature
     private boolean active;
 
     public PlayerEspFeature(ConfigCatalog configs, PlayerEspConfig config, ClientSession session,
-            TabPresence presence, RelationLookup relations) {
+            TabPresence presence, RelationLookup relations, TextureState textures) {
         this.configs = configs;
         this.config = config;
         this.session = session;
         this.presence = presence;
         this.relations = relations;
-        renderer = new PlayerEspRenderer(config);
+        renderer = new PlayerEspRenderer(config, textures);
     }
 
     @Override

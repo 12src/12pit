@@ -42,6 +42,7 @@ import pit12.runtime.config.ConfigChangeListener;
 import pit12.runtime.config.ConfigChangeSet;
 import pit12.runtime.session.ClientSession;
 import pit12.shared.lifecycle.ClientLifecycle;
+import pit12.shared.rendering.TextureState;
 
 public final class ItemEspFeature implements ClientLifecycle, ConfigChangeListener {
     private final Minecraft minecraft = Minecraft.getMinecraft();
@@ -57,11 +58,12 @@ public final class ItemEspFeature implements ClientLifecycle, ConfigChangeListen
     private boolean started;
     private boolean active;
 
-    public ItemEspFeature(ConfigCatalog configs, ItemEspConfig config, ClientSession session) {
+    public ItemEspFeature(ConfigCatalog configs, ItemEspConfig config, ClientSession session,
+            TextureState textures) {
         this.configs = configs;
         this.config = config;
         this.session = session;
-        renderer = new ItemEspRenderer(config);
+        renderer = new ItemEspRenderer(config, textures);
     }
 
     @Override

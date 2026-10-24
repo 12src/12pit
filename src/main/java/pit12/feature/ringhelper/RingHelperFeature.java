@@ -41,6 +41,7 @@ import pit12.runtime.pit.PitMap;
 import pit12.runtime.pit.PitMid;
 import pit12.runtime.session.ClientSession;
 import pit12.shared.lifecycle.ClientLifecycle;
+import pit12.shared.rendering.TextureState;
 
 public final class RingHelperFeature implements ClientLifecycle, ConfigChangeListener {
     private final Minecraft minecraft;
@@ -48,7 +49,7 @@ public final class RingHelperFeature implements ClientLifecycle, ConfigChangeLis
     private final RingHelperConfig config;
     private final ClientSession session;
     private final PitContext pitContext;
-    private final RingRenderer renderer = new RingRenderer();
+    private final RingRenderer renderer;
     private final MutableBlockPos probeBlock = new MutableBlockPos();
     private List<BlockPos> targets = new ArrayList<>();
     private List<BlockPos> nextTargets = new ArrayList<>();
@@ -59,12 +60,13 @@ public final class RingHelperFeature implements ClientLifecycle, ConfigChangeLis
     private boolean active;
 
     public RingHelperFeature(Minecraft minecraft, ConfigCatalog configs, RingHelperConfig config,
-            ClientSession session, PitContext pitContext) {
+            ClientSession session, PitContext pitContext, TextureState textures) {
         this.minecraft = minecraft;
         this.configs = configs;
         this.config = config;
         this.session = session;
         this.pitContext = pitContext;
+        renderer = new RingRenderer(textures);
     }
 
     @Override

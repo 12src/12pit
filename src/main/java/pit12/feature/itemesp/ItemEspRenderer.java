@@ -24,13 +24,15 @@ import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.init.Items;
 import pit12.shared.rendering.BoxRenderer;
+import pit12.shared.rendering.TextureState;
 
 final class ItemEspRenderer {
     private final ItemEspConfig config;
-    private final BoxRenderer boxes = new BoxRenderer();
+    private final BoxRenderer boxes;
 
-    ItemEspRenderer(ItemEspConfig config) {
+    ItemEspRenderer(ItemEspConfig config, TextureState textures) {
         this.config = config;
+        boxes = new BoxRenderer(textures);
     }
 
     void render(Minecraft minecraft, List<ItemEspFeature.Target> targets, float partialTicks) {

@@ -10,9 +10,9 @@ Each package directly under `feature` owns one user-facing capability, including
 
 `shared` provides small helper interfaces and utilities for threading, listeners, rendering, and file writes. Live game state belongs to runtime and feature components.
 
-`platform` adapts external systems such as Forge commands and Mixin. Adapters pass external requests to their owners through small interfaces. An adapter can implement `ClientLifecycle` to manage its own subscriptions and registrations.
+`platform` adapts external frameworks, client extensions, and native services. It handles registration, protocol details, and compatibility hooks. Adapters pass external requests to their owners through interfaces owned by features, runtime, or shared code. Group adapters by the system they adapt. An adapter can implement `ClientLifecycle` to manage its own subscriptions and registrations.
 
-Features own command definitions and actions. `runtime.command` handles routing, help, completion, and command availability. `platform.command` handles Forge registration.
+Features own command definitions and actions. `runtime.command` handles routing, help, completion, and command availability. `platform.forge` handles Forge registration.
 
 `feature.webui` owns the local HTTP server and connects the configuration interface to config and feature APIs. `web-ui` contains the browser pages.
 
@@ -22,7 +22,7 @@ Features own command definitions and actions. `runtime.command` handles routing,
 
 Features may depend on `runtime` and `shared`. Access to another feature goes through that feature's public `api` package. `runtime` may depend on `shared`. `shared` stays independent of the other project layers.
 
-`platform` may depend on `runtime`, `feature`, and `shared`. Features and runtime code use binding interfaces to stay independent of platform classes. Command runtime code stays independent of Forge.
+`platform` may depend on `runtime`, `feature`, and `shared`. Features, runtime, and shared code stay independent of platform classes. They receive platform services and bind hooks through interfaces they own. Native APIs and optional framework types stay in platform adapters. Command runtime code stays independent of Forge.
 
 Packages directly under a project layer form modules. Keep module dependencies free of cycles. A feature-specific Mixin belongs to that feature and accesses other features through their public APIs.
 

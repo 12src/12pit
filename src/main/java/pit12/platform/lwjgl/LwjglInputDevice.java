@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.platform.input;
+package pit12.platform.lwjgl;
 
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Field;

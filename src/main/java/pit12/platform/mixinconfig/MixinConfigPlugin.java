@@ -24,13 +24,14 @@ import net.minecraft.launchwrapper.Launch;
 import org.spongepowered.asm.lib.tree.ClassNode;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
+import pit12.platform.lunar.LunarSupport;
 
 public final class MixinConfigPlugin implements IMixinConfigPlugin {
     private boolean lunar;
 
     @Override
     public void onLoad(String mixinPackage) {
-        lunar = Launch.classLoader.getResource("mixins.legacy_bridge_combined.json") != null;
+        lunar = LunarSupport.isLoaded();
     }
 
     @Override
