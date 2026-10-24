@@ -127,7 +127,7 @@ public final class OneConfigAdapter implements ClientLifecycle, ConfigChangeList
     }
 
     // OneConfig hides SubConfig from the main list. This one needs to stay visible.
-    private static final class RootView extends Config {
+    public static final class RootView extends Config {
         RootView() {
             super(new Mod("12pit", ModType.HYPIXEL), "pit12-oneconfig-view/root.json", true, false);
             initialize();
@@ -153,7 +153,7 @@ public final class OneConfigAdapter implements ClientLifecycle, ConfigChangeList
         }
     }
     public static final class View extends SubConfig {
-        private final FeatureConfig feature;
+        public final FeatureConfig feature;
 
         View(FeatureConfig feature) {
             super(feature.originalDisplayName(), "pit12-oneconfig-view/" + feature.id() + ".json",

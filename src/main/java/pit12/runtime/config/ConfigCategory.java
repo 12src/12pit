@@ -42,4 +42,8 @@ public final class ConfigCategory {
     public String displayName() {
         return displayName;
     }
+
+    public String originalDisplayName() {
+        return originalDisplayName;
+    }
 }
