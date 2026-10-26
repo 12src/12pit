@@ -18,12 +18,10 @@
  */
 package pit12.platform.lunar;
 
-import net.minecraft.launchwrapper.Launch;
-
 public final class LunarSupport {
     private LunarSupport() {}
 
     public static boolean isLoaded() {
-        return Launch.classLoader.getResource("mixins.legacy_bridge_combined.json") != null;
+        return LunarSupport.class.getClassLoader().getResource("mixins.legacy_bridge_combined.json") != null;
     }
 }

@@ -32,11 +32,11 @@ jobs:
           cache: npm
           cache-dependency-path: web-ui/package-lock.json
 
-      - name: Set up JDK 21
+      - name: Set up JDK 25
         uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: '25'
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
@@ -66,17 +66,17 @@ jobs:
           git tag --force nightly
           git push --force origin refs/tags/nightly
           commit_sha="$(git rev-parse HEAD)"
-          release_notes="_The attached JAR was built from commit [${commit_sha::7}](https://github.com/${GITHUB_REPOSITORY}/commit/${commit_sha}) by [GitHub Actions](https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/attempts/${GITHUB_RUN_ATTEMPT})._"
+          release_notes="_The attached JARs were built from commit [${commit_sha::7}](https://github.com/${GITHUB_REPOSITORY}/commit/${commit_sha}) by [GitHub Actions](https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/attempts/${GITHUB_RUN_ATTEMPT})._"
 
           if gh release view nightly --repo "${GITHUB_REPOSITORY}" > /dev/null 2>&1; then
             gh release edit nightly \
               --repo "${GITHUB_REPOSITORY}" \
               --notes "${release_notes}"
-            gh release upload nightly build/libs/12pit.jar \
+            gh release upload nightly build/libs/*.jar \
               --repo "${GITHUB_REPOSITORY}" \
               --clobber
           else
-            gh release create nightly build/libs/12pit.jar \
+            gh release create nightly build/libs/*.jar \
               --repo "${GITHUB_REPOSITORY}" \
               --title "12pit Nightly" \
               --notes "${release_notes}" \

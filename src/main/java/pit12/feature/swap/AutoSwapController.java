@@ -30,13 +30,13 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.potion.Potion;
-import net.minecraftforge.common.util.Constants;
 import pit12.runtime.config.ConfigChangeSet;
 import pit12.runtime.item.PitEnchantment;
 import pit12.runtime.item.PitEnchantmentReader;
 import pit12.runtime.languages.Languages;
 import pit12.runtime.pit.PitContext;
 import pit12.runtime.pit.SpawnState;
+import pit12.shared.nbt.NbtTypes;
 
 final class AutoSwapController {
     private final Minecraft minecraft;
@@ -300,11 +300,11 @@ final class AutoSwapController {
 
     private static int lives(ItemStack stack) {
         NBTTagCompound root = stack.getTagCompound();
-        if (root == null || !root.hasKey("ExtraAttributes", Constants.NBT.TAG_COMPOUND))
+        if (root == null || !root.hasKey("ExtraAttributes", NbtTypes.COMPOUND))
             return -1;
         NBTTagCompound extra = root.getCompoundTag("ExtraAttributes");
         // Missing numeric NBT reads as 0. Use -1 so unknown Lives rank below known values.
-        return extra.hasKey("Lives", Constants.NBT.TAG_ANY_NUMERIC)
+        return extra.hasKey("Lives", NbtTypes.ANY_NUMERIC)
                 ? Math.max(-1, extra.getInteger("Lives"))
                 : -1;
     }

@@ -26,12 +26,8 @@ import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import net.minecraft.client.Minecraft;
-import net.minecraftforge.client.event.RenderGameOverlayEvent;
-import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
-import net.minecraftforge.client.event.TextureStitchEvent;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import pit12.runtime.command.CommandRegistry;
 import pit12.runtime.config.ConfigCatalog;
 import pit12.runtime.config.ConfigChangeListener;
@@ -41,9 +37,13 @@ import pit12.runtime.hud.HudRegistry;
 import pit12.runtime.hud.HudRenderer;
 import pit12.runtime.languages.Languages;
 import pit12.shared.concurrent.ClientThread;
+import pit12.shared.event.ClientEvents;
+import pit12.shared.event.ClientEvents.Overlay;
 import pit12.shared.lifecycle.ClientLifecycle;
 
 public final class EventListFeature implements ClientLifecycle, ConfigChangeListener {
+    private final Consumer<Overlay> onRenderOverlayListener = this::onRenderOverlay;
+
     private final Minecraft minecraft = Minecraft.getMinecraft();
     private final ConfigCatalog configs;
     private final ClientThread client;
@@ -51,7 +51,7 @@ public final class EventListFeature implements ClientLifecycle, ConfigChangeList
     private final CommandRegistry commands;
     private final HudRegistry hudRegistry;
     private final EventListHud hud;
-    private final FontListener fontListener = new FontListener();
+    private final Runnable fontListener = this::onTextureReload;
     private final Languages language;
     private final Runnable languageListener;
     private final HudRenderer hudRenderer = new HudRenderer();
@@ -104,7 +104,7 @@ public final class EventListFeature implements ClientLifecycle, ConfigChangeList
             return;
         }
         started = true;
-        MinecraftForge.EVENT_BUS.register(fontListener);
+        ClientEvents.TEXTURES_RELOADED.add(fontListener);
         language.addListener(languageListener);
         hudRegistry.register(hud);
         configs.addListener(this);
@@ -122,7 +122,7 @@ public final class EventListFeature implements ClientLifecycle, ConfigChangeList
         }
         started = false;
         commands.setActive(config, false);
-        MinecraftForge.EVENT_BUS.unregister(fontListener);
+        ClientEvents.TEXTURES_RELOADED.remove(fontListener);
         configs.removeListener(this);
         language.removeListener(languageListener);
         deactivate();
@@ -137,14 +137,14 @@ public final class EventListFeature implements ClientLifecycle, ConfigChangeList
         active = true;
         generation++;
         rebuild(System.currentTimeMillis());
-        MinecraftForge.EVENT_BUS.register(this);
+        ClientEvents.OVERLAY.add(onRenderOverlayListener);
         fetch(rateLimitedUntil);
     }
 
     private void deactivate() {
         active = false;
         generation++;
-        MinecraftForge.EVENT_BUS.unregister(this);
+        ClientEvents.OVERLAY.remove(onRenderOverlayListener);
         if (request != null) {
             request.cancel(true);
             request = null;
@@ -250,9 +250,8 @@ public final class EventListFeature implements ClientLifecycle, ConfigChangeList
         displayedSecond = now / 1000L;
     }
 
-    @SubscribeEvent
-    public void onRenderOverlay(RenderGameOverlayEvent.Post event) {
-        if (!active || event.type != ElementType.ALL || hudRegistry.editing()
+    private void onRenderOverlay(Overlay event) {
+        if (!active || hudRegistry.editing()
                 || minecraft.theWorld == null) {
             return;
         }
@@ -266,11 +265,7 @@ public final class EventListFeature implements ClientLifecycle, ConfigChangeList
                 event.partialTicks, false);
     }
 
-    // Forge needs this listener class to be public.
-    public final class FontListener {
-        @SubscribeEvent
-        public void onTextureStitch(TextureStitchEvent.Post event) {
-            hud.close();
-        }
+    private void onTextureReload() {
+        hud.close();
     }
 }

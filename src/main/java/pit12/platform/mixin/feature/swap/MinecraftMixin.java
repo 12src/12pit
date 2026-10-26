@@ -49,15 +49,6 @@ public abstract class MinecraftMixin implements SwapHooksBinding {
             callback.cancel();
     }
 
-    @Inject(method = "runTick",
-            at = @At(value = "INVOKE",
-                    target = "Lnet/minecraftforge/fml/common/FMLCommonHandler;onPreClientTick()V",
-                    shift = At.Shift.AFTER, remap = false))
-    private void pit12$startSwapTick(CallbackInfo callback) {
-        if (pit12$swapHooks != null)
-            pit12$swapHooks.inventoryTick(0);
-    }
-
     @Inject(method = "runTick", at = @At(value = "INVOKE",
             target = "Lnet/minecraft/client/gui/GuiScreen;handleInput()V", shift = At.Shift.AFTER))
     private void pit12$afterGuiInput(CallbackInfo callback) {

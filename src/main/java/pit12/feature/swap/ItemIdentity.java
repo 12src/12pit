@@ -27,9 +27,9 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.common.util.Constants;
 import pit12.runtime.item.PitEnchantmentReader;
 import pit12.runtime.item.PitEnchantments;
+import pit12.shared.nbt.NbtTypes;
 
 final class ItemIdentity {
     enum Kind {
@@ -59,9 +59,9 @@ final class ItemIdentity {
         if (variant < 0)
             return null;
         NBTTagCompound root = stack.getTagCompound();
-        if (root != null && root.hasKey("ExtraAttributes", Constants.NBT.TAG_COMPOUND)) {
+        if (root != null && root.hasKey("ExtraAttributes", NbtTypes.COMPOUND)) {
             NBTTagCompound extra = root.getCompoundTag("ExtraAttributes");
-            if (extra.hasKey("Nonce", Constants.NBT.TAG_ANY_NUMERIC)) {
+            if (extra.hasKey("Nonce", NbtTypes.ANY_NUMERIC)) {
                 long nonce = extra.getLong("Nonce");
                 if (nonce >= 10)
                     return new ItemIdentity(item, variant, Kind.NONCE, Long.toString(nonce));

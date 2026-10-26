@@ -24,16 +24,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Consumer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraftforge.client.event.RenderWorldLastEvent;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.entity.EntityJoinWorldEvent;
-import net.minecraftforge.fml.common.eventhandler.EventPriority;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import pit12.feature.relation.api.Relation;
 import pit12.feature.relation.api.RelationListener;
 import pit12.feature.relation.api.RelationLookup;
@@ -44,11 +38,17 @@ import pit12.runtime.config.ConfigChangeSet;
 import pit12.runtime.player.TabPresence;
 import pit12.runtime.player.TabPresenceListener;
 import pit12.runtime.session.ClientSession;
+import pit12.shared.event.ClientEvents;
+import pit12.shared.event.ClientEvents.EntityJoined;
 import pit12.shared.lifecycle.ClientLifecycle;
 import pit12.shared.rendering.TextureState;
 
 public final class PlayerEspFeature
         implements ClientLifecycle, ConfigChangeListener, RelationListener, TabPresenceListener {
+    private final Consumer<EntityJoined> onEntityJoinListener = this::onEntityJoin;
+    private final Runnable onTickListener = this::onTick;
+    private final ClientEvents.WorldRenderer onRenderWorldListener = this::onRenderWorld;
+
     private final Minecraft minecraft = Minecraft.getMinecraft();
     private final ConfigCatalog configs;
     private final PlayerEspConfig config;
@@ -112,7 +112,9 @@ public final class PlayerEspFeature
             session.addListener(sessionChanged);
             presence.addListener(this);
             relations.addListener(this);
-            MinecraftForge.EVENT_BUS.register(this);
+            ClientEvents.ENTITY_JOIN_LAST.add(onEntityJoinListener);
+            ClientEvents.TICK_END.add(onTickListener);
+            ClientEvents.WORLD_RENDER_LAST.add(onRenderWorldListener);
             onSessionChanged();
         } catch (RuntimeException failure) {
             deactivate();
@@ -125,7 +127,9 @@ public final class PlayerEspFeature
             return;
         }
         active = false;
-        MinecraftForge.EVENT_BUS.unregister(this);
+        ClientEvents.ENTITY_JOIN_LAST.remove(onEntityJoinListener);
+        ClientEvents.TICK_END.remove(onTickListener);
+        ClientEvents.WORLD_RENDER_LAST.remove(onRenderWorldListener);
         relations.removeListener(this);
         presence.removeListener(this);
         session.removeListener(sessionChanged);
@@ -156,8 +160,7 @@ public final class PlayerEspFeature
         rebuildTargets();
     }
 
-    @SubscribeEvent(priority = EventPriority.LOWEST)
-    public void onEntityJoin(EntityJoinWorldEvent event) {
+    private void onEntityJoin(EntityJoined event) {
         if (!active || !event.world.isRemote || !(event.entity instanceof EntityPlayer)) {
             return;
         }
@@ -171,9 +174,8 @@ public final class PlayerEspFeature
         }
     }
 
-    @SubscribeEvent
-    public void onTick(ClientTickEvent event) {
-        if (!active || event.phase != Phase.END) {
+    private void onTick() {
+        if (!active) {
             return;
         }
         session.checkThread();
@@ -247,10 +249,9 @@ public final class PlayerEspFeature
         }
     }
 
-    @SubscribeEvent(priority = EventPriority.LOWEST)
-    public void onRenderWorld(RenderWorldLastEvent event) {
+    private void onRenderWorld(float partialTicks) {
         if (active && world != null && world == minecraft.theWorld && !targets.isEmpty()) {
-            renderer.render(minecraft, targets, event.partialTicks);
+            renderer.render(minecraft, targets, partialTicks);
         }
     }
 

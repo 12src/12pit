@@ -100,7 +100,7 @@ public final class ArchitectureTest {
                     "pit12.shared..")
             .should().dependOnClassesThat()
             .resideOutsideOfPackages("pit12..", "java..", "javax..", "com.sun.net.httpserver..",
-                    "net.minecraft..", "net.minecraftforge..", "com.mojang..", "com.google..",
+                    "net.minecraft..", "com.mojang..", "com.google..",
                     "org.lwjgl..", "org.apache.http..")
             .because("optional client and native API access belongs to platform adapters");
 

@@ -19,16 +19,15 @@
 package pit12.feature.tooltip;
 
 import net.minecraft.client.Minecraft;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import pit12.runtime.config.ConfigCatalog;
 import pit12.runtime.config.ConfigChangeListener;
 import pit12.runtime.config.ConfigChangeSet;
+import pit12.shared.event.ClientEvents;
 import pit12.shared.lifecycle.ClientLifecycle;
 
 public final class TooltipFeature implements ClientLifecycle, ConfigChangeListener {
+    private final Runnable onClientTickListener = this::onClientTick;
+
     private final ConfigCatalog configs;
     private final TooltipConfig config;
     private HeldItemTooltipBinding binding;
@@ -76,11 +75,7 @@ public final class TooltipFeature implements ClientLifecycle, ConfigChangeListen
         }
     }
 
-    @SubscribeEvent
-    public void onClientTick(ClientTickEvent event) {
-        if (event.phase != Phase.START) {
-            return;
-        }
+    private void onClientTick() {
         bindOrListen();
     }
 
@@ -88,7 +83,7 @@ public final class TooltipFeature implements ClientLifecycle, ConfigChangeListen
         Object ingameGui = Minecraft.getMinecraft().ingameGUI;
         if (!(ingameGui instanceof HeldItemTooltipBinding)) {
             if (!listening) {
-                MinecraftForge.EVENT_BUS.register(this);
+                ClientEvents.TICK_START.add(onClientTickListener);
                 listening = true;
             }
             return;
@@ -107,7 +102,7 @@ public final class TooltipFeature implements ClientLifecycle, ConfigChangeListen
 
     private void stopListening() {
         if (listening) {
-            MinecraftForge.EVENT_BUS.unregister(this);
+            ClientEvents.TICK_START.remove(onClientTickListener);
             listening = false;
         }
     }

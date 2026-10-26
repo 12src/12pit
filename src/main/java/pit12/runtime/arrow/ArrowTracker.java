@@ -35,14 +35,13 @@ import net.minecraft.entity.projectile.EntityArrow;
 import net.minecraft.item.ItemBow;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.BlockPos;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import pit12.runtime.session.ClientSession;
+import pit12.shared.event.ClientEvents;
 import pit12.shared.lifecycle.ClientLifecycle;
 
 public final class ArrowTracker implements ClientLifecycle, ArrowPacketObserver, ArrowObserver {
+    private final Runnable onTickListener = this::onTick;
+
     private final Minecraft minecraft;
     private final ClientSession session;
     private final List<ArrowListener> listeners = new ArrayList<>();
@@ -128,9 +127,9 @@ public final class ArrowTracker implements ClientLifecycle, ArrowPacketObserver,
             return;
         trackingHits = enabled;
         if (trackingHits) {
-            MinecraftForge.EVENT_BUS.register(this);
+            ClientEvents.TICK_END.add(onTickListener);
         } else {
-            MinecraftForge.EVENT_BUS.unregister(this);
+            ClientEvents.TICK_END.remove(onTickListener);
             hits.clear();
         }
     }
@@ -333,10 +332,8 @@ public final class ArrowTracker implements ClientLifecycle, ArrowPacketObserver,
         }
     }
 
-    @SubscribeEvent
-    public void onTick(ClientTickEvent event) {
-        if (event.phase == Phase.END)
-            hits.tick();
+    private void onTick() {
+        hits.tick();
     }
 
     @Override

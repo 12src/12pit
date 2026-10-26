@@ -18,23 +18,24 @@
  */
 package pit12.feature.quickmath;
 
+import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
-import net.minecraftforge.client.event.ClientChatReceivedEvent;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import pit12.runtime.config.ConfigCatalog;
 import pit12.runtime.config.ConfigChangeListener;
 import pit12.runtime.config.ConfigChangeSet;
+import pit12.shared.event.ClientEvents;
+import pit12.shared.event.ClientEvents.Chat;
 import pit12.shared.lifecycle.ClientLifecycle;
 
 public final class AutoQuickMathFeature implements ClientLifecycle, ConfigChangeListener {
+    private final Consumer<Chat> onChatReceivedListener = this::onChatReceived;
+    private final Runnable onClientTickListener = this::onClientTick;
+
     private static final Logger LOGGER = Logger.getLogger(AutoQuickMathFeature.class.getName());
     private static final Pattern QUICK_MATHS_PATTERN = Pattern.compile(
             "^QUICK MATHS!\\s+Solve:\\s*([0-9+\\-*x×÷/()\\s]+?)\\s*$", Pattern.CASE_INSENSITIVE);
@@ -85,15 +86,16 @@ public final class AutoQuickMathFeature implements ClientLifecycle, ConfigChange
         }
         active = enabled;
         if (active) {
-            MinecraftForge.EVENT_BUS.register(this);
+            ClientEvents.CHAT.add(onChatReceivedListener);
+            ClientEvents.TICK_START.add(onClientTickListener);
         } else {
-            MinecraftForge.EVENT_BUS.unregister(this);
+            ClientEvents.CHAT.remove(onChatReceivedListener);
+            ClientEvents.TICK_START.remove(onClientTickListener);
             clearPendingAnswer();
         }
     }
 
-    @SubscribeEvent
-    public void onChatReceived(ClientChatReceivedEvent event) {
+    private void onChatReceived(Chat event) {
         if (!active) {
             return;
         }
@@ -114,9 +116,8 @@ public final class AutoQuickMathFeature implements ClientLifecycle, ConfigChange
         }
     }
 
-    @SubscribeEvent
-    public void onClientTick(ClientTickEvent event) {
-        if (!active || event.phase != Phase.START) {
+    private void onClientTick() {
+        if (!active) {
             return;
         }
         if (pendingAnswer == null) {

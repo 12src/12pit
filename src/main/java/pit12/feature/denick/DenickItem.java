@@ -23,7 +23,7 @@ import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraftforge.common.util.Constants;
+import pit12.shared.nbt.NbtTypes;
 
 final class DenickItem {
     private static final Pattern ENCHANTMENT_KEY = Pattern.compile("[a-z_]+");
@@ -40,11 +40,11 @@ final class DenickItem {
             return null;
         }
         NBTTagCompound root = stack.getTagCompound();
-        if (!root.hasKey("ExtraAttributes", Constants.NBT.TAG_COMPOUND)) {
+        if (!root.hasKey("ExtraAttributes", NbtTypes.COMPOUND)) {
             return null;
         }
         NBTTagCompound extra = root.getCompoundTag("ExtraAttributes");
-        if (!extra.hasKey("Nonce", Constants.NBT.TAG_ANY_NUMERIC)) {
+        if (!extra.hasKey("Nonce", NbtTypes.ANY_NUMERIC)) {
             return null;
         }
         long nonce = extra.getLong("Nonce");
@@ -54,7 +54,7 @@ final class DenickItem {
         String type = stack.getItem() == Items.leather_leggings ? "pants1"
                 : stack.getItem() == Items.golden_sword ? "swords1"
                         : stack.getItem() == Items.bow ? "bows1" : null;
-        if (type == null || !extra.hasKey("MaxLives", Constants.NBT.TAG_ANY_NUMERIC)) {
+        if (type == null || !extra.hasKey("MaxLives", NbtTypes.ANY_NUMERIC)) {
             return null;
         }
         int maxLives = extra.getInteger("MaxLives");
@@ -62,7 +62,7 @@ final class DenickItem {
             return null;
         }
         StringBuilder query = new StringBuilder();
-        NBTTagList enchantments = extra.getTagList("CustomEnchants", Constants.NBT.TAG_COMPOUND);
+        NBTTagList enchantments = extra.getTagList("CustomEnchants", NbtTypes.COMPOUND);
         if (enchantments.tagCount() == 0) {
             return null;
         }
