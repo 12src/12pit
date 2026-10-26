@@ -33,11 +33,8 @@ import net.minecraft.client.network.NetHandlerPlayClient;
 import net.minecraft.client.network.NetworkPlayerInfo;
 import net.minecraft.scoreboard.ScorePlayerTeam;
 import net.minecraft.scoreboard.Scoreboard;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import pit12.runtime.session.ClientSession;
+import pit12.shared.event.ClientEvents;
 import pit12.shared.event.Listeners;
 import pit12.shared.lifecycle.ClientLifecycle;
 import pit12.shared.text.PlayerNameFormatter;
@@ -45,6 +42,8 @@ import pit12.shared.text.PlayerNameFormatter;
 /** Use this API on the client thread. */
 public final class PlayerNameCache
         implements ClientLifecycle, TabPresenceListener, PlayerTeamObserver {
+    private final Runnable onClientTickListener = this::onClientTick;
+
     private final Minecraft minecraft;
     private final ClientSession session;
     private final TabPresence presence;
@@ -72,7 +71,7 @@ public final class PlayerNameCache
         started = true;
         session.addListener(sessionChanged);
         presence.addListener(this);
-        MinecraftForge.EVENT_BUS.register(this);
+        ClientEvents.TICK_START.add(onClientTickListener);
         onSessionChanged();
     }
 
@@ -83,7 +82,7 @@ public final class PlayerNameCache
             return;
         }
         started = false;
-        MinecraftForge.EVENT_BUS.unregister(this);
+        ClientEvents.TICK_START.remove(onClientTickListener);
         presence.removeListener(this);
         session.removeListener(sessionChanged);
         if (scoreboard instanceof PlayerTeamBinding) {
@@ -184,11 +183,7 @@ public final class PlayerNameCache
         }
     }
 
-    @SubscribeEvent
-    public void onClientTick(ClientTickEvent event) {
-        if (event.phase != Phase.START) {
-            return;
-        }
+    private void onClientTick() {
         session.checkThread();
         session.refresh();
         while (!dirty.isEmpty()) {

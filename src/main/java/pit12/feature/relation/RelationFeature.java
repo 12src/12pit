@@ -37,10 +37,6 @@ import java.util.function.LongSupplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.minecraft.client.Minecraft;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import pit12.feature.relation.api.IdentityLookupState;
 import pit12.feature.relation.api.Relation;
 import pit12.feature.relation.api.RelationEntry;
@@ -57,12 +53,15 @@ import pit12.runtime.player.TabPresenceListener;
 import pit12.shared.chat.ChatFeedback;
 import pit12.shared.chat.ChatFeedback.Tone;
 import pit12.shared.concurrent.ClientThread;
+import pit12.shared.event.ClientEvents;
 import pit12.shared.event.Listeners;
 import pit12.shared.lifecycle.ClientLifecycle;
 import pit12.shared.result.OperationResult;
 import pit12.shared.result.OperationResult.Status;
 
 public final class RelationFeature implements ClientLifecycle, Relations, TabPresenceListener {
+    private final Runnable onTickListener = this::onTick;
+
     private static final Logger LOGGER = Logger.getLogger(RelationFeature.class.getName());
     private final TabPresence presence;
     private final Path path;
@@ -133,7 +132,7 @@ public final class RelationFeature implements ClientLifecycle, Relations, TabPre
                 this::notifyChanged);
         presence.addListener(this);
         if (installAdapters) {
-            MinecraftForge.EVENT_BUS.register(this);
+            ClientEvents.TICK_START.add(onTickListener);
         }
         worker.start();
     }
@@ -147,7 +146,7 @@ public final class RelationFeature implements ClientLifecycle, Relations, TabPre
         generation++;
         presence.removeListener(this);
         if (installAdapters)
-            MinecraftForge.EVENT_BUS.unregister(this);
+            ClientEvents.TICK_START.remove(onTickListener);
         if (lookups != null)
             lookups.clear();
         ExecutorService closingLookups = lookupWorker;
@@ -356,10 +355,9 @@ public final class RelationFeature implements ClientLifecycle, Relations, TabPre
         return OperationResult.success(null);
     }
 
-    @SubscribeEvent
-    public void onTick(ClientTickEvent event) {
+    private void onTick() {
         client.check();
-        if (event.phase == Phase.START && started && ready)
+        if (started && ready)
             lookups.tick();
     }
 

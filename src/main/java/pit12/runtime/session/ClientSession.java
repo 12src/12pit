@@ -20,19 +20,22 @@ package pit12.runtime.session;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.network.NetHandlerPlayClient;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.world.WorldEvent;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.network.FMLNetworkEvent.ClientDisconnectionFromServerEvent;
+import net.minecraft.network.NetworkManager;
+import net.minecraft.world.World;
 import pit12.shared.concurrent.ClientThread;
+import pit12.shared.event.ClientEvents;
 import pit12.shared.event.Listeners;
 import pit12.shared.lifecycle.ClientLifecycle;
 
 /** Both connection and world are updated before listeners run. */
 public final class ClientSession implements ClientLifecycle {
+    private final Consumer<NetworkManager> onDisconnectListener = this::onDisconnect;
+    private final Consumer<World> onWorldUnloadListener = this::onWorldUnload;
+
     private final Minecraft minecraft;
     private final ClientThread client;
     private final ClientSessionBinding binding;
@@ -86,7 +89,8 @@ public final class ClientSession implements ClientLifecycle {
         // noinspection NonAtomicOperationOnVolatileField
         generation++;
         binding.bindWorldChangeListener(this::refresh);
-        MinecraftForge.EVENT_BUS.register(this);
+        ClientEvents.DISCONNECT.add(onDisconnectListener);
+        ClientEvents.WORLD_UNLOAD.add(onWorldUnloadListener);
         refresh();
     }
 
@@ -99,7 +103,8 @@ public final class ClientSession implements ClientLifecycle {
         // noinspection NonAtomicOperationOnVolatileField
         generation++;
         binding.bindWorldChangeListener(null);
-        MinecraftForge.EVENT_BUS.unregister(this);
+        ClientEvents.DISCONNECT.remove(onDisconnectListener);
+        ClientEvents.WORLD_UNLOAD.remove(onWorldUnloadListener);
         if (state.clear())
             Listeners.notify(listeners, Runnable::run);
         listeners.clear();
@@ -112,29 +117,27 @@ public final class ClientSession implements ClientLifecycle {
         }
     }
 
-    @SubscribeEvent
-    public void onDisconnect(ClientDisconnectionFromServerEvent event) {
+    private void onDisconnect(NetworkManager manager) {
         long eventGeneration = generation;
         client.execute(() -> {
             if (!started || generation != eventGeneration)
                 return;
             refresh();
             NetHandlerPlayClient current = state.connection();
-            if (current != null && current.getNetworkManager() == event.manager
+            if (current != null && current.getNetworkManager() == manager
                     && state.disconnect(current)) {
                 Listeners.notify(listeners, Runnable::run);
             }
         });
     }
 
-    @SubscribeEvent
-    public void onWorldUnload(WorldEvent.Unload event) {
-        if (!(event.world instanceof WorldClient))
+    private void onWorldUnload(World world) {
+        if (!(world instanceof WorldClient))
             return;
         long eventGeneration = generation;
         client.execute(() -> {
             if (started && generation == eventGeneration
-                    && state.unload((WorldClient) event.world)) {
+                    && state.unload((WorldClient) world)) {
                 Listeners.notify(listeners, Runnable::run);
             }
         });

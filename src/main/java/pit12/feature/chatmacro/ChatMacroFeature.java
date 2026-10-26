@@ -19,14 +19,10 @@
 package pit12.feature.chatmacro;
 
 import java.nio.file.Path;
+import java.util.function.Consumer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.renderer.GlStateManager;
-import net.minecraftforge.client.event.RenderGameOverlayEvent;
-import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.lwjgl.input.Keyboard;
 import pit12.runtime.command.CommandRegistry;
 import pit12.runtime.config.ConfigCatalog;
@@ -42,12 +38,17 @@ import pit12.runtime.session.ClientSession;
 import pit12.shared.chat.ChatFeedback;
 import pit12.shared.chat.ChatFeedback.Tone;
 import pit12.shared.concurrent.ClientThread;
+import pit12.shared.event.ClientEvents;
+import pit12.shared.event.ClientEvents.Overlay;
 import pit12.shared.input.Keybind;
 import pit12.shared.lifecycle.ClientLifecycle;
 import pit12.shared.rendering.FontWidths;
 
 public final class ChatMacroFeature
         implements ClientLifecycle, InputHandler, SidebarListener, ConfigChangeListener {
+    private final Runnable onTickListener = this::onTick;
+    private final Consumer<Overlay> onRenderOverlayListener = this::onRenderOverlay;
+
     private final Minecraft minecraft;
     private final ConfigCatalog configs;
     private final ChatMacroConfig config;
@@ -98,7 +99,8 @@ public final class ChatMacroFeature
         configs.addListener(this);
         session.addListener(sessionListener);
         language.addListener(languageListener);
-        MinecraftForge.EVENT_BUS.register(this);
+        ClientEvents.TICK_END.add(onTickListener);
+        ClientEvents.OVERLAY.add(onRenderOverlayListener);
         commands.setActive(config, true);
     }
 
@@ -112,7 +114,8 @@ public final class ChatMacroFeature
         configs.removeListener(this);
         session.removeListener(sessionListener);
         language.removeListener(languageListener);
-        MinecraftForge.EVENT_BUS.unregister(this);
+        ClientEvents.TICK_END.remove(onTickListener);
+        ClientEvents.OVERLAY.remove(onRenderOverlayListener);
         bindings.stop();
     }
 
@@ -159,10 +162,7 @@ public final class ChatMacroFeature
             input.lock(this);
     }
 
-    @SubscribeEvent
-    public void onTick(TickEvent.ClientTickEvent event) {
-        if (event.phase != TickEvent.Phase.END)
-            return;
+    private void onTick() {
         if (waiting && waitingPlayer != minecraft.thePlayer
                 || pending != null && pendingPlayer != minecraft.thePlayer) {
             cancel(false);
@@ -262,9 +262,8 @@ public final class ChatMacroFeature
         input.unlock(this, resume);
     }
 
-    @SubscribeEvent
-    public void onRenderOverlay(RenderGameOverlayEvent.Post event) {
-        if (!waiting || event.type != ElementType.ALL || minecraft.gameSettings.hideGUI
+    private void onRenderOverlay(Overlay event) {
+        if (!waiting || minecraft.gameSettings.hideGUI
                 || minecraft.thePlayer == null)
             return;
         GlStateManager.pushMatrix();

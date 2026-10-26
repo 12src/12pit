@@ -144,6 +144,17 @@ public final class BootstrapLayoutTest {
                             null),
                     sectionAt(source, constructorStart + objects.start()));
         }
+        Matcher integrations = Pattern.compile("\\b(\\w+)\\s*=\\s*ClientPlatform\\.integration\\(([^;]*)\\);")
+                .matcher(constructorBody);
+        while (integrations.find()) {
+            String name = integrations.group(1);
+            producers.put(name, name);
+            arguments.put(name, integrations.group(2));
+            inlineComponents.add(name);
+            platformComponents.add(name);
+            assertEquals("Platform integration section", "Platform integrations",
+                    sectionAt(source, constructorStart + integrations.start()));
+        }
         Matcher results =
                 Pattern.compile("\\b(\\w+)\\s*=\\s*(register\\w+)\\(").matcher(constructorBody);
         while (results.find()) {

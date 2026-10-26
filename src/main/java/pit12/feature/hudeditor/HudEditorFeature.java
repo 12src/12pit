@@ -20,13 +20,10 @@ package pit12.feature.hudeditor;
 
 import static pit12.runtime.languages.Languages.source;
 
+import java.util.function.BooleanSupplier;
 import java.util.function.IntSupplier;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiChat;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import pit12.feature.hudeditor.api.HudEditor;
 import pit12.feature.profile.api.Profiles;
 import pit12.runtime.command.CommandNode;
@@ -35,9 +32,12 @@ import pit12.runtime.config.BooleanSetting;
 import pit12.runtime.config.ConfigCatalog;
 import pit12.runtime.hud.HudRegistry;
 import pit12.runtime.languages.Languages;
+import pit12.shared.event.ClientEvents;
 import pit12.shared.lifecycle.ClientLifecycle;
 
 public final class HudEditorFeature implements ClientLifecycle, HudEditor {
+    private final Runnable onClientTickListener = this::onClientTick;
+
     private final Minecraft minecraft = Minecraft.getMinecraft();
     private final HudEditorController controller;
     private final HudRegistry registry;
@@ -49,10 +49,10 @@ public final class HudEditorFeature implements ClientLifecycle, HudEditor {
     private boolean pendingOpen;
 
     public HudEditorFeature(HudRegistry registry, CommandRegistry commands, Languages language,
-            ConfigCatalog configs, Profiles profiles) {
+            ConfigCatalog configs, Profiles profiles, BooleanSupplier renderHotbar) {
         this.registry = registry;
         this.language = language;
-        controller = new HudEditorController(registry, configs, profiles);
+        controller = new HudEditorController(registry, configs, profiles, renderHotbar);
         commands.register(CommandNode.command("hudeditor", source("Open the HUD editor"))
                 .executes((sender, args) -> requestOpen()).build(), true);
     }
@@ -74,7 +74,7 @@ public final class HudEditorFeature implements ClientLifecycle, HudEditor {
     public void stop() {
         registry.checkThread();
         if (pendingOpen) {
-            MinecraftForge.EVENT_BUS.unregister(this);
+            ClientEvents.TICK_END.remove(onClientTickListener);
         }
         started = false;
         pendingOpen = false;
@@ -88,20 +88,19 @@ public final class HudEditorFeature implements ClientLifecycle, HudEditor {
     void requestOpen() {
         if (started && !pendingOpen) {
             pendingOpen = true;
-            MinecraftForge.EVENT_BUS.register(this);
+            ClientEvents.TICK_END.add(onClientTickListener);
         }
     }
 
-    @SubscribeEvent
-    public void onClientTick(ClientTickEvent event) {
+    private void onClientTick() {
         registry.checkThread();
         // GuiChat closes itself after dispatching a command.
-        if (event.phase != Phase.END || !pendingOpen
+        if (!pendingOpen
                 || minecraft.currentScreen instanceof GuiChat) {
             return;
         }
         pendingOpen = false;
-        MinecraftForge.EVENT_BUS.unregister(this);
+        ClientEvents.TICK_END.remove(onClientTickListener);
         open();
     }
 

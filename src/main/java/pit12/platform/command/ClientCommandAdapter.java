@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.platform.forge;
+package pit12.platform.command;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -27,23 +27,22 @@ import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommand;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.util.BlockPos;
-import net.minecraftforge.client.ClientCommandHandler;
+import net.minecraft.command.CommandHandler;
 import pit12.platform.mixin.accessor.CommandHandlerAccessor;
 import pit12.runtime.command.CommandNode;
 import pit12.runtime.command.CommandRegistry;
 
-public final class ForgeCommandAdapter extends CommandBase {
+public final class ClientCommandAdapter extends CommandBase {
     private final CommandRegistry registry;
     private final CommandNode command;
 
-    private ForgeCommandAdapter(CommandRegistry registry, CommandNode command) {
+    private ClientCommandAdapter(CommandRegistry registry, CommandNode command) {
         this.registry = registry;
         this.command = command;
     }
 
-    public static Runnable register(CommandRegistry registry, CommandNode command) {
-        ClientCommandHandler handler = ClientCommandHandler.instance;
-        ForgeCommandAdapter adapter = new ForgeCommandAdapter(registry, command);
+    public static Runnable register(CommandHandler handler, CommandRegistry registry, CommandNode command) {
+        ClientCommandAdapter adapter = new ClientCommandAdapter(registry, command);
         List<String> names = new ArrayList<>(command.aliases());
         names.add(command.name());
         Map<String, ICommand> previous = new LinkedHashMap<>();
@@ -63,7 +62,7 @@ public final class ForgeCommandAdapter extends CommandBase {
                     }
                 }
             }
-            // Forge has no unregister. registerCommand also added it to commandSet.
+            // registerCommand also keeps the command in this set.
             ((CommandHandlerAccessor) handler).pit12$getCommandSet().remove(adapter);
         };
     }

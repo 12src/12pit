@@ -1,6 +1,9 @@
 # Gradle
 /.gradle/
 /build/
+/ornithe/.gradle/
+/ornithe/build/
+/ornithe/run/
 
 # JVM crash logs
 hs_err_pid*.log

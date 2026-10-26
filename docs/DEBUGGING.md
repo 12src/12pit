@@ -20,7 +20,11 @@ On Linux or macOS:
 
 The development client launches in `run/`. See `run/logs/latest.log` for any errors in the client and the local URL of the configuration interface.
 
-[DevAuth](https://github.com/DJtheRedstoner/DevAuth) is shipped in the development environment. For testing with a logged-in Minecraft account, set the `devauth.enabled` JVM property and configure it as explained in the [DevAuth documentation](https://github.com/DJtheRedstoner/DevAuth#configuration).
+To launch Ornithe, run `./gradlew :ornithe:runClient` or `.\gradlew.bat :ornithe:runClient`. Its working directory is `ornithe/run/`, and its log is `ornithe/run/logs/latest.log`.
+
+[DevAuth](https://github.com/DJtheRedstoner/DevAuth) is included in the Forge development environment. For testing with a logged-in Minecraft account, set the `devauth.enabled` JVM property and configure it as explained in the [DevAuth documentation](https://github.com/DJtheRedstoner/DevAuth#configuration).
+
+`./gradlew assemble` builds both targets and puts `12pit.jar` and `12pit-ornithe.jar` in `build/libs/`. Use `./gradlew remapJar` to build Forge alone, or `./gradlew :ornithe:remapJar` to build Ornithe alone. The latter writes to `ornithe/build/libs/`.
 
 ## Develop the configuration interface
 

@@ -19,16 +19,11 @@
 package pit12.feature.swap;
 
 import java.nio.file.Path;
+import java.util.function.Consumer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.MovingObjectPosition;
-import net.minecraftforge.client.event.GuiScreenEvent;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.entity.player.AttackEntityEvent;
-import net.minecraftforge.fml.common.eventhandler.EventPriority;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import pit12.feature.relation.api.RelationLookup;
@@ -48,11 +43,18 @@ import pit12.runtime.session.ClientSession;
 import pit12.shared.chat.ChatFeedback;
 import pit12.shared.chat.ChatFeedback.Tone;
 import pit12.shared.concurrent.ClientThread;
+import pit12.shared.event.ClientEvents;
+import pit12.shared.event.ClientEvents.Attack;
+import pit12.shared.event.ClientEvents.ScreenDraw;
 import pit12.shared.input.Keybind;
 import pit12.shared.lifecycle.ClientLifecycle;
 
 public final class SwapFeature
         implements ClientLifecycle, ConfigChangeListener, SwapHooks, InputHandler {
+    private final Runnable onTickListener = this::onTick;
+    private final Consumer<Attack> onAttackListener = this::onAttack;
+    private final Consumer<ScreenDraw> onDrawListener = this::onDraw;
+
     private final Minecraft minecraft;
     private final ConfigCatalog configs;
     private final SwapConfig config;
@@ -145,14 +147,18 @@ public final class SwapFeature
         listening = enabled;
         if (enabled) {
             session.addListener(sessionListener);
-            MinecraftForge.EVENT_BUS.register(this);
+            ClientEvents.TICK_END.add(onTickListener);
+            ClientEvents.ATTACK_LAST.add(onAttackListener);
+            ClientEvents.GUI_DRAW.add(onDrawListener);
             hookBinding.pit12$bindSwapHooks(this);
             input.addHandler(this);
         } else {
             session.removeListener(sessionListener);
             input.removeHandler(this);
             hookBinding.pit12$bindSwapHooks(null);
-            MinecraftForge.EVENT_BUS.unregister(this);
+            ClientEvents.TICK_END.remove(onTickListener);
+            ClientEvents.ATTACK_LAST.remove(onAttackListener);
+            ClientEvents.GUI_DRAW.remove(onDrawListener);
             automatic.reset();
             updateMouseGrab();
             overlay.clear();
@@ -234,10 +240,7 @@ public final class SwapFeature
         }
     }
 
-    @SubscribeEvent
-    public void onTick(TickEvent.ClientTickEvent event) {
-        if (event.phase != TickEvent.Phase.END)
-            return;
+    private void onTick() {
         if (config.enabled()) {
             if (!input.locked()
                     && !InputBlocker.held(minecraft.gameSettings.keyBindUseItem.getKeyCode()))
@@ -250,8 +253,7 @@ public final class SwapFeature
         updateMouseGrab();
     }
 
-    @SubscribeEvent(priority = EventPriority.LOWEST)
-    public void onAttack(AttackEntityEvent event) {
+    private void onAttack(Attack event) {
         if (!config.enabled() || !config.autoSwap.get() || !config.dark.get()
                 || event.entityPlayer != minecraft.thePlayer
                 || !(event.target instanceof EntityPlayer))
@@ -271,10 +273,9 @@ public final class SwapFeature
         mouseGrabbed = hidden;
     }
 
-    @SubscribeEvent
-    public void onDraw(GuiScreenEvent.DrawScreenEvent.Pre event) {
+    private void onDraw(ScreenDraw event) {
         if (controller.owns(event.gui) && controller.hidden())
-            event.setCanceled(true);
+            event.canceled = true;
     }
 
     @Override

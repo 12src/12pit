@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.entity.Entity;
@@ -30,21 +31,20 @@ import net.minecraft.entity.item.EntityItem;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraftforge.client.event.RenderWorldLastEvent;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.entity.EntityJoinWorldEvent;
-import net.minecraftforge.fml.common.eventhandler.EventPriority;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import pit12.runtime.config.ConfigCatalog;
 import pit12.runtime.config.ConfigChangeListener;
 import pit12.runtime.config.ConfigChangeSet;
 import pit12.runtime.session.ClientSession;
+import pit12.shared.event.ClientEvents;
+import pit12.shared.event.ClientEvents.EntityJoined;
 import pit12.shared.lifecycle.ClientLifecycle;
 import pit12.shared.rendering.TextureState;
 
 public final class ItemEspFeature implements ClientLifecycle, ConfigChangeListener {
+    private final Consumer<EntityJoined> onEntityJoinListener = this::onEntityJoin;
+    private final Runnable onTickListener = this::onTick;
+    private final ClientEvents.WorldRenderer onRenderWorldListener = this::onRenderWorld;
+
     private final Minecraft minecraft = Minecraft.getMinecraft();
     private final ConfigCatalog configs;
     private final ItemEspConfig config;
@@ -102,7 +102,9 @@ public final class ItemEspFeature implements ClientLifecycle, ConfigChangeListen
         active = true;
         try {
             session.addListener(sessionChanged);
-            MinecraftForge.EVENT_BUS.register(this);
+            ClientEvents.ENTITY_JOIN_LAST.add(onEntityJoinListener);
+            ClientEvents.TICK_END.add(onTickListener);
+            ClientEvents.WORLD_RENDER_LAST.add(onRenderWorldListener);
             onSessionChanged();
         } catch (RuntimeException failure) {
             deactivate();
@@ -115,7 +117,9 @@ public final class ItemEspFeature implements ClientLifecycle, ConfigChangeListen
             return;
         }
         active = false;
-        MinecraftForge.EVENT_BUS.unregister(this);
+        ClientEvents.ENTITY_JOIN_LAST.remove(onEntityJoinListener);
+        ClientEvents.TICK_END.remove(onTickListener);
+        ClientEvents.WORLD_RENDER_LAST.remove(onRenderWorldListener);
         session.removeListener(sessionChanged);
         world = null;
         candidates.clear();
@@ -147,8 +151,7 @@ public final class ItemEspFeature implements ClientLifecycle, ConfigChangeListen
         targetsDirty = true;
     }
 
-    @SubscribeEvent(priority = EventPriority.LOWEST)
-    public void onEntityJoin(EntityJoinWorldEvent event) {
+    private void onEntityJoin(EntityJoined event) {
         if (!active || !event.world.isRemote || !(event.entity instanceof EntityItem)) {
             return;
         }
@@ -164,9 +167,8 @@ public final class ItemEspFeature implements ClientLifecycle, ConfigChangeListen
         }
     }
 
-    @SubscribeEvent
-    public void onTick(ClientTickEvent event) {
-        if (!active || event.phase != Phase.END) {
+    private void onTick() {
+        if (!active) {
             return;
         }
         session.checkThread();
@@ -224,10 +226,9 @@ public final class ItemEspFeature implements ClientLifecycle, ConfigChangeListen
         }
     }
 
-    @SubscribeEvent(priority = EventPriority.LOWEST)
-    public void onRenderWorld(RenderWorldLastEvent event) {
+    private void onRenderWorld(float partialTicks) {
         if (active && world != null && world == minecraft.theWorld && !targets.isEmpty()) {
-            renderer.render(minecraft, targets, event.partialTicks);
+            renderer.render(minecraft, targets, partialTicks);
         }
     }
 

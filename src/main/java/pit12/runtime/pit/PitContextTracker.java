@@ -18,20 +18,20 @@
  */
 package pit12.runtime.pit;
 
+import java.util.function.Consumer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.chunk.Chunk;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.world.ChunkEvent;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import pit12.runtime.session.ClientSession;
+import pit12.shared.event.ClientEvents;
 import pit12.shared.lifecycle.ClientLifecycle;
 
 public final class PitContextTracker implements ClientLifecycle, PitContext {
+    private final Runnable onClientTickListener = this::onClientTick;
+    private final Consumer<Chunk> onChunkLoadListener = this::onChunkLoad;
+
     private static final int ORIGIN_X = 0;
     private static final int ORIGIN_Z = 0;
     private final ClientSession session;
@@ -51,7 +51,8 @@ public final class PitContextTracker implements ClientLifecycle, PitContext {
         if (started) {
             return;
         }
-        MinecraftForge.EVENT_BUS.register(this);
+        ClientEvents.TICK_START.add(onClientTickListener);
+        ClientEvents.CHUNK_LOAD.add(onChunkLoadListener);
         started = true;
         session.addListener(sessionChanged);
         onSessionChanged();
@@ -63,7 +64,8 @@ public final class PitContextTracker implements ClientLifecycle, PitContext {
         if (started) {
             started = false;
             session.removeListener(sessionChanged);
-            MinecraftForge.EVENT_BUS.unregister(this);
+            ClientEvents.TICK_START.remove(onClientTickListener);
+            ClientEvents.CHUNK_LOAD.remove(onChunkLoadListener);
         }
         reset();
     }
@@ -74,12 +76,8 @@ public final class PitContextTracker implements ClientLifecycle, PitContext {
         return snapshot;
     }
 
-    @SubscribeEvent
-    public void onClientTick(ClientTickEvent event) {
+    private void onClientTick() {
         session.checkThread();
-        if (event.phase != Phase.START) {
-            return;
-        }
         if (boundWorld == null || !detectionPending) {
             return;
         }
@@ -90,13 +88,11 @@ public final class PitContextTracker implements ClientLifecycle, PitContext {
         detect(boundWorld);
     }
 
-    @SubscribeEvent
-    public void onChunkLoad(ChunkEvent.Load event) {
-        if (event.world != boundWorld) {
+    private void onChunkLoad(Chunk chunk) {
+        if (chunk.getWorld() != boundWorld) {
             return;
         }
         session.checkThread();
-        Chunk chunk = event.getChunk();
         if (chunk.xPosition == ORIGIN_X && chunk.zPosition == ORIGIN_Z) {
             // Load fires before the packet fills the chunk, so scan on the next tick.
             detectionPending = true;

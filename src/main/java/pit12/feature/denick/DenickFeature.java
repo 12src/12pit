@@ -42,10 +42,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import pit12.feature.denick.api.DenickNames;
 import pit12.runtime.command.CommandNode;
 import pit12.runtime.command.CommandRegistry;
@@ -69,11 +65,14 @@ import pit12.runtime.session.ClientSession;
 import pit12.shared.chat.ChatFeedback;
 import pit12.shared.chat.ChatFeedback.Tone;
 import pit12.shared.concurrent.ClientThread;
+import pit12.shared.event.ClientEvents;
 import pit12.shared.event.Listeners;
 import pit12.shared.lifecycle.ClientLifecycle;
 
 public final class DenickFeature implements ClientLifecycle, DenickNames, TabPresenceListener,
         PlayerEquipmentListener, ConfigChangeListener, NickListener {
+    private final Runnable onTickListener = this::onTick;
+
     private static final Logger LOGGER = Logger.getLogger(DenickFeature.class.getName());
     private final Minecraft minecraft;
     private final ClientThread client;
@@ -193,11 +192,11 @@ public final class DenickFeature implements ClientLifecycle, DenickNames, TabPre
                 nicks.addListener(this);
                 presence.addListener(this);
                 session.addListener(sessionChanged);
-                MinecraftForge.EVENT_BUS.register(this);
+                ClientEvents.TICK_END.add(onTickListener);
                 resetWorld();
                 presence.players().forEach((id, name) -> onPlayerSeen(id, name, true));
             } else {
-                MinecraftForge.EVENT_BUS.unregister(this);
+                ClientEvents.TICK_END.remove(onTickListener);
                 session.removeListener(sessionChanged);
                 presence.removeListener(this);
                 nicks.removeListener(this);
@@ -416,9 +415,8 @@ public final class DenickFeature implements ClientLifecycle, DenickNames, TabPre
         }
     }
 
-    @SubscribeEvent
-    public void onTick(ClientTickEvent event) {
-        if (!active || event.phase != Phase.END) {
+    private void onTick() {
+        if (!active) {
             return;
         }
         client.check();

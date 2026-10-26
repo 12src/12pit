@@ -19,6 +19,7 @@
 package pit12.feature.contractreroll;
 
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -34,12 +35,6 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.MovingObjectPosition;
-import net.minecraftforge.client.event.ClientChatReceivedEvent;
-import net.minecraftforge.client.event.GuiOpenEvent;
-import net.minecraftforge.client.event.RenderGameOverlayEvent;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.lwjgl.input.Keyboard;
 import pit12.runtime.config.ConfigCatalog;
 import pit12.runtime.config.ConfigChangeListener;
@@ -55,6 +50,9 @@ import pit12.runtime.scoreboard.SidebarListener;
 import pit12.runtime.session.ClientSession;
 import pit12.shared.chat.ChatFeedback;
 import pit12.shared.chat.ChatFeedback.Tone;
+import pit12.shared.event.ClientEvents;
+import pit12.shared.event.ClientEvents.Chat;
+import pit12.shared.event.ClientEvents.Overlay;
 import pit12.shared.input.Keybind;
 import pit12.shared.input.MinecraftActions;
 import pit12.shared.lifecycle.ClientLifecycle;
@@ -62,6 +60,11 @@ import pit12.shared.rendering.FontWidths;
 
 public final class ContractRerollFeature
         implements ClientLifecycle, InputHandler, SidebarListener, ConfigChangeListener {
+    private final Runnable onTickListener = this::onTick;
+    private final Consumer<Chat> onChatListener = this::onChat;
+    private final Consumer<GuiScreen> onGuiOpenListener = this::onGuiOpen;
+    private final Consumer<Overlay> onRenderOverlayListener = this::onRenderOverlay;
+
     private static final Logger LOGGER = Logger.getLogger(ContractRerollFeature.class.getName());
     private static final int[] CHOICE_SLOTS = {11, 13, 15};
     private static final Pattern KILLS = Pattern.compile("Kill ([0-9]+) players\\.");
@@ -172,7 +175,10 @@ public final class ContractRerollFeature
             sidebar.addListener(this);
             language.addListener(languageChanged);
             refreshContract();
-            MinecraftForge.EVENT_BUS.register(this);
+            ClientEvents.TICK_END.add(onTickListener);
+            ClientEvents.CHAT.add(onChatListener);
+            ClientEvents.GUI_OPEN.add(onGuiOpenListener);
+            ClientEvents.OVERLAY.add(onRenderOverlayListener);
             input.lock(this);
             clickAt = Minecraft.getSystemTime() + ThreadLocalRandom.current().nextInt(150, 351);
         } catch (RuntimeException failure) {
@@ -181,9 +187,8 @@ public final class ContractRerollFeature
         return true;
     }
 
-    @SubscribeEvent
-    public void onTick(TickEvent.ClientTickEvent event) {
-        if (event.phase != TickEvent.Phase.END || state == State.IDLE)
+    private void onTick() {
+        if (state == State.IDLE)
             return;
         if (player != minecraft.thePlayer || minecraft.theWorld == null || player.isDead) {
             finish(false);
@@ -247,8 +252,7 @@ public final class ContractRerollFeature
         }
     }
 
-    @SubscribeEvent
-    public void onChat(ClientChatReceivedEvent event) {
+    private void onChat(Chat event) {
         if (state == State.LANGUAGE_REPLY && event.type != 2
                 && EnumChatFormatting
                         .getTextWithoutFormattingCodes(event.message.getUnformattedText()).trim()
@@ -294,14 +298,13 @@ public final class ContractRerollFeature
         input.runAction(this, actions::pit12$rightClick);
     }
 
-    @SubscribeEvent
-    public void onGuiOpen(GuiOpenEvent event) {
+    private void onGuiOpen(GuiScreen screen) {
         if (state == State.IDLE)
             return;
-        if (event.gui == null) {
+        if (screen == null) {
             if (menu != null)
                 fail(language.translate("The menu closed unexpectedly."));
-        } else if (event.gui != previousScreen && !acceptMenu(event.gui)) {
+        } else if (screen != previousScreen && !acceptMenu(screen)) {
             fail(state == State.QUESTS
                     ? language.translate(
                             "Move next to the Quest Master and aim at them before starting.")
@@ -494,17 +497,18 @@ public final class ContractRerollFeature
         menu = null;
         pendingStacks = null;
         hint = null;
-        MinecraftForge.EVENT_BUS.unregister(this);
+        ClientEvents.TICK_END.remove(onTickListener);
+        ClientEvents.CHAT.remove(onChatListener);
+        ClientEvents.GUI_OPEN.remove(onGuiOpenListener);
+        ClientEvents.OVERLAY.remove(onRenderOverlayListener);
         session.removeListener(sessionChanged);
         sidebar.removeListener(this);
         language.removeListener(languageChanged);
         input.unlock(this, resume);
     }
 
-    @SubscribeEvent
-    public void onRenderOverlay(RenderGameOverlayEvent.Post event) {
-        if (state == State.IDLE || event.type != RenderGameOverlayEvent.ElementType.ALL
-                || minecraft.gameSettings.hideGUI || minecraft.thePlayer == null)
+    private void onRenderOverlay(Overlay event) {
+        if (state == State.IDLE || minecraft.gameSettings.hideGUI || minecraft.thePlayer == null)
             return;
         GlStateManager.pushMatrix();
         GlStateManager.translate(event.resolution.getScaledWidth() / 2.0F,

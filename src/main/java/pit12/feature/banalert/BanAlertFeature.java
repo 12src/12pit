@@ -26,14 +26,10 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.util.EnumChatFormatting;
-import net.minecraftforge.client.event.ClientChatReceivedEvent;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import pit12.runtime.config.ConfigCatalog;
 import pit12.runtime.config.ConfigChangeListener;
 import pit12.runtime.languages.Languages;
@@ -42,9 +38,14 @@ import pit12.runtime.player.TabPresenceListener;
 import pit12.runtime.session.ClientSession;
 import pit12.shared.chat.ChatFeedback;
 import pit12.shared.chat.ChatFeedback.Tone;
+import pit12.shared.event.ClientEvents;
+import pit12.shared.event.ClientEvents.Chat;
 import pit12.shared.lifecycle.ClientLifecycle;
 
 public final class BanAlertFeature implements ClientLifecycle, TabPresenceListener {
+    private final Consumer<Chat> onChatReceivedListener = this::onChatReceived;
+    private final Runnable onClientTickListener = this::onClientTick;
+
     private static final String BAN_MESSAGE_PREFIX = "A player has been removed from your game";
     private static final long WINDOW_NANOS = TimeUnit.SECONDS.toNanos(1);
     private final Minecraft minecraft;
@@ -107,10 +108,12 @@ public final class BanAlertFeature implements ClientLifecycle, TabPresenceListen
         if (active) {
             session.addListener(sessionChanged);
             presence.addListener(this);
-            MinecraftForge.EVENT_BUS.register(this);
+            ClientEvents.CHAT.add(onChatReceivedListener);
+            ClientEvents.TICK_END.add(onClientTickListener);
             reset();
         } else {
-            MinecraftForge.EVENT_BUS.unregister(this);
+            ClientEvents.CHAT.remove(onChatReceivedListener);
+            ClientEvents.TICK_END.remove(onClientTickListener);
             presence.removeListener(this);
             session.removeListener(sessionChanged);
             onlineNames.clear();
@@ -147,8 +150,7 @@ public final class BanAlertFeature implements ClientLifecycle, TabPresenceListen
         departures.put(playerId, new Departure(name, now));
     }
 
-    @SubscribeEvent
-    public void onChatReceived(ClientChatReceivedEvent event) {
+    private void onChatReceived(Chat event) {
         if (!active || event.type == 2) {
             return;
         }
@@ -166,9 +168,8 @@ public final class BanAlertFeature implements ClientLifecycle, TabPresenceListen
         discardExpired(now);
     }
 
-    @SubscribeEvent
-    public void onClientTick(ClientTickEvent event) {
-        if (!active || event.phase != Phase.END || pendingMessages.isEmpty()) {
+    private void onClientTick() {
+        if (!active || pendingMessages.isEmpty()) {
             return;
         }
         session.refresh();

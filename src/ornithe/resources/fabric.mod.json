@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "${modId}",
+  "version": "${version}",
+  "name": "${modName}",
+  "description": "Tools for Hypixel's The Pit.",
+  "environment": "client",
+  "entrypoints": {
+    "client": ["pit12.Pit12"]
+  },
+  "mixins": ["mixins.pit12.json"],
+  "contact": {
+    "homepage": "https://github.com/12src/12pit",
+    "sources": "https://github.com/12src/12pit",
+    "issues": "https://github.com/12src/12pit/issues"
+  },
+  "license": "GPL-3.0-or-later",
+  "depends": {
+    "fabricloader": ">=0.18.3",
+    "minecraft": "${mcversion}",
+    "java": ">=8"
+  }
+}

@@ -27,12 +27,6 @@ import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.BlockPos.MutableBlockPos;
-import net.minecraftforge.client.event.RenderWorldLastEvent;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.common.eventhandler.EventPriority;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import pit12.runtime.config.ConfigCatalog;
 import pit12.runtime.config.ConfigChangeListener;
 import pit12.runtime.config.ConfigChangeSet;
@@ -40,10 +34,14 @@ import pit12.runtime.pit.PitContext;
 import pit12.runtime.pit.PitMap;
 import pit12.runtime.pit.PitMid;
 import pit12.runtime.session.ClientSession;
+import pit12.shared.event.ClientEvents;
 import pit12.shared.lifecycle.ClientLifecycle;
 import pit12.shared.rendering.TextureState;
 
 public final class RingHelperFeature implements ClientLifecycle, ConfigChangeListener {
+    private final Runnable onClientTickListener = this::onClientTick;
+    private final ClientEvents.WorldRenderer onRenderWorldListener = this::onRenderWorld;
+
     private final Minecraft minecraft;
     private final ConfigCatalog configs;
     private final RingHelperConfig config;
@@ -99,9 +97,11 @@ public final class RingHelperFeature implements ClientLifecycle, ConfigChangeLis
         active = enabled;
         if (enabled) {
             session.addListener(sessionChanged);
-            MinecraftForge.EVENT_BUS.register(this);
+            ClientEvents.TICK_END.add(onClientTickListener);
+            ClientEvents.WORLD_RENDER_LAST.add(onRenderWorldListener);
         } else {
-            MinecraftForge.EVENT_BUS.unregister(this);
+            ClientEvents.TICK_END.remove(onClientTickListener);
+            ClientEvents.WORLD_RENDER_LAST.remove(onRenderWorldListener);
             session.removeListener(sessionChanged);
         }
         reset();
@@ -124,9 +124,8 @@ public final class RingHelperFeature implements ClientLifecycle, ConfigChangeLis
         }
     }
 
-    @SubscribeEvent
-    public void onClientTick(ClientTickEvent event) {
-        if (!active || event.phase != Phase.END) {
+    private void onClientTick() {
+        if (!active) {
             return;
         }
         session.checkThread();
@@ -188,8 +187,7 @@ public final class RingHelperFeature implements ClientLifecycle, ConfigChangeLis
         return held != null && held.stackSize > 0 && held.getItem() instanceof ItemBlock;
     }
 
-    @SubscribeEvent(priority = EventPriority.LOWEST)
-    public void onRenderWorld(RenderWorldLastEvent event) {
+    private void onRenderWorld(float partialTicks) {
         if (active && world == minecraft.theWorld && !targets.isEmpty() && shouldShow()) {
             renderer.render(minecraft, targets, config.color(), geometryRevision);
         }
