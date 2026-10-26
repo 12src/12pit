@@ -26,8 +26,6 @@ import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.minecraft.client.Minecraft;
-import net.minecraftforge.client.ClientCommandHandler;
-import net.minecraftforge.fml.client.FMLClientHandler;
 import pit12.feature.autoclick.AutoClickBinding;
 import pit12.feature.autoclick.AutoClickConfig;
 import pit12.feature.autoclick.AutoClickFeature;
@@ -100,12 +98,10 @@ import pit12.feature.tooltip.TooltipConfig;
 import pit12.feature.tooltip.TooltipFeature;
 import pit12.feature.webui.WebUiConfig;
 import pit12.feature.webui.WebUiFeature;
+import pit12.platform.client.ClientPlatform;
 import pit12.platform.discord.DiscordIpcConnection;
-import pit12.platform.forge.ForgeCommandAdapter;
 import pit12.platform.lunar.LunarSupport;
 import pit12.platform.lunar.LunarTextureState;
-import pit12.platform.lwjgl.LwjglInputDevice;
-import pit12.platform.oneconfig.OneConfigSupport;
 import pit12.runtime.arrow.ArrowTracker;
 import pit12.runtime.command.CommandRegistry;
 import pit12.runtime.config.BooleanSetting;
@@ -158,10 +154,10 @@ public final class ClientBootstrap {
         ArrowTracker arrows = new ArrowTracker(minecraft, session);
         components.add(arrows);
         InputBlocker input = new InputBlocker(minecraft, client, (InputBlockBinding) minecraft,
-                new LwjglInputDevice());
+                ClientPlatform.inputDevice());
         components.add(input);
         CommandRegistry commands =
-                new CommandRegistry(client, configs, ForgeCommandAdapter::register, language);
+                new CommandRegistry(client, configs, ClientPlatform::registerCommand, language);
         components.add(commands);
         PitContextTracker pitContext = new PitContextTracker(session);
         components.add(pitContext);
@@ -233,15 +229,16 @@ public final class ClientBootstrap {
         registerContractReroll(minecraft, configs, session, pitContext, sidebar, input,
                 (MinecraftActions) minecraft);
         // Category: Patch
-        registerCommandFix(configs, (CommandFixBinding) ClientCommandHandler.instance);
-        if (FMLClientHandler.instance().hasOptifine()) {
+        registerCommandFix(configs, ClientPlatform.commandFix());
+        if (ClientPlatform.hasOptifine()) {
             registerResourceLeakFix(configs,
                     (ResourceLeakFixBinding) minecraft.getTextureMapBlocks());
         }
         registerScoreboardFix(configs, (ScoreboardFixBinding) minecraft);
         // Platform integrations
-        OneConfigSupport oneConfig = new OneConfigSupport(configs);
-        components.add(oneConfig);
+        ClientLifecycle integration = ClientPlatform.integration(configs);
+        if (integration != null)
+            components.add(integration);
         language.addListener(() -> configs.localize(language));
         language.addListener(() -> webUiConfigs.localize(language));
         webUiConfigs.freeze();
@@ -259,7 +256,8 @@ public final class ClientBootstrap {
     private HudEditorFeature registerHudEditor(HudRegistry hudRegistry, CommandRegistry commands,
             ConfigCatalog configs, Profiles profiles) {
         HudEditorFeature hudEditor =
-                new HudEditorFeature(hudRegistry, commands, language, configs, profiles);
+                new HudEditorFeature(hudRegistry, commands, language, configs, profiles,
+                        ClientPlatform::renderHotbar);
         components.add(hudEditor);
         return hudEditor;
     }

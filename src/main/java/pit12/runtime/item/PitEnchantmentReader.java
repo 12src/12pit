@@ -21,7 +21,7 @@ package pit12.runtime.item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraftforge.common.util.Constants;
+import pit12.shared.nbt.NbtTypes;
 
 public final class PitEnchantmentReader {
     private PitEnchantmentReader() {}
@@ -77,7 +77,7 @@ public final class PitEnchantmentReader {
         }
         NBTTagCompound itemTag = stack.getTagCompound();
         // Missing compounds and lists return empty tags, so check the keys first.
-        if (!itemTag.hasKey("ExtraAttributes", Constants.NBT.TAG_COMPOUND)) {
+        if (!itemTag.hasKey("ExtraAttributes", NbtTypes.COMPOUND)) {
             return null;
         }
         return itemTag.getCompoundTag("ExtraAttributes");
@@ -87,11 +87,11 @@ public final class PitEnchantmentReader {
         if (extraAttributes == null) {
             return null;
         }
-        if (!extraAttributes.hasKey("CustomEnchants", Constants.NBT.TAG_LIST)) {
+        if (!extraAttributes.hasKey("CustomEnchants", NbtTypes.LIST)) {
             return null;
         }
         NBTTagList enchantments =
-                extraAttributes.getTagList("CustomEnchants", Constants.NBT.TAG_COMPOUND);
+                extraAttributes.getTagList("CustomEnchants", NbtTypes.COMPOUND);
         return enchantments.tagCount() == 0 ? null : enchantments;
     }
 }

@@ -26,16 +26,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Consumer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraftforge.client.event.RenderGameOverlayEvent;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.entity.PlaySoundAtEntityEvent;
-import net.minecraftforge.event.entity.player.AttackEntityEvent;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import pit12.feature.relation.api.Relation;
 import pit12.feature.relation.api.RelationLookup;
 import pit12.feature.telebow.api.TelebowCooldownListener;
@@ -54,10 +48,19 @@ import pit12.runtime.player.PlayerEntityTracker;
 import pit12.runtime.player.PlayerEquipmentAccess;
 import pit12.runtime.player.PlayerNameCache;
 import pit12.runtime.session.ClientSession;
+import pit12.shared.event.ClientEvents;
+import pit12.shared.event.ClientEvents.Attack;
+import pit12.shared.event.ClientEvents.Overlay;
+import pit12.shared.event.ClientEvents.Sound;
 import pit12.shared.lifecycle.ClientLifecycle;
 
 public final class TimersFeature
         implements ClientLifecycle, ConfigChangeListener, TelebowCooldownListener, PlayerTimers {
+    private final Consumer<Attack> onAttackListener = this::onAttack;
+    private final Consumer<Sound> onSoundListener = this::onSound;
+    private final Runnable onTickListener = this::onTick;
+    private final Consumer<Overlay> onRenderOverlayListener = this::onRenderOverlay;
+
     private final Minecraft minecraft;
     private final ConfigCatalog configs;
     private final TimersConfig config;
@@ -178,9 +181,15 @@ public final class TimersFeature
             return;
         active = enabled;
         if (active) {
-            MinecraftForge.EVENT_BUS.register(this);
+            ClientEvents.ATTACK.add(onAttackListener);
+            ClientEvents.SOUND.add(onSoundListener);
+            ClientEvents.TICK_END.add(onTickListener);
+            ClientEvents.OVERLAY.add(onRenderOverlayListener);
         } else {
-            MinecraftForge.EVENT_BUS.unregister(this);
+            ClientEvents.ATTACK.remove(onAttackListener);
+            ClientEvents.SOUND.remove(onSoundListener);
+            ClientEvents.TICK_END.remove(onTickListener);
+            ClientEvents.OVERLAY.remove(onRenderOverlayListener);
             rows.clear();
             pendingRows.clear();
             countdownTexts.clear();
@@ -313,15 +322,13 @@ public final class TimersFeature
         }
     }
 
-    @SubscribeEvent
-    public void onAttack(AttackEntityEvent event) {
+    private void onAttack(Attack event) {
         if (venomActive && event.entityPlayer == minecraft.thePlayer
                 && event.target instanceof EntityPlayer)
             venom.attack((EntityPlayer) event.target);
     }
 
-    @SubscribeEvent
-    public void onSound(PlaySoundAtEntityEvent event) {
+    private void onSound(Sound event) {
         if (jumpBoostActive && config.jumpBoostSoundRequired.get()
                 && event.entity == minecraft.thePlayer && "random.drink".equals(event.name))
             jumpBoost.drink(minecraft.thePlayer);
@@ -364,10 +371,7 @@ public final class TimersFeature
         }
     }
 
-    @SubscribeEvent
-    public void onTick(ClientTickEvent event) {
-        if (event.phase != Phase.END)
-            return;
+    private void onTick() {
         if (venomActive)
             venom.tick();
         if (jumpBoostActive)
@@ -433,9 +437,8 @@ public final class TimersFeature
         return orderChanged;
     }
 
-    @SubscribeEvent
-    public void onRenderOverlay(RenderGameOverlayEvent.Post event) {
-        if (event.type != RenderGameOverlayEvent.ElementType.ALL || hud.empty()
+    private void onRenderOverlay(Overlay event) {
+        if (hud.empty()
                 || hudRegistry.editing() || minecraft.theWorld == null
                 || minecraft.gameSettings.hideGUI)
             return;

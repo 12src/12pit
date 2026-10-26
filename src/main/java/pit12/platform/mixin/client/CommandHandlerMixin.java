@@ -27,7 +27,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import pit12.platform.forge.ForgeCommandAdapter;
+import pit12.platform.command.ClientCommandAdapter;
 
 @Mixin(CommandHandler.class)
 public abstract class CommandHandlerMixin {
@@ -38,7 +38,7 @@ public abstract class CommandHandlerMixin {
             return;
         List<String> completions = cir.getReturnValue();
         for (ICommand command : ((CommandHandler) (Object) this).getCommands().values()) {
-            if (command instanceof ForgeCommandAdapter) {
+            if (command instanceof ClientCommandAdapter) {
                 completions.removeAll(command.getCommandAliases());
             }
         }

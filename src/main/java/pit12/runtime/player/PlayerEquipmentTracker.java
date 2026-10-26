@@ -27,16 +27,15 @@ import net.minecraft.client.network.NetHandlerPlayClient;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import pit12.runtime.session.ClientSession;
+import pit12.shared.event.ClientEvents;
 import pit12.shared.event.Listeners;
 import pit12.shared.lifecycle.ClientLifecycle;
 
 public final class PlayerEquipmentTracker implements ClientLifecycle, PlayerEquipmentAccess,
         PlayerEquipmentPacketObserver, PlayerEntityListener {
+    private final Runnable onClientTickListener = this::onClientTick;
+
     private final ClientSession session;
     private final PlayerEntityTracker players;
     private final Runnable sessionChanged;
@@ -57,7 +56,7 @@ public final class PlayerEquipmentTracker implements ClientLifecycle, PlayerEqui
         if (started) {
             return;
         }
-        MinecraftForge.EVENT_BUS.register(this);
+        ClientEvents.TICK_START.add(onClientTickListener);
         started = true;
         players.addListener(this);
         session.addListener(sessionChanged);
@@ -75,7 +74,7 @@ public final class PlayerEquipmentTracker implements ClientLifecycle, PlayerEqui
         session.removeListener(sessionChanged);
         players.removeListener(this);
         unbindNetHandler();
-        MinecraftForge.EVENT_BUS.unregister(this);
+        ClientEvents.TICK_START.remove(onClientTickListener);
         clearCache();
         listeners.clear();
     }
@@ -147,12 +146,8 @@ public final class PlayerEquipmentTracker implements ClientLifecycle, PlayerEqui
         }
     }
 
-    @SubscribeEvent
-    public void onClientTick(ClientTickEvent event) {
+    private void onClientTick() {
         session.checkThread();
-        if (event.phase != Phase.START) {
-            return;
-        }
         session.refresh();
         if (session.world() == null) {
             clearCache();

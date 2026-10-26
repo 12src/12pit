@@ -19,6 +19,7 @@
 package pit12.feature.autofish;
 
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Consumer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.GuiChat;
@@ -27,21 +28,20 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.projectile.EntityFishHook;
 import net.minecraft.item.ItemFishingRod;
 import net.minecraft.item.ItemStack;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.entity.player.PlayerInteractEvent;
-import net.minecraftforge.fml.common.eventhandler.EventPriority;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import pit12.runtime.config.ConfigCatalog;
 import pit12.runtime.config.ConfigChangeListener;
 import pit12.runtime.config.ConfigChangeSet;
 import pit12.runtime.config.IntegerSetting;
 import pit12.runtime.session.ClientSession;
+import pit12.shared.event.ClientEvents;
+import pit12.shared.event.ClientEvents.Interaction;
 import pit12.shared.input.MinecraftActions;
 import pit12.shared.lifecycle.ClientLifecycle;
 
 public final class AutoFishFeature implements ClientLifecycle, ConfigChangeListener {
+    private final Runnable onClientTickListener = this::onClientTick;
+    private final Consumer<Interaction> onInteractListener = this::onInteract;
+
     private enum State {
         WAITING_FOR_RISE,
         WAITING_FOR_BITE,
@@ -67,7 +67,7 @@ public final class AutoFishFeature implements ClientLifecycle, ConfigChangeListe
     private double floatingY;
     private int stableTicks;
     private boolean automaticClick;
-    private PlayerInteractEvent clickEvent;
+    private Interaction clickEvent;
     private int delayTicks;
     private boolean emptyHook;
 
@@ -116,17 +116,18 @@ public final class AutoFishFeature implements ClientLifecycle, ConfigChangeListe
         active = enabled;
         if (enabled) {
             session.addListener(sessionChanged);
-            MinecraftForge.EVENT_BUS.register(this);
+            ClientEvents.TICK_START.add(onClientTickListener);
+            ClientEvents.INTERACT.add(onInteractListener);
         } else {
-            MinecraftForge.EVENT_BUS.unregister(this);
+            ClientEvents.TICK_START.remove(onClientTickListener);
+            ClientEvents.INTERACT.remove(onInteractListener);
             session.removeListener(sessionChanged);
         }
         reset();
     }
 
-    @SubscribeEvent
-    public void onClientTick(ClientTickEvent event) {
-        if (!active || event.phase != Phase.START) {
+    private void onClientTick() {
+        if (!active) {
             return;
         }
         EntityPlayerSP player = minecraft.thePlayer;
@@ -238,15 +239,14 @@ public final class AutoFishFeature implements ClientLifecycle, ConfigChangeListe
         state = rightClick() ? State.WAITING_FOR_REMOVAL : State.WAITING_FOR_RECOVERY;
     }
 
-    @SubscribeEvent(priority = EventPriority.LOWEST, receiveCanceled = true)
-    public void onInteract(PlayerInteractEvent event) {
+    private void onInteract(Interaction event) {
         if (event.entityPlayer != minecraft.thePlayer
-                || event.action == PlayerInteractEvent.Action.LEFT_CLICK_BLOCK) {
+                || event.action == Interaction.Action.LEFT_CLICK_BLOCK) {
             return;
         }
         if (!automaticClick) {
             reset();
-        } else if (event.action == PlayerInteractEvent.Action.RIGHT_CLICK_AIR) {
+        } else if (event.action == Interaction.Action.RIGHT_CLICK_AIR) {
             clickEvent = event;
         }
     }
@@ -267,7 +267,7 @@ public final class AutoFishFeature implements ClientLifecycle, ConfigChangeListe
         try {
             actions.pit12$rightClick();
             // Other listeners may cancel the click, so check after they have all run.
-            return clickEvent != null && !clickEvent.isCanceled();
+            return clickEvent != null && !clickEvent.canceled.getAsBoolean();
         } finally {
             automaticClick = false;
             clickEvent = null;

@@ -19,15 +19,9 @@
 package pit12.feature.playerlist;
 
 import java.util.UUID;
+import java.util.function.Consumer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
-import net.minecraftforge.client.event.RenderGameOverlayEvent;
-import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
-import net.minecraftforge.client.event.TextureStitchEvent;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import pit12.feature.denick.api.DenickNames;
 import pit12.feature.relation.api.Relation;
 import pit12.feature.relation.api.RelationListener;
@@ -47,11 +41,16 @@ import pit12.runtime.player.PlayerEquipmentListener;
 import pit12.runtime.player.PlayerNameCache;
 import pit12.runtime.player.TabPresence;
 import pit12.runtime.player.TabPresenceListener;
+import pit12.shared.event.ClientEvents;
+import pit12.shared.event.ClientEvents.Overlay;
 import pit12.shared.input.Keybind;
 import pit12.shared.lifecycle.ClientLifecycle;
 
 public final class PlayerListFeature implements ClientLifecycle, PlayerEquipmentListener,
         ConfigChangeListener, RelationListener, TabPresenceListener {
+    private final Runnable onClientTickListener = this::onClientTick;
+    private final Consumer<Overlay> onRenderOverlayListener = this::onRenderOverlay;
+
     static final int UPDATE_INTERVAL_TICKS = 2;
     private final Minecraft minecraft = Minecraft.getMinecraft();
     private final ConfigCatalog configs;
@@ -63,7 +62,7 @@ public final class PlayerListFeature implements ClientLifecycle, PlayerEquipment
     private final DenickNames denickNames;
     private final PlayerListBuilder builder;
     private final PlayerListHud hud;
-    private final FontListener fontListener = new FontListener();
+    private final Runnable fontListener = this::onTextureReload;
     private final Languages language;
     private final Runnable languageListener;
     private final HudRegistry hudRegistry;
@@ -102,7 +101,7 @@ public final class PlayerListFeature implements ClientLifecycle, PlayerEquipment
             return;
         }
         started = true;
-        MinecraftForge.EVENT_BUS.register(fontListener);
+        ClientEvents.TEXTURES_RELOADED.add(fontListener);
         language.addListener(languageListener);
         hudRegistry.register(hud);
         configs.addListener(this);
@@ -117,7 +116,7 @@ public final class PlayerListFeature implements ClientLifecycle, PlayerEquipment
             return;
         }
         started = false;
-        MinecraftForge.EVENT_BUS.unregister(fontListener);
+        ClientEvents.TEXTURES_RELOADED.remove(fontListener);
         configs.removeListener(this);
         language.removeListener(languageListener);
         deactivate();
@@ -135,7 +134,8 @@ public final class PlayerListFeature implements ClientLifecycle, PlayerEquipment
             presence.addListener(this);
             playerNames.addListener(namesChanged);
             denickNames.addListener(namesChanged);
-            MinecraftForge.EVENT_BUS.register(this);
+            ClientEvents.TICK_START.add(onClientTickListener);
+            ClientEvents.OVERLAY.add(onRenderOverlayListener);
         } catch (RuntimeException failure) {
             deactivate();
             throw failure;
@@ -147,7 +147,8 @@ public final class PlayerListFeature implements ClientLifecycle, PlayerEquipment
             return;
         }
         active = false;
-        MinecraftForge.EVENT_BUS.unregister(this);
+        ClientEvents.TICK_START.remove(onClientTickListener);
+        ClientEvents.OVERLAY.remove(onRenderOverlayListener);
         presence.removeListener(this);
         playerNames.removeListener(namesChanged);
         denickNames.removeListener(namesChanged);
@@ -245,11 +246,7 @@ public final class PlayerListFeature implements ClientLifecycle, PlayerEquipment
         }
     }
 
-    @SubscribeEvent
-    public void onClientTick(ClientTickEvent event) {
-        if (event.phase != Phase.START) {
-            return;
-        }
+    private void onClientTick() {
         boolean realNames = minecraft.currentScreen == null && minecraft.inGameHasFocus
                 && Keybind.held(config.realNamesKey());
         if (realNames != realNamesHeld) {
@@ -272,9 +269,8 @@ public final class PlayerListFeature implements ClientLifecycle, PlayerEquipment
         }
     }
 
-    @SubscribeEvent
-    public void onRenderOverlay(RenderGameOverlayEvent.Post event) {
-        if (event.type != ElementType.ALL || hudRegistry.editing() || minecraft.theWorld == null
+    private void onRenderOverlay(Overlay event) {
+        if (hudRegistry.editing() || minecraft.theWorld == null
                 || snapshot.isEmpty()) {
             return;
         }
@@ -285,11 +281,7 @@ public final class PlayerListFeature implements ClientLifecycle, PlayerEquipment
                 event.partialTicks, false);
     }
 
-    // Forge needs this listener class to be public.
-    public final class FontListener {
-        @SubscribeEvent
-        public void onTextureStitch(TextureStitchEvent.Post event) {
-            hud.configurationChanged();
-        }
+    private void onTextureReload() {
+        hud.configurationChanged();
     }
 }

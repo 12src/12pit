@@ -26,9 +26,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.BooleanSupplier;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraftforge.client.GuiIngameForge;
 import pit12.feature.profile.api.Profiles;
 import pit12.runtime.config.ConfigCatalog;
 import pit12.runtime.config.ConfigChangeListener;
@@ -50,6 +50,7 @@ final class HudEditorController {
 
     private final Minecraft minecraft = Minecraft.getMinecraft();
     private final HudRegistry registry;
+    private final BooleanSupplier renderHotbar;
     private final ConfigCatalog configs;
     private final Profiles profiles;
     private final HudRenderer renderer = new HudRenderer();
@@ -84,7 +85,9 @@ final class HudEditorController {
     private boolean opened;
     private boolean live;
 
-    HudEditorController(HudRegistry registry, ConfigCatalog configs, Profiles profiles) {
+    HudEditorController(HudRegistry registry, ConfigCatalog configs, Profiles profiles,
+            BooleanSupplier renderHotbar) {
+        this.renderHotbar = renderHotbar;
         this.registry = registry;
         this.configs = configs;
         this.profiles = profiles;
@@ -269,7 +272,7 @@ final class HudEditorController {
             }
         }
         if (minecraft.thePlayer != null && !minecraft.gameSettings.hideGUI
-                && GuiIngameForge.renderHotbar && !minecraft.playerController.isSpectator()
+                && renderHotbar.getAsBoolean() && !minecraft.playerController.isSpectator()
                 && minecraft.getRenderViewEntity() instanceof EntityPlayer) {
             // Same bounds as the hotbar background, in GUI pixels.
             others.add(new HudEditorSnap.Box(screenWidth / 2 - 91, screenHeight - 22, 182, 22));

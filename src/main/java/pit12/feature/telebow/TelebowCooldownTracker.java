@@ -27,10 +27,6 @@ import java.util.UUID;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.projectile.EntityArrow;
 import net.minecraft.item.ItemStack;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import pit12.feature.telebow.api.TelebowCooldownListener;
 import pit12.feature.telebow.api.TelebowCooldowns;
 import pit12.runtime.arrow.ArrowAccess;
@@ -43,11 +39,14 @@ import pit12.runtime.config.ConfigChangeSet;
 import pit12.runtime.item.PitEnchantment;
 import pit12.runtime.item.PitEnchantmentReader;
 import pit12.runtime.session.ClientSession;
+import pit12.shared.event.ClientEvents;
 import pit12.shared.event.Listeners;
 import pit12.shared.lifecycle.ClientLifecycle;
 
 public final class TelebowCooldownTracker
         implements ClientLifecycle, ConfigChangeListener, ArrowListener, TelebowCooldowns {
+    private final Runnable onTickListener = this::onTick;
+
     private static final long TELEPORT_WINDOW_NANOS = 1_000_000_000L;
     private final ConfigCatalog configs;
     private final TelebowConfig config;
@@ -92,9 +91,9 @@ public final class TelebowCooldownTracker
         active = enabled;
         if (active) {
             arrows.addListener(this);
-            MinecraftForge.EVENT_BUS.register(this);
+            ClientEvents.TICK_END.add(onTickListener);
         } else {
-            MinecraftForge.EVENT_BUS.unregister(this);
+            ClientEvents.TICK_END.remove(onTickListener);
             arrows.removeListener(this);
             onArrowsReset();
         }
@@ -261,9 +260,8 @@ public final class TelebowCooldownTracker
                 listener -> listener.onTelebowCooldown(cooldown.player, cooldown.until));
     }
 
-    @SubscribeEvent
-    public void onTick(ClientTickEvent event) {
-        if (event.phase != Phase.END || cooldowns.isEmpty() && attempts.isEmpty())
+    private void onTick() {
+        if (cooldowns.isEmpty() && attempts.isEmpty())
             return;
         long now = System.nanoTime();
         cooldowns.values().removeIf(cooldown -> now >= cooldown.until);

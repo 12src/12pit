@@ -25,9 +25,6 @@ import java.nio.file.Path;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.minecraft.client.Minecraft;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.InputEvent;
 import org.lwjgl.input.Keyboard;
 import pit12.feature.hudeditor.api.HudEditor;
 import pit12.feature.profile.api.Profiles;
@@ -37,10 +34,13 @@ import pit12.runtime.config.ConfigCatalog;
 import pit12.runtime.config.ConfigChangeListener;
 import pit12.runtime.config.ConfigChangeSet;
 import pit12.runtime.languages.Languages;
+import pit12.shared.event.ClientEvents;
 import pit12.shared.input.Keybind;
 import pit12.shared.lifecycle.ClientLifecycle;
 
 public final class WebUiFeature implements ClientLifecycle, ConfigChangeListener {
+    private final Runnable onKeyInputListener = this::onKeyInput;
+
     private static final Logger LOGGER = Logger.getLogger(WebUiFeature.class.getName());
     private final Minecraft minecraft = Minecraft.getMinecraft();
     private final WebUiConfig config;
@@ -84,7 +84,7 @@ public final class WebUiFeature implements ClientLifecycle, ConfigChangeListener
             LOGGER.log(Level.WARNING, "Configuration interface is unavailable", failure);
             return;
         }
-        MinecraftForge.EVENT_BUS.register(this);
+        ClientEvents.KEY_INPUT.add(onKeyInputListener);
         started = true;
         LOGGER.info("Configuration interface available at " + server.address());
     }
@@ -92,7 +92,7 @@ public final class WebUiFeature implements ClientLifecycle, ConfigChangeListener
     @Override
     public void stop() {
         if (started) {
-            MinecraftForge.EVENT_BUS.unregister(this);
+            ClientEvents.KEY_INPUT.remove(onKeyInputListener);
             started = false;
         }
         server.stop();
@@ -108,8 +108,7 @@ public final class WebUiFeature implements ClientLifecycle, ConfigChangeListener
         }
     }
 
-    @SubscribeEvent
-    public void onKeyInput(InputEvent.KeyInputEvent ignoredEvent) {
+    private void onKeyInput() {
         int key = config.keybind().get();
         if (key == Keyboard.KEY_NONE || minecraft.currentScreen != null
                 || !Keyboard.getEventKeyState() || Keyboard.isRepeatEvent()

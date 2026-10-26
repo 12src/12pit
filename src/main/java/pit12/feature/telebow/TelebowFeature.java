@@ -27,11 +27,6 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.projectile.EntityArrow;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.BlockPos;
-import net.minecraftforge.client.event.RenderWorldLastEvent;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import pit12.feature.relation.api.Relation;
 import pit12.feature.relation.api.RelationListener;
 import pit12.feature.relation.api.RelationLookup;
@@ -45,11 +40,15 @@ import pit12.runtime.config.ConfigChangeSet;
 import pit12.runtime.item.PitEnchantment;
 import pit12.runtime.item.PitEnchantmentReader;
 import pit12.runtime.session.ClientSession;
+import pit12.shared.event.ClientEvents;
 import pit12.shared.lifecycle.ClientLifecycle;
 import pit12.shared.rendering.TextureState;
 
 public final class TelebowFeature
         implements ClientLifecycle, ConfigChangeListener, ArrowListener, RelationListener {
+    private final Runnable onTickListener = this::onTick;
+    private final ClientEvents.WorldRenderer onRenderWorldListener = this::onRenderWorld;
+
     private final Minecraft minecraft;
     private final ConfigCatalog configs;
     private final TelebowConfig config;
@@ -118,9 +117,11 @@ public final class TelebowFeature
         if (active) {
             arrows.addListener(this);
             relations.addListener(this);
-            MinecraftForge.EVENT_BUS.register(this);
+            ClientEvents.TICK_END.add(onTickListener);
+            ClientEvents.WORLD_RENDER.add(onRenderWorldListener);
         } else {
-            MinecraftForge.EVENT_BUS.unregister(this);
+            ClientEvents.TICK_END.remove(onTickListener);
+            ClientEvents.WORLD_RENDER.remove(onRenderWorldListener);
             relations.removeListener(this);
             arrows.removeListener(this);
             onArrowsReset();
@@ -245,10 +246,7 @@ public final class TelebowFeature
         }
     }
 
-    @SubscribeEvent
-    public void onTick(ClientTickEvent event) {
-        if (event.phase != Phase.END)
-            return;
+    private void onTick() {
         long now = System.nanoTime();
         long lifetime = (config.holdTime.get() + config.fadeTime.get()) * 1_000_000L;
         Iterator<TelebowPath> iterator = paths.values().iterator();
@@ -280,13 +278,12 @@ public final class TelebowFeature
         renderer.clear();
     }
 
-    @SubscribeEvent
-    public void onRenderWorld(RenderWorldLastEvent event) {
+    private void onRenderWorld(float partialTicks) {
         if (paths.isEmpty() && aim.targets.isEmpty() || minecraft.gameSettings.hideGUI
                 || minecraft.theWorld != session.world())
             return;
         if (aimActive)
-            aim.interpolate(event.partialTicks);
+            aim.interpolate(partialTicks);
         renderer.render(paths.values(), aim.targets.values(), System.nanoTime());
     }
 }

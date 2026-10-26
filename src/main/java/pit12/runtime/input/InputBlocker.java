@@ -25,17 +25,16 @@ import java.util.Set;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.settings.KeyBinding;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.common.eventhandler.EventPriority;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.Display;
 import pit12.shared.concurrent.ClientThread;
+import pit12.shared.event.ClientEvents;
 import pit12.shared.lifecycle.ClientLifecycle;
 
 public final class InputBlocker implements ClientLifecycle {
+    private final Runnable onTickListener = this::onTick;
+
     private final Minecraft minecraft;
     private final ClientThread client;
     private final InputBlockBinding binding;
@@ -93,7 +92,7 @@ public final class InputBlocker implements ClientLifecycle {
         if (alreadyLocked)
             return;
         device.block(this::blockedKey, this::focusOnClick);
-        MinecraftForge.EVENT_BUS.register(this);
+        ClientEvents.INPUT_TICK.add(onTickListener);
         KeyBinding.unPressAllKeys();
         if (minecraft.playerController != null) {
             minecraft.playerController.resetBlockRemoving();
@@ -176,10 +175,8 @@ public final class InputBlocker implements ClientLifecycle {
         return false;
     }
 
-    @SubscribeEvent(priority = EventPriority.HIGHEST)
-    public void onTick(TickEvent.ClientTickEvent event) {
-        if (event.phase == TickEvent.Phase.START)
-            device.dispatchEvents();
+    private void onTick() {
+        device.dispatchEvents();
     }
 
     private void blockedKey(int key, int modifiers) {
@@ -190,7 +187,7 @@ public final class InputBlocker implements ClientLifecycle {
     }
 
     private void release(boolean resume) {
-        MinecraftForge.EVENT_BUS.unregister(this);
+        ClientEvents.INPUT_TICK.remove(onTickListener);
         cursorReleased = false;
         device.unblock();
         minecraft.mouseHelper.deltaX = 0;

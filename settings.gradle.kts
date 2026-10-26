@@ -33,3 +33,6 @@ pluginManagement {
 plugins { id("org.gradle.toolchains.foojay-resolver-convention") }
 
 rootProject.name = "12pit"
+
+// Each build loads its own Loom implementation.
+includeBuild("ornithe")

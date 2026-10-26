@@ -81,6 +81,8 @@ val generateBuildConfig =
     }
 
 sourceSets.main {
+    java.srcDir("src/forge/java")
+    resources.srcDir("src/forge/resources")
     java.srcDir(generatedBuildConfigDirectory)
     output.setResourcesDir(sourceSets.main.flatMap { it.java.classesDirectory })
 }
@@ -142,7 +144,7 @@ val htmlLicenseHeader = "<!--\n$licenseText\n-->"
 
 spotless {
     java {
-        target("src/main/java/**/*.java", "src/test/java/**/*.java")
+        target("src/main/java/**/*.java", "src/forge/java/**/*.java", "src/ornithe/java/**/*.java", "src/test/java/**/*.java")
         eclipse().configFile(eclipseFormatterConfigPath)
         importOrder("\\#", "")
         removeUnusedImports()
@@ -161,7 +163,7 @@ spotless {
     }
 
     kotlinGradle {
-        target("*.gradle.kts")
+        target("*.gradle.kts", "ornithe/*.gradle.kts")
         ktfmt(ktfmtVersion).kotlinlangStyle().configure {
             it.setMaxWidth(120)
             it.setBlockIndent(4)
@@ -191,26 +193,12 @@ tasks.withType<Jar> {
     }
 }
 
-val npm = if (SystemUtils.IS_OS_WINDOWS) "npm.cmd" else "npm"
-val installWebUi =
-    tasks.register<Exec>("installWebUi") {
-        inputs.files("web-ui/package.json", "web-ui/package-lock.json")
-        outputs.file("web-ui/node_modules/.package-lock.json")
-        commandLine(npm, "ci", "--prefix", "web-ui")
-    }
+tasks.register("installWebUi") {
+    dependsOn(gradle.includedBuild("ornithe").task(":installWebUi"))
+}
 val buildWebUi =
-    tasks.register<Exec>("buildWebUi") {
-        dependsOn(installWebUi)
-        inputs.files(
-            fileTree("web-ui/src"),
-            "web-ui/index.html",
-            "web-ui/vite.config.ts",
-            "web-ui/tsconfig.json",
-            "web-ui/package.json",
-            "web-ui/package-lock.json",
-        )
-        outputs.dir("web-ui/dist")
-        commandLine(npm, "run", "build", "--prefix", "web-ui")
+    tasks.register("buildWebUi") {
+        dependsOn(gradle.includedBuild("ornithe").task(":buildWebUi"))
     }
 
 tasks.named<JavaExec>("runClient") {
@@ -261,4 +249,13 @@ tasks.shadowJar {
     exclude("META-INF/*.DSA", "META-INF/*.RSA", "META-INF/*.SF")
 }
 
-tasks.assemble { dependsOn(remapJar) }
+val packageOrnithe =
+    tasks.register<Copy>("packageOrnithe") {
+        dependsOn(gradle.includedBuild("ornithe").task(":remapJar"))
+        from("ornithe/build/libs/$modName-ornithe.jar")
+        into(layout.buildDirectory.dir("libs"))
+    }
+
+tasks.assemble { dependsOn(remapJar, packageOrnithe) }
+
+tasks.clean { dependsOn(gradle.includedBuild("ornithe").task(":clean")) }
