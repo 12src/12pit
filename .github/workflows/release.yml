@@ -44,7 +44,7 @@ jobs:
           set -euo pipefail
 
           if [[ -z "${RELEASE_TAG}" ]]; then
-            RELEASE_TAG="$(git tag --sort=-creatordate --list --exclude nightly | sed -n '1p')"
+            RELEASE_TAG="$(git tag --sort=-creatordate --list | grep -v '^nightly$' | sed -n '1p')"
           fi
 
           if [[ "${RELEASE_TAG}" == nightly ]]; then
