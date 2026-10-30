@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.platform.mixin.feature.scoreboardfix;
+package pit12.platform.mixin.feature.patch.scoreboardfix;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.scoreboard.ScoreObjective;
@@ -26,7 +26,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import pit12.feature.scoreboardfix.ScoreboardFixBinding;
+import pit12.feature.patch.scoreboardfix.ScoreboardFixBinding;
 
 @Mixin(Scoreboard.class)
 public abstract class ScoreboardMixin {

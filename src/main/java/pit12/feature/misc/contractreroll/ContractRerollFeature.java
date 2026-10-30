@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.contractreroll;
+package pit12.feature.misc.contractreroll;
 
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Level;

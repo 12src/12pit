@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.swap;
+package pit12.feature.combat.swap;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -25,9 +25,9 @@ import java.util.UUID;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
-import pit12.feature.relation.api.Relation;
-import pit12.feature.relation.api.RelationLookup;
-import pit12.feature.relation.api.RelationReadiness;
+import pit12.feature.client.relation.api.Relation;
+import pit12.feature.client.relation.api.RelationLookup;
+import pit12.feature.client.relation.api.RelationReadiness;
 import pit12.runtime.item.PitEnchantment;
 import pit12.runtime.item.PitEnchantments;
 import pit12.runtime.player.PlayerEquipmentAccess;

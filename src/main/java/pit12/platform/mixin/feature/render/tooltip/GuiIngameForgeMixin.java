@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.platform.mixin.feature.tooltip;
+package pit12.platform.mixin.feature.render.tooltip;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiIngame;
@@ -25,8 +25,8 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
-import pit12.feature.tooltip.HeldItemTooltipBinding;
-import pit12.feature.tooltip.TooltipConfig;
+import pit12.feature.render.tooltip.HeldItemTooltipBinding;
+import pit12.feature.render.tooltip.TooltipConfig;
 import pit12.runtime.item.PitEnchantmentReader;
 
 @Mixin(value = GuiIngameForge.class, remap = false)

@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.profile;
+package pit12.feature.client.profile;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -27,14 +27,14 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import pit12.feature.profile.api.ProfileMutationResult;
-import pit12.feature.profile.api.ProfileMutationResult.Status;
-import pit12.feature.profile.api.ProfileSummary;
-import pit12.feature.profile.api.ProfilesSnapshot;
-import pit12.feature.profile.api.ProfilesSnapshot.LoadState;
-import pit12.feature.profile.storage.LoadedProfiles;
-import pit12.feature.profile.storage.ProfileLoadProblem;
-import pit12.feature.profile.storage.StoredProfile;
+import pit12.feature.client.profile.api.ProfileMutationResult;
+import pit12.feature.client.profile.api.ProfileMutationResult.Status;
+import pit12.feature.client.profile.api.ProfileSummary;
+import pit12.feature.client.profile.api.ProfilesSnapshot;
+import pit12.feature.client.profile.api.ProfilesSnapshot.LoadState;
+import pit12.feature.client.profile.storage.LoadedProfiles;
+import pit12.feature.client.profile.storage.ProfileLoadProblem;
+import pit12.feature.client.profile.storage.StoredProfile;
 import pit12.runtime.config.ConfigCatalog;
 import pit12.runtime.config.ConfigChangeSet;
 import pit12.runtime.config.ConfigSnapshot;

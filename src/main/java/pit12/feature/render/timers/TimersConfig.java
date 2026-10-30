@@ -16,13 +16,13 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.timers;
+package pit12.feature.render.timers;
 
 import static pit12.runtime.languages.Languages.source;
 
 import java.util.EnumMap;
 import java.util.Map;
-import pit12.feature.timers.TimersHud.TimerType;
+import pit12.feature.render.timers.TimersHud.TimerType;
 import pit12.runtime.config.BooleanSetting;
 import pit12.runtime.config.ColorSetting;
 import pit12.runtime.config.ConfigCategory;

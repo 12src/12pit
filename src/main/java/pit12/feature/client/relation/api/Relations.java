@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.relation.api;
+package pit12.feature.client.relation.api;
 
 import java.util.List;
 import pit12.shared.result.OperationResult;

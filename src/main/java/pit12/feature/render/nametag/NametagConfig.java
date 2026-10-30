@@ -16,11 +16,11 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.nametag;
+package pit12.feature.render.nametag;
 
 import static pit12.runtime.languages.Languages.source;
 
-import pit12.feature.timers.api.PlayerTimers;
+import pit12.feature.render.timers.api.PlayerTimers;
 import pit12.runtime.config.BooleanSetting;
 import pit12.runtime.config.ChoiceSetting;
 import pit12.runtime.config.ConfigCategory;

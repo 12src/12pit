@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.relation;
+package pit12.feature.client.relation;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -25,8 +25,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
-import pit12.feature.relation.api.Relation;
-import pit12.feature.relation.api.RelationEntry;
+import pit12.feature.client.relation.api.Relation;
+import pit12.feature.client.relation.api.RelationEntry;
 import pit12.runtime.languages.Languages;
 
 final class RelationBook {

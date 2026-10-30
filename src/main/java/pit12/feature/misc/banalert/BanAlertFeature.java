@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.banalert;
+package pit12.feature.misc.banalert;
 
 import java.util.ArrayDeque;
 import java.util.Deque;

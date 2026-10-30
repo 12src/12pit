@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.eventlist;
+package pit12.feature.render.eventlist;
 
 import java.time.Instant;
 import java.time.ZoneId;

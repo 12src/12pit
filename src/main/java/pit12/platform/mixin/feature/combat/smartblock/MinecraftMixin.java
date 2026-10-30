@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.platform.mixin.feature.smartblock;
+package pit12.platform.mixin.feature.combat.smartblock;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
@@ -28,8 +28,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import pit12.feature.smartblock.SmartBlockBinding;
-import pit12.feature.smartblock.SmartBlockFeature;
+import pit12.feature.combat.smartblock.SmartBlockBinding;
+import pit12.feature.combat.smartblock.SmartBlockFeature;
 
 @Mixin(Minecraft.class)
 public abstract class MinecraftMixin implements SmartBlockBinding {

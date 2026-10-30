@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.telebow;
+package pit12.feature.render.telebow;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -31,8 +31,8 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
-import pit12.feature.telebow.api.TelebowCooldownListener;
-import pit12.feature.telebow.api.TelebowCooldowns;
+import pit12.feature.render.telebow.api.TelebowCooldownListener;
+import pit12.feature.render.telebow.api.TelebowCooldowns;
 import pit12.runtime.arrow.ArrowAccess;
 import pit12.runtime.arrow.ArrowHit;
 import pit12.runtime.arrow.ArrowListener;

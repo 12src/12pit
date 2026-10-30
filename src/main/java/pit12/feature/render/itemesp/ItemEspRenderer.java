@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.itemesp;
+package pit12.feature.render.itemesp;
 
 import java.util.List;
 import net.minecraft.client.Minecraft;

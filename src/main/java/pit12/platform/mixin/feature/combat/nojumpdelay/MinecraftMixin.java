@@ -16,13 +16,13 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.platform.mixin.feature.nojumpdelay;
+package pit12.platform.mixin.feature.combat.nojumpdelay;
 
 import net.minecraft.client.Minecraft;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
-import pit12.feature.nojumpdelay.NoJumpDelayBinding;
-import pit12.feature.nojumpdelay.NoJumpDelayConfig;
+import pit12.feature.combat.nojumpdelay.NoJumpDelayBinding;
+import pit12.feature.combat.nojumpdelay.NoJumpDelayConfig;
 
 @Mixin(Minecraft.class)
 public abstract class MinecraftMixin implements NoJumpDelayBinding {

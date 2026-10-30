@@ -28,78 +28,78 @@ import java.util.logging.Logger;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.client.ClientCommandHandler;
 import net.minecraftforge.fml.client.FMLClientHandler;
-import pit12.feature.autofish.AutoFishConfig;
-import pit12.feature.autofish.AutoFishFeature;
-import pit12.feature.banalert.BanAlertConfig;
-import pit12.feature.banalert.BanAlertFeature;
-import pit12.feature.chatmacro.ChatMacroConfig;
-import pit12.feature.chatmacro.ChatMacroFeature;
-import pit12.feature.commandfix.CommandFixBinding;
-import pit12.feature.commandfix.CommandFixConfig;
-import pit12.feature.commandfix.CommandFixFeature;
-import pit12.feature.contractreroll.ContractRerollConfig;
-import pit12.feature.contractreroll.ContractRerollFeature;
-import pit12.feature.denick.DenickConfig;
-import pit12.feature.denick.DenickFeature;
-import pit12.feature.denick.DenickNamesBinding;
-import pit12.feature.denick.api.DenickNames;
-import pit12.feature.discordrpc.DiscordRpcFeature;
-import pit12.feature.eventlist.EventListConfig;
-import pit12.feature.eventlist.EventListFeature;
-import pit12.feature.fontcachefix.FontCacheFixBinding;
-import pit12.feature.fontcachefix.FontCacheFixConfig;
-import pit12.feature.fontcachefix.FontCacheFixFeature;
-import pit12.feature.gamma.GammaBinding;
-import pit12.feature.gamma.GammaConfig;
-import pit12.feature.gamma.GammaFeature;
-import pit12.feature.hudeditor.HudEditorFeature;
-import pit12.feature.itemesp.ItemEspConfig;
-import pit12.feature.itemesp.ItemEspFeature;
-import pit12.feature.nametag.NametagConfig;
-import pit12.feature.nametag.NametagFeature;
-import pit12.feature.nametag.NametagNamesBinding;
-import pit12.feature.nojumpdelay.NoJumpDelayBinding;
-import pit12.feature.nojumpdelay.NoJumpDelayConfig;
-import pit12.feature.nojumpdelay.NoJumpDelayFeature;
-import pit12.feature.playeresp.PlayerEspConfig;
-import pit12.feature.playeresp.PlayerEspFeature;
-import pit12.feature.playerlist.PlayerListConfig;
-import pit12.feature.playerlist.PlayerListFeature;
-import pit12.feature.profile.ProfilesFeature;
-import pit12.feature.profile.api.Profiles;
-import pit12.feature.quickmath.AutoQuickMathConfig;
-import pit12.feature.quickmath.AutoQuickMathFeature;
-import pit12.feature.relation.RelationFeature;
-import pit12.feature.relation.api.RelationLookup;
-import pit12.feature.relation.api.Relations;
-import pit12.feature.resourceleakfix.ResourceLeakFixBinding;
-import pit12.feature.resourceleakfix.ResourceLeakFixConfig;
-import pit12.feature.resourceleakfix.ResourceLeakFixFeature;
-import pit12.feature.ringhelper.RingHelperConfig;
-import pit12.feature.ringhelper.RingHelperFeature;
-import pit12.feature.scoreboardfix.ScoreboardFixBinding;
-import pit12.feature.scoreboardfix.ScoreboardFixConfig;
-import pit12.feature.scoreboardfix.ScoreboardFixFeature;
-import pit12.feature.smartblock.SmartBlockBinding;
-import pit12.feature.smartblock.SmartBlockConfig;
-import pit12.feature.smartblock.SmartBlockFeature;
-import pit12.feature.sprint.AutoSprintBinding;
-import pit12.feature.sprint.AutoSprintConfig;
-import pit12.feature.sprint.AutoSprintFeature;
-import pit12.feature.swap.SwapConfig;
-import pit12.feature.swap.SwapFeature;
-import pit12.feature.swap.SwapHooksBinding;
-import pit12.feature.swap.api.SwapBindings;
-import pit12.feature.telebow.TelebowConfig;
-import pit12.feature.telebow.TelebowFeature;
-import pit12.feature.telebow.api.TelebowCooldowns;
-import pit12.feature.timers.TimersConfig;
-import pit12.feature.timers.TimersFeature;
-import pit12.feature.timers.api.PlayerTimers;
-import pit12.feature.tooltip.TooltipConfig;
-import pit12.feature.tooltip.TooltipFeature;
-import pit12.feature.webui.WebUiConfig;
-import pit12.feature.webui.WebUiFeature;
+import pit12.feature.client.discordrpc.DiscordRpcFeature;
+import pit12.feature.client.hudeditor.HudEditorFeature;
+import pit12.feature.client.profile.ProfilesFeature;
+import pit12.feature.client.profile.api.Profiles;
+import pit12.feature.client.relation.RelationFeature;
+import pit12.feature.client.relation.api.RelationLookup;
+import pit12.feature.client.relation.api.Relations;
+import pit12.feature.client.webui.WebUiConfig;
+import pit12.feature.client.webui.WebUiFeature;
+import pit12.feature.combat.nojumpdelay.NoJumpDelayBinding;
+import pit12.feature.combat.nojumpdelay.NoJumpDelayConfig;
+import pit12.feature.combat.nojumpdelay.NoJumpDelayFeature;
+import pit12.feature.combat.smartblock.SmartBlockBinding;
+import pit12.feature.combat.smartblock.SmartBlockConfig;
+import pit12.feature.combat.smartblock.SmartBlockFeature;
+import pit12.feature.combat.sprint.AutoSprintBinding;
+import pit12.feature.combat.sprint.AutoSprintConfig;
+import pit12.feature.combat.sprint.AutoSprintFeature;
+import pit12.feature.combat.swap.SwapConfig;
+import pit12.feature.combat.swap.SwapFeature;
+import pit12.feature.combat.swap.SwapHooksBinding;
+import pit12.feature.combat.swap.api.SwapBindings;
+import pit12.feature.misc.autofish.AutoFishConfig;
+import pit12.feature.misc.autofish.AutoFishFeature;
+import pit12.feature.misc.banalert.BanAlertConfig;
+import pit12.feature.misc.banalert.BanAlertFeature;
+import pit12.feature.misc.chatmacro.ChatMacroConfig;
+import pit12.feature.misc.chatmacro.ChatMacroFeature;
+import pit12.feature.misc.contractreroll.ContractRerollConfig;
+import pit12.feature.misc.contractreroll.ContractRerollFeature;
+import pit12.feature.misc.denick.DenickConfig;
+import pit12.feature.misc.denick.DenickFeature;
+import pit12.feature.misc.denick.DenickNamesBinding;
+import pit12.feature.misc.denick.api.DenickNames;
+import pit12.feature.misc.quickmath.AutoQuickMathConfig;
+import pit12.feature.misc.quickmath.AutoQuickMathFeature;
+import pit12.feature.patch.commandfix.CommandFixBinding;
+import pit12.feature.patch.commandfix.CommandFixConfig;
+import pit12.feature.patch.commandfix.CommandFixFeature;
+import pit12.feature.patch.fontcachefix.FontCacheFixBinding;
+import pit12.feature.patch.fontcachefix.FontCacheFixConfig;
+import pit12.feature.patch.fontcachefix.FontCacheFixFeature;
+import pit12.feature.patch.resourceleakfix.ResourceLeakFixBinding;
+import pit12.feature.patch.resourceleakfix.ResourceLeakFixConfig;
+import pit12.feature.patch.resourceleakfix.ResourceLeakFixFeature;
+import pit12.feature.patch.scoreboardfix.ScoreboardFixBinding;
+import pit12.feature.patch.scoreboardfix.ScoreboardFixConfig;
+import pit12.feature.patch.scoreboardfix.ScoreboardFixFeature;
+import pit12.feature.render.eventlist.EventListConfig;
+import pit12.feature.render.eventlist.EventListFeature;
+import pit12.feature.render.gamma.GammaBinding;
+import pit12.feature.render.gamma.GammaConfig;
+import pit12.feature.render.gamma.GammaFeature;
+import pit12.feature.render.itemesp.ItemEspConfig;
+import pit12.feature.render.itemesp.ItemEspFeature;
+import pit12.feature.render.nametag.NametagConfig;
+import pit12.feature.render.nametag.NametagFeature;
+import pit12.feature.render.nametag.NametagNamesBinding;
+import pit12.feature.render.playeresp.PlayerEspConfig;
+import pit12.feature.render.playeresp.PlayerEspFeature;
+import pit12.feature.render.playerlist.PlayerListConfig;
+import pit12.feature.render.playerlist.PlayerListFeature;
+import pit12.feature.render.ringhelper.RingHelperConfig;
+import pit12.feature.render.ringhelper.RingHelperFeature;
+import pit12.feature.render.telebow.TelebowConfig;
+import pit12.feature.render.telebow.TelebowFeature;
+import pit12.feature.render.telebow.api.TelebowCooldowns;
+import pit12.feature.render.timers.TimersConfig;
+import pit12.feature.render.timers.TimersFeature;
+import pit12.feature.render.timers.api.PlayerTimers;
+import pit12.feature.render.tooltip.TooltipConfig;
+import pit12.feature.render.tooltip.TooltipFeature;
 import pit12.platform.discord.DiscordIpcConnection;
 import pit12.platform.forge.ForgeCommandAdapter;
 import pit12.platform.lunar.LunarSupport;
@@ -184,7 +184,7 @@ public final class ClientBootstrap {
         Supplier<TextureState> textureStates =
                 LunarSupport.isLoaded() ? LunarTextureState::new : OpenGlTextureState::new;
         // Feature providers
-        // Category: No config
+        // Category: Client
         Profiles profiles =
                 registerProfiles(configs, new File(minecraft.mcDataDir, "12pit/config").toPath());
         HudEditorFeature hudEditor = registerHudEditor(hudRegistry, commands, configs, profiles);
@@ -195,7 +195,7 @@ public final class ClientBootstrap {
                 playerEquipment, relations, commands,
                 new File(minecraft.mcDataDir, "12pit/swap-bindings.json").toPath(),
                 (SwapHooksBinding) minecraft, input, inputTicks);
-        // Category: No config
+        // Category: Client
         BooleanSetting discordRpc =
                 registerWebUi(webUiConfigs, configs, profiles, relations, hudEditor, swapBindings,
                         commands, new File(minecraft.mcDataDir, "12pit/webui.json").toPath());
@@ -209,7 +209,7 @@ public final class ClientBootstrap {
                 playerNames, nicks, players, playerEquipment, commands,
                 new File(minecraft.mcDataDir, "12pit/denick-cache.json").toPath());
         // Features
-        // Category: No config
+        // Category: Client
         registerDiscordRpc(webUiConfigs, discordRpc);
         // Category: Combat
         registerAutoSprint(configs, (AutoSprintBinding) minecraft);
@@ -254,7 +254,7 @@ public final class ClientBootstrap {
     }
 
     // Feature providers
-    // Category: No config
+    // Category: Client
     private Profiles registerProfiles(ConfigCatalog configs, Path directory) {
         ProfilesFeature profiles = new ProfilesFeature(configs, directory);
         components.add(profiles);
@@ -290,7 +290,7 @@ public final class ClientBootstrap {
         return swap.bindings();
     }
 
-    // Category: No config
+    // Category: Client
     private BooleanSetting registerWebUi(ConfigCatalog configs, ConfigCatalog featureConfigs,
             Profiles profiles, Relations relations, HudEditorFeature hudEditor,
             SwapBindings swapBindings, CommandRegistry commands, Path path) {
@@ -343,7 +343,7 @@ public final class ClientBootstrap {
     }
 
     // Features
-    // Category: No config
+    // Category: Client
     private void registerDiscordRpc(ConfigCatalog configs, BooleanSetting enabled) {
         components.add(new DiscordRpcFeature(configs, enabled, DiscordIpcConnection::open));
     }

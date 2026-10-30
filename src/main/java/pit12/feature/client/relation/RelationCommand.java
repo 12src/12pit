@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.relation;
+package pit12.feature.client.relation;
 
 import static pit12.runtime.languages.Languages.source;
 import static pit12.shared.chat.ChatFeedback.reply;
@@ -25,9 +25,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import net.minecraft.command.ICommandSender;
-import pit12.feature.relation.api.IdentityLookupState;
-import pit12.feature.relation.api.Relation;
-import pit12.feature.relation.api.RelationEntry;
+import pit12.feature.client.relation.api.IdentityLookupState;
+import pit12.feature.client.relation.api.Relation;
+import pit12.feature.client.relation.api.RelationEntry;
 import pit12.runtime.command.CommandNode;
 import pit12.runtime.languages.Languages;
 import pit12.runtime.player.TabPresence;

@@ -16,12 +16,12 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.profile;
+package pit12.feature.client.profile;
 
 import java.util.UUID;
-import pit12.feature.profile.api.ProfileCreateSession;
-import pit12.feature.profile.api.ProfileMutationResult;
-import pit12.feature.profile.api.ProfileMutationResult.Status;
+import pit12.feature.client.profile.api.ProfileCreateSession;
+import pit12.feature.client.profile.api.ProfileMutationResult;
+import pit12.feature.client.profile.api.ProfileMutationResult.Status;
 import pit12.runtime.config.ConfigSnapshot;
 
 final class ProfileCreateOperation implements ProfileCreateSession {

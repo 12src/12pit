@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.platform.mixin.feature.fontcachefix;
+package pit12.platform.mixin.feature.patch.fontcachefix;
 
 import java.util.concurrent.atomic.AtomicInteger;
 import net.minecraft.client.Minecraft;
@@ -28,7 +28,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
-import pit12.feature.fontcachefix.FontCacheFixBinding;
+import pit12.feature.patch.fontcachefix.FontCacheFixBinding;
 
 @Pseudo
 @Mixin(targets = "club.sk1er.patcher.hooks.FontRendererHook", remap = false)

@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.resourceleakfix;
+package pit12.feature.patch.resourceleakfix;
 
 import static pit12.runtime.languages.Languages.source;
 

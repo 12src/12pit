@@ -89,9 +89,9 @@ public final class ArchitectureTest {
                     .because("Forge command registration belongs to the platform adapter");
     @ArchTest
     public static final ArchRule WEB_SERVER_DEPENDENCIES =
-            classes().that().haveFullyQualifiedName("pit12.feature.webui.WebUiServer").should()
-                    .onlyDependOnClassesThat()
-                    .resideInAnyPackage("pit12.feature.webui..", "java..", "com.google..",
+            classes().that().haveFullyQualifiedName("pit12.feature.client.webui.WebUiServer")
+                    .should().onlyDependOnClassesThat()
+                    .resideInAnyPackage("pit12.feature.client.webui..", "java..", "com.google..",
                             "com.sun.net.httpserver..", "net.minecraft.client..")
                     .because("business endpoints belong to registered API adapters");
     @ArchTest
@@ -107,7 +107,9 @@ public final class ArchitectureTest {
     @ArchTest
     public static void MODULES_MUST_BE_FREE_OF_CYCLES(JavaClasses classes) {
         slices().matching("pit12.(*).(*)..").should().beFreeOfCycles()
-                .check(classes.that(resideOutsideOfPackage("pit12.platform.mixin..")));
+                .check(classes.that(resideOutsideOfPackage("pit12.platform.mixin..")
+                        .and(resideOutsideOfPackage("pit12.feature.."))));
+        slices().matching("pit12.feature.(*).(*)..").should().beFreeOfCycles().check(classes);
     }
 
     @ArchTest
@@ -216,7 +218,8 @@ public final class ArchitectureTest {
         if (!packageName.startsWith(prefix)) {
             return null;
         }
-        int separator = packageName.indexOf('.', prefix.length());
+        int categoryEnd = packageName.indexOf('.', prefix.length());
+        int separator = packageName.indexOf('.', categoryEnd + 1);
         return separator < 0 ? packageName.substring(prefix.length())
                 : packageName.substring(prefix.length(), separator);
     }
@@ -227,7 +230,8 @@ public final class ArchitectureTest {
         if (!packageName.startsWith(prefix)) {
             return null;
         }
-        int separator = packageName.indexOf('.', prefix.length());
+        int categoryEnd = packageName.indexOf('.', prefix.length());
+        int separator = packageName.indexOf('.', categoryEnd + 1);
         return separator < 0 ? packageName.substring(prefix.length())
                 : packageName.substring(prefix.length(), separator);
     }

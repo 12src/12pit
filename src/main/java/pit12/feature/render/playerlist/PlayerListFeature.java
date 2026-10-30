@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.playerlist;
+package pit12.feature.render.playerlist;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,10 +30,10 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
-import pit12.feature.denick.api.DenickNames;
-import pit12.feature.relation.api.Relation;
-import pit12.feature.relation.api.RelationListener;
-import pit12.feature.relation.api.RelationLookup;
+import pit12.feature.client.relation.api.Relation;
+import pit12.feature.client.relation.api.RelationListener;
+import pit12.feature.client.relation.api.RelationLookup;
+import pit12.feature.misc.denick.api.DenickNames;
 import pit12.runtime.config.ConfigCatalog;
 import pit12.runtime.config.ConfigChangeListener;
 import pit12.runtime.config.ConfigChangeSet;

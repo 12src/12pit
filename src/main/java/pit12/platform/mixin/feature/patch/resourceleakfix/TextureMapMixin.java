@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.platform.mixin.feature.resourceleakfix;
+package pit12.platform.mixin.feature.patch.resourceleakfix;
 
 import java.io.InputStream;
 import net.minecraft.client.renderer.texture.TextureMap;
@@ -27,8 +27,8 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
-import pit12.feature.resourceleakfix.ResourceLeakFixBinding;
-import pit12.feature.resourceleakfix.ResourceLeakFixConfig;
+import pit12.feature.patch.resourceleakfix.ResourceLeakFixBinding;
+import pit12.feature.patch.resourceleakfix.ResourceLeakFixConfig;
 
 @Mixin(TextureMap.class)
 public abstract class TextureMapMixin implements ResourceLeakFixBinding {

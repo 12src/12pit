@@ -16,9 +16,9 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.webui;
+package pit12.feature.client.webui;
 
-import static pit12.feature.webui.WebUiJson.requiredString;
+import static pit12.feature.client.webui.WebUiJson.requiredString;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -39,14 +39,14 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
-import pit12.feature.profile.api.ProfileMutationResult;
-import pit12.feature.profile.api.ProfileSummary;
-import pit12.feature.profile.api.Profiles;
-import pit12.feature.relation.api.Relation;
-import pit12.feature.relation.api.RelationEntry;
-import pit12.feature.relation.api.RelationReadiness;
-import pit12.feature.relation.api.Relations;
-import pit12.feature.swap.api.SwapBindings;
+import pit12.feature.client.profile.api.ProfileMutationResult;
+import pit12.feature.client.profile.api.ProfileSummary;
+import pit12.feature.client.profile.api.Profiles;
+import pit12.feature.client.relation.api.Relation;
+import pit12.feature.client.relation.api.RelationEntry;
+import pit12.feature.client.relation.api.RelationReadiness;
+import pit12.feature.client.relation.api.Relations;
+import pit12.feature.combat.swap.api.SwapBindings;
 import pit12.shared.result.OperationResult;
 
 final class SettingsTransfer {

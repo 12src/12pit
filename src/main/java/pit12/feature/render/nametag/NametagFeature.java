@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.nametag;
+package pit12.feature.render.nametag;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -32,8 +32,8 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
-import pit12.feature.denick.api.DenickNames;
-import pit12.feature.timers.api.PlayerTimers;
+import pit12.feature.misc.denick.api.DenickNames;
+import pit12.feature.render.timers.api.PlayerTimers;
 import pit12.runtime.config.ConfigCatalog;
 import pit12.runtime.config.ConfigChangeListener;
 import pit12.runtime.config.ConfigChangeSet;

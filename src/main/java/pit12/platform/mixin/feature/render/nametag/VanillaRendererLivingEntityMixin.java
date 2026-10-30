@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.platform.mixin.feature.nametag;
+package pit12.platform.mixin.feature.render.nametag;
 
 import java.util.UUID;
 import net.minecraft.client.Minecraft;
@@ -29,7 +29,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import pit12.feature.nametag.NametagNamesBinding;
+import pit12.feature.render.nametag.NametagNamesBinding;
 
 @Mixin(RendererLivingEntity.class)
 public abstract class VanillaRendererLivingEntityMixin {

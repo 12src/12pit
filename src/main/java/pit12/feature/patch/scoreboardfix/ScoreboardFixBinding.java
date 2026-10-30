@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.scoreboardfix;
+package pit12.feature.patch.scoreboardfix;
 
 public interface ScoreboardFixBinding {
     void pit12$bindScoreboardFixConfig(ScoreboardFixConfig config);

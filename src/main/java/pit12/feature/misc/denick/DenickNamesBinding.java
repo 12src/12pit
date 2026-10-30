@@ -16,9 +16,9 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.denick;
+package pit12.feature.misc.denick;
 
-import pit12.feature.denick.api.DenickNames;
+import pit12.feature.misc.denick.api.DenickNames;
 
 public interface DenickNamesBinding {
     void pit12$bindDenickNames(DenickNames names);

@@ -16,13 +16,13 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.platform.mixin.feature.sprint;
+package pit12.platform.mixin.feature.combat.sprint;
 
 import net.minecraft.client.Minecraft;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
-import pit12.feature.sprint.AutoSprintBinding;
-import pit12.feature.sprint.AutoSprintConfig;
+import pit12.feature.combat.sprint.AutoSprintBinding;
+import pit12.feature.combat.sprint.AutoSprintConfig;
 
 @Mixin(Minecraft.class)
 public abstract class MinecraftMixin implements AutoSprintBinding {

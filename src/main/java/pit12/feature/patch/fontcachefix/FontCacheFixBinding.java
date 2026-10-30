@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.fontcachefix;
+package pit12.feature.patch.fontcachefix;
 
 public interface FontCacheFixBinding {
     void pit12$bindFontCacheFixConfig(FontCacheFixConfig config);

@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.platform.mixin.feature.sprint;
+package pit12.platform.mixin.feature.combat.sprint;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
@@ -28,7 +28,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import pit12.feature.sprint.AutoSprintBinding;
+import pit12.feature.combat.sprint.AutoSprintBinding;
 import pit12.runtime.input.SprintInputBinding;
 
 @Mixin(EntityPlayerSP.class)

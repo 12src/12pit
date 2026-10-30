@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.relation;
+package pit12.feature.client.relation;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -26,8 +26,8 @@ import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.function.BiConsumer;
 import java.util.function.LongSupplier;
-import pit12.feature.relation.api.IdentityLookupState;
-import pit12.feature.relation.api.RelationEntry;
+import pit12.feature.client.relation.api.IdentityLookupState;
+import pit12.feature.client.relation.api.RelationEntry;
 import pit12.shared.concurrent.ClientThread;
 
 final class PendingLookups {

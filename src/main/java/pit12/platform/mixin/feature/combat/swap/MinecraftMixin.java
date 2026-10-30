@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.platform.mixin.feature.swap;
+package pit12.platform.mixin.feature.combat.swap;
 
 import net.minecraft.client.Minecraft;
 import org.spongepowered.asm.mixin.Mixin;
@@ -24,8 +24,8 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import pit12.feature.swap.SwapHooks;
-import pit12.feature.swap.SwapHooksBinding;
+import pit12.feature.combat.swap.SwapHooks;
+import pit12.feature.combat.swap.SwapHooksBinding;
 
 @Mixin(Minecraft.class)
 public abstract class MinecraftMixin implements SwapHooksBinding {

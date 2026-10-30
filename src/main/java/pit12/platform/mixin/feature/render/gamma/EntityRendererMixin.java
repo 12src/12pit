@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.platform.mixin.feature.gamma;
+package pit12.platform.mixin.feature.render.gamma;
 
 import net.minecraft.client.renderer.EntityRenderer;
 import net.minecraft.client.settings.GameSettings;
@@ -25,8 +25,8 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
-import pit12.feature.gamma.GammaBinding;
-import pit12.feature.gamma.GammaConfig;
+import pit12.feature.render.gamma.GammaBinding;
+import pit12.feature.render.gamma.GammaConfig;
 
 @Mixin(EntityRenderer.class)
 public abstract class EntityRendererMixin implements GammaBinding {

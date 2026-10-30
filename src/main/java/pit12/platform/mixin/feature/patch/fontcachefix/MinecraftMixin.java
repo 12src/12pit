@@ -16,13 +16,13 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.platform.mixin.feature.fontcachefix;
+package pit12.platform.mixin.feature.patch.fontcachefix;
 
 import net.minecraft.client.Minecraft;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
-import pit12.feature.fontcachefix.FontCacheFixBinding;
-import pit12.feature.fontcachefix.FontCacheFixConfig;
+import pit12.feature.patch.fontcachefix.FontCacheFixBinding;
+import pit12.feature.patch.fontcachefix.FontCacheFixConfig;
 
 @Mixin(Minecraft.class)
 public abstract class MinecraftMixin implements FontCacheFixBinding {

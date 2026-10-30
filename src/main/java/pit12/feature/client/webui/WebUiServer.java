@@ -16,9 +16,9 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.webui;
+package pit12.feature.client.webui;
 
-import static pit12.feature.webui.WebUiJson.object;
+import static pit12.feature.client.webui.WebUiJson.object;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;

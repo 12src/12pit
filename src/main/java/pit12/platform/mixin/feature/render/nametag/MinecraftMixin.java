@@ -16,14 +16,14 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.platform.mixin.feature.nametag;
+package pit12.platform.mixin.feature.render.nametag;
 
 import java.util.UUID;
 import java.util.function.Function;
 import net.minecraft.client.Minecraft;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
-import pit12.feature.nametag.NametagNamesBinding;
+import pit12.feature.render.nametag.NametagNamesBinding;
 
 @Mixin(Minecraft.class)
 public abstract class MinecraftMixin implements NametagNamesBinding {

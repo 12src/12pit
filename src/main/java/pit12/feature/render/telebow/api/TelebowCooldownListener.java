@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.telebow.api;
+package pit12.feature.render.telebow.api;
 
 import java.util.UUID;
 import net.minecraft.entity.player.EntityPlayer;

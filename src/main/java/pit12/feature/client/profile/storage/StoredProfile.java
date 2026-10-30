@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.profile.storage;
+package pit12.feature.client.profile.storage;
 
 import com.google.gson.JsonObject;
 import java.util.UUID;

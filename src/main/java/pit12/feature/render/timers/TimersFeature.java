@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.timers;
+package pit12.feature.render.timers;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -36,13 +36,13 @@ import net.minecraftforge.event.entity.player.AttackEntityEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
-import pit12.feature.relation.api.Relation;
-import pit12.feature.relation.api.RelationLookup;
-import pit12.feature.telebow.api.TelebowCooldownListener;
-import pit12.feature.telebow.api.TelebowCooldowns;
-import pit12.feature.timers.TimersHud.Group;
-import pit12.feature.timers.TimersHud.TimerType;
-import pit12.feature.timers.api.PlayerTimers;
+import pit12.feature.client.relation.api.Relation;
+import pit12.feature.client.relation.api.RelationLookup;
+import pit12.feature.render.telebow.api.TelebowCooldownListener;
+import pit12.feature.render.telebow.api.TelebowCooldowns;
+import pit12.feature.render.timers.TimersHud.Group;
+import pit12.feature.render.timers.TimersHud.TimerType;
+import pit12.feature.render.timers.api.PlayerTimers;
 import pit12.runtime.arrow.ArrowTracker;
 import pit12.runtime.config.ConfigCatalog;
 import pit12.runtime.config.ConfigChangeListener;

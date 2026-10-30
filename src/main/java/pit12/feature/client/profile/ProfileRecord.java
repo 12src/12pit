@@ -16,14 +16,14 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.profile;
+package pit12.feature.client.profile;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import java.util.Map;
 import java.util.UUID;
-import pit12.feature.profile.api.ProfileSummary;
-import pit12.feature.profile.storage.StoredProfile;
+import pit12.feature.client.profile.api.ProfileSummary;
+import pit12.feature.client.profile.storage.StoredProfile;
 import pit12.runtime.config.ConfigSnapshot;
 
 final class ProfileRecord {

@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.platform.mixin.feature.nametag;
+package pit12.platform.mixin.feature.render.nametag;
 
 import java.util.UUID;
 import java.util.function.Function;
@@ -29,7 +29,7 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import pit12.feature.nametag.NametagNamesBinding;
+import pit12.feature.render.nametag.NametagNamesBinding;
 import pit12.platform.lunar.LunarNametagText;
 
 // Run after Lunar adds the component getter at priority 200.

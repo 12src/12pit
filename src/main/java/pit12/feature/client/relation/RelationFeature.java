@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.relation;
+package pit12.feature.client.relation;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -40,15 +40,15 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
-import pit12.feature.relation.api.IdentityLookupState;
-import pit12.feature.relation.api.Relation;
-import pit12.feature.relation.api.RelationEntry;
-import pit12.feature.relation.api.RelationListener;
-import pit12.feature.relation.api.RelationReadiness;
-import pit12.feature.relation.api.Relations;
-import pit12.feature.relation.storage.RelationIoWorker;
-import pit12.feature.relation.storage.RelationStorage;
-import pit12.feature.relation.storage.RelationStore;
+import pit12.feature.client.relation.api.IdentityLookupState;
+import pit12.feature.client.relation.api.Relation;
+import pit12.feature.client.relation.api.RelationEntry;
+import pit12.feature.client.relation.api.RelationListener;
+import pit12.feature.client.relation.api.RelationReadiness;
+import pit12.feature.client.relation.api.Relations;
+import pit12.feature.client.relation.storage.RelationIoWorker;
+import pit12.feature.client.relation.storage.RelationStorage;
+import pit12.feature.client.relation.storage.RelationStore;
 import pit12.runtime.command.CommandRegistry;
 import pit12.runtime.languages.Languages;
 import pit12.runtime.player.TabPresence;

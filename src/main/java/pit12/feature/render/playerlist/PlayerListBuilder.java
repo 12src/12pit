@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.playerlist;
+package pit12.feature.render.playerlist;
 
 import java.util.ArrayList;
 import java.util.EnumMap;
@@ -29,9 +29,9 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.network.NetworkPlayerInfo;
 import net.minecraft.entity.player.EntityPlayer;
-import pit12.feature.denick.api.DenickNames;
-import pit12.feature.relation.api.Relation;
-import pit12.feature.relation.api.RelationLookup;
+import pit12.feature.client.relation.api.Relation;
+import pit12.feature.client.relation.api.RelationLookup;
+import pit12.feature.misc.denick.api.DenickNames;
 import pit12.runtime.item.PitEnchantment;
 import pit12.runtime.item.PitEnchantmentFormat;
 import pit12.runtime.nick.NickTracker;

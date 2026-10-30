@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.platform.mixin.feature.timers;
+package pit12.platform.mixin.feature.render.timers;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.network.NetHandlerPlayClient;
@@ -34,10 +34,10 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import pit12.feature.timers.JumpBoostPacketBinding;
-import pit12.feature.timers.JumpBoostTracker;
-import pit12.feature.timers.VenomPacketBinding;
-import pit12.feature.timers.VenomTracker;
+import pit12.feature.render.timers.JumpBoostPacketBinding;
+import pit12.feature.render.timers.JumpBoostTracker;
+import pit12.feature.render.timers.VenomPacketBinding;
+import pit12.feature.render.timers.VenomTracker;
 
 @Mixin(NetHandlerPlayClient.class)
 public abstract class NetHandlerPlayClientMixin

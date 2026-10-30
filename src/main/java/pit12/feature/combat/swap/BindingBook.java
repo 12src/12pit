@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.swap;
+package pit12.feature.combat.swap;
 
 import static pit12.runtime.languages.Languages.source;
 
@@ -35,7 +35,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import pit12.feature.swap.api.SwapBindings;
+import pit12.feature.combat.swap.api.SwapBindings;
 import pit12.shared.concurrent.ClientThread;
 import pit12.shared.event.Listeners;
 import pit12.shared.result.OperationResult;

@@ -16,13 +16,13 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.platform.mixin.feature.nametag;
+package pit12.platform.mixin.feature.render.nametag;
 
 import net.minecraft.client.renderer.entity.RendererLivingEntity;
 import net.minecraft.entity.EntityLivingBase;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Invoker;
-import pit12.feature.nametag.NametagVisibility;
+import pit12.feature.render.nametag.NametagVisibility;
 
 @Mixin(RendererLivingEntity.class)
 public interface RendererLivingEntityAccessor extends NametagVisibility {

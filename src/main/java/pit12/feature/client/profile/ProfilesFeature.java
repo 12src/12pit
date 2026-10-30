@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.profile;
+package pit12.feature.client.profile;
 
 import com.google.gson.JsonParseException;
 import java.io.IOException;
@@ -28,17 +28,17 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import pit12.feature.profile.api.ProfileMutationResult;
-import pit12.feature.profile.api.Profiles;
-import pit12.feature.profile.api.ProfilesSnapshot;
-import pit12.feature.profile.storage.JsonProfileStore;
-import pit12.feature.profile.storage.LoadedProfiles;
-import pit12.feature.profile.storage.ProfileCodec;
-import pit12.feature.profile.storage.ProfileIoWorker;
-import pit12.feature.profile.storage.ProfileSchema;
-import pit12.feature.profile.storage.ProfileStore;
-import pit12.feature.profile.storage.ProfileWriteBatch;
-import pit12.feature.profile.storage.StoredProfile;
+import pit12.feature.client.profile.api.ProfileMutationResult;
+import pit12.feature.client.profile.api.Profiles;
+import pit12.feature.client.profile.api.ProfilesSnapshot;
+import pit12.feature.client.profile.storage.JsonProfileStore;
+import pit12.feature.client.profile.storage.LoadedProfiles;
+import pit12.feature.client.profile.storage.ProfileCodec;
+import pit12.feature.client.profile.storage.ProfileIoWorker;
+import pit12.feature.client.profile.storage.ProfileSchema;
+import pit12.feature.client.profile.storage.ProfileStore;
+import pit12.feature.client.profile.storage.ProfileWriteBatch;
+import pit12.feature.client.profile.storage.StoredProfile;
 import pit12.runtime.config.ConfigCatalog;
 import pit12.runtime.config.ConfigChangeListener;
 import pit12.shared.lifecycle.ClientLifecycle;

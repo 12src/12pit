@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.swap;
+package pit12.feature.combat.swap;
 
 import java.nio.file.Path;
 import net.minecraft.client.Minecraft;
@@ -31,8 +31,8 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
-import pit12.feature.relation.api.RelationLookup;
-import pit12.feature.swap.api.SwapBindings;
+import pit12.feature.client.relation.api.RelationLookup;
+import pit12.feature.combat.swap.api.SwapBindings;
 import pit12.runtime.command.CommandRegistry;
 import pit12.runtime.config.ConfigCatalog;
 import pit12.runtime.config.ConfigChangeListener;

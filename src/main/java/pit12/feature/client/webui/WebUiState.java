@@ -16,21 +16,21 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.webui;
+package pit12.feature.client.webui;
 
-import static pit12.feature.webui.WebUiJson.object;
+import static pit12.feature.client.webui.WebUiJson.object;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import pit12.feature.profile.api.ProfileSummary;
-import pit12.feature.profile.api.Profiles;
-import pit12.feature.profile.api.ProfilesSnapshot;
-import pit12.feature.relation.api.Relation;
-import pit12.feature.relation.api.RelationEntry;
-import pit12.feature.relation.api.Relations;
-import pit12.feature.swap.api.SwapBindings;
+import pit12.feature.client.profile.api.ProfileSummary;
+import pit12.feature.client.profile.api.Profiles;
+import pit12.feature.client.profile.api.ProfilesSnapshot;
+import pit12.feature.client.relation.api.Relation;
+import pit12.feature.client.relation.api.RelationEntry;
+import pit12.feature.client.relation.api.Relations;
+import pit12.feature.combat.swap.api.SwapBindings;
 import pit12.runtime.config.ChoiceSetting;
 import pit12.runtime.config.ConfigCatalog;
 import pit12.runtime.config.ConfigCategory;

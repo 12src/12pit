@@ -16,11 +16,11 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.relation.storage;
+package pit12.feature.client.relation.storage;
 
 import java.io.IOException;
 import java.util.List;
-import pit12.feature.relation.api.RelationEntry;
+import pit12.feature.client.relation.api.RelationEntry;
 
 public interface RelationStorage {
     List<RelationEntry> load() throws IOException;

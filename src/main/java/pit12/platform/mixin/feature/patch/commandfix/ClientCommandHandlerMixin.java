@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.platform.mixin.feature.commandfix;
+package pit12.platform.mixin.feature.patch.commandfix;
 
 import net.minecraft.command.ICommandSender;
 import net.minecraftforge.client.ClientCommandHandler;
@@ -25,8 +25,8 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import pit12.feature.commandfix.CommandFixBinding;
-import pit12.feature.commandfix.CommandFixConfig;
+import pit12.feature.patch.commandfix.CommandFixBinding;
+import pit12.feature.patch.commandfix.CommandFixConfig;
 
 @Mixin(value = ClientCommandHandler.class, remap = false)
 public abstract class ClientCommandHandlerMixin implements CommandFixBinding {

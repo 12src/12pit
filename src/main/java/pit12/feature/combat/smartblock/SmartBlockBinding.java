@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.smartblock;
+package pit12.feature.combat.smartblock;
 
 public interface SmartBlockBinding {
     void pit12$bindSmartBlock(SmartBlockFeature feature);

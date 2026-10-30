@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.relation.storage;
+package pit12.feature.client.relation.storage;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -34,8 +34,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import pit12.feature.relation.api.Relation;
-import pit12.feature.relation.api.RelationEntry;
+import pit12.feature.client.relation.api.Relation;
+import pit12.feature.client.relation.api.RelationEntry;
 import pit12.shared.storage.AtomicFile;
 
 public final class RelationStore implements RelationStorage {
