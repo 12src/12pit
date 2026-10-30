@@ -1,4 +1,4 @@
-<!-- Source: docs/ARCHITECTURE.md; Based on: 36ca2550d013e1d87fb0a788636e9e5b151b126d -->
+<!-- Source: docs/ARCHITECTURE.md; Based on: 062a603619aa421ee6c75084a80fad90d3acae16 -->
 
 # 12pit 架构
 
@@ -24,9 +24,11 @@
 
 `feature` 可以依赖 `runtime` 和 `shared`。不同功能之间交互时，只能通过对方公开的 `api` 包访问。`runtime` 只依赖 `shared`，而 `shared` 不依赖项目中的任何其他层。
 
-`platform` 可以依赖 `runtime`、`feature` 和 `shared`，但反过来这些层不依赖 `platform` 的类，而是通过自己定义的接口接收平台服务或绑定钩子。原生 API 和可选的外部框架类型都留在 `platform` 内部，`runtime.command` 也不依赖 Forge。
+`platform` 可以依赖 `runtime`、`feature` 和 `shared`。功能 Mixin 包遵守与 `platform` 相同的依赖规则。各层通过自己定义的接口接收平台服务和绑定钩子。原生 API 和可选的外部框架类型保留在 `platform` 和功能 Mixin 包内。`runtime.command` 独立于 Forge 处理命令。
 
-`runtime`、`shared` 和 `platform` 下的直接子包各自构成模块。`feature.<category>.<feature>` 下的每个包构成一个功能模块。同层模块之间避免循环依赖。所有 Mixin 都放在 `platform.mixin` 下，其中功能专用的 Mixin 放在 `platform.mixin.feature.<category>.<feature>`，同样遵守功能边界约束。
+`runtime`、`shared` 和 `platform` 下的直接子包各自构成模块。`feature.<category>.<feature>` 下的每个包构成一个功能模块。同层模块之间避免循环依赖。共享 Mixin 放在 `platform.mixin` 下。功能专用的 Mixin 放在 `feature.<category>.<feature>.mixin`，同样遵守功能边界约束。
+
+每个 Mixin 包都有自己的配置。`src/main/resources/mixins.pit12.list` 统一设置开发环境、打包构建和架构检查使用的配置顺序。各配置共用一个 refmap 和插件。
 
 ## 状态和资源
 
