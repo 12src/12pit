@@ -118,7 +118,8 @@ public final class RingHelperFeature implements ClientLifecycle, ConfigChangeLis
     @Override
     public void onConfigChanged(ConfigChangeSet changes) {
         if (started && (changes.affects("ringhelper", "enabled")
-                || changes.affects("ringhelper", "holding_blocks_only"))) {
+                || changes.affects("ringhelper", "holding_blocks_only")
+                || changes.affects("ringhelper", "near_mid_only"))) {
             updateActivation();
             targets.clear();
         }
@@ -179,6 +180,10 @@ public final class RingHelperFeature implements ClientLifecycle, ConfigChangeLis
     private boolean shouldShow() {
         EntityPlayerSP player = minecraft.thePlayer;
         if (player == null) {
+            return false;
+        }
+        if (config.nearMidOnly()
+                && !pitContext.current().map().isNearMid(player.posX, player.posZ)) {
             return false;
         }
         if (!config.holdingBlocksOnly()) {

@@ -27,6 +27,7 @@ import pit12.runtime.config.FeatureConfig;
 
 public final class RingHelperConfig extends FeatureConfig {
     private final BooleanSetting holdingBlocksOnly;
+    private final BooleanSetting nearMidOnly;
     private final ColorSetting color;
 
     public RingHelperConfig() {
@@ -35,12 +36,18 @@ public final class RingHelperConfig extends FeatureConfig {
         holdingBlocksOnly =
                 booleanSetting("holding_blocks_only", source("Only while holding blocks"),
                         source("Shows the ring only while holding a block."), true);
+        nearMidOnly = booleanSetting("near_mid_only", source("Only near mid"),
+                source("Shows the ring only near the middle."), true);
         color = colorPickerSetting("color", source("Ring color"),
                 source("Color and opacity of the ring outlines."), 0xB0C2E7FF);
     }
 
     public boolean holdingBlocksOnly() {
         return holdingBlocksOnly.get();
+    }
+
+    public boolean nearMidOnly() {
+        return nearMidOnly.get();
     }
 
     public int color() {
