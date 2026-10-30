@@ -97,7 +97,8 @@ public final class ArchitectureTest {
             classes().that().haveFullyQualifiedName("pit12.feature.client.webui.WebUiServer")
                     .should().onlyDependOnClassesThat()
                     .resideInAnyPackage("pit12.feature.client.webui..", "java..", "com.google..",
-                            "com.sun.net.httpserver..", "net.minecraft.client..")
+                            "com.sun.net.httpserver..", "net.minecraft.client..",
+                            "org.apache.logging.log4j..")
                     .because("business endpoints belong to registered API adapters");
     @ArchTest
     public static final ArchRule EXTERNAL_APIS_BELONG_TO_PLATFORM = noClasses().that()
@@ -107,7 +108,7 @@ public final class ArchitectureTest {
             .dependOnClassesThat()
             .resideOutsideOfPackages("pit12..", "java..", "javax..", "com.sun.net.httpserver..",
                     "net.minecraft..", "net.minecraftforge..", "com.mojang..", "com.google..",
-                    "org.lwjgl..", "org.apache.http..")
+                    "org.lwjgl..", "org.apache.http..", "org.apache.logging.log4j..")
             .because("optional client and native API access belongs to platform adapters");
 
     @ArchTest

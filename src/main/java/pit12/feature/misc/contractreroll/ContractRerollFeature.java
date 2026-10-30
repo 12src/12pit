@@ -19,8 +19,6 @@
 package pit12.feature.misc.contractreroll;
 
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import net.minecraft.client.Minecraft;
@@ -39,6 +37,8 @@ import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.lwjgl.input.Keyboard;
 import pit12.runtime.config.ConfigCatalog;
 import pit12.runtime.config.ConfigChangeListener;
@@ -62,7 +62,7 @@ import pit12.shared.text.TextCodes;
 
 public final class ContractRerollFeature
         implements ClientLifecycle, InputHandler, SidebarListener, ConfigChangeListener {
-    private static final Logger LOGGER = Logger.getLogger(ContractRerollFeature.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger(ContractRerollFeature.class);
     private static final int[] CHOICE_SLOTS = {11, 13, 15};
     private static final Pattern KILLS = Pattern.compile("Kill ([0-9]+) players\\.");
     private static final Pattern NO_ARMOR =
@@ -468,7 +468,7 @@ public final class ContractRerollFeature
     }
 
     private void failedAction(RuntimeException failure) {
-        LOGGER.log(Level.WARNING, "Contract reroll failed", failure);
+        LOGGER.warn("Contract reroll failed", failure);
         fail(language.translate("An unexpected error occurred."));
     }
 

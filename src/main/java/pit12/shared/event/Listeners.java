@@ -21,11 +21,11 @@ package pit12.shared.event;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.function.Consumer;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public final class Listeners {
-    private static final Logger LOGGER = Logger.getLogger(Listeners.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger(Listeners.class);
 
     private Listeners() {}
 
@@ -34,8 +34,7 @@ public final class Listeners {
             try {
                 callback.accept(listener);
             } catch (RuntimeException failure) {
-                LOGGER.log(Level.WARNING, "Listener failed: " + listener.getClass().getName(),
-                        failure);
+                LOGGER.error("Listener failed: {}", listener.getClass().getName(), failure);
             }
         }
     }

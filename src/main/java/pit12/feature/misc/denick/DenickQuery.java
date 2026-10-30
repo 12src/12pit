@@ -23,11 +23,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.BooleanSupplier;
-import java.util.logging.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import pit12.shared.text.TextCodes;
 
 final class DenickQuery {
-    private static final Logger LOGGER = Logger.getLogger(DenickQuery.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger(DenickQuery.class);
     String owner;
     String displayName;
     Exception failure;
@@ -63,7 +64,7 @@ final class DenickQuery {
                                 : displayName;
                 return query;
             } catch (IOException failure) {
-                LOGGER.warning("Denick item query failed for " + item.query + ": " + failure);
+                LOGGER.debug("Denick item query failed for {}", item.query, failure);
                 query.failure = failure;
             }
         }

@@ -36,15 +36,15 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import net.minecraft.util.ChatAllowedCharacters;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.lwjgl.input.Keyboard;
 import pit12.shared.concurrent.ClientThread;
 import pit12.shared.storage.AtomicFile;
 
 final class MacroBindings {
-    private static final Logger LOGGER = Logger.getLogger(MacroBindings.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger(MacroBindings.class);
     private final ClientThread client;
     private final Path path;
     private final Consumer<String> report;
@@ -78,7 +78,7 @@ final class MacroBindings {
                         : decode(new String(Files.readAllBytes(path), StandardCharsets.UTF_8));
             } catch (IOException | SecurityException | JsonParseException
                     | IllegalArgumentException failure) {
-                LOGGER.log(Level.WARNING, "Cannot load chat macros", failure);
+                LOGGER.warn("Could not load chat macros from {}", path, failure);
                 client.execute(() -> {
                     if (worker != started)
                         return;
@@ -165,7 +165,7 @@ final class MacroBindings {
             try {
                 AtomicFile.write(path, new GsonBuilder().setPrettyPrinting().create().toJson(root));
             } catch (IOException | SecurityException failure) {
-                LOGGER.log(Level.WARNING, "Cannot save chat macros", failure);
+                LOGGER.warn("Could not save chat macros to {}", path, failure);
                 client.execute(() -> {
                     if (worker == writer)
                         report.accept(source("Chat macros could not be saved"));

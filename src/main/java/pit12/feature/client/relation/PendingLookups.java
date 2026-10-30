@@ -26,11 +26,14 @@ import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.function.BiConsumer;
 import java.util.function.LongSupplier;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import pit12.feature.client.relation.api.IdentityLookupState;
 import pit12.feature.client.relation.api.RelationEntry;
 import pit12.shared.concurrent.ClientThread;
 
 final class PendingLookups {
+    private static final Logger LOGGER = LogManager.getLogger(PendingLookups.class);
     private final Map<RelationEntry, Request> requests = new IdentityHashMap<>();
     private final IdentityResolver resolver;
     private final Executor worker;
@@ -125,21 +128,24 @@ final class PendingLookups {
         try {
             profile = resolver.lookup(request.entry.name());
         } catch (IOException | RuntimeException failure) {
-            client.execute(() -> complete(request, null, true));
+            client.execute(() -> complete(request, null, failure));
             return;
         }
-        client.execute(() -> complete(request, profile, false));
+        client.execute(() -> complete(request, profile, null));
     }
 
-    private void complete(Request request, MojangProfileLookup.Profile profile, boolean failed) {
+    private void complete(Request request, MojangProfileLookup.Profile profile, Exception failure) {
         if (running == request)
             running = null;
         if (requests.get(request.entry) != request)
             return;
-        if (failed) {
+        if (failure != null) {
             request.state = request.attempts < 3 ? IdentityLookupState.RETRYING
                     : IdentityLookupState.FAILED;
             request.deadline = time.getAsLong() + (request.attempts == 1 ? 1000L : 5000L);
+            if (request.state == IdentityLookupState.FAILED)
+                LOGGER.warn("UUID lookup failed for {} after {} attempts", request.entry.name(),
+                        request.attempts, failure);
         } else if (profile == null) {
             request.state = IdentityLookupState.NOT_FOUND;
         } else {

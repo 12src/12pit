@@ -33,8 +33,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import pit12.feature.combat.swap.api.SwapBindings;
 import pit12.shared.concurrent.ClientThread;
 import pit12.shared.event.Listeners;
@@ -42,7 +42,7 @@ import pit12.shared.result.OperationResult;
 import pit12.shared.result.OperationResult.Status;
 
 final class BindingBook implements SwapBindings {
-    private static final Logger LOGGER = Logger.getLogger(BindingBook.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger(BindingBook.class);
     private final ClientThread client;
     private final BindingStore store;
     private final LinkedHashMap<ItemIdentity, SwapBinding> bindings = new LinkedHashMap<>();
@@ -78,7 +78,7 @@ final class BindingBook implements SwapBindings {
                 loaded = store.load();
             } catch (IOException | SecurityException | JsonParseException
                     | IllegalArgumentException failure) {
-                LOGGER.log(Level.WARNING, "Cannot load swap bindings", failure);
+                LOGGER.warn("Cannot load swap bindings", failure);
                 client.execute(() -> {
                     if (worker != started)
                         return;
@@ -189,7 +189,7 @@ final class BindingBook implements SwapBindings {
             try {
                 store.write(saved);
             } catch (IOException | SecurityException failure) {
-                LOGGER.log(Level.WARNING, "Cannot save swap bindings", failure);
+                LOGGER.warn("Cannot save swap bindings", failure);
                 client.execute(() -> {
                     if (worker == writer)
                         report.accept(source("Swap bindings could not be saved"));

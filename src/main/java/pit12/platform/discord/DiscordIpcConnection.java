@@ -37,12 +37,12 @@ import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import pit12.feature.client.discordrpc.DiscordRpcConnection;
 
 public final class DiscordIpcConnection implements DiscordRpcConnection {
-    private static final Logger LOGGER = Logger.getLogger(DiscordIpcConnection.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger(DiscordIpcConnection.class);
     private final Closeable transport;
     private final DataInputStream input;
     private final DataOutputStream output;
@@ -63,8 +63,7 @@ public final class DiscordIpcConnection implements DiscordRpcConnection {
                     return new DiscordIpcConnection(pipe, new BufferedInputStream(pipe.input),
                             new BufferedOutputStream(pipe.output));
                 } catch (IOException unavailable) {
-                    LOGGER.log(Level.FINE, "Discord IPC endpoint " + index + " is unavailable",
-                            unavailable);
+                    LOGGER.trace("Discord IPC endpoint {} is unavailable", index, unavailable);
                 }
             }
             return null;
@@ -92,8 +91,7 @@ public final class DiscordIpcConnection implements DiscordRpcConnection {
                                 new BufferedInputStream(socket.input),
                                 new BufferedOutputStream(socket.output));
                     } catch (IOException failure) {
-                        LOGGER.log(Level.FINE, "Discord IPC endpoint is unavailable: " + endpoint,
-                                failure);
+                        LOGGER.trace("Discord IPC endpoint is unavailable: {}", endpoint, failure);
                     }
                 }
             }
@@ -130,7 +128,7 @@ public final class DiscordIpcConnection implements DiscordRpcConnection {
         while (true) {
             JsonObject response = receive();
             if (new JsonPrimitive("ERROR").equals(response.get("evt"))) {
-                LOGGER.warning("Discord rejected the RPC request: " + response);
+                LOGGER.warn("Discord rejected the RPC request: {}", response);
                 return;
             }
         }

@@ -34,13 +34,13 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.regex.Pattern;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import pit12.shared.storage.AtomicFile;
 
 public final class JsonProfileStore implements ProfileStore {
-    private static final Logger LOGGER = Logger.getLogger(JsonProfileStore.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger(JsonProfileStore.class);
     private static final String STATE_FILE = "profiles.json";
     private static final Pattern PROFILE_FILE = Pattern.compile(
             "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\\.json");
@@ -58,7 +58,7 @@ public final class JsonProfileStore implements ProfileStore {
         try {
             Files.createDirectories(directory);
         } catch (IOException failure) {
-            LOGGER.log(Level.WARNING, "Failed to create profile directory " + directory, failure);
+            LOGGER.warn("Failed to create profile directory {}", directory, failure);
             problems.add(new ProfileLoadProblem(directory, "Profile directory is unavailable"));
             return new LoadedProfiles(Collections.emptyList(), null, problems, false);
         }
@@ -72,7 +72,7 @@ public final class JsonProfileStore implements ProfileStore {
                 }
             }
         } catch (IOException failure) {
-            LOGGER.log(Level.WARNING, "Failed to scan profile directory " + directory, failure);
+            LOGGER.warn("Failed to scan profile directory {}", directory, failure);
             problems.add(new ProfileLoadProblem(directory, "Profile directory cannot be read"));
             return new LoadedProfiles(Collections.emptyList(), activeProfileId, problems, false);
         }
@@ -89,11 +89,11 @@ public final class JsonProfileStore implements ProfileStore {
                 }
                 profiles.add(result.profile());
                 for (String warning : result.warnings()) {
-                    LOGGER.warning("Profile load warning for " + file + ": " + warning);
+                    LOGGER.warn("Profile load warning for {}: {}", file, warning);
                     problems.add(new ProfileLoadProblem(file, warning));
                 }
             } catch (RuntimeException | IOException failure) {
-                LOGGER.log(Level.WARNING, "Failed to load profile " + file, failure);
+                LOGGER.warn("Failed to load profile {}", file, failure);
                 problems.add(new ProfileLoadProblem(file,
                         failure.getMessage() == null ? "Profile could not be loaded"
                                 : failure.getMessage()));
@@ -153,7 +153,7 @@ public final class JsonProfileStore implements ProfileStore {
             }
             return UUID.fromString(active.getAsString());
         } catch (RuntimeException | IOException failure) {
-            LOGGER.log(Level.WARNING, "Failed to load profile state " + statePath, failure);
+            LOGGER.warn("Failed to load profile state {}", statePath, failure);
             problems.add(new ProfileLoadProblem(statePath,
                     failure.getMessage() == null ? "Profile state could not be loaded"
                             : failure.getMessage()));

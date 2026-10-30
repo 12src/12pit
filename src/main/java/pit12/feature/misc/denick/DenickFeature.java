@@ -36,8 +36,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BooleanSupplier;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import net.minecraft.client.Minecraft;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayer;
@@ -46,6 +44,8 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import pit12.feature.misc.denick.api.DenickNames;
 import pit12.runtime.command.CommandNode;
 import pit12.runtime.command.CommandRegistry;
@@ -74,7 +74,7 @@ import pit12.shared.lifecycle.ClientLifecycle;
 
 public final class DenickFeature implements ClientLifecycle, DenickNames, TabPresenceListener,
         PlayerEquipmentListener, ConfigChangeListener, NickListener {
-    private static final Logger LOGGER = Logger.getLogger(DenickFeature.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger(DenickFeature.class);
     private final Minecraft minecraft;
     private final ClientThread client;
     private final ConfigCatalog configs;
@@ -165,7 +165,7 @@ public final class DenickFeature implements ClientLifecycle, DenickNames, TabPre
             try {
                 loaded = store.load();
             } catch (IOException | RuntimeException failure) {
-                LOGGER.log(Level.WARNING, "Cannot load denick cache", failure);
+                LOGGER.warn("Cannot load denick cache", failure);
             }
             Map<String, String> result = loaded;
             client.execute(() -> {
@@ -239,7 +239,7 @@ public final class DenickFeature implements ClientLifecycle, DenickNames, TabPre
             try {
                 if (!storageWorker.awaitTermination(2000L, TimeUnit.MILLISECONDS)) {
                     storageWorker.shutdownNow();
-                    LOGGER.warning("Denick cache worker did not stop");
+                    LOGGER.warn("Denick cache worker did not stop");
                 }
             } catch (InterruptedException interrupted) {
                 storageWorker.shutdownNow();
@@ -497,8 +497,8 @@ public final class DenickFeature implements ClientLifecycle, DenickNames, TabPre
                             }
                         });
                     } catch (IOException failure) {
-                        LOGGER.warning("Cannot resolve cached denick owner for " + target.name
-                                + ": " + failure);
+                        LOGGER.debug("Could not resolve cached denick owner for {}", target.name,
+                                failure);
                     }
                 }
                 DenickQuery result = DenickQuery.run(api, items, search.force ? null : cached,
@@ -593,7 +593,7 @@ public final class DenickFeature implements ClientLifecycle, DenickNames, TabPre
             try {
                 store.write(saved);
             } catch (IOException | RuntimeException failure) {
-                LOGGER.log(Level.WARNING, "Cannot save denick cache", failure);
+                LOGGER.warn("Cannot save denick cache", failure);
             }
         });
     }

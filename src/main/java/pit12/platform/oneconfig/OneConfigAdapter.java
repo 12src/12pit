@@ -37,9 +37,9 @@ import cc.polyfrost.oneconfig.gui.elements.config.ConfigTextBox;
 import cc.polyfrost.oneconfig.internal.config.core.ConfigCore;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import net.minecraft.client.Minecraft;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.lwjgl.input.Keyboard;
 import pit12.runtime.config.BooleanSetting;
 import pit12.runtime.config.ChoiceSetting;
@@ -57,7 +57,7 @@ import pit12.shared.input.Keybind;
 import pit12.shared.lifecycle.ClientLifecycle;
 
 public final class OneConfigAdapter implements ClientLifecycle, ConfigChangeListener {
-    private static final Logger LOGGER = Logger.getLogger(OneConfigAdapter.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger(OneConfigAdapter.class);
     private final ConfigCatalog catalog;
     private final OneConfigHudAdapter hudAdapter;
     private final List<Mod> featureMods = new ArrayList<>();
@@ -375,7 +375,7 @@ public final class OneConfigAdapter implements ClientLifecycle, ConfigChangeList
         try {
             ((Setting<Object>) setting).set(value);
         } catch (IllegalArgumentException failure) {
-            LOGGER.log(Level.WARNING, "Rejected OneConfig value for " + setting.id(), failure);
+            LOGGER.warn("Rejected OneConfig value for {}", setting.id(), failure);
         }
     }
 }

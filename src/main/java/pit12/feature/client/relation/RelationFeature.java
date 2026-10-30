@@ -33,13 +33,13 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.LongSupplier;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import pit12.feature.client.relation.api.IdentityLookupState;
 import pit12.feature.client.relation.api.Relation;
 import pit12.feature.client.relation.api.RelationEntry;
@@ -62,7 +62,7 @@ import pit12.shared.result.OperationResult;
 import pit12.shared.result.OperationResult.Status;
 
 public final class RelationFeature implements ClientLifecycle, Relations, TabPresenceListener {
-    private static final Logger LOGGER = Logger.getLogger(RelationFeature.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger(RelationFeature.class);
     private final TabPresence presence;
     private final Path path;
     private final ClientThread client;
@@ -175,7 +175,7 @@ public final class RelationFeature implements ClientLifecycle, Relations, TabPre
         if (closingLookups != null) {
             try {
                 if (!closingLookups.awaitTermination(7000L, TimeUnit.MILLISECONDS))
-                    LOGGER.warning("Relation lookup worker did not stop");
+                    LOGGER.warn("Relation lookup worker did not stop");
             } catch (InterruptedException interrupted) {
                 Thread.currentThread().interrupt();
                 throw new IllegalStateException("Interrupted while stopping relation lookups",
@@ -439,7 +439,7 @@ public final class RelationFeature implements ClientLifecycle, Relations, TabPre
 
         @Override
         public void loadFailed(Exception failure) {
-            LOGGER.log(Level.WARNING, "Failed to load relations from " + path, failure);
+            LOGGER.warn("Failed to load relations from {}", path, failure);
             dispatch(expected, () -> {
                 String message = failure.getMessage();
                 loadProblem =
@@ -451,7 +451,7 @@ public final class RelationFeature implements ClientLifecycle, Relations, TabPre
 
         @Override
         public void writeFailed(IOException failure) {
-            LOGGER.log(Level.WARNING, "Failed to save relations to " + path, failure);
+            LOGGER.warn("Failed to save relations to {}", path, failure);
             dispatch(expected, () -> {
                 if (installAdapters && Minecraft.getMinecraft().thePlayer != null) {
                     ChatFeedback.reply(Minecraft.getMinecraft().thePlayer, Tone.ERROR,

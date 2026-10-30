@@ -37,8 +37,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.net.ssl.SSLException;
 import org.apache.http.Header;
 import org.apache.http.client.config.RequestConfig;
@@ -47,10 +45,12 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.conn.ConnectTimeoutException;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /** Only the event list worker uses this client. */
 final class EventFeedClient {
-    private static final Logger LOGGER = Logger.getLogger(EventFeedClient.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger(EventFeedClient.class);
     private static final String MAINLAND_ENDPOINT = "https://events.askll.dev/";
     private String defaultEndpoint =
             usesMainlandSettings() ? MAINLAND_ENDPOINT : "https://events.12pit.workers.dev/";
@@ -74,8 +74,8 @@ final class EventFeedClient {
                                     System.currentTimeMillis()));
                     int status = response.getStatusLine().getStatusCode();
                     if (status != 200) {
-                        LOGGER.fine("Event schedule request to " + endpoint + " returned HTTP "
-                                + status);
+                        LOGGER.warn("Event schedule request to {} returned HTTP {}", endpoint,
+                                status);
                         return new Result(null, retryAt);
                     }
                     if (response.getEntity() == null) {
@@ -108,15 +108,15 @@ final class EventFeedClient {
                             || Thread.currentThread().isInterrupted()) {
                         throw failure;
                     }
-                    LOGGER.log(Level.FINE,
-                            "Event schedule request failed, trying " + MAINLAND_ENDPOINT, failure);
+                    LOGGER.debug("Event schedule request to {} failed, trying {}", endpoint,
+                            MAINLAND_ENDPOINT, failure);
                     endpoint = MAINLAND_ENDPOINT;
                 }
             }
         } catch (IOException | JsonParseException | IllegalArgumentException | ArithmeticException
                 | DateTimeParseException failure) {
             if (!Thread.currentThread().isInterrupted()) {
-                LOGGER.log(Level.WARNING, "Could not load the event schedule", failure);
+                LOGGER.warn("Could not load the event schedule from {}", endpoint, failure);
             }
             return new Result(null, retryAt);
         }
@@ -190,13 +190,13 @@ final class EventFeedClient {
             if (seconds >= 0L && seconds <= (Long.MAX_VALUE - now) / 1000L) {
                 return now + seconds * 1000L;
             }
-            LOGGER.fine("Ignoring an invalid Retry-After delay");
+            LOGGER.debug("Ignoring an invalid Retry-After delay: {}", value);
         } catch (NumberFormatException failure) {
             try {
                 return ZonedDateTime.parse(value, DateTimeFormatter.RFC_1123_DATE_TIME).toInstant()
                         .toEpochMilli();
             } catch (DateTimeParseException invalidDate) {
-                LOGGER.fine("Ignoring an invalid Retry-After date");
+                LOGGER.debug("Ignoring an invalid Retry-After date: {}", value);
             }
         }
         return 0L;
