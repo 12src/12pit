@@ -4,7 +4,7 @@
 
 `Pit12` is the Forge entry point. It relays Forge lifecycle events to `ClientBootstrap`, which instantiates the top-level components, wires up their dependencies, and handles start-up/shut-down.
 
-Each package in `feature` directory is responsible for one user facing capability, including its settings, logic, commands, rendering, storage, and Forge listeners for that particular feature.
+Features are grouped under `feature.client`, `feature.combat`, `feature.render`, `feature.misc`, and `feature.patch`. Each feature package owns one user-facing capability, including its settings, logic, commands, rendering, storage, and Forge listeners.
 
 `runtime` is for shared services and live state with its own lifecycle, like the client session, game state trackers, command registry, config catalog, and hud registry.
 
@@ -14,7 +14,7 @@ Each package in `feature` directory is responsible for one user facing capabilit
 
 Features define their commands and actions. `runtime.command` handles routing, help, tab completion, and availability checks. `platform.forge` registers the commands with Forge.
 
-`feature.webui` runs a local HTTP server that connects the configuration interface (`web-ui`) to config and feature APIs.
+`feature.client.webui` runs a local HTTP server that connects the configuration interface (`web-ui`) to config and feature APIs.
 
 ## Dependencies
 
@@ -24,7 +24,7 @@ Features define their commands and actions. `runtime.command` handles routing, h
 
 `platform` may depend on `runtime`, `feature` and `shared`, but the opposite direction of dependencies is not allowed. Platform services and binding hooks are provided to the rest of the system through the interfaces that belong to the corresponding layer. Native APIs and optional framework types are kept in `platform`, `runtime.command` does not depend on Forge.
 
-The packages directly under each layer are modules and do not have circular dependencies between each other. The Mixins are in `platform.mixin` and feature-specific Mixins are in `platform.mixin.feature.<feature>`, respecting the feature boundary.
+The packages directly under `runtime`, `shared`, and `platform` are modules. Each package at `feature.<category>.<feature>` is a feature module. Modules within each layer have no circular dependencies. The Mixins are in `platform.mixin`, and feature-specific Mixins are in `platform.mixin.feature.<category>.<feature>`, respecting the feature boundary.
 
 ## State and resources
 

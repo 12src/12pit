@@ -1,0 +1,163 @@
+/*
+ * This file is part of 12pit.
+ *
+ * Copyright (C) 2026 The 12pit Authors and contributors <https://github.com/12src/12pit>
+ *
+ * 12pit is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * 12pit is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
+ */
+package pit12.feature.client.profile.storage;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.regex.Pattern;
+import pit12.shared.storage.AtomicFile;
+
+public final class JsonProfileStore implements ProfileStore {
+    private static final Logger LOGGER = Logger.getLogger(JsonProfileStore.class.getName());
+    private static final String STATE_FILE = "profiles.json";
+    private static final Pattern PROFILE_FILE = Pattern.compile(
+            "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\\.json");
+    private final Path directory;
+    private final ProfileCodec codec;
+    private final Gson gson = new GsonBuilder().setPrettyPrinting().create();
+
+    public JsonProfileStore(Path directory, ProfileCodec codec) {
+        this.directory = directory;
+        this.codec = codec;
+    }
+
+    public LoadedProfiles load() {
+        ArrayList<ProfileLoadProblem> problems = new ArrayList<>();
+        try {
+            Files.createDirectories(directory);
+        } catch (IOException failure) {
+            LOGGER.log(Level.WARNING, "Failed to create profile directory " + directory, failure);
+            problems.add(new ProfileLoadProblem(directory, "Profile directory is unavailable"));
+            return new LoadedProfiles(Collections.emptyList(), null, problems, false);
+        }
+        UUID activeProfileId = readActiveProfileId(problems);
+        ArrayList<Path> files = new ArrayList<>();
+        try (DirectoryStream<Path> entries = Files.newDirectoryStream(directory, "*.json")) {
+            for (Path entry : entries) {
+                if (Files.isRegularFile(entry)
+                        && PROFILE_FILE.matcher(entry.getFileName().toString()).matches()) {
+                    files.add(entry);
+                }
+            }
+        } catch (IOException failure) {
+            LOGGER.log(Level.WARNING, "Failed to scan profile directory " + directory, failure);
+            problems.add(new ProfileLoadProblem(directory, "Profile directory cannot be read"));
+            return new LoadedProfiles(Collections.emptyList(), activeProfileId, problems, false);
+        }
+        files.sort(Comparator.comparing(path -> path.getFileName().toString()));
+        ArrayList<StoredProfile> profiles = new ArrayList<>();
+        for (Path file : files) {
+            String filename = file.getFileName().toString();
+            String idText = filename.substring(0, filename.length() - ".json".length());
+            UUID expectedId = UUID.fromString(idText);
+            try (BufferedReader reader = Files.newBufferedReader(file, StandardCharsets.UTF_8)) {
+                ProfileCodec.DecodeResult result = codec.decode(reader);
+                if (!expectedId.equals(result.profile().id())) {
+                    throw new IllegalArgumentException("id does not match filename UUID");
+                }
+                profiles.add(result.profile());
+                for (String warning : result.warnings()) {
+                    LOGGER.warning("Profile load warning for " + file + ": " + warning);
+                    problems.add(new ProfileLoadProblem(file, warning));
+                }
+            } catch (RuntimeException | IOException failure) {
+                LOGGER.log(Level.WARNING, "Failed to load profile " + file, failure);
+                problems.add(new ProfileLoadProblem(file,
+                        failure.getMessage() == null ? "Profile could not be loaded"
+                                : failure.getMessage()));
+            }
+        }
+        return new LoadedProfiles(profiles, activeProfileId, problems, true);
+    }
+
+    public void writeProfile(StoredProfile profile) throws IOException {
+        AtomicFile.write(directory.resolve(profile.id() + ".json"), codec.encode(profile));
+    }
+
+    public void writeState(UUID activeProfileId) throws IOException {
+        JsonObject root = new JsonObject();
+        root.addProperty("schemaVersion", ProfileCodec.SCHEMA_VERSION);
+        root.addProperty("activeProfileId", activeProfileId.toString());
+        AtomicFile.write(directory.resolve(STATE_FILE), gson.toJson(root));
+    }
+
+    public void moveToTrash(UUID profileId) throws IOException {
+        Path source = directory.resolve(profileId + ".json");
+        if (!Files.exists(source)) {
+            return;
+        }
+        Path trash = directory.resolve("trash");
+        Files.createDirectories(trash);
+        String baseName = profileId + "-" + System.currentTimeMillis();
+        Path target = trash.resolve(baseName + ".json");
+        int suffix = 1;
+        while (Files.exists(target)) {
+            target = trash.resolve(baseName + "-" + suffix++ + ".json");
+        }
+        Files.move(source, target);
+    }
+
+    private UUID readActiveProfileId(List<ProfileLoadProblem> problems) {
+        Path statePath = directory.resolve(STATE_FILE);
+        if (!Files.exists(statePath)) {
+            return null;
+        }
+        try (BufferedReader reader = Files.newBufferedReader(statePath, StandardCharsets.UTF_8)) {
+            JsonElement parsed = new JsonParser().parse(reader);
+            if (!parsed.isJsonObject()) {
+                throw new IllegalArgumentException("root must be a JSON object");
+            }
+            JsonObject root = parsed.getAsJsonObject();
+            JsonElement version = root.get("schemaVersion");
+            if (version == null || !version.isJsonPrimitive()
+                    || !version.getAsJsonPrimitive().isNumber()
+                    || Integer.parseInt(version.getAsString()) != ProfileCodec.SCHEMA_VERSION) {
+                throw new IllegalArgumentException("unsupported schemaVersion");
+            }
+            JsonElement active = root.get("activeProfileId");
+            if (active == null || !active.isJsonPrimitive()
+                    || !active.getAsJsonPrimitive().isString()) {
+                throw new IllegalArgumentException("$.activeProfileId must be a UUID string");
+            }
+            return UUID.fromString(active.getAsString());
+        } catch (RuntimeException | IOException failure) {
+            LOGGER.log(Level.WARNING, "Failed to load profile state " + statePath, failure);
+            problems.add(new ProfileLoadProblem(statePath,
+                    failure.getMessage() == null ? "Profile state could not be loaded"
+                            : failure.getMessage()));
+            return null;
+        }
+    }
+}

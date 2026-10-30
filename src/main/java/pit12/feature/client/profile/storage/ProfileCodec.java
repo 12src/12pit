@@ -1,0 +1,260 @@
+/*
+ * This file is part of 12pit.
+ *
+ * Copyright (C) 2026 The 12pit Authors and contributors <https://github.com/12src/12pit>
+ *
+ * 12pit is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * 12pit is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
+ */
+package pit12.feature.client.profile.storage;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import java.io.Reader;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import pit12.runtime.config.ConfigSnapshot;
+import pit12.runtime.config.Setting;
+
+public final class ProfileCodec {
+    public static final int SCHEMA_VERSION = 1;
+
+    public static final class DecodeResult {
+        private final StoredProfile profile;
+        private final List<String> warnings;
+
+        DecodeResult(StoredProfile profile, List<String> warnings) {
+            this.profile = profile;
+            this.warnings = warnings;
+        }
+
+        public StoredProfile profile() {
+            return profile;
+        }
+
+        public List<String> warnings() {
+            return warnings;
+        }
+    }
+
+    private final ProfileSchema schema;
+    private final Gson gson = new GsonBuilder().setPrettyPrinting().create();
+
+    public ProfileCodec(ProfileSchema schema) {
+        this.schema = schema;
+    }
+
+    public DecodeResult decode(Reader reader) {
+        JsonElement parsed = new JsonParser().parse(reader);
+        if (!parsed.isJsonObject()) {
+            throw new IllegalArgumentException("root must be a JSON object");
+        }
+        JsonObject root = parsed.getAsJsonObject();
+        int schemaVersion = requiredInt(root, "schemaVersion", 0);
+        if (schemaVersion > SCHEMA_VERSION) {
+            throw new IllegalArgumentException("schemaVersion " + schemaVersion
+                    + " is newer than supported version " + SCHEMA_VERSION);
+        }
+        if (schemaVersion != SCHEMA_VERSION) {
+            throw new IllegalArgumentException("unsupported schemaVersion " + schemaVersion);
+        }
+        UUID id = UUID.fromString(requiredString(root, "id"));
+        String name = requiredString(root, "name").trim();
+        if (name.isEmpty() || name.length() > 48) {
+            throw new IllegalArgumentException("name must contain 1 to 48 characters");
+        }
+        int order = requiredInt(root, "order", 0);
+        long updatedAt = optionalLong(root, "updatedAt", 0L);
+        ArrayList<String> warnings = new ArrayList<>();
+        LinkedHashMap<String, Map<String, Object>> configValues = new LinkedHashMap<>();
+        JsonElement featuresElement = root.get("features");
+        JsonObject features = featuresElement != null && featuresElement.isJsonObject()
+                ? featuresElement.getAsJsonObject()
+                : new JsonObject();
+        if (featuresElement != null && !featuresElement.isJsonObject()) {
+            warnings.add("$.features must be an object. Known settings use defaults");
+        }
+        for (Map.Entry<String, Map<String, Setting.StorageType>> featureEntry : schema.features()
+                .entrySet()) {
+            LinkedHashMap<String, Object> settingValues = new LinkedHashMap<>();
+            JsonElement featureElement = features.get(featureEntry.getKey());
+            JsonObject featureObject = featureElement != null && featureElement.isJsonObject()
+                    ? featureElement.getAsJsonObject()
+                    : null;
+            if (featureElement != null && !featureElement.isJsonObject()) {
+                warnings.add("$.features." + featureEntry.getKey() + " must be an object");
+            }
+            if (featureObject != null) {
+                for (Map.Entry<String, Setting.StorageType> settingEntry : featureEntry.getValue()
+                        .entrySet()) {
+                    JsonElement value = featureObject.get(settingEntry.getKey());
+                    if (value == null || value.isJsonNull()) {
+                        continue;
+                    }
+                    if (settingEntry.getValue() == Setting.StorageType.BOOLEAN
+                            && value.isJsonPrimitive() && value.getAsJsonPrimitive().isBoolean()) {
+                        settingValues.put(settingEntry.getKey(), value.getAsBoolean());
+                    } else if (settingEntry.getValue() == Setting.StorageType.INTEGER
+                            && value.isJsonPrimitive() && value.getAsJsonPrimitive().isNumber()) {
+                        try {
+                            settingValues.put(settingEntry.getKey(),
+                                    Integer.parseInt(value.getAsString()));
+                        } catch (NumberFormatException failure) {
+                            warnings.add("$.features." + featureEntry.getKey() + "."
+                                    + settingEntry.getKey()
+                                    + " must be an integer. The default is used");
+                        }
+                    } else if (settingEntry.getValue() == Setting.StorageType.DECIMAL
+                            && value.isJsonPrimitive() && value.getAsJsonPrimitive().isNumber()) {
+                        try {
+                            double decimalValue = Double.parseDouble(value.getAsString());
+                            if (!Double.isFinite(decimalValue)) {
+                                throw new NumberFormatException("non-finite decimal");
+                            }
+                            settingValues.put(settingEntry.getKey(), decimalValue);
+                        } catch (NumberFormatException failure) {
+                            warnings.add("$.features." + featureEntry.getKey() + "."
+                                    + settingEntry.getKey()
+                                    + " must be a finite decimal. The default is used");
+                        }
+                    } else if (settingEntry.getValue() == Setting.StorageType.STRING
+                            && value.isJsonPrimitive() && value.getAsJsonPrimitive().isString()) {
+                        settingValues.put(settingEntry.getKey(), value.getAsString());
+                    } else {
+                        warnings.add(
+                                "$.features." + featureEntry.getKey() + "." + settingEntry.getKey()
+                                        + " has the wrong value type. The default is used");
+                    }
+                }
+            }
+            configValues.put(featureEntry.getKey(), settingValues);
+        }
+        return new DecodeResult(new StoredProfile(id, name, order, updatedAt, 0L,
+                new ConfigSnapshot(configValues), root), warnings);
+    }
+
+    public String encode(StoredProfile profile) {
+        JsonObject root = copy(profile.preservedRoot()).getAsJsonObject();
+        root.addProperty("schemaVersion", SCHEMA_VERSION);
+        root.addProperty("id", profile.id().toString());
+        root.addProperty("name", profile.name());
+        root.addProperty("order", profile.order());
+        root.remove("visible");
+        root.addProperty("updatedAt", profile.updatedAt());
+        if (!root.has("binding")) {
+            root.add("binding", JsonNull.INSTANCE);
+        }
+        JsonElement oldFeatures = root.get("features");
+        JsonObject features =
+                oldFeatures != null && oldFeatures.isJsonObject() ? oldFeatures.getAsJsonObject()
+                        : new JsonObject();
+        for (Map.Entry<String, Map<String, Setting.StorageType>> featureEntry : schema.features()
+                .entrySet()) {
+            JsonElement oldFeature = features.get(featureEntry.getKey());
+            JsonObject featureObject =
+                    oldFeature != null && oldFeature.isJsonObject() ? oldFeature.getAsJsonObject()
+                            : new JsonObject();
+            Map<String, Object> values = profile.config().feature(featureEntry.getKey());
+            if (values != null) {
+                for (Map.Entry<String, Setting.StorageType> settingEntry : featureEntry.getValue()
+                        .entrySet()) {
+                    if (settingEntry.getValue() == Setting.StorageType.BOOLEAN) {
+                        Object value = values.get(settingEntry.getKey());
+                        if (value instanceof Boolean) {
+                            featureObject.addProperty(settingEntry.getKey(), (Boolean) value);
+                        }
+                    } else if (settingEntry.getValue() == Setting.StorageType.INTEGER
+                            || settingEntry.getValue() == Setting.StorageType.DECIMAL) {
+                        Object value = values.get(settingEntry.getKey());
+                        if (value instanceof Number) {
+                            featureObject.addProperty(settingEntry.getKey(), (Number) value);
+                        }
+                    } else if (settingEntry.getValue() == Setting.StorageType.STRING) {
+                        Object value = values.get(settingEntry.getKey());
+                        if (value instanceof String) {
+                            featureObject.addProperty(settingEntry.getKey(), (String) value);
+                        }
+                    }
+                }
+            }
+            features.add(featureEntry.getKey(), featureObject);
+        }
+        root.add("features", features);
+        return gson.toJson(root);
+    }
+
+    private static String requiredString(JsonObject object, String key) {
+        JsonElement value = object.get(key);
+        if (value == null || !value.isJsonPrimitive() || !value.getAsJsonPrimitive().isString()) {
+            throw new IllegalArgumentException("$." + key + " must be a string");
+        }
+        return value.getAsString();
+    }
+
+    private static int requiredInt(JsonObject object, String key, int minimum) {
+        JsonElement value = object.get(key);
+        if (value == null || !value.isJsonPrimitive() || !value.getAsJsonPrimitive().isNumber()) {
+            throw new IllegalArgumentException("$." + key + " must be an integer");
+        }
+        try {
+            int parsed = Integer.parseInt(value.getAsString());
+            if (parsed < minimum) {
+                throw new IllegalArgumentException("$." + key + " must be at least " + minimum);
+            }
+            return parsed;
+        } catch (NumberFormatException failure) {
+            throw new IllegalArgumentException("$." + key + " must be an integer", failure);
+        }
+    }
+
+    private static long optionalLong(JsonObject object, String key, long fallback) {
+        JsonElement value = object.get(key);
+        if (value == null) {
+            return fallback;
+        }
+        if (!value.isJsonPrimitive() || !value.getAsJsonPrimitive().isNumber()) {
+            throw new IllegalArgumentException("$." + key + " must be an integer");
+        }
+        try {
+            return Long.parseLong(value.getAsString());
+        } catch (NumberFormatException failure) {
+            throw new IllegalArgumentException("$." + key + " must be an integer", failure);
+        }
+    }
+
+    private static JsonElement copy(JsonElement source) {
+        if (source.isJsonObject()) {
+            JsonObject result = new JsonObject();
+            for (Map.Entry<String, JsonElement> entry : source.getAsJsonObject().entrySet()) {
+                result.add(entry.getKey(), copy(entry.getValue()));
+            }
+            return result;
+        }
+        if (source.isJsonArray()) {
+            JsonArray result = new JsonArray();
+            for (JsonElement element : source.getAsJsonArray()) {
+                result.add(copy(element));
+            }
+            return result;
+        }
+        return source;
+    }
+}

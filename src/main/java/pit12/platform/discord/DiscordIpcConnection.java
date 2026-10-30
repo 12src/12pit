@@ -39,7 +39,7 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import pit12.feature.discordrpc.DiscordRpcConnection;
+import pit12.feature.client.discordrpc.DiscordRpcConnection;
 
 public final class DiscordIpcConnection implements DiscordRpcConnection {
     private static final Logger LOGGER = Logger.getLogger(DiscordIpcConnection.class.getName());

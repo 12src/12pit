@@ -1,4 +1,4 @@
-<!-- Source: README.md; Based on: fd3499ea65660abdafb7116049c5fd734e73efe8 -->
+<!-- Source: README.md; Based on: 9457cda8e22008b21d9b83abbbde8cbbc0f5638a -->
 
 # 12pit
 
@@ -14,7 +14,7 @@
 
 ## 环境要求
 
-运行 Gradle 需要 JDK 21。模组本身与 Minecraft 1.8.9 一样运行在 Java 8 上，编译时 Gradle 会自动查找或下载 Java 8 工具链。
+运行 Gradle 至少需要 JDK 21。模组本身与 Minecraft 1.8.9 一样运行在 Java 8 上，编译时 Gradle 会自动查找或下载 Java 8 工具链。
 
 此外，`assemble` 和 `runClient` 任务会构建网页配置界面，因此还需要安装 Node.js 和 npm（CI 使用 Node.js 24）。
 
@@ -40,7 +40,7 @@ Linux 或 macOS：
 
 ### IntelliJ IDEA
 
-通过 Gradle 导入项目，并将 Gradle JVM 设为 JDK 21。之后可以直接在 Gradle 工具窗口中运行 `assemble`、`check` 和 `runClient`。
+通过 Gradle 导入项目，并将 Gradle JVM 设为 JDK 21 或更高版本。之后可以直接在 Gradle 工具窗口中运行 `assemble`、`check` 和 `runClient`。
 
 ### VS Code
 

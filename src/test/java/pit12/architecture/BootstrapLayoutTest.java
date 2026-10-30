@@ -39,7 +39,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.junit.Test;
-import pit12.feature.webui.WebUiConfig;
+import pit12.feature.client.webui.WebUiConfig;
 import pit12.runtime.config.ConfigCategory;
 import pit12.runtime.config.FeatureConfig;
 import pit12.shared.lifecycle.ClientLifecycle;
@@ -323,7 +323,7 @@ public final class BootstrapLayoutTest {
 
         private List<String> section() {
             return Arrays.asList(provider ? "Feature providers" : "Features",
-                    category == null ? "No config" : category.displayName());
+                    category == null ? "Client" : category.displayName());
         }
     }
     private static final class Call {

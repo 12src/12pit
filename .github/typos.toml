@@ -1,5 +1,5 @@
 [default]
-# src/main/java/pit12/feature/denick/PitPalClient.java:47
+# src/main/java/pit12/feature/misc/denick/PitPalClient.java:47
 extend-ignore-re = ['response\.get\("sucess"\)']
 
 [files]

@@ -1,4 +1,4 @@
-<!-- Source: docs/ARCHITECTURE.md; Based on: b89c7e1ea68fd0183c6877fdbe32f36b5d89cb2b -->
+<!-- Source: docs/ARCHITECTURE.md; Based on: 36ca2550d013e1d87fb0a788636e9e5b151b126d -->
 
 # 12pit 架构
 
@@ -6,7 +6,7 @@
 
 `Pit12` 是 Forge 入口类，负责将 Forge 生命周期事件转发给 `ClientBootstrap`。`ClientBootstrap` 创建顶层组件、组装依赖，并管理应用的启动和关闭。
 
-`feature` 下的每个直接子包对应一项具体功能，管理自己的配置、逻辑、命令、渲染、持久化数据，以及该功能专用的 Forge 监听器。
+功能按 `feature.client`、`feature.combat`、`feature.render`、`feature.misc` 和 `feature.patch` 分组。每个功能包对应一项具体功能，管理自己的配置、逻辑、命令、渲染、持久化数据，以及该功能专用的 Forge 监听器。
 
 `runtime` 存放有独立生命周期或多个功能共享的实时状态与服务，例如客户端会话、游戏状态跟踪器、命令注册表、配置目录和 HUD 注册表。
 
@@ -16,7 +16,7 @@
 
 命令由各功能自己定义和实现，`runtime.command` 负责路由、帮助信息、补全和可用性判断，`platform.forge` 负责向 Forge 注册。
 
-`feature.webui` 管理本地 HTTP 服务器，负责把浏览器里的配置界面（`web-ui`）与配置及功能 API 连接起来。
+`feature.client.webui` 管理本地 HTTP 服务器，负责把浏览器里的配置界面（`web-ui`）与配置及功能 API 连接起来。
 
 ## 依赖
 
@@ -26,7 +26,7 @@
 
 `platform` 可以依赖 `runtime`、`feature` 和 `shared`，但反过来这些层不依赖 `platform` 的类，而是通过自己定义的接口接收平台服务或绑定钩子。原生 API 和可选的外部框架类型都留在 `platform` 内部，`runtime.command` 也不依赖 Forge。
 
-各层下的直接子包各自构成模块，模块之间不能出现循环依赖。所有 Mixin 都放在 `platform.mixin` 下，其中功能专用的 Mixin 放在 `platform.mixin.feature.<feature>`，同样遵守功能边界约束。
+`runtime`、`shared` 和 `platform` 下的直接子包各自构成模块。`feature.<category>.<feature>` 下的每个包构成一个功能模块。同层模块之间避免循环依赖。所有 Mixin 都放在 `platform.mixin` 下，其中功能专用的 Mixin 放在 `platform.mixin.feature.<category>.<feature>`，同样遵守功能边界约束。
 
 ## 状态和资源
 
