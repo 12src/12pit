@@ -28,6 +28,8 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.network.NetHandlerPlayClient;
+import net.minecraft.client.network.NetworkPlayerInfo;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -53,7 +55,8 @@ public final class BanAlertFeature implements ClientLifecycle, TabPresenceListen
     private final ClientSession session;
     private final TabPresence presence;
     private final Languages language;
-    private final Map<UUID, String> onlineNames = new HashMap<>();
+    // The Tab entry is already gone when onPlayerLeft runs.
+    private final Map<UUID, NetworkPlayerInfo> onlinePlayers = new HashMap<>();
     private final Map<UUID, Departure> departures = new LinkedHashMap<>();
     private final Deque<Long> pendingMessages = new ArrayDeque<>();
     private final Runnable sessionChanged = this::reset;
@@ -113,7 +116,7 @@ public final class BanAlertFeature implements ClientLifecycle, TabPresenceListen
             MinecraftForge.EVENT_BUS.unregister(this);
             presence.removeListener(this);
             session.removeListener(sessionChanged);
-            onlineNames.clear();
+            onlinePlayers.clear();
             departures.clear();
             pendingMessages.clear();
         }
@@ -125,8 +128,10 @@ public final class BanAlertFeature implements ClientLifecycle, TabPresenceListen
         if (!active || sessionRevision != session.revision()) {
             return;
         }
-        if (name != null) {
-            onlineNames.put(playerId, name);
+        NetHandlerPlayClient handler = session.connection();
+        NetworkPlayerInfo info = handler == null ? null : handler.getPlayerInfo(playerId);
+        if (info != null && name != null) {
+            onlinePlayers.put(playerId, info);
         }
         departures.remove(playerId);
     }
@@ -138,13 +143,14 @@ public final class BanAlertFeature implements ClientLifecycle, TabPresenceListen
         if (!active || sessionRevision != session.revision()) {
             return;
         }
-        String name = onlineNames.remove(playerId);
-        if (name == null) {
+        NetworkPlayerInfo info = onlinePlayers.remove(playerId);
+        if (info == null) {
             return;
         }
         long now = System.nanoTime();
         discardExpired(now);
-        departures.put(playerId, new Departure(name, now));
+        departures.put(playerId,
+                new Departure(minecraft.ingameGUI.getTabList().getPlayerName(info), now));
     }
 
     @SubscribeEvent
@@ -202,10 +208,10 @@ public final class BanAlertFeature implements ClientLifecycle, TabPresenceListen
     private void reset() {
         session.checkThread();
         sessionRevision = session.revision();
-        onlineNames.clear();
+        onlinePlayers.clear();
         departures.clear();
         pendingMessages.clear();
-        onlineNames.putAll(presence.players());
+        presence.players().forEach((id, name) -> onPlayerSeen(id, name, false));
     }
 
     private void discardExpired(long now) {
