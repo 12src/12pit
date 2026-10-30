@@ -26,6 +26,7 @@ val oneConfigVersion = providers.gradleProperty("oneConfigVersion").get()
 val ktfmtVersion = providers.gradleProperty("ktfmtVersion").get()
 val licenseHeaderPath = providers.gradleProperty("licenseHeaderPath").get()
 val eclipseFormatterConfigPath = providers.gradleProperty("eclipseFormatterConfigPath").get()
+val mixinConfigNames = file("src/main/resources/mixins.$modId.list").readLines()
 
 group = modGroup
 
@@ -49,7 +50,7 @@ loom {
 
     forge {
         pack200Provider.set(Pack200Adapter())
-        mixinConfig("mixins.$modId.json")
+        mixinConfigNames.forEach { mixinConfig(it) }
     }
 
     mixin {
@@ -187,7 +188,7 @@ tasks.withType<Jar> {
         this["FMLCorePluginContainsFMLMod"] = "true"
         this["ForceLoadAsMod"] = "true"
         this["TweakClass"] = "org.spongepowered.asm.launch.MixinTweaker"
-        this["MixinConfigs"] = "mixins.$modId.json"
+        this["MixinConfigs"] = mixinConfigNames.joinToString(",")
     }
 }
 
@@ -234,7 +235,7 @@ tasks.processResources {
     inputs.properties(properties)
     filteringCharset = "UTF-8"
 
-    filesMatching(listOf("mcmod.info", "mixins.$modId.json")) { expand(properties) }
+    filesMatching(listOf("mcmod.info") + mixinConfigNames) { expand(properties) }
 }
 
 val remapJar =

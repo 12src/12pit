@@ -22,9 +22,11 @@ Features define their commands and actions. `runtime.command` handles routing, h
 
 `feature` may depend on `runtime` and `shared`. If some feature needs access to another feature, it goes through the `api` package of that feature. `runtime` depends only on `shared`, and `shared` depends on nothing.
 
-`platform` may depend on `runtime`, `feature` and `shared`, but the opposite direction of dependencies is not allowed. Platform services and binding hooks are provided to the rest of the system through the interfaces that belong to the corresponding layer. Native APIs and optional framework types are kept in `platform`, `runtime.command` does not depend on Forge.
+`platform` may depend on `runtime`, `feature` and `shared`. Feature Mixin packages follow the same dependency rules as `platform`. Platform services and binding hooks are provided to the rest of the system through the interfaces that belong to the corresponding layer. Native APIs and optional framework types are kept in `platform` and feature Mixin packages. `runtime.command` handles commands independently of Forge.
 
-The packages directly under `runtime`, `shared`, and `platform` are modules. Each package at `feature.<category>.<feature>` is a feature module. Modules within each layer have no circular dependencies. The Mixins are in `platform.mixin`, and feature-specific Mixins are in `platform.mixin.feature.<category>.<feature>`, respecting the feature boundary.
+The packages directly under `runtime`, `shared`, and `platform` are modules. Each package at `feature.<category>.<feature>` is a feature module. Modules within each layer have no circular dependencies. Shared Mixins are in `platform.mixin`. Feature-specific Mixins are in `feature.<category>.<feature>.mixin`, respecting the feature boundary.
+
+Each Mixin package has its own configuration. `src/main/resources/mixins.pit12.list` sets the configuration order for development, packaged builds, and architecture checks. The configurations share one refmap and plugin.
 
 ## State and resources
 

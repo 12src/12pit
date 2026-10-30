@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.platform.mixin.feature.patch.resourceleakfix;
+package pit12.feature.patch.resourceleakfix.mixin;
 
 import java.io.InputStream;
 import net.minecraft.client.resources.SimpleResource;

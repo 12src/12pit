@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "minVersion": "0.7.11",
+  "package": "${basePackage}.feature.render.tooltip.mixin",
+  "plugin": "${basePackage}.platform.mixinconfig.MixinConfigPlugin",
+  "refmap": "mixins.${modId}.refmap.json",
+  "target": "@env(DEFAULT)",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [],
+  "client": [
+    "GuiIngameForgeMixin"
+  ]
+}

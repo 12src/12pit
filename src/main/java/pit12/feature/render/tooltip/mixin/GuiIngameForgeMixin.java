@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.platform.mixin.feature.render.tooltip;
+package pit12.feature.render.tooltip.mixin;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiIngame;

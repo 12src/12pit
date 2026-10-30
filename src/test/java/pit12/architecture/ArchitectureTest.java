@@ -18,6 +18,7 @@
  */
 package pit12.architecture;
 
+import static com.tngtech.archunit.core.domain.JavaClass.Predicates.resideInAPackage;
 import static com.tngtech.archunit.core.domain.JavaClass.Predicates.resideOutsideOfPackage;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
@@ -38,6 +39,7 @@ import com.tngtech.archunit.lang.ArchCondition;
 import com.tngtech.archunit.lang.ArchRule;
 import com.tngtech.archunit.lang.ConditionEvents;
 import com.tngtech.archunit.lang.SimpleConditionEvent;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -75,12 +77,15 @@ public final class ArchitectureTest {
     public static final ArchRule TOP_LEVEL_DEPENDENCIES = layeredArchitecture()
             .consideringOnlyDependenciesInLayers().layer("Application").definedBy("pit12")
             .layer("Bootstrap").definedBy("pit12.bootstrap..").layer("Platform")
-            .definedBy("pit12.platform..").layer("Runtime").definedBy("pit12.runtime..")
-            .layer("Feature").definedBy("pit12.feature..").layer("Shared")
-            .definedBy("pit12.shared..").whereLayer("Application").mayOnlyAccessLayers("Bootstrap")
-            .whereLayer("Bootstrap").mayOnlyAccessLayers("Platform", "Runtime", "Feature", "Shared")
-            .whereLayer("Platform").mayOnlyAccessLayers("Runtime", "Feature", "Shared")
-            .whereLayer("Runtime").mayOnlyAccessLayers("Shared").whereLayer("Feature")
+            .definedBy("pit12.platform..", "pit12.feature.*.*.mixin..").layer("Runtime")
+            .definedBy("pit12.runtime..").layer("Feature")
+            .definedBy(resideInAPackage("pit12.feature..")
+                    .and(resideOutsideOfPackage("pit12.feature.*.*.mixin..")))
+            .layer("Shared").definedBy("pit12.shared..").whereLayer("Application")
+            .mayOnlyAccessLayers("Bootstrap").whereLayer("Bootstrap")
+            .mayOnlyAccessLayers("Platform", "Runtime", "Feature", "Shared").whereLayer("Platform")
+            .mayOnlyAccessLayers("Runtime", "Feature", "Shared").whereLayer("Runtime")
+            .mayOnlyAccessLayers("Shared").whereLayer("Feature")
             .mayOnlyAccessLayers("Runtime", "Shared").whereLayer("Shared").mayNotAccessAnyLayer();
     @ArchTest
     public static final ArchRule COMMAND_RUNTIME_MUST_NOT_DEPEND_ON_FORGE =
@@ -98,7 +103,8 @@ public final class ArchitectureTest {
     public static final ArchRule EXTERNAL_APIS_BELONG_TO_PLATFORM = noClasses().that()
             .resideInAnyPackage("pit12.bootstrap..", "pit12.runtime..", "pit12.feature..",
                     "pit12.shared..")
-            .should().dependOnClassesThat()
+            .and().resideOutsideOfPackage("pit12.feature.*.*.mixin..").should()
+            .dependOnClassesThat()
             .resideOutsideOfPackages("pit12..", "java..", "javax..", "com.sun.net.httpserver..",
                     "net.minecraft..", "net.minecraftforge..", "com.mojang..", "com.google..",
                     "org.lwjgl..", "org.apache.http..")
@@ -124,10 +130,10 @@ public final class ArchitectureTest {
     @ArchTest
     public static final ArchRule MIXINS_MUST_RESIDE_IN_MIXIN_PACKAGES =
             classes().that().areAnnotatedWith("org.spongepowered.asm.mixin.Mixin").should()
-                    .resideInAPackage("pit12.platform.mixin..");
+                    .resideInAnyPackage("pit12.platform.mixin..", "pit12.feature.*.*.mixin..");
     @ArchTest
     public static final ArchRule MIXIN_PACKAGES_MUST_ONLY_CONTAIN_MIXINS = classes().that()
-            .resideInAPackage("pit12.platform.mixin..").should()
+            .resideInAnyPackage("pit12.platform.mixin..", "pit12.feature.*.*.mixin..").should()
             .beAnnotatedWith("org.spongepowered.asm.mixin.Mixin")
             .because("ordinary classes in the configured Mixin tree cannot be loaded directly");
 
@@ -136,7 +142,8 @@ public final class ArchitectureTest {
         Set<String> featureNames = new TreeSet<String>();
         for (JavaClass javaClass : classes) {
             String featureName = featureNameOf(javaClass);
-            if (featureName != null) {
+            if (featureName != null
+                    && !javaClass.isAnnotatedWith("org.spongepowered.asm.mixin.Mixin")) {
                 featureNames.add(featureName);
             }
         }
@@ -145,7 +152,7 @@ public final class ArchitectureTest {
             if (!javaClass.isAnnotatedWith("org.spongepowered.asm.mixin.Mixin")) {
                 continue;
             }
-            String declaredFeature = mixinFeatureNameOf(javaClass);
+            String declaredFeature = featureNameOf(javaClass);
             if (declaredFeature != null && !featureNames.contains(declaredFeature)) {
                 violations.add(javaClass.getName() + " mirrors missing feature " + declaredFeature);
             }
@@ -157,7 +164,7 @@ public final class ArchitectureTest {
                 }
                 if (declaredFeature == null) {
                     violations.add(javaClass.getName() + " depends on feature " + dependencyFeature
-                            + " outside platform.mixin.feature");
+                            + " and requires a feature Mixin package");
                 } else if (!isFeatureApi(target, dependencyFeature)) {
                     violations.add(javaClass.getName() + " depends on internal classes of feature "
                             + dependencyFeature);
@@ -224,18 +231,6 @@ public final class ArchitectureTest {
                 : packageName.substring(prefix.length(), separator);
     }
 
-    private static String mixinFeatureNameOf(JavaClass javaClass) {
-        String prefix = "pit12.platform.mixin.feature.";
-        String packageName = javaClass.getPackageName();
-        if (!packageName.startsWith(prefix)) {
-            return null;
-        }
-        int categoryEnd = packageName.indexOf('.', prefix.length());
-        int separator = packageName.indexOf('.', categoryEnd + 1);
-        return separator < 0 ? packageName.substring(prefix.length())
-                : packageName.substring(prefix.length(), separator);
-    }
-
     private static boolean isFeatureApi(JavaClass javaClass, String featureName) {
         String apiPackage = "pit12.feature." + featureName + ".api";
         String packageName = javaClass.getPackageName();
@@ -243,21 +238,39 @@ public final class ArchitectureTest {
     }
 
     private static Set<String> configuredMixins() {
+        InputStream stream =
+                ArchitectureTest.class.getClassLoader().getResourceAsStream("mixins.pit12.list");
+        if (stream == null) {
+            throw new AssertionError("Missing mixins.pit12.list on the test runtime classpath");
+        }
+        try (BufferedReader reader =
+                new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))) {
+            Set<String> configuredMixins = new TreeSet<String>();
+            String configName;
+            while ((configName = reader.readLine()) != null) {
+                addConfiguredMixins(configuredMixins, configName);
+            }
+            return configuredMixins;
+        } catch (IOException failure) {
+            throw new AssertionError("Cannot read mixins.pit12.list", failure);
+        }
+    }
+
+    private static void addConfiguredMixins(Set<String> destination, String configName) {
         try (InputStream stream =
-                ArchitectureTest.class.getClassLoader().getResourceAsStream("mixins.pit12.json")) {
+                ArchitectureTest.class.getClassLoader().getResourceAsStream(configName)) {
             if (stream == null) {
-                throw new AssertionError("Missing mixins.pit12.json on the test runtime classpath");
+                throw new AssertionError(
+                        "Missing " + configName + " on the test runtime classpath");
             }
             JsonObject config = new JsonParser()
                     .parse(new InputStreamReader(stream, StandardCharsets.UTF_8)).getAsJsonObject();
             String basePackage = config.get("package").getAsString();
-            Set<String> configuredMixins = new TreeSet<String>();
-            addConfiguredMixins(configuredMixins, config, basePackage, "mixins");
-            addConfiguredMixins(configuredMixins, config, basePackage, "client");
-            addConfiguredMixins(configuredMixins, config, basePackage, "server");
-            return configuredMixins;
+            addConfiguredMixins(destination, config, basePackage, "mixins");
+            addConfiguredMixins(destination, config, basePackage, "client");
+            addConfiguredMixins(destination, config, basePackage, "server");
         } catch (IOException | RuntimeException failure) {
-            throw new AssertionError("Cannot read mixins.pit12.json", failure);
+            throw new AssertionError("Cannot read " + configName, failure);
         }
     }
 
