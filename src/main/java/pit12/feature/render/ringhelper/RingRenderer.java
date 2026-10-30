@@ -22,19 +22,19 @@ import java.util.List;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GLAllocation;
 import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.util.BlockPos;
 import org.lwjgl.opengl.GL11;
 import pit12.shared.rendering.TextureState;
+import pit12.shared.rendering.WorldRenderState;
 
 final class RingRenderer {
-    private final TextureState textures;
+    private final WorldRenderState state;
     private int displayList;
     private long compiledRevision = -1;
 
     RingRenderer(TextureState textures) {
-        this.textures = textures;
+        state = new WorldRenderState(textures);
     }
 
     void render(Minecraft minecraft, List<BlockPos> blocks, int color, long revision) {
@@ -53,31 +53,21 @@ final class RingRenderer {
             }
             compiledRevision = revision;
         }
-        GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT
-                | GL11.GL_LINE_BIT | GL11.GL_CURRENT_BIT | GL11.GL_TEXTURE_BIT);
-        textures.begin();
+        state.begin(GL11.GL_LINE_BIT);
         GlStateManager.pushMatrix();
         try {
-            GL11.glDisable(GL11.GL_DEPTH_TEST);
-            GL11.glDepthMask(false);
-            GL11.glDisable(GL11.GL_ALPHA_TEST);
-            GL11.glDisable(GL11.GL_LIGHTING);
-            GL11.glDisable(GL11.GL_COLOR_MATERIAL);
-            GL11.glDisable(GL11.GL_FOG);
-            GL11.glEnable(GL11.GL_BLEND);
-            OpenGlHelper.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE,
-                    GL11.GL_ZERO);
             GL11.glLineWidth(1.0F);
-            GL11.glColor4f((color >>> 16 & 255) / 255F, (color >>> 8 & 255) / 255F,
+            GlStateManager.color((color >>> 16 & 255) / 255F, (color >>> 8 & 255) / 255F,
                     (color & 255) / 255F, (color >>> 24) / 255F);
             RenderManager camera = minecraft.getRenderManager();
             GlStateManager.translate(-camera.viewerPosX, -camera.viewerPosY, -camera.viewerPosZ);
             GlStateManager.callList(displayList);
         } finally {
-            GlStateManager.popMatrix();
-            GL11.glPopAttrib();
-            textures.end();
-            GlStateManager.resetColor();
+            try {
+                GlStateManager.popMatrix();
+            } finally {
+                state.end();
+            }
         }
     }
 

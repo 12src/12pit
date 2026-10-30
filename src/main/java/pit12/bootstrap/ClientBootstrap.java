@@ -102,8 +102,6 @@ import pit12.feature.render.tooltip.TooltipConfig;
 import pit12.feature.render.tooltip.TooltipFeature;
 import pit12.platform.discord.DiscordIpcConnection;
 import pit12.platform.forge.ForgeCommandAdapter;
-import pit12.platform.lunar.LunarSupport;
-import pit12.platform.lunar.LunarTextureState;
 import pit12.platform.mixinconfig.MixinFailureWarning;
 import pit12.platform.oneconfig.OneConfigSupport;
 import pit12.runtime.arrow.ArrowTracker;
@@ -181,8 +179,7 @@ public final class ClientBootstrap {
         SidebarCache sidebar = new SidebarCache(minecraft, session);
         components.add(sidebar);
         HudRegistry hudRegistry = new HudRegistry(client);
-        Supplier<TextureState> textureStates =
-                LunarSupport.isLoaded() ? LunarTextureState::new : OpenGlTextureState::new;
+        Supplier<TextureState> textureStates = OpenGlTextureState::new;
         // Feature providers
         // Category: Client
         Profiles profiles =

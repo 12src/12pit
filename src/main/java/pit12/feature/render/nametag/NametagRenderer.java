@@ -21,15 +21,17 @@ package pit12.feature.render.nametag;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.WorldRenderer;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.player.EntityPlayer;
 import org.lwjgl.opengl.GL11;
+import pit12.shared.rendering.RenderStateSnapshot;
 
 final class NametagRenderer {
+    private final RenderStateSnapshot state = new RenderStateSnapshot();
+
     void render(Minecraft minecraft, EntityPlayer player, NametagText text, double x, double y,
             double z, double distanceSquared, int upwardOffset) {
         FontRenderer font = minecraft.fontRendererObj;
@@ -42,11 +44,7 @@ final class NametagRenderer {
             nameY += font.FONT_HEIGHT * 1.15F * 0.02666667F;
         }
         int heldItemY = text.leggings == null ? 0 : -font.FONT_HEIGHT - 2;
-        boolean alphaEnabled = GL11.glIsEnabled(GL11.GL_ALPHA_TEST);
-        boolean textureEnabled = GL11.glIsEnabled(GL11.GL_TEXTURE_2D);
-        int boundTexture = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
-        GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT
-                | GL11.GL_CURRENT_BIT | GL11.GL_TEXTURE_BIT);
+        state.capture();
         GlStateManager.pushMatrix();
         try {
             GlStateManager.translate(x, nameY + upwardOffset * 0.01D, z);
@@ -55,18 +53,18 @@ final class NametagRenderer {
                     .rotate(minecraft.gameSettings.thirdPersonView == 2 ? -renderManager.playerViewX
                             : renderManager.playerViewX, 1.0F, 0.0F, 0.0F);
             GlStateManager.scale(-0.02666667F, -0.02666667F, 0.02666667F);
-            GL11.glDisable(GL11.GL_LIGHTING);
-            GL11.glEnable(GL11.GL_BLEND);
-            OpenGlHelper.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE,
-                    GL11.GL_ZERO);
+            GlStateManager.disableLighting();
+            GlStateManager.enableBlend();
+            GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA,
+                    GL11.GL_ONE, GL11.GL_ZERO);
             GlStateManager.enableAlpha();
-            GL11.glAlphaFunc(GL11.GL_GREATER, 0.1F);
+            GlStateManager.alphaFunc(GL11.GL_GREATER, 0.1F);
             if (sneaking) {
-                GL11.glEnable(GL11.GL_DEPTH_TEST);
+                GlStateManager.enableDepth();
             } else {
-                GL11.glDisable(GL11.GL_DEPTH_TEST);
+                GlStateManager.disableDepth();
             }
-            GL11.glDepthMask(false);
+            GlStateManager.depthMask(false);
             // Keep Lunar's texture tracking in sync while drawing the background.
             GlStateManager.disableTexture2D();
             Tessellator tessellator = Tessellator.getInstance();
@@ -82,26 +80,16 @@ final class NametagRenderer {
             GlStateManager.enableTexture2D();
             drawText(font, text, heldItemY, 0x20FFFFFF);
             if (!sneaking) {
-                GL11.glEnable(GL11.GL_DEPTH_TEST);
-                GL11.glDepthMask(true);
+                GlStateManager.enableDepth();
+                GlStateManager.depthMask(true);
                 drawText(font, text, heldItemY, 0xFFFFFFFF);
             }
         } finally {
-            // FontRenderer does change the cached state, so put it back too.
-            GlStateManager.bindTexture(boundTexture);
-            if (textureEnabled) {
-                GlStateManager.enableTexture2D();
-            } else {
-                GlStateManager.disableTexture2D();
+            try {
+                state.restore();
+            } finally {
+                GlStateManager.popMatrix();
             }
-            if (alphaEnabled) {
-                GlStateManager.enableAlpha();
-            } else {
-                GlStateManager.disableAlpha();
-            }
-            GL11.glPopAttrib();
-            GlStateManager.resetColor();
-            GlStateManager.popMatrix();
         }
     }
 

@@ -21,9 +21,11 @@ package pit12.feature.misc.chatmacro;
 import java.nio.file.Path;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
+import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
@@ -64,6 +66,9 @@ public final class ChatMacroFeature
     private EntityPlayerSP waitingPlayer;
     private long waitingRevision;
     private String spawnHint;
+    private int hintWidth = -1;
+    private FontRenderer hintFont;
+    private boolean hintUnicode;
     private String pending;
     private EntityPlayerSP pendingPlayer;
     private boolean pendingSpawn;
@@ -241,9 +246,11 @@ public final class ChatMacroFeature
     }
 
     private void updateHint() {
-        if (waiting)
+        if (waiting) {
             spawnHint = language.format("Spawning… Press [{0}] to cancel.",
                     Keybind.name(config.spawnKey.get()));
+            hintWidth = -1;
+        }
     }
 
     private void stopWaiting() {
@@ -263,16 +270,30 @@ public final class ChatMacroFeature
     }
 
     @SubscribeEvent
+    public void onTextureStitch(TextureStitchEvent.Post event) {
+        hintWidth = -1;
+    }
+
+    @SubscribeEvent
     public void onRenderOverlay(RenderGameOverlayEvent.Post event) {
         if (!waiting || event.type != ElementType.ALL || minecraft.gameSettings.hideGUI
                 || minecraft.thePlayer == null)
             return;
+        FontRenderer font = minecraft.fontRendererObj;
+        boolean unicode = font.getUnicodeFlag();
+        if (hintWidth < 0 || hintFont != font || hintUnicode != unicode) {
+            hintWidth = FontWidths.measure(font, spawnHint);
+            hintFont = font;
+            hintUnicode = unicode;
+        }
         GlStateManager.pushMatrix();
-        GlStateManager.translate(event.resolution.getScaledWidth() / 2.0F,
-                event.resolution.getScaledHeight() / 2.0F + 35, 0);
-        GlStateManager.scale(2, 2, 2);
-        minecraft.fontRendererObj.drawStringWithShadow(spawnHint,
-                -FontWidths.measure(minecraft.fontRendererObj, spawnHint) / 2.0F, 0, 0xFFFFFF);
-        GlStateManager.popMatrix();
+        try {
+            GlStateManager.translate(event.resolution.getScaledWidth() / 2.0F,
+                    event.resolution.getScaledHeight() / 2.0F + 35, 0);
+            GlStateManager.scale(2, 2, 2);
+            font.drawStringWithShadow(spawnHint, -hintWidth / 2.0F, 0, 0xFFFFFF);
+        } finally {
+            GlStateManager.popMatrix();
+        }
     }
 }
