@@ -12,3 +12,4 @@ mixins.pit12.combat.smartblock.json
 mixins.pit12.render.timers.json
 mixins.pit12.render.tooltip.json
 mixins.pit12.combat.swap.json
+mixins.pit12.render.freecam.json
