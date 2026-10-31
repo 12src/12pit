@@ -18,24 +18,39 @@
  */
 package pit12.feature.fontcachefix;
 
+import pit12.runtime.config.ConfigCatalog;
+import pit12.runtime.config.ConfigChangeListener;
+import pit12.runtime.config.ConfigChangeSet;
 import pit12.shared.lifecycle.ClientLifecycle;
 
-public final class FontCacheFixFeature implements ClientLifecycle {
+public final class FontCacheFixFeature implements ClientLifecycle, ConfigChangeListener {
+    private final ConfigCatalog configs;
     private final FontCacheFixConfig config;
     private final FontCacheFixBinding binding;
 
-    public FontCacheFixFeature(FontCacheFixConfig config, FontCacheFixBinding binding) {
+    public FontCacheFixFeature(ConfigCatalog configs, FontCacheFixConfig config,
+            FontCacheFixBinding binding) {
+        this.configs = configs;
         this.config = config;
         this.binding = binding;
     }
 
     @Override
     public void start() {
-        binding.pit12$bindFontCacheFixConfig(config);
+        configs.addListener(this);
+        binding.pit12$setFontCacheFixEnabled(config.enabled());
     }
 
     @Override
     public void stop() {
-        binding.pit12$bindFontCacheFixConfig(null);
+        configs.removeListener(this);
+        binding.pit12$setFontCacheFixEnabled(true);
+    }
+
+    @Override
+    public void onConfigChanged(ConfigChangeSet changes) {
+        if (changes.affects("fontcachefix", "enabled")) {
+            binding.pit12$setFontCacheFixEnabled(config.enabled());
+        }
     }
 }

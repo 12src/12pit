@@ -480,7 +480,7 @@ public final class ClientBootstrap {
     private void registerFontCacheFix(ConfigCatalog configs, FontCacheFixBinding binding) {
         FontCacheFixConfig config = new FontCacheFixConfig();
         configs.register(config);
-        components.add(new FontCacheFixFeature(config, binding));
+        components.add(new FontCacheFixFeature(configs, config, binding));
     }
 
     private void registerResourceLeakFix(ConfigCatalog configs, ResourceLeakFixBinding binding) {
