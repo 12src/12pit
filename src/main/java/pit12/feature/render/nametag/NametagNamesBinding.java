@@ -22,7 +22,9 @@ import java.util.UUID;
 import java.util.function.Function;
 
 public interface NametagNamesBinding {
-    void pit12$bindNametagNames(Function<UUID, String> suffix);
+    void pit12$bindNametagNames(Function<UUID, String> suffix, boolean enhancedVisibility);
 
     Function<UUID, String> pit12$nametagNames();
+
+    boolean pit12$enhancedNametags();
 }

@@ -21,6 +21,9 @@ package pit12.feature.render.playerlist;
 import java.util.UUID;
 
 public final class PlayerListEntry {
+    long directionFrame;
+    double directionSine;
+    double directionCosine;
     private final UUID playerId;
     private final int entityId;
     private final String name;

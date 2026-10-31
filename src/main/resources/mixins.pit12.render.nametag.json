@@ -10,7 +10,9 @@
   "client": [
     "RendererLivingEntityAccessor",
     "MinecraftMixin",
+    "RenderMixin",
     "VanillaRendererLivingEntityMixin",
+    "PatcherRendererLivingEntityMixin",
     "LunarEntityLivingBaseMixin"
   ]
 }

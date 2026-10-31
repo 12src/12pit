@@ -102,8 +102,8 @@ import pit12.feature.render.tooltip.TooltipConfig;
 import pit12.feature.render.tooltip.TooltipFeature;
 import pit12.platform.discord.DiscordIpcConnection;
 import pit12.platform.forge.ForgeCommandAdapter;
+import pit12.platform.lunar.LunarInput;
 import pit12.platform.lunar.LunarSupport;
-import pit12.platform.lunar.LunarTextureState;
 import pit12.platform.mixinconfig.MixinFailureWarning;
 import pit12.platform.oneconfig.OneConfigSupport;
 import pit12.runtime.arrow.ArrowTracker;
@@ -159,7 +159,9 @@ public final class ClientBootstrap {
         components.add(session);
         ArrowTracker arrows = new ArrowTracker(minecraft, session);
         components.add(arrows);
-        InputBlocker input = new InputBlocker(minecraft, client, (InputBlockBinding) minecraft);
+        InputBlocker input = new InputBlocker(minecraft, client, (InputBlockBinding) minecraft,
+                LunarSupport.isLoaded() ? () -> LunarInput.preservedSprintKey(minecraft)
+                        : () -> null);
         components.add(input);
         InputTicks inputTicks = new InputTicks(client, (InputTickBinding) minecraft);
         components.add(inputTicks);
@@ -181,8 +183,7 @@ public final class ClientBootstrap {
         SidebarCache sidebar = new SidebarCache(minecraft, session);
         components.add(sidebar);
         HudRegistry hudRegistry = new HudRegistry(client);
-        Supplier<TextureState> textureStates =
-                LunarSupport.isLoaded() ? LunarTextureState::new : OpenGlTextureState::new;
+        Supplier<TextureState> textureStates = OpenGlTextureState::new;
         // Feature providers
         // Category: Client
         Profiles profiles =
@@ -219,7 +220,8 @@ public final class ClientBootstrap {
         registerEventList(configs, hudRegistry, commands);
         registerGamma(configs, (GammaBinding) minecraft.entityRenderer);
         registerItemEsp(configs, session, textureStates.get());
-        registerNametag(minecraft, configs, session, playerEquipment, denickNames, nicks, timers);
+        registerNametag(minecraft, configs, session, playerEquipment, denickNames, nicks, timers,
+                textureStates.get());
         registerPlayerEsp(configs, session, presence, relations, textureStates.get());
         registerPlayerList(configs, playerNames, players, playerEquipment, pitContext, hudRegistry,
                 relations, presence, denickNames, nicks);
@@ -391,11 +393,11 @@ public final class ClientBootstrap {
 
     private void registerNametag(Minecraft minecraft, ConfigCatalog configs, ClientSession session,
             PlayerEquipmentAccess equipment, DenickNames denickNames, NickTracker nicks,
-            PlayerTimers timers) {
+            PlayerTimers timers, TextureState textures) {
         NametagConfig config = new NametagConfig();
         configs.register(config);
         components.add(new NametagFeature(minecraft, configs, config, session, equipment,
-                denickNames, nicks, timers, (NametagNamesBinding) minecraft));
+                denickNames, nicks, timers, (NametagNamesBinding) minecraft, textures));
     }
 
     private void registerPlayerEsp(ConfigCatalog configs, ClientSession session,

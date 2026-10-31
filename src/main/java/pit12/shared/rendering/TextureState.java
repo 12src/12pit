@@ -19,7 +19,7 @@
 package pit12.shared.rendering;
 
 public interface TextureState {
-    /** Call after glPushAttrib, then call end() after glPopAttrib. */
+    /** Saves the main and lightmap texture units, then disables their textures until end(). */
     void begin();
 
     void setEnabled(boolean enabled);

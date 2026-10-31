@@ -18,93 +18,19 @@
  */
 package pit12.shared.rendering;
 
-import java.nio.FloatBuffer;
 import net.minecraft.client.renderer.GlStateManager;
-import org.lwjgl.BufferUtils;
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL14;
 
-public final class UiRenderState {
-    // LWJGL 2 wants 16 slots here, even though a color only uses four.
-    private final FloatBuffer currentColor = BufferUtils.createFloatBuffer(16);
-    private final float[] color = new float[4];
-    private boolean active;
-    private boolean blendEnabled;
-    private boolean textureEnabled;
-    private boolean alphaEnabled;
-    private boolean lightingEnabled;
-    private boolean cullEnabled;
-    private int blendSourceRgb;
-    private int blendDestinationRgb;
-    private int blendSourceAlpha;
-    private int blendDestinationAlpha;
-    private int boundTexture;
-
+public final class UiRenderState extends RenderStateSnapshot {
     public void begin() {
-        if (active) {
-            throw new IllegalStateException("UI render state is already active");
-        }
-        active = true;
-        blendEnabled = GL11.glIsEnabled(GL11.GL_BLEND);
-        textureEnabled = GL11.glIsEnabled(GL11.GL_TEXTURE_2D);
-        alphaEnabled = GL11.glIsEnabled(GL11.GL_ALPHA_TEST);
-        lightingEnabled = GL11.glIsEnabled(GL11.GL_LIGHTING);
-        cullEnabled = GL11.glIsEnabled(GL11.GL_CULL_FACE);
-        blendSourceRgb = GL11.glGetInteger(GL14.GL_BLEND_SRC_RGB);
-        blendDestinationRgb = GL11.glGetInteger(GL14.GL_BLEND_DST_RGB);
-        blendSourceAlpha = GL11.glGetInteger(GL14.GL_BLEND_SRC_ALPHA);
-        blendDestinationAlpha = GL11.glGetInteger(GL14.GL_BLEND_DST_ALPHA);
-        boundTexture = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
-        currentColor.clear();
-        GL11.glGetFloat(GL11.GL_CURRENT_COLOR, currentColor);
-        for (int index = 0; index < color.length; index++) {
-            color[index] = currentColor.get(index);
-        }
+        beginUi();
         GlStateManager.pushMatrix();
-        GlStateManager.enableBlend();
-        GlStateManager.enableAlpha();
-        GlStateManager.disableLighting();
-        GlStateManager.disableCull();
-        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
     }
 
     public void end() {
-        if (!active) {
-            return;
-        }
         try {
-            if (blendEnabled) {
-                GlStateManager.enableBlend();
-            } else {
-                GlStateManager.disableBlend();
-            }
-            if (textureEnabled) {
-                GlStateManager.enableTexture2D();
-            } else {
-                GlStateManager.disableTexture2D();
-            }
-            if (alphaEnabled) {
-                GlStateManager.enableAlpha();
-            } else {
-                GlStateManager.disableAlpha();
-            }
-            if (lightingEnabled) {
-                GlStateManager.enableLighting();
-            } else {
-                GlStateManager.disableLighting();
-            }
-            if (cullEnabled) {
-                GlStateManager.enableCull();
-            } else {
-                GlStateManager.disableCull();
-            }
-            GlStateManager.tryBlendFuncSeparate(blendSourceRgb, blendDestinationRgb,
-                    blendSourceAlpha, blendDestinationAlpha);
-            GlStateManager.bindTexture(boundTexture);
-            GlStateManager.color(color[0], color[1], color[2], color[3]);
+            restore();
         } finally {
             GlStateManager.popMatrix();
-            active = false;
         }
     }
 }
