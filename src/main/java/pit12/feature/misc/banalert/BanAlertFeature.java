@@ -18,6 +18,8 @@
  */
 package pit12.feature.misc.banalert;
 
+import static net.minecraft.util.EnumChatFormatting.WHITE;
+
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashMap;
@@ -198,8 +200,10 @@ public final class BanAlertFeature implements ClientLifecycle, TabPresenceListen
             if (closest != null && player != null) {
                 String offset = (closestDifference < 0 ? "-" : "+")
                         + TimeUnit.NANOSECONDS.toMillis(Math.abs(closestDifference));
-                ChatFeedback.reply(player, Tone.WARNING, language.format(
-                        "Possibly banned player: {0} §e({1}ms)", "§f" + closest.name, offset));
+                ChatFeedback.reply(player, Tone.WARNING,
+                        language.format("Possibly banned player: {0} §e({1}ms)",
+                                Tone.WARNING.argument(WHITE, closest.name),
+                                Tone.WARNING.argument(WHITE, offset)));
             }
         }
         discardExpired(now);

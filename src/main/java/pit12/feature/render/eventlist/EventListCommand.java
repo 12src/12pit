@@ -18,6 +18,8 @@
  */
 package pit12.feature.render.eventlist;
 
+import static net.minecraft.util.EnumChatFormatting.AQUA;
+import static net.minecraft.util.EnumChatFormatting.WHITE;
 import static pit12.runtime.languages.Languages.source;
 import static pit12.shared.chat.ChatFeedback.reply;
 
@@ -61,18 +63,23 @@ final class EventListCommand {
         String name = String.join(" ", args);
         EventType type = EventType.fromName(name);
         if (type == null) {
-            reply(sender, Tone.ERROR, language.format("Unknown event: {0}", name));
+            reply(sender, Tone.ERROR,
+                    language.format("Unknown event: {0}", Tone.ERROR.argument(WHITE, name)));
             return;
         }
         List<PitEvent> matching = feature.events(type);
-        reply(sender, Tone.INFO, language.format("{0} events ({1}):",
-                language.translate(type.displayName), matching.size()));
+        reply(sender, Tone.INFO,
+                language.format("{0} events ({1}):",
+                        Tone.INFO.argument(WHITE, language.translate(type.displayName)),
+                        Tone.INFO.argument(AQUA, matching.size())));
         long now = System.currentTimeMillis();
         for (PitEvent event : matching) {
             reply(sender, Tone.INFO,
-                    "  " + language.translate(event.type.displayName) + " - "
-                            + TIME.format(Instant.ofEpochMilli(event.timestamp)) + " - "
-                            + countdown(event, now));
+                    "  " + Tone.INFO.argument(WHITE, language.translate(event.type.displayName))
+                            + " - "
+                            + Tone.INFO.argument(WHITE,
+                                    TIME.format(Instant.ofEpochMilli(event.timestamp)))
+                            + " - " + Tone.INFO.argument(WHITE, countdown(event, now)));
         }
         if (matching.isEmpty()) {
             reply(sender, Tone.INFO, language.translate("  No stored events"));

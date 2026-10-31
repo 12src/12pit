@@ -18,6 +18,8 @@
  */
 package pit12.feature.misc.chatmacro;
 
+import static net.minecraft.util.EnumChatFormatting.AQUA;
+import static net.minecraft.util.EnumChatFormatting.WHITE;
 import static pit12.runtime.languages.Languages.source;
 import static pit12.shared.chat.ChatFeedback.reply;
 
@@ -71,30 +73,34 @@ final class ChatMacroCommand {
     private void bind(ICommandSender sender, String[] args) {
         int key = key(args[0]);
         bindings.bind(key, String.join(" ", Arrays.asList(args).subList(1, args.length)));
-        reply(sender, Tone.SUCCESS,
-                language.format("Bound chat macro to {0}", Keyboard.getKeyName(key)));
+        reply(sender, Tone.SUCCESS, language.format("Bound chat macro to {0}",
+                Tone.SUCCESS.argument(AQUA, Keyboard.getKeyName(key))));
     }
 
     private void list(ICommandSender sender, String[] args) {
         bindings.requireReady();
         Map<Integer, String> entries = bindings.entries();
-        reply(sender, Tone.INFO, language.format("Chat macros: {0}", entries.size()));
+        reply(sender, Tone.INFO,
+                language.format("Chat macros: {0}", Tone.INFO.argument(AQUA, entries.size())));
         for (Map.Entry<Integer, String> entry : entries.entrySet())
-            reply(sender, Tone.INFO, Keyboard.getKeyName(entry.getKey()) + ": " + entry.getValue());
+            reply(sender, Tone.INFO, Tone.INFO.argument(AQUA, Keyboard.getKeyName(entry.getKey()))
+                    + ": " + Tone.INFO.argument(WHITE, entry.getValue()));
     }
 
     private void remove(ICommandSender sender, String[] args) {
         int key = key(args[0]);
         boolean removed = bindings.remove(key);
         reply(sender, removed ? Tone.SUCCESS : Tone.WARNING,
-                removed ? language.format("Removed chat macro for {0}", Keyboard.getKeyName(key))
+                removed ? language.format("Removed chat macro for {0}",
+                        Tone.SUCCESS.argument(AQUA, Keyboard.getKeyName(key)))
                         : language.translate("No matching chat macro"));
     }
 
     private int key(String name) {
         int key = Keyboard.getKeyIndex(name.toUpperCase(Locale.ROOT));
         if (key == Keyboard.KEY_NONE)
-            throw new IllegalArgumentException("Unknown keyboard key: " + name);
+            throw new IllegalArgumentException(
+                    "Unknown keyboard key: " + Tone.ERROR.argument(WHITE, name));
         return key;
     }
 

@@ -24,7 +24,9 @@ import java.util.UUID;
 public interface DenickNames {
     String listName(UUID playerId, String original);
 
-    /** Returns null when Denick is disabled or no real name is known. */
+    /**
+     * Returns the real name with prestige removed, or null when Denick is disabled or the name is unknown.
+     */
     String realDisplayName(UUID playerId);
 
     void addListener(Runnable listener);

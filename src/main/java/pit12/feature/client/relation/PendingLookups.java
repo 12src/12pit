@@ -18,6 +18,8 @@
  */
 package pit12.feature.client.relation;
 
+import static net.minecraft.util.EnumChatFormatting.WHITE;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
@@ -30,6 +32,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pit12.feature.client.relation.api.IdentityLookupState;
 import pit12.feature.client.relation.api.RelationEntry;
+import pit12.shared.chat.ChatFeedback.Tone;
 import pit12.shared.concurrent.ClientThread;
 
 final class PendingLookups {
@@ -104,15 +107,19 @@ final class PendingLookups {
         return IdentityLookupState.UNKNOWN;
     }
 
-    List<String> problems() {
+    List<String> problems(boolean chat) {
         client.check();
         List<String> problems = new ArrayList<>();
         for (Request request : requests.values()) {
+            if (request.state != IdentityLookupState.FAILED
+                    && request.state != IdentityLookupState.NOT_FOUND)
+                continue;
+            String name = chat ? Tone.WARNING.argument(WHITE, request.entry.name())
+                    : request.entry.name();
             if (request.state == IdentityLookupState.FAILED)
-                problems.add("UUID lookup failed for " + request.entry.name()
-                        + ". Add the player again to retry");
-            if (request.state == IdentityLookupState.NOT_FOUND)
-                problems.add("Player was not found: " + request.entry.name());
+                problems.add("UUID lookup failed for " + name + ". Add the player again to retry");
+            else
+                problems.add("Player was not found: " + name);
         }
         return problems;
     }

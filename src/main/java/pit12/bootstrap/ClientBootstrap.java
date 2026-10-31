@@ -286,7 +286,7 @@ public final class ClientBootstrap {
             InputTicks inputTicks) {
         SwapConfig config = new SwapConfig();
         configs.register(config);
-        SwapFeature swap = new SwapFeature(minecraft, client, configs, config, session, pitContext,
+        SwapFeature swap = new SwapFeature(minecraft, client, configs, config, session,
                 playerEquipment, relations, commands, path, binding, input, inputTicks, language);
         components.add(swap);
         return swap.bindings();

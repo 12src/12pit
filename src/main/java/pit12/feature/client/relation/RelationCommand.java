@@ -18,6 +18,10 @@
  */
 package pit12.feature.client.relation;
 
+import static net.minecraft.util.EnumChatFormatting.AQUA;
+import static net.minecraft.util.EnumChatFormatting.GREEN;
+import static net.minecraft.util.EnumChatFormatting.RED;
+import static net.minecraft.util.EnumChatFormatting.WHITE;
 import static pit12.runtime.languages.Languages.source;
 import static pit12.shared.chat.ChatFeedback.reply;
 
@@ -75,37 +79,32 @@ final class RelationCommand {
     }
 
     private void list(ICommandSender sender, String[] args) {
-        if (!ready(sender))
+        if (!feature.commandReady(sender))
             return;
         List<RelationEntry> entries = feature.entries(relation);
         reply(sender, Tone.INFO,
                 language.format("{0} ({1}):",
-                        relation == Relation.FRIEND ? language.translate("Friends")
-                                : language.translate("Enemies"),
-                        entries.size()));
+                        Tone.INFO.argument(relation == Relation.FRIEND ? GREEN : RED,
+                                relation == Relation.FRIEND ? language.translate("Friends")
+                                        : language.translate("Enemies")),
+                        Tone.INFO.argument(AQUA, entries.size())));
         for (RelationEntry entry : entries) {
             reply(sender, Tone.INFO,
-                    "  " + entry.name()
+                    "  " + Tone.INFO.argument(WHITE, entry.name())
                             + (entry.playerId() == null
                                     ? language.format(" (UUID {0})",
-                                            lookupStatus(feature.resolutionOf(entry.name())))
+                                            Tone.INFO.argument(WHITE,
+                                                    lookupStatus(
+                                                            feature.resolutionOf(entry.name()))))
                                     : ""));
         }
     }
 
     private void change(ICommandSender sender, String operation, String player) {
-        if (ready(sender)) {
+        if (feature.commandReady(sender)) {
             OperationResult<Void> result = feature.change(relation, operation, player);
             reply(sender, result.succeeded() ? Tone.SUCCESS : Tone.ERROR, result.message());
         }
-    }
-
-    private boolean ready(ICommandSender sender) {
-        String problem = feature.readinessProblem();
-        if (problem == null)
-            return true;
-        reply(sender, Tone.WARNING, problem);
-        return false;
     }
 
     private String lookupStatus(IdentityLookupState state) {
