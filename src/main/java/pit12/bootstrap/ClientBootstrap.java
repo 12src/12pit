@@ -81,6 +81,8 @@ import pit12.feature.render.eventlist.EventListFeature;
 import pit12.feature.render.gamma.GammaBinding;
 import pit12.feature.render.gamma.GammaConfig;
 import pit12.feature.render.gamma.GammaFeature;
+import pit12.feature.render.imagepopup.ImagePopupConfig;
+import pit12.feature.render.imagepopup.ImagePopupFeature;
 import pit12.feature.render.itemesp.ItemEspConfig;
 import pit12.feature.render.itemesp.ItemEspFeature;
 import pit12.feature.render.nametag.NametagConfig;
@@ -218,6 +220,7 @@ public final class ClientBootstrap {
         // Category: Render
         registerEventList(configs, hudRegistry, commands);
         registerGamma(configs, (GammaBinding) minecraft.entityRenderer);
+        registerImagePopup(minecraft, configs, client, session, inputTicks);
         registerItemEsp(configs, session, textureStates.get());
         registerNametag(minecraft, configs, session, playerEquipment, denickNames, nicks, timers);
         registerPlayerEsp(configs, session, presence, relations, textureStates.get());
@@ -380,6 +383,14 @@ public final class ClientBootstrap {
         GammaConfig config = new GammaConfig();
         configs.register(config);
         components.add(new GammaFeature(configs, config, binding));
+    }
+
+    private void registerImagePopup(Minecraft minecraft, ConfigCatalog configs, ClientThread client,
+            ClientSession session, InputTicks inputTicks) {
+        ImagePopupConfig config = new ImagePopupConfig();
+        configs.register(config);
+        components.add(new ImagePopupFeature(minecraft, client, configs, config, session,
+                inputTicks, new File(minecraft.mcDataDir, "config/12pit/splash").toPath()));
     }
 
     private void registerItemEsp(ConfigCatalog configs, ClientSession session,
