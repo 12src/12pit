@@ -35,21 +35,17 @@ import pit12.runtime.config.ConfigChangeSet;
 import pit12.runtime.item.PitEnchantment;
 import pit12.runtime.item.PitEnchantmentReader;
 import pit12.runtime.languages.Languages;
-import pit12.runtime.pit.PitContext;
-import pit12.runtime.pit.SpawnState;
 
 final class AutoSwapController {
     private final Minecraft minecraft;
     private final SwapConfig config;
     private final SwapController swaps;
-    private final PitContext pit;
     private final DarkTargets darkTargets;
     private final Languages language;
     private final EnumSet<PitEnchantment> used = EnumSet.noneOf(PitEnchantment.class);
     private EntityPlayerSP player;
     private long tick;
     private long retryAt;
-    private boolean inSpawn;
     private boolean poisoned;
     private boolean venomPending;
     private boolean automaticPending;
@@ -59,12 +55,11 @@ final class AutoSwapController {
     private ItemStack originalPants;
     private boolean canRestore;
 
-    AutoSwapController(Minecraft minecraft, SwapConfig config, SwapController swaps, PitContext pit,
+    AutoSwapController(Minecraft minecraft, SwapConfig config, SwapController swaps,
             DarkTargets darkTargets, Languages language) {
         this.minecraft = minecraft;
         this.config = config;
         this.swaps = swaps;
-        this.pit = pit;
         this.darkTargets = darkTargets;
         this.language = language;
     }
@@ -80,14 +75,9 @@ final class AutoSwapController {
         if (!isActive(player)) {
             if (automaticPending)
                 swaps.cancel();
-            reset();
+            clearSwapState();
             return;
         }
-        boolean nowInSpawn = pit.current().spawnStateAt(player.posX, player.posY,
-                player.posZ) == SpawnState.IN_SPAWN;
-        if (nowInSpawn && !inSpawn)
-            used.clear();
-        inSpawn = nowInSpawn;
         if (player.getHealth() <= 0) {
             if (automaticPending)
                 swaps.cancel();
@@ -143,7 +133,7 @@ final class AutoSwapController {
         if (changes.affects("swap", "auto_swap") && !config.autoSwap.get()) {
             if (automaticPending)
                 swaps.cancel();
-            reset();
+            clearSwapState();
         }
         if (changes.affects("swap", "use_dark") && !config.dark.get()) {
             darkTargets.reset();
@@ -249,8 +239,11 @@ final class AutoSwapController {
         return darkNeeded && available(PitEnchantment.Somber) ? PitEnchantment.Somber : null;
     }
 
-    private boolean available(PitEnchantment type) {
-        return PitEnchantmentReader.contains(leggings(), type) || findPants(type) >= 0;
+    boolean available(PitEnchantment type) {
+        EntityPlayerSP current = minecraft.thePlayer;
+        return current != null
+                && (PitEnchantmentReader.contains(current.inventory.armorInventory[1], type)
+                        || findPants(current, type) >= 0);
     }
 
     private void equip(PitEnchantment type) {
@@ -260,7 +253,7 @@ final class AutoSwapController {
             activePants = ItemIdentity.read(worn);
             return;
         }
-        int source = findPants(type);
+        int source = findPants(player, type);
         if (source < 0)
             return;
         SwapController.Target target = new SwapController.Target(source,
@@ -279,11 +272,11 @@ final class AutoSwapController {
         }
     }
 
-    private int findPants(PitEnchantment type) {
+    private int findPants(EntityPlayerSP current, PitEnchantment type) {
         int selected = -1;
         int mostLives = -1;
         for (int index = 0; index < 36; index++) {
-            ItemStack stack = player.inventory.getStackInSlot(index);
+            ItemStack stack = current.inventory.getStackInSlot(index);
             if (stack == null || stack.stackSize <= 0 || SwapBinding.armorTarget(stack) != 2
                     || !PitEnchantmentReader.contains(stack, type))
                 continue;
@@ -418,7 +411,6 @@ final class AutoSwapController {
             if (automaticPending)
                 swaps.cancel();
             reset();
-            player = current;
             return;
         }
         if (Math.abs(current.posX - x) > 1 || Math.abs(current.posY - y) > 1
@@ -462,15 +454,17 @@ final class AutoSwapController {
     }
 
     void reset() {
+        used.clear();
+        clearSwapState();
+    }
+
+    void clearSwapState() {
         darkTargets.reset();
-        player = null;
         retryAt = 0;
-        inSpawn = false;
         poisoned = false;
         venomPending = false;
         automaticPending = false;
         pending = null;
-        used.clear();
         clearActive();
     }
 

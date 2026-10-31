@@ -44,7 +44,6 @@ import pit12.runtime.input.InputTicks.Phase;
 import pit12.runtime.item.PitEnchantment;
 import pit12.runtime.item.PitEnchantmentReader;
 import pit12.runtime.languages.Languages;
-import pit12.runtime.pit.PitContext;
 import pit12.runtime.player.PlayerEquipmentAccess;
 import pit12.runtime.session.ClientSession;
 import pit12.shared.chat.ChatFeedback;
@@ -74,9 +73,9 @@ public final class SwapFeature implements ClientLifecycle, ConfigChangeListener,
     private boolean mouseGrabbed;
 
     public SwapFeature(Minecraft minecraft, ClientThread client, ConfigCatalog configs,
-            SwapConfig config, ClientSession session, PitContext pit,
-            PlayerEquipmentAccess equipment, RelationLookup relations, CommandRegistry commands,
-            Path path, SwapHooksBinding hookBinding, InputBlocker input, InputTicks inputTicks,
+            SwapConfig config, ClientSession session, PlayerEquipmentAccess equipment,
+            RelationLookup relations, CommandRegistry commands, Path path,
+            SwapHooksBinding hookBinding, InputBlocker input, InputTicks inputTicks,
             Languages language) {
         this.minecraft = minecraft;
         this.configs = configs;
@@ -91,8 +90,7 @@ public final class SwapFeature implements ClientLifecycle, ConfigChangeListener,
         controller = new SwapController(minecraft, session, config, bindings, this::report, input,
                 this, language);
         DarkTargets darkTargets = new DarkTargets(minecraft, config, equipment, relations);
-        automatic =
-                new AutoSwapController(minecraft, config, controller, pit, darkTargets, language);
+        automatic = new AutoSwapController(minecraft, config, controller, darkTargets, language);
         overlay = new SwapOverlay(minecraft, bindings);
         commands.register(
                 new SwapCommand(minecraft, bindings, config, automatic, language).definition(),
@@ -110,6 +108,7 @@ public final class SwapFeature implements ClientLifecycle, ConfigChangeListener,
             return;
         started = true;
         configs.addListener(this);
+        session.addListener(sessionListener);
         bindings.start();
         updateListening();
         commands.setActive(config, true);
@@ -124,6 +123,7 @@ public final class SwapFeature implements ClientLifecycle, ConfigChangeListener,
         commands.setActive(config, false);
         controller.finish(false);
         configs.removeListener(this);
+        session.removeListener(sessionListener);
         updateListening();
         bindings.stop();
     }
@@ -133,7 +133,7 @@ public final class SwapFeature implements ClientLifecycle, ConfigChangeListener,
         if (changes.affects("swap", "enabled")) {
             if (!config.enabled()) {
                 controller.cancel();
-                automatic.reset();
+                automatic.clearSwapState();
                 overlay.clear();
             }
             updateListening();
@@ -149,18 +149,16 @@ public final class SwapFeature implements ClientLifecycle, ConfigChangeListener,
             return;
         listening = enabled;
         if (enabled) {
-            session.addListener(sessionListener);
             MinecraftForge.EVENT_BUS.register(this);
             hookBinding.pit12$bindSwapHooks(this);
             input.addHandler(this);
             inputTicks.addListener(this);
         } else {
-            session.removeListener(sessionListener);
             input.removeHandler(this);
             inputTicks.removeListener(this);
             hookBinding.pit12$bindSwapHooks(null);
             MinecraftForge.EVENT_BUS.unregister(this);
-            automatic.reset();
+            automatic.clearSwapState();
             updateMouseGrab();
             overlay.clear();
             rightClickHeld = false;

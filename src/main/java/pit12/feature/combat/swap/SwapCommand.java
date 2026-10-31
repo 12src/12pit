@@ -22,6 +22,7 @@ import static net.minecraft.util.EnumChatFormatting.AQUA;
 import static net.minecraft.util.EnumChatFormatting.GOLD;
 import static net.minecraft.util.EnumChatFormatting.GRAY;
 import static net.minecraft.util.EnumChatFormatting.GREEN;
+import static net.minecraft.util.EnumChatFormatting.RED;
 import static net.minecraft.util.EnumChatFormatting.WHITE;
 import static net.minecraft.util.EnumChatFormatting.YELLOW;
 import static pit12.runtime.languages.Languages.source;
@@ -147,11 +148,8 @@ final class SwapCommand {
                 state(PitEnchantment.Escape_Pod, config.escapePod.get())));
         reply(sender, Tone.INFO, language.format("Phoenix: {0}",
                 state(PitEnchantment.Phoenix, config.phoenix.get())));
-        reply(sender, Tone.INFO, language.format("Dark: {0}",
-                !config.dark.get() ? Tone.INFO.argument(GRAY, language.translate("disabled"))
-                        : automatic.active(PitEnchantment.Somber)
-                                ? Tone.INFO.argument(GREEN, language.translate("equipped"))
-                                : Tone.INFO.argument(YELLOW, language.translate("waiting"))));
+        reply(sender, Tone.INFO,
+                language.format("Dark: {0}", state(PitEnchantment.Somber, config.dark.get())));
     }
 
     private void requirePlayer() {
@@ -164,9 +162,13 @@ final class SwapCommand {
             return Tone.INFO.argument(GRAY, language.translate("disabled"));
         if (automatic.used(type))
             return Tone.INFO.argument(GOLD, language.translate("used"));
+        if (!automatic.available(type))
+            return Tone.INFO.argument(RED, language.translate("unavailable"));
         if (automatic.active(type))
             return Tone.INFO.argument(GREEN, language.translate("equipped"));
-        return Tone.INFO.argument(AQUA, language.translate("unused"));
+        return type == PitEnchantment.Somber
+                ? Tone.INFO.argument(YELLOW, language.translate("waiting"))
+                : Tone.INFO.argument(AQUA, language.translate("unused"));
     }
 
     private int key(String name) {
