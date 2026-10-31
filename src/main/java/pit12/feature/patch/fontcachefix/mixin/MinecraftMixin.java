@@ -27,16 +27,32 @@ import pit12.feature.patch.fontcachefix.FontCacheFixConfig;
 @Mixin(Minecraft.class)
 public abstract class MinecraftMixin implements FontCacheFixBinding {
     @Unique
-    private FontCacheFixConfig pit12$fontCacheFixConfig;
+    private volatile FontCacheFixConfig pit12$fontCacheFixConfig;
+    @Unique
+    private volatile boolean pit12$fontCacheFixCached = true;
 
     @Override
     public void pit12$bindFontCacheFixConfig(FontCacheFixConfig config) {
         pit12$fontCacheFixConfig = config;
+        if (config == null) {
+            pit12$fontCacheFixCached = true;
+        } else if (((Minecraft) (Object) this).isCallingFromMinecraftThread()) {
+            pit12$fontCacheFixCached = config.enabled();
+        }
     }
 
     @Override
     public boolean pit12$fontCacheFixEnabled() {
-        // Fonts render before the config is bound.
-        return pit12$fontCacheFixConfig == null || pit12$fontCacheFixConfig.enabled();
+        FontCacheFixConfig config = pit12$fontCacheFixConfig;
+        if (config == null) {
+            // Fonts render before the config is bound.
+            return true;
+        }
+        if (!((Minecraft) (Object) this).isCallingFromMinecraftThread()) {
+            // The splash screen and resource loaders ask for font widths off the client thread.
+            return pit12$fontCacheFixCached;
+        }
+        pit12$fontCacheFixCached = config.enabled();
+        return pit12$fontCacheFixCached;
     }
 }
