@@ -78,6 +78,9 @@ import pit12.feature.patch.scoreboardfix.ScoreboardFixConfig;
 import pit12.feature.patch.scoreboardfix.ScoreboardFixFeature;
 import pit12.feature.render.eventlist.EventListConfig;
 import pit12.feature.render.eventlist.EventListFeature;
+import pit12.feature.render.freecam.FreeCameraBinding;
+import pit12.feature.render.freecam.FreeCameraConfig;
+import pit12.feature.render.freecam.FreeCameraFeature;
 import pit12.feature.render.gamma.GammaBinding;
 import pit12.feature.render.gamma.GammaConfig;
 import pit12.feature.render.gamma.GammaFeature;
@@ -217,6 +220,8 @@ public final class ClientBootstrap {
         registerSmartBlock(minecraft, configs, session, (SmartBlockBinding) minecraft);
         // Category: Render
         registerEventList(configs, hudRegistry, commands);
+        registerFreeCamera(minecraft, configs, session, input, inputTicks,
+                (FreeCameraBinding) minecraft);
         registerGamma(configs, (GammaBinding) minecraft.entityRenderer);
         registerItemEsp(configs, session, textureStates.get());
         registerNametag(minecraft, configs, session, playerEquipment, denickNames, nicks, timers);
@@ -374,6 +379,15 @@ public final class ClientBootstrap {
         EventListConfig config = new EventListConfig();
         configs.register(config);
         components.add(new EventListFeature(configs, config, hudRegistry, commands, language));
+    }
+
+    private void registerFreeCamera(Minecraft minecraft, ConfigCatalog configs,
+            ClientSession session, InputBlocker input, InputTicks inputTicks,
+            FreeCameraBinding binding) {
+        FreeCameraConfig config = new FreeCameraConfig();
+        configs.register(config);
+        components.add(new FreeCameraFeature(minecraft, configs, config, session, input, inputTicks,
+                binding));
     }
 
     private void registerGamma(ConfigCatalog configs, GammaBinding binding) {
