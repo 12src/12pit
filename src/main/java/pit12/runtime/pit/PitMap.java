@@ -65,12 +65,19 @@ public enum PitMap {
         return mid;
     }
 
+    public boolean isNearMid(double x, double z) {
+        return this != UNKNOWN && withinSpawnRadius(x, z);
+    }
+
     SpawnState spawnStateAt(double x, double y, double z) {
         if (this == UNKNOWN) {
             return SpawnState.UNKNOWN;
         }
-        return y + 1 >= spawnY && Math.abs(x) <= spawnRadius && Math.abs(z) <= spawnRadius
-                ? SpawnState.IN_SPAWN
+        return y + 1 >= spawnY && withinSpawnRadius(x, z) ? SpawnState.IN_SPAWN
                 : SpawnState.OUTSIDE_SPAWN;
+    }
+
+    private boolean withinSpawnRadius(double x, double z) {
+        return Math.abs(x) <= spawnRadius && Math.abs(z) <= spawnRadius;
     }
 }
