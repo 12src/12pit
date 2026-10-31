@@ -1,0 +1,67 @@
+/*
+ * This file is part of 12pit.
+ *
+ * Copyright (C) 2026 The 12pit Authors and contributors <https://github.com/12src/12pit>
+ *
+ * 12pit is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * 12pit is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
+ */
+package pit12.feature.render.freecam.mixin;
+
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.util.MovementInput;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import pit12.feature.render.freecam.FreeCameraBinding;
+import pit12.feature.render.freecam.FreeCameraFeature;
+
+@Mixin(EntityPlayerSP.class)
+public abstract class EntityPlayerSPMixin {
+    @Unique
+    private MovementInput pit12$frozenInput;
+    @Unique
+    private MovementInput pit12$realInput;
+
+    // Swap the input object for the duration of the player tick, the same way the vanilla input
+    // would be overwritten by updatePlayerMoveState() later in the tick.
+    @Inject(method = "onUpdate", at = @At("HEAD"))
+    private void pit12$freezeMovement(CallbackInfo callback) {
+        FreeCameraFeature feature = pit12$freeCamera();
+        if (feature != null && feature.blocksMovement() && pit12$realInput == null) {
+            if (pit12$frozenInput == null) {
+                pit12$frozenInput = new MovementInput();
+            }
+            EntityPlayerSP player = (EntityPlayerSP) (Object) this;
+            pit12$realInput = player.movementInput;
+            player.movementInput = pit12$frozenInput;
+        }
+    }
+
+    @Inject(method = "onUpdate", at = @At("RETURN"))
+    private void pit12$restoreMovement(CallbackInfo callback) {
+        if (pit12$realInput != null) {
+            ((EntityPlayerSP) (Object) this).movementInput = pit12$realInput;
+            pit12$realInput = null;
+        }
+    }
+
+    @Unique
+    private static FreeCameraFeature pit12$freeCamera() {
+        FreeCameraBinding binding = (FreeCameraBinding) Minecraft.getMinecraft();
+        return binding.pit12$freeCamera();
+    }
+}
