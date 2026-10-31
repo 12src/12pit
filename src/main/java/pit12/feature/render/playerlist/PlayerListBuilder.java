@@ -24,7 +24,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.regex.Pattern;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.network.NetworkPlayerInfo;
@@ -44,7 +43,6 @@ import pit12.runtime.player.PlayerEquipmentSnapshot;
 import pit12.runtime.player.PlayerNameCache;
 
 final class PlayerListBuilder {
-    private static final Pattern PRESTIGE_PREFIX = Pattern.compile("\\[(?:§.|[IVXLCDM])+-");
     private final Minecraft minecraft;
     private final PlayerEquipmentAccess equipment;
     private final PlayerEntityTracker players;
@@ -131,7 +129,7 @@ final class PlayerListBuilder {
             if (previous == null) {
                 String realName = realNames ? denickNames.realDisplayName(playerId) : null;
                 if (realName != null) {
-                    name = PRESTIGE_PREFIX.matcher(realName).replaceFirst("[");
+                    name = realName;
                 } else if (config.nickMarker() && nicked) {
                     name = name.trim() + " §e§lN";
                 }
