@@ -39,6 +39,8 @@ public final class NametagConfig extends FeatureConfig {
     private final BooleanSetting showGem;
     private final BooleanSetting showHeldItem;
     private final BooleanSetting showLeggings;
+    private final BooleanSetting enhancedVisibility;
+    private final IntegerSetting scale;
     private final IntegerSetting upwardOffset;
 
     public NametagConfig() {
@@ -59,6 +61,9 @@ public final class NametagConfig extends FeatureConfig {
                 source("Shows the held item's Pit enchantments."), true);
         showLeggings = booleanSetting("show_leggings", source("Show leggings enchantments"),
                 source("Shows the leggings' Pit enchantments."), true);
+        upwardOffset = integerSliderSetting("enchantment_offset", source("Upward offset"),
+                source("Moves enchantments above the player name and scales with the nametag."), 30,
+                20, 40, 1);
         subsubcategory("timers", source("Timers"));
         pinTimer = booleanSetting("pin_timer", source("Show Pin timer"),
                 source("Shows Pin timers after player names when enabled in Timers HUD."), true);
@@ -70,9 +75,12 @@ public final class NametagConfig extends FeatureConfig {
         telebowTimer = booleanSetting("telebow_timer", source("Show Telebow cooldown"),
                 source("Shows Telebow cooldowns after player names when enabled in Timers HUD."),
                 true);
-        subsubcategory("display", source("Display"));
-        upwardOffset = integerSliderSetting("upward_offset", source("Upward offset (1/100 block)"),
-                source("Moves enchantments above the nametag."), 36, 20, 40, 1);
+        subsubcategory("visibility", source("Visibility"));
+        enhancedVisibility = booleanSetting("enhanced_visibility", source("Enhanced visibility"),
+                source("Keeps nametags readable at a distance and visible through blocks."), true);
+        scale = integerSliderSetting("scale", source("Scale (%)"),
+                source("Minimum nametag size when Enhanced visibility is enabled."), 50, 25, 200,
+                5);
     }
 
     public boolean nickMarker() {
@@ -107,5 +115,13 @@ public final class NametagConfig extends FeatureConfig {
 
     public int upwardOffset() {
         return upwardOffset.get();
+    }
+
+    public boolean enhancedVisibility() {
+        return enhancedVisibility.get();
+    }
+
+    public int scale() {
+        return scale.get();
     }
 }

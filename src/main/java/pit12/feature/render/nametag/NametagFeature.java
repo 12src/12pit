@@ -27,6 +27,7 @@ import net.minecraft.client.renderer.entity.RendererLivingEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.client.event.RenderLivingEvent;
+import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -45,6 +46,7 @@ import pit12.runtime.player.PlayerEquipmentListener;
 import pit12.runtime.player.PlayerEquipmentSnapshot;
 import pit12.runtime.session.ClientSession;
 import pit12.shared.lifecycle.ClientLifecycle;
+import pit12.shared.rendering.TextureState;
 
 public final class NametagFeature
         implements ClientLifecycle, ConfigChangeListener, PlayerEquipmentListener {
@@ -58,17 +60,20 @@ public final class NametagFeature
     private final PlayerTimers timers;
     private final NametagNamesBinding binding;
     private final NametagRenderer renderer = new NametagRenderer();
+    private final NametagOverlayRenderer overlay;
     private final Map<UUID, NametagText> texts = new HashMap<>();
     private final Runnable sessionChanged = this::rebuildTexts;
     private boolean unicodeFont;
     private boolean fontDirty;
     private boolean started;
     private boolean active;
+    private boolean enhancedVisibility;
     private int timerTypes;
 
     public NametagFeature(Minecraft minecraft, ConfigCatalog configs, NametagConfig config,
             ClientSession session, PlayerEquipmentAccess equipment, DenickNames denickNames,
-            NickTracker nicks, PlayerTimers timers, NametagNamesBinding binding) {
+            NickTracker nicks, PlayerTimers timers, NametagNamesBinding binding,
+            TextureState textures) {
         this.minecraft = minecraft;
         this.configs = configs;
         this.config = config;
@@ -78,6 +83,7 @@ public final class NametagFeature
         this.nicks = nicks;
         this.timers = timers;
         this.binding = binding;
+        overlay = new NametagOverlayRenderer(textures);
     }
 
     @Override
@@ -104,12 +110,9 @@ public final class NametagFeature
 
     private void updateActivation() {
         boolean enabled = started && config.enabled();
+        enhancedVisibility = enabled && config.enhancedVisibility();
         timerTypes = enabled ? config.timerTypes() : 0;
-        binding.pit12$bindNametagNames(
-                enabled && (config.nickMarker() || config.realNames() || timerTypes != 0)
-                        ? this::nameSuffix
-                        : null);
-        if (enabled && (config.showHeldItem() || config.showLeggings())) {
+        if (enabled && (enhancedVisibility || config.showHeldItem() || config.showLeggings())) {
             if (!active) {
                 active = true;
                 try {
@@ -125,6 +128,11 @@ public final class NametagFeature
         } else {
             deactivate();
         }
+        binding.pit12$bindNametagNames(
+                enabled && (config.nickMarker() || config.realNames() || timerTypes != 0)
+                        ? this::nameSuffix
+                        : null,
+                enhancedVisibility);
     }
 
     private void deactivate() {
@@ -153,19 +161,20 @@ public final class NametagFeature
 
     private void updateText(UUID playerId) {
         PlayerEquipmentSnapshot snapshot = equipment.loadedEquipment(playerId);
-        if (snapshot == null) {
+        if (snapshot == null && !enhancedVisibility) {
             texts.remove(playerId);
             return;
         }
-        String heldItem = config.showHeldItem() && snapshot.heldItemKnown() ? PitEnchantmentFormat
-                .format(snapshot.heldEnchantments(), config.enchantmentFormat(), config.showGem())
+        String heldItem = snapshot != null && config.showHeldItem() && snapshot.heldItemKnown()
+                ? PitEnchantmentFormat.format(snapshot.heldEnchantments(),
+                        config.enchantmentFormat(), config.showGem())
                 : null;
         String leggings =
-                config.showLeggings() && snapshot.leggingsKnown()
+                snapshot != null && config.showLeggings() && snapshot.leggingsKnown()
                         ? PitEnchantmentFormat.format(snapshot.leggingsEnchantments(),
                                 config.enchantmentFormat(), config.showGem())
                         : null;
-        if (heldItem == null && leggings == null) {
+        if (heldItem == null && leggings == null && !enhancedVisibility) {
             texts.remove(playerId);
         } else {
             texts.put(playerId, new NametagText(heldItem, leggings, minecraft.fontRendererObj));
@@ -199,6 +208,7 @@ public final class NametagFeature
         }
         if (changes.affects("nametag", "enabled") || changes.affects("nametag", "nick_marker")
                 || changes.affects("nametag", "real_names")
+                || changes.affects("nametag", "enhanced_visibility")
                 || changes.affects("nametag", "show_held_item")
                 || changes.affects("nametag", "show_leggings")
                 || changes.affects("nametag", "pin_timer")
@@ -208,6 +218,7 @@ public final class NametagFeature
             updateActivation();
         }
         if (active && (changes.affects("nametag", "enchantment_format")
+                || changes.affects("nametag", "enhanced_visibility")
                 || changes.affects("nametag", "show_gem")
                 || changes.affects("nametag", "show_held_item")
                 || changes.affects("nametag", "show_leggings"))) {
@@ -248,8 +259,8 @@ public final class NametagFeature
     // Lunar replaces name rendering and skips Forge's Specials events.
     @SubscribeEvent
     public void onRenderName(RenderLivingEvent.Post<?> event) {
-        if (!active || !(event.entity instanceof EntityPlayer) || minecraft.thePlayer == null
-                || event.entity == minecraft.thePlayer
+        if (!active || enhancedVisibility || !(event.entity instanceof EntityPlayer)
+                || minecraft.thePlayer == null || event.entity == minecraft.thePlayer
                 || event.entity.worldObj != minecraft.theWorld
                 || session.world() != minecraft.theWorld || !Minecraft.isGuiEnabled()) {
             return;
@@ -271,6 +282,16 @@ public final class NametagFeature
         if (text != null && ((NametagVisibility) event.renderer).pit12$canRenderName(player)) {
             renderer.render(minecraft, player, text, event.x, event.y, event.z, distanceSquared,
                     config.upwardOffset());
+        }
+    }
+
+    @SubscribeEvent
+    public void onRenderWorld(RenderWorldLastEvent event) {
+        WorldClient world = session.world();
+        if (active && enhancedVisibility && world != null && world == minecraft.theWorld
+                && minecraft.thePlayer != null && Minecraft.isGuiEnabled()) {
+            overlay.render(minecraft, world, texts, binding.pit12$nametagNames(),
+                    config.upwardOffset(), config.scale() * 0.01F, event.partialTicks);
         }
     }
 }

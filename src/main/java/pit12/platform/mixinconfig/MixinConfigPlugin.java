@@ -54,6 +54,11 @@ public final class MixinConfigPlugin implements IMixinConfigPlugin, IMixinErrorH
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
         if (mixinClassName
+                .equals("pit12.feature.render.nametag.mixin.PatcherRendererLivingEntityMixin")) {
+            return !lunar && Launch.classLoader
+                    .getResource("club/sk1er/patcher/config/PatcherConfig.class") != null;
+        }
+        if (mixinClassName
                 .equals("pit12.feature.render.nametag.mixin.VanillaRendererLivingEntityMixin")) {
             return !lunar;
         }

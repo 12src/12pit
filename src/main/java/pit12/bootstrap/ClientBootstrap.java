@@ -216,7 +216,8 @@ public final class ClientBootstrap {
         registerEventList(configs, hudRegistry, commands);
         registerGamma(configs, (GammaBinding) minecraft.entityRenderer);
         registerItemEsp(configs, session, textureStates.get());
-        registerNametag(minecraft, configs, session, playerEquipment, denickNames, nicks, timers);
+        registerNametag(minecraft, configs, session, playerEquipment, denickNames, nicks, timers,
+                textureStates.get());
         registerPlayerEsp(configs, session, presence, relations, textureStates.get());
         registerPlayerList(configs, playerNames, players, playerEquipment, pitContext, hudRegistry,
                 relations, presence, denickNames, nicks);
@@ -388,11 +389,11 @@ public final class ClientBootstrap {
 
     private void registerNametag(Minecraft minecraft, ConfigCatalog configs, ClientSession session,
             PlayerEquipmentAccess equipment, DenickNames denickNames, NickTracker nicks,
-            PlayerTimers timers) {
+            PlayerTimers timers, TextureState textures) {
         NametagConfig config = new NametagConfig();
         configs.register(config);
         components.add(new NametagFeature(minecraft, configs, config, session, equipment,
-                denickNames, nicks, timers, (NametagNamesBinding) minecraft));
+                denickNames, nicks, timers, (NametagNamesBinding) minecraft, textures));
     }
 
     private void registerPlayerEsp(ConfigCatalog configs, ClientSession session,

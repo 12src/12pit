@@ -30,6 +30,9 @@ import org.lwjgl.opengl.GL11;
 import pit12.shared.rendering.RenderStateSnapshot;
 
 final class NametagRenderer {
+    static final float WORLD_SCALE = 0.02666667F;
+    // Profiles store offsets in hundredths of a block at the original nametag scale.
+    static final float OFFSET_SCALE = 0.01F / WORLD_SCALE;
     private final RenderStateSnapshot state = new RenderStateSnapshot();
 
     void render(Minecraft minecraft, EntityPlayer player, NametagText text, double x, double y,
@@ -41,18 +44,19 @@ final class NametagRenderer {
         if (!sneaking && distanceSquared < 100.0D
                 && player.getWorldScoreboard().getObjectiveInDisplaySlot(2) != null) {
             // A below-name score raises the player's name by one line.
-            nameY += font.FONT_HEIGHT * 1.15F * 0.02666667F;
+            nameY += font.FONT_HEIGHT * 1.15F * WORLD_SCALE;
         }
         int heldItemY = text.leggings == null ? 0 : -font.FONT_HEIGHT - 2;
         state.capture();
         GlStateManager.pushMatrix();
         try {
-            GlStateManager.translate(x, nameY + upwardOffset * 0.01D, z);
+            GlStateManager.translate(x, nameY, z);
             GlStateManager.rotate(-renderManager.playerViewY, 0.0F, 1.0F, 0.0F);
             GlStateManager
                     .rotate(minecraft.gameSettings.thirdPersonView == 2 ? -renderManager.playerViewX
                             : renderManager.playerViewX, 1.0F, 0.0F, 0.0F);
-            GlStateManager.scale(-0.02666667F, -0.02666667F, 0.02666667F);
+            GlStateManager.scale(-WORLD_SCALE, -WORLD_SCALE, WORLD_SCALE);
+            GlStateManager.translate(0.0F, -upwardOffset * OFFSET_SCALE, 0.0F);
             GlStateManager.disableLighting();
             GlStateManager.enableBlend();
             GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA,
