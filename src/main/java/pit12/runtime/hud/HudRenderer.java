@@ -22,11 +22,12 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.GlStateManager;
 import pit12.runtime.config.HudConfig;
-import pit12.shared.rendering.UiRenderState;
+import pit12.shared.rendering.RenderStateSnapshot;
 import pit12.shared.rendering.UiRenderer;
 
 public final class HudRenderer extends UiRenderer {
-    private final UiRenderState state = new UiRenderState();
+    private final RenderStateSnapshot state = new RenderStateSnapshot();
+    private boolean batched;
 
     public HudRenderer() {
         super(Minecraft.getMinecraft());
@@ -56,8 +57,24 @@ public final class HudRenderer extends UiRenderer {
         return new HudBounds(x, y, width, height, scale);
     }
 
+    public void beginBatch() {
+        state.beginUi();
+        batched = true;
+    }
+
+    public void endBatch() {
+        try {
+            state.restore();
+        } finally {
+            batched = false;
+        }
+    }
+
     public void render(HudElement element, HudBounds bounds, float partialTicks, boolean editing) {
-        state.begin();
+        if (!batched) {
+            state.beginUi();
+        }
+        GlStateManager.pushMatrix();
         boolean unicode = fontRenderer.getUnicodeFlag();
         fontRenderer.setUnicodeFlag(element.config().font().get() == 1);
         try {
@@ -66,7 +83,10 @@ public final class HudRenderer extends UiRenderer {
             element.render(partialTicks, editing);
         } finally {
             fontRenderer.setUnicodeFlag(unicode);
-            state.end();
+            GlStateManager.popMatrix();
+            if (!batched) {
+                state.restore();
+            }
         }
     }
 }

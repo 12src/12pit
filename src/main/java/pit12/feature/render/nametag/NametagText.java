@@ -26,11 +26,32 @@ final class NametagText {
     final String leggings;
     final int heldItemWidth;
     final int leggingsWidth;
+    String name;
+    int nameWidth;
+    String score;
+    int scoreWidth;
+    float x;
+    float y;
+    float scale;
 
     NametagText(String heldItem, String leggings, FontRenderer font) {
         this.heldItem = heldItem;
         this.leggings = leggings;
         heldItemWidth = heldItem == null ? 0 : FontWidths.measure(font, heldItem);
         leggingsWidth = leggings == null ? 0 : FontWidths.measure(font, leggings);
+    }
+
+    void updateName(String name, String score, FontRenderer font) {
+        if (!name.equals(this.name)) {
+            this.name = name;
+            nameWidth = FontWidths.measure(font, name);
+        }
+        if (score == null) {
+            this.score = null;
+            scoreWidth = 0;
+        } else if (!score.equals(this.score)) {
+            this.score = score;
+            scoreWidth = FontWidths.measure(font, score);
+        }
     }
 }

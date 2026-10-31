@@ -20,18 +20,14 @@ package pit12.shared.rendering;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.gui.Gui;
 import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.util.ResourceLocation;
 import org.lwjgl.opengl.GL11;
 
 public class UiRenderer {
-    private final Minecraft minecraft;
     protected final FontRenderer fontRenderer;
     private float pixelScale = Float.NaN;
 
     public UiRenderer(Minecraft minecraft) {
-        this.minecraft = minecraft;
         fontRenderer = minecraft.fontRendererObj;
     }
 
@@ -64,35 +60,6 @@ public class UiRenderer {
                 GlStateManager.enableTexture2D();
                 GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
             }
-        }
-    }
-
-    public void texture(ResourceLocation texture, int x, int y, int width, int height, int color,
-            float rotationDegrees) {
-        if (width <= 0 || height <= 0 || Float.isNaN(pixelScale)) {
-            return;
-        }
-        int pixelX = Math.round(x * pixelScale);
-        int pixelY = Math.round(y * pixelScale);
-        int pixelWidth = Math.max(1, Math.round(width * pixelScale));
-        int pixelHeight = Math.max(1, Math.round(height * pixelScale));
-        float inverseScale = 1.0F / pixelScale;
-        GlStateManager.pushMatrix();
-        GlStateManager.scale(inverseScale, inverseScale, 1.0F);
-        GlStateManager.translate(pixelX + pixelWidth / 2.0F, pixelY + pixelHeight / 2.0F, 0.0F);
-        GlStateManager.rotate(rotationDegrees, 0.0F, 0.0F, 1.0F);
-        try {
-            GlStateManager.enableTexture2D();
-            GlStateManager.enableBlend();
-            GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1,
-                    0);
-            minecraft.getTextureManager().bindTexture(texture);
-            color(color);
-            Gui.drawModalRectWithCustomSizedTexture(-pixelWidth / 2, -pixelHeight / 2, 0.0F, 0.0F,
-                    pixelWidth, pixelHeight, pixelWidth, pixelHeight);
-        } finally {
-            color(0xFFFFFFFF);
-            GlStateManager.popMatrix();
         }
     }
 

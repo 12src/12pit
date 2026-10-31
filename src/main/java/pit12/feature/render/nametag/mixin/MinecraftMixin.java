@@ -29,14 +29,22 @@ import pit12.feature.render.nametag.NametagNamesBinding;
 public abstract class MinecraftMixin implements NametagNamesBinding {
     @Unique
     private Function<UUID, String> pit12$nametagSuffix;
+    @Unique
+    private boolean pit12$enhancedNametags;
 
     @Override
-    public void pit12$bindNametagNames(Function<UUID, String> suffix) {
+    public void pit12$bindNametagNames(Function<UUID, String> suffix, boolean enhancedVisibility) {
         pit12$nametagSuffix = suffix;
+        pit12$enhancedNametags = enhancedVisibility;
     }
 
     @Override
     public Function<UUID, String> pit12$nametagNames() {
         return pit12$nametagSuffix;
+    }
+
+    @Override
+    public boolean pit12$enhancedNametags() {
+        return pit12$enhancedNametags;
     }
 }

@@ -317,12 +317,17 @@ public final class PlayerListFeature implements ClientLifecycle, PlayerEquipment
             return;
         }
         ScaledResolution resolution = event.resolution;
-        for (PlayerListHud hud : activeHuds) {
-            HudBounds bounds = HudRenderer.layout(hud, resolution.getScaledWidth(),
-                    resolution.getScaledHeight(), resolution.getScaleFactor(), false);
-            if (hud.width() > 0) {
-                hudRenderer.render(hud, bounds, event.partialTicks, false);
+        hudRenderer.beginBatch();
+        try {
+            for (PlayerListHud hud : activeHuds) {
+                HudBounds bounds = HudRenderer.layout(hud, resolution.getScaledWidth(),
+                        resolution.getScaledHeight(), resolution.getScaleFactor(), false);
+                if (hud.width() > 0) {
+                    hudRenderer.render(hud, bounds, event.partialTicks, false);
+                }
             }
+        } finally {
+            hudRenderer.endBatch();
         }
     }
 

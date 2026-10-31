@@ -542,14 +542,19 @@ public final class TimersFeature
                 || minecraft.gameSettings.hideGUI)
             return;
         ScaledResolution resolution = event.resolution;
-        for (TimersHud hud : activeHuds) {
-            if (hud.rows.isEmpty()) {
-                continue;
+        renderer.beginBatch();
+        try {
+            for (TimersHud hud : activeHuds) {
+                if (hud.rows.isEmpty()) {
+                    continue;
+                }
+                HudBounds bounds = HudRenderer.layout(hud, resolution.getScaledWidth(),
+                        resolution.getScaledHeight(), resolution.getScaleFactor(), false);
+                hud.visibleHeight = (resolution.getScaledHeight() - bounds.y) / bounds.scale;
+                renderer.render(hud, bounds, event.partialTicks, false);
             }
-            HudBounds bounds = HudRenderer.layout(hud, resolution.getScaledWidth(),
-                    resolution.getScaledHeight(), resolution.getScaleFactor(), false);
-            hud.visibleHeight = (resolution.getScaledHeight() - bounds.y) / bounds.scale;
-            renderer.render(hud, bounds, event.partialTicks, false);
+        } finally {
+            renderer.endBatch();
         }
     }
 

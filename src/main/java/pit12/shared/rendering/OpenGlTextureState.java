@@ -18,29 +18,52 @@
  */
 package pit12.shared.rendering;
 
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
-import org.lwjgl.opengl.GL11;
 
 public final class OpenGlTextureState implements TextureState {
+    private int activeTexture;
+    private int boundTexture;
+    private boolean textureEnabled;
+    private boolean lightmapEnabled;
+
     @Override
     public void begin() {
-        OpenGlHelper.setActiveTexture(OpenGlHelper.lightmapTexUnit);
-        GL11.glDisable(GL11.GL_TEXTURE_2D);
-        OpenGlHelper.setActiveTexture(OpenGlHelper.defaultTexUnit);
-        GL11.glDisable(GL11.GL_TEXTURE_2D);
+        activeTexture = OpenGlHelper.defaultTexUnit + GlStateManager.activeTextureUnit;
+        boundTexture = GlStateManager.textureState[0].textureName;
+        textureEnabled = GlStateManager.textureState[0].texture2DState.currentState;
+        lightmapEnabled = GlStateManager.textureState[OpenGlHelper.lightmapTexUnit
+                - OpenGlHelper.defaultTexUnit].texture2DState.currentState;
+        GlStateManager.setActiveTexture(OpenGlHelper.lightmapTexUnit);
+        GlStateManager.disableTexture2D();
+        GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit);
+        GlStateManager.disableTexture2D();
     }
 
     @Override
     public void setEnabled(boolean enabled) {
         if (enabled) {
-            GL11.glEnable(GL11.GL_TEXTURE_2D);
+            GlStateManager.enableTexture2D();
         } else {
-            GL11.glDisable(GL11.GL_TEXTURE_2D);
+            GlStateManager.disableTexture2D();
         }
     }
 
     @Override
     public void end() {
-        // glPopAttrib restores the raw GL state.
+        GlStateManager.setActiveTexture(OpenGlHelper.lightmapTexUnit);
+        if (lightmapEnabled) {
+            GlStateManager.enableTexture2D();
+        } else {
+            GlStateManager.disableTexture2D();
+        }
+        GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit);
+        GlStateManager.bindTexture(boundTexture);
+        if (textureEnabled) {
+            GlStateManager.enableTexture2D();
+        } else {
+            GlStateManager.disableTexture2D();
+        }
+        GlStateManager.setActiveTexture(activeTexture);
     }
 }

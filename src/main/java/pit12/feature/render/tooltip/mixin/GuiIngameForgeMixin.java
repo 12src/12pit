@@ -18,9 +18,13 @@
  */
 package pit12.feature.render.tooltip.mixin;
 
+import java.util.Objects;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiIngame;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraftforge.client.GuiIngameForge;
+import net.minecraftforge.common.util.Constants;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -33,6 +37,14 @@ import pit12.runtime.item.PitEnchantmentReader;
 public abstract class GuiIngameForgeMixin extends GuiIngame implements HeldItemTooltipBinding {
     @Unique
     private TooltipConfig pit12$tooltipConfig;
+    @Unique
+    private NBTTagList pit12$tooltipEnchantments;
+    @Unique
+    private boolean pit12$tooltipGemmed;
+    @Unique
+    private boolean pit12$tooltipShowGem;
+    @Unique
+    private String pit12$tooltipText;
 
     protected GuiIngameForgeMixin(Minecraft minecraft) {
         super(minecraft);
@@ -41,6 +53,8 @@ public abstract class GuiIngameForgeMixin extends GuiIngame implements HeldItemT
     @Override
     public void pit12$bindTooltipConfig(TooltipConfig config) {
         pit12$tooltipConfig = config;
+        pit12$tooltipEnchantments = null;
+        pit12$tooltipText = null;
     }
 
     @ModifyVariable(method = "renderToolHightlight", remap = false,
@@ -50,9 +64,29 @@ public abstract class GuiIngameForgeMixin extends GuiIngame implements HeldItemT
         if (config == null || !config.enabled() || !config.showEnchantments()) {
             return originalName;
         }
-        String enchantments = PitEnchantmentReader.read(highlightingItemStack)
-                .formatBoldDisplayNames(config.showGem());
-        return enchantments == null ? originalName : enchantments;
+        NBTTagCompound tag =
+                highlightingItemStack == null ? null : highlightingItemStack.getTagCompound();
+        NBTTagCompound extra =
+                tag != null && tag.hasKey("ExtraAttributes", Constants.NBT.TAG_COMPOUND)
+                        ? tag.getCompoundTag("ExtraAttributes")
+                        : null;
+        NBTTagList enchantments =
+                extra != null && extra.hasKey("CustomEnchants", Constants.NBT.TAG_LIST)
+                        ? extra.getTagList("CustomEnchants", Constants.NBT.TAG_COMPOUND)
+                        : null;
+        boolean showGem = config.showGem();
+        boolean gemmed = showGem && extra != null && extra.getInteger("UpgradeGemsUses") > 0;
+        if (showGem != pit12$tooltipShowGem || gemmed != pit12$tooltipGemmed
+                || !Objects.equals(enchantments, pit12$tooltipEnchantments)) {
+            // Item NBT can change in place, so keep a separate snapshot for comparisons.
+            pit12$tooltipEnchantments =
+                    enchantments == null ? null : (NBTTagList) enchantments.copy();
+            pit12$tooltipShowGem = showGem;
+            pit12$tooltipGemmed = gemmed;
+            pit12$tooltipText = PitEnchantmentReader.read(highlightingItemStack)
+                    .formatBoldDisplayNames(showGem);
+        }
+        return pit12$tooltipText == null ? originalName : pit12$tooltipText;
     }
 
     // Slot 4 holds the tooltip Y coordinate before either font renderer is chosen.

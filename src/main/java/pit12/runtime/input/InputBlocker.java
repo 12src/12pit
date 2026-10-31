@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Supplier;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.settings.KeyBinding;
@@ -36,6 +37,7 @@ public final class InputBlocker implements ClientLifecycle {
     private final Minecraft minecraft;
     private final ClientThread client;
     private final InputBlockBinding binding;
+    private final Supplier<KeyBinding> preservedKey;
     private final Set<Object> owners = new HashSet<>();
     private final List<InputHandler> handlers = new ArrayList<>();
     private Object actionOwner;
@@ -46,10 +48,12 @@ public final class InputBlocker implements ClientLifecycle {
     private boolean cursorReleased;
     private boolean started;
 
-    public InputBlocker(Minecraft minecraft, ClientThread client, InputBlockBinding binding) {
+    public InputBlocker(Minecraft minecraft, ClientThread client, InputBlockBinding binding,
+            Supplier<KeyBinding> preservedKey) {
         this.minecraft = minecraft;
         this.client = client;
         this.binding = binding;
+        this.preservedKey = preservedKey;
     }
 
     @Override
@@ -237,8 +241,7 @@ public final class InputBlocker implements ClientLifecycle {
         sprintPlayer = null;
         if (Mouse.isCreated())
             Mouse.getDWheel();
-        // Lunar restores Toggle Sprint when the inventory closes.
-        boolean sprintPressed = minecraft.gameSettings.keyBindSprint.isKeyDown();
+        KeyBinding pressedKey = preservedKey.get();
         KeyBinding.unPressAllKeys();
         if (!resume || !minecraft.inGameHasFocus || !Display.isActive())
             return;
@@ -253,8 +256,7 @@ public final class InputBlocker implements ClientLifecycle {
                 }
             }
             if (!consumed)
-                KeyBinding.setKeyBindState(key, held(key)
-                        || sprintPressed && keyBinding == minecraft.gameSettings.keyBindSprint);
+                KeyBinding.setKeyBindState(key, held(key) || keyBinding == pressedKey);
         }
         if (player != null && player == minecraft.thePlayer
                 && sprintForwardKey == minecraft.gameSettings.keyBindForward.getKeyCode()

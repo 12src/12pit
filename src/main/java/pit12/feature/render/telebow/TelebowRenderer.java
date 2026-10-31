@@ -29,7 +29,6 @@ import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GLAllocation;
 import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.culling.ClippingHelper;
 import net.minecraft.client.renderer.culling.ClippingHelperImpl;
 import net.minecraft.client.renderer.culling.Frustum;
@@ -40,6 +39,7 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 import pit12.shared.rendering.FontWidths;
 import pit12.shared.rendering.TextureState;
+import pit12.shared.rendering.WorldRenderState;
 
 final class TelebowRenderer {
     private static final double[] CIRCLE = new double[48];
@@ -53,6 +53,7 @@ final class TelebowRenderer {
     private final Minecraft minecraft;
     private final TelebowConfig config;
     private final TextureState textures;
+    private final WorldRenderState state;
     private final Map<TelebowPath, Mesh> meshes = new IdentityHashMap<>();
     private final List<Mesh> visible = new ArrayList<>();
     private final List<TelebowAim.Target> visibleAims = new ArrayList<>();
@@ -64,6 +65,7 @@ final class TelebowRenderer {
         this.minecraft = minecraft;
         this.config = config;
         this.textures = textures;
+        state = new WorldRenderState(textures);
     }
 
     void render(Collection<TelebowPath> paths, Collection<TelebowAim.Target> aims, long now) {
@@ -84,7 +86,6 @@ final class TelebowRenderer {
                 4.0 / Math.min(Math.abs(clipping.projectionMatrix[0]) * minecraft.displayWidth,
                         Math.abs(clipping.projectionMatrix[5]) * minecraft.displayHeight);
         boolean unicode = font.getUnicodeFlag();
-        boolean drawNames = false;
         boolean drawBeams = false;
         for (TelebowPath path : paths) {
             TelebowTrajectory trajectory = path.trajectory;
@@ -134,7 +135,6 @@ final class TelebowRenderer {
             if (mesh.geometryVisible || mesh.nameVisible) {
                 mesh.alpha = alpha;
                 visible.add(mesh);
-                drawNames |= mesh.nameVisible;
                 drawBeams |= mesh.geometryVisible && trajectory.hasImpact;
             }
         }
@@ -160,27 +160,12 @@ final class TelebowRenderer {
                     visibleAims.add(target);
             }
         }
-        drawNames |= aimNames && !visibleAims.isEmpty();
         if (visible.isEmpty() && visibleAims.isEmpty())
             return;
-        boolean alphaEnabled = drawNames && GL11.glIsEnabled(GL11.GL_ALPHA_TEST);
-        boolean textureEnabled = drawNames && GL11.glIsEnabled(GL11.GL_TEXTURE_2D);
-        GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT
-                | GL11.GL_LINE_BIT | GL11.GL_CURRENT_BIT | GL11.GL_TEXTURE_BIT);
-        textures.begin();
-        int boundTexture = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
+        state.begin(GL11.GL_LINE_BIT | GL11.GL_CURRENT_BIT);
         GlStateManager.pushMatrix();
         try {
-            GL11.glDisable(GL11.GL_DEPTH_TEST);
-            GL11.glDepthMask(false);
-            GL11.glDisable(GL11.GL_ALPHA_TEST);
-            GL11.glDisable(GL11.GL_LIGHTING);
-            GL11.glDisable(GL11.GL_COLOR_MATERIAL);
-            GL11.glDisable(GL11.GL_FOG);
-            GL11.glDisable(GL11.GL_CULL_FACE);
-            GL11.glEnable(GL11.GL_BLEND);
-            OpenGlHelper.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE,
-                    GL11.GL_ZERO);
+            GlStateManager.disableCull();
             GL11.glLineWidth(2F);
             GlStateManager.translate(-camera.viewerPosX, -camera.viewerPosY, -camera.viewerPosZ);
             if (drawBeams) {
@@ -207,7 +192,7 @@ final class TelebowRenderer {
                         mesh.revision = path.revision;
                     }
                     int color = path.color;
-                    GL11.glColor4f((color >>> 16 & 255) / 255F, (color >>> 8 & 255) / 255F,
+                    GlStateManager.color((color >>> 16 & 255) / 255F, (color >>> 8 & 255) / 255F,
                             (color & 255) / 255F, mesh.alpha);
                     GlStateManager.callList(mesh.lines);
                 }
@@ -223,22 +208,11 @@ final class TelebowRenderer {
         } finally {
             visible.clear();
             visibleAims.clear();
-            // Keep the cached binding in sync with the state restored by glPopAttrib.
-            GlStateManager.bindTexture(boundTexture);
-            if (drawNames) {
-                if (textureEnabled)
-                    GlStateManager.enableTexture2D();
-                else
-                    GlStateManager.disableTexture2D();
-                if (alphaEnabled)
-                    GlStateManager.enableAlpha();
-                else
-                    GlStateManager.disableAlpha();
+            try {
+                GlStateManager.popMatrix();
+            } finally {
+                state.end();
             }
-            GlStateManager.popMatrix();
-            GL11.glPopAttrib();
-            textures.end();
-            GlStateManager.resetColor();
         }
     }
 
@@ -252,10 +226,10 @@ final class TelebowRenderer {
                     : camera.playerViewX, 1, 0, 0);
             GlStateManager.scale(-target.scale, -target.scale, target.scale);
             textures.setEnabled(false);
-            GL11.glDisable(GL11.GL_ALPHA_TEST);
+            GlStateManager.disableAlpha();
             int color = target.color;
             float alpha = target.alpha;
-            GL11.glColor4f((color >>> 16 & 255) / 255F, (color >>> 8 & 255) / 255F,
+            GlStateManager.color((color >>> 16 & 255) / 255F, (color >>> 8 & 255) / 255F,
                     (color & 255) / 255F, alpha);
             GL11.glBegin(GL11.GL_LINES);
             try {
@@ -336,9 +310,9 @@ final class TelebowRenderer {
         float green = (color >>> 8 & 255) / 255F;
         float blue = (color & 255) / 255F;
         double top = y + 32;
-        GL11.glColor4f(red, green, blue, alpha * 0.18F);
+        GlStateManager.color(red, green, blue, alpha * 0.18F);
         drawBeamLayer(x, y, z, top, 0.24);
-        GL11.glColor4f(red, green, blue, alpha * 0.45F);
+        GlStateManager.color(red, green, blue, alpha * 0.45F);
         drawBeamLayer(x, y, z, top, 0.12);
     }
 
@@ -405,11 +379,11 @@ final class TelebowRenderer {
         int textAlpha = Math.round(alpha * 255);
         if (textAlpha < 4)
             return;
-        GL11.glDisable(GL11.GL_DEPTH_TEST);
-        GL11.glDepthMask(false);
-        GL11.glDisable(GL11.GL_ALPHA_TEST);
+        GlStateManager.disableDepth();
+        GlStateManager.depthMask(false);
+        GlStateManager.disableAlpha();
         textures.setEnabled(false);
-        GL11.glColor4f(0, 0, 0, alpha * 0.25F);
+        GlStateManager.color(0, 0, 0, alpha * 0.25F);
         int left = -width / 2 - 1;
         int right = width / 2 + 1;
         GL11.glBegin(GL11.GL_QUADS);
@@ -422,20 +396,16 @@ final class TelebowRenderer {
             GL11.glEnd();
         }
         textures.setEnabled(true);
-        // FontRenderer uses this cache for text decorations too.
-        GlStateManager.enableTexture2D();
-        GL11.glEnable(GL11.GL_ALPHA_TEST);
-        GL11.glAlphaFunc(GL11.GL_GREATER, 0.001F);
         GlStateManager.enableAlpha();
-        GlStateManager.resetColor();
+        GlStateManager.alphaFunc(GL11.GL_GREATER, 0.001F);
         int faintAlpha = Math.round(alpha * 32);
         if (faintAlpha >= 4)
             font.drawString(name, -width / 2, 0, faintAlpha << 24 | 0xFFFFFF);
-        GL11.glEnable(GL11.GL_DEPTH_TEST);
-        GL11.glDepthMask(true);
+        GlStateManager.enableDepth();
+        GlStateManager.depthMask(true);
         font.drawString(name, -width / 2, 0, textAlpha << 24 | 0xFFFFFF);
-        GL11.glDisable(GL11.GL_DEPTH_TEST);
-        GL11.glDepthMask(false);
+        GlStateManager.disableDepth();
+        GlStateManager.depthMask(false);
     }
 
     void remove(TelebowPath path) {

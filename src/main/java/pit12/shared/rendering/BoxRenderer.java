@@ -21,7 +21,6 @@ package pit12.shared.rendering;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.WorldRenderer;
 import net.minecraft.client.renderer.culling.ClippingHelperImpl;
@@ -30,7 +29,7 @@ import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import org.lwjgl.opengl.GL11;
 
 public final class BoxRenderer {
-    private final TextureState textures;
+    private final WorldRenderState state;
     private final List<Box> boxes = new ArrayList<>();
     private Frustum frustum;
     private Tessellator tessellator;
@@ -42,7 +41,7 @@ public final class BoxRenderer {
     private boolean outlines;
 
     public BoxRenderer(TextureState textures) {
-        this.textures = textures;
+        state = new WorldRenderState(textures);
     }
 
     public void beginFrame(double cameraX, double cameraY, double cameraZ) {
@@ -53,10 +52,8 @@ public final class BoxRenderer {
         fills = false;
         outlines = false;
         if (frustum == null) {
+            // Vanilla refreshes these shared planes before RenderWorldLastEvent.
             frustum = new Frustum(ClippingHelperImpl.getInstance());
-        } else {
-            // getInstance() also updates the clipping planes from the current matrices.
-            ClippingHelperImpl.getInstance();
         }
         frustum.setPosition(cameraX, cameraY, cameraZ);
     }
@@ -96,24 +93,12 @@ public final class BoxRenderer {
         if (tessellator == null) {
             tessellator = new Tessellator(16384);
         }
-        GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT
-                | GL11.GL_LINE_BIT | GL11.GL_CURRENT_BIT | GL11.GL_POLYGON_BIT
-                | GL11.GL_TEXTURE_BIT);
-        textures.begin();
+        state.begin(GL11.GL_LINE_BIT | GL11.GL_POLYGON_BIT);
         try {
             GL11.glPushClientAttrib(GL11.GL_CLIENT_VERTEX_ARRAY_BIT);
             try {
-                GL11.glDisable(GL11.GL_DEPTH_TEST);
-                GL11.glDepthMask(false);
-                GL11.glDisable(GL11.GL_ALPHA_TEST);
-                GL11.glDisable(GL11.GL_LIGHTING);
-                GL11.glDisable(GL11.GL_COLOR_MATERIAL);
-                GL11.glDisable(GL11.GL_FOG);
-                GL11.glEnable(GL11.GL_BLEND);
-                OpenGlHelper.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA,
-                        GL11.GL_ONE, GL11.GL_ZERO);
-                GL11.glEnable(GL11.GL_CULL_FACE);
-                GL11.glCullFace(GL11.GL_BACK);
+                GlStateManager.enableCull();
+                GlStateManager.cullFace(GL11.GL_BACK);
                 GL11.glFrontFace(GL11.GL_CCW);
                 GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, GL11.GL_FILL);
                 GL11.glLineWidth(1.0F);
@@ -127,9 +112,7 @@ public final class BoxRenderer {
                 GL11.glPopClientAttrib();
             }
         } finally {
-            GL11.glPopAttrib();
-            textures.end();
-            GlStateManager.resetColor();
+            state.end();
         }
     }
 

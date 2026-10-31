@@ -23,6 +23,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.inventory.GuiChest;
 import net.minecraft.client.renderer.GlStateManager;
@@ -34,6 +35,7 @@ import net.minecraft.util.MovingObjectPosition;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
@@ -98,6 +100,9 @@ public final class ContractRerollFeature
     private long deadline;
     private long clickAt;
     private String hint;
+    private int hintWidth = -1;
+    private FontRenderer hintFont;
+    private boolean hintUnicode;
 
     public ContractRerollFeature(Minecraft minecraft, ConfigCatalog configs,
             ContractRerollConfig config, ClientSession session, PitContext pit,
@@ -459,6 +464,7 @@ public final class ContractRerollFeature
     private void updateHint() {
         hint = state == State.CONTRACT ? language.translate("Waiting for the contract to end…")
                 : language.translate("Rerolling contracts…");
+        hintWidth = -1;
     }
 
     @Override
@@ -499,17 +505,31 @@ public final class ContractRerollFeature
     }
 
     @SubscribeEvent
+    public void onTextureStitch(TextureStitchEvent.Post event) {
+        hintWidth = -1;
+    }
+
+    @SubscribeEvent
     public void onRenderOverlay(RenderGameOverlayEvent.Post event) {
         if (state == State.IDLE || event.type != RenderGameOverlayEvent.ElementType.ALL
                 || minecraft.gameSettings.hideGUI || minecraft.thePlayer == null)
             return;
+        FontRenderer font = minecraft.fontRendererObj;
+        boolean unicode = font.getUnicodeFlag();
+        if (hintWidth < 0 || hintFont != font || hintUnicode != unicode) {
+            hintWidth = FontWidths.measure(font, hint);
+            hintFont = font;
+            hintUnicode = unicode;
+        }
         GlStateManager.pushMatrix();
-        GlStateManager.translate(event.resolution.getScaledWidth() / 2.0F,
-                event.resolution.getScaledHeight() / 2.0F + 35, 0);
-        GlStateManager.scale(2, 2, 2);
-        minecraft.fontRendererObj.drawStringWithShadow(hint,
-                -FontWidths.measure(minecraft.fontRendererObj, hint) / 2.0F, 0, 0xFFFFFF);
-        GlStateManager.popMatrix();
+        try {
+            GlStateManager.translate(event.resolution.getScaledWidth() / 2.0F,
+                    event.resolution.getScaledHeight() / 2.0F + 35, 0);
+            GlStateManager.scale(2, 2, 2);
+            font.drawStringWithShadow(hint, -hintWidth / 2.0F, 0, 0xFFFFFF);
+        } finally {
+            GlStateManager.popMatrix();
+        }
     }
 
     private enum State {
