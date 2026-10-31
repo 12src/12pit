@@ -29,6 +29,8 @@
     "input.NetworkManagerMixin",
     "input.PlayerControllerMPMixin",
     "rendering.VanillaFontRendererMixin",
-    "rendering.OptiFineFontRendererMixin"
+    "rendering.OptiFineFontRendererMixin",
+    "rendering.LunarFontRendererMixin",
+    "rendering.PatcherFontRendererMixin"
   ]
 }

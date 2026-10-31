@@ -102,6 +102,8 @@ import pit12.feature.render.tooltip.TooltipConfig;
 import pit12.feature.render.tooltip.TooltipFeature;
 import pit12.platform.discord.DiscordIpcConnection;
 import pit12.platform.forge.ForgeCommandAdapter;
+import pit12.platform.lunar.LunarInput;
+import pit12.platform.lunar.LunarSupport;
 import pit12.platform.mixinconfig.MixinFailureWarning;
 import pit12.platform.oneconfig.OneConfigSupport;
 import pit12.runtime.arrow.ArrowTracker;
@@ -157,7 +159,9 @@ public final class ClientBootstrap {
         components.add(session);
         ArrowTracker arrows = new ArrowTracker(minecraft, session);
         components.add(arrows);
-        InputBlocker input = new InputBlocker(minecraft, client, (InputBlockBinding) minecraft);
+        InputBlocker input = new InputBlocker(minecraft, client, (InputBlockBinding) minecraft,
+                LunarSupport.isLoaded() ? () -> LunarInput.preservedSprintKey(minecraft)
+                        : () -> null);
         components.add(input);
         InputTicks inputTicks = new InputTicks(client, (InputTickBinding) minecraft);
         components.add(inputTicks);
