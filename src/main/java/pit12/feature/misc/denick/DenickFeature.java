@@ -18,6 +18,7 @@
  */
 package pit12.feature.misc.denick;
 
+import static net.minecraft.util.EnumChatFormatting.WHITE;
 import static pit12.runtime.languages.Languages.source;
 
 import java.io.IOException;
@@ -275,7 +276,8 @@ public final class DenickFeature implements ClientLifecycle, DenickNames, TabPre
             targets.put(player.getKey(), target);
         }
         begin(target, sender, args.length == 2);
-        ChatFeedback.reply(sender, Tone.INFO, language.format("Querying {0}...", target.name));
+        ChatFeedback.reply(sender, Tone.INFO,
+                language.format("Querying {0}...", Tone.INFO.argument(WHITE, target.name)));
     }
 
     private void resetWorld() {
@@ -492,7 +494,9 @@ public final class DenickFeature implements ClientLifecycle, DenickNames, TabPre
                                 target.realDisplayName = name;
                                 target.owner = cached;
                                 reply(search.sender, Tone.SUCCESS,
-                                        language.format("{0} §c-> {1} §c(cached)", display, name));
+                                        language.format("{0} §c-> {1} §c(cached)",
+                                                Tone.SUCCESS.argument(WHITE, display),
+                                                Tone.SUCCESS.argument(WHITE, name)));
                                 changed();
                             }
                         });
@@ -543,9 +547,11 @@ public final class DenickFeature implements ClientLifecycle, DenickNames, TabPre
                 boolean corrected = cached != null && !Objects.equals(cached, result.owner);
                 reply(search.sender, Tone.SUCCESS,
                         corrected
-                                ? language.format("{0} §c-> {1} §c(updated)", display,
-                                        result.displayName)
-                                : display + " §c-> " + result.displayName);
+                                ? language.format("{0} §c-> {1} §c(updated)",
+                                        Tone.SUCCESS.argument(WHITE, display),
+                                        Tone.SUCCESS.argument(WHITE, result.displayName))
+                                : Tone.SUCCESS.argument(WHITE, display) + " §c-> "
+                                        + Tone.SUCCESS.argument(WHITE, result.displayName));
                 changed();
             }
             if (!Objects.equals(mappings.put(target.name.toLowerCase(Locale.ROOT), result.owner),
@@ -558,8 +564,9 @@ public final class DenickFeature implements ClientLifecycle, DenickNames, TabPre
             if (mappings.remove(target.name.toLowerCase(Locale.ROOT)) != null) {
                 persist();
                 if (search.sender != null || !config.successOnly.get()) {
-                    reply(search.sender, Tone.WARNING, language
-                            .format("Cached identity for {0} is no longer confirmed", target.name));
+                    reply(search.sender, Tone.WARNING,
+                            language.format("Cached identity for {0} is no longer confirmed",
+                                    Tone.WARNING.argument(WHITE, target.name)));
                 }
             }
             target.realDisplayName = null;
@@ -576,7 +583,7 @@ public final class DenickFeature implements ClientLifecycle, DenickNames, TabPre
             String message = items.isEmpty() ? source("No searchable equipment for {0}")
                     : result.failure != null ? source("Could not query {0}")
                             : source("No confirmed owner for {0}");
-            String text = language.format(message, target.name);
+            String text = language.format(message, Tone.WARNING.argument(WHITE, target.name));
             if (monitoring) {
                 text += ". " + language.translate("Waiting for new equipment");
             }

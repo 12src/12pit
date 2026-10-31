@@ -40,6 +40,10 @@ public final class ChatFeedback {
         Tone(EnumChatFormatting color) {
             this.color = color;
         }
+
+        public String argument(EnumChatFormatting color, Object value) {
+            return color + String.valueOf(value) + this.color;
+        }
     }
 
     private ChatFeedback() {}

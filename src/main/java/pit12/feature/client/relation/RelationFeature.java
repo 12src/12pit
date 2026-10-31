@@ -18,6 +18,8 @@
  */
 package pit12.feature.client.relation;
 
+import static net.minecraft.util.EnumChatFormatting.WHITE;
+
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -34,6 +36,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.LongSupplier;
 import net.minecraft.client.Minecraft;
+import net.minecraft.command.ICommandSender;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
@@ -209,6 +212,17 @@ public final class RelationFeature implements ClientLifecycle, Relations, TabPre
         }
     }
 
+    boolean commandReady(ICommandSender sender) {
+        String problem = readiness() == RelationReadiness.FAILED
+                ? language.format("Relations could not be loaded: {0}",
+                        Tone.WARNING.argument(WHITE, loadProblem))
+                : readinessProblem();
+        if (problem == null)
+            return true;
+        ChatFeedback.reply(sender, Tone.WARNING, problem);
+        return false;
+    }
+
     @Override
     public Relation relationOf(UUID playerId) {
         client.check();
@@ -235,7 +249,7 @@ public final class RelationFeature implements ClientLifecycle, Relations, TabPre
     @Override
     public List<String> lookupProblems() {
         client.check();
-        return lookups == null ? Collections.emptyList() : lookups.problems();
+        return lookups == null ? Collections.emptyList() : lookups.problems(false);
     }
 
     @Override
@@ -265,7 +279,7 @@ public final class RelationFeature implements ClientLifecycle, Relations, TabPre
     }
 
     private void notifyChanged() {
-        List<String> problems = lookupProblems();
+        List<String> problems = lookups == null ? Collections.emptyList() : lookups.problems(true);
         if (installAdapters && Minecraft.getMinecraft().thePlayer != null) {
             for (String problem : problems) {
                 if (!shownLookupProblems.contains(problem)) {
@@ -301,8 +315,9 @@ public final class RelationFeature implements ClientLifecycle, Relations, TabPre
         if (result.succeeded && !"remove".equals(action))
             lookups.retry(name);
         lookups.tick();
-        return result.succeeded ? OperationResult.success(null, result.message)
-                : OperationResult.failure(Status.INVALID_VALUE, result.message);
+        String message = result.message(language, true);
+        return result.succeeded ? OperationResult.success(null, message)
+                : OperationResult.failure(Status.INVALID_VALUE, message);
     }
 
     @Override
@@ -321,8 +336,9 @@ public final class RelationFeature implements ClientLifecycle, Relations, TabPre
                     entry.playerId() == null ? book.change(target, action, entry.name(), online)
                             : book.remove(target, entry.playerId());
             changed |= result.changed;
-            results.add(result.succeeded ? OperationResult.success(null, result.message)
-                    : OperationResult.failure(Status.INVALID_VALUE, result.message));
+            String message = result.message(language, false);
+            results.add(result.succeeded ? OperationResult.success(null, message)
+                    : OperationResult.failure(Status.INVALID_VALUE, message));
         }
         finish(previous, changed, false);
         if ("add".equals(action))

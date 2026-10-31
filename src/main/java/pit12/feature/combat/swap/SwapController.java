@@ -18,6 +18,8 @@
  */
 package pit12.feature.combat.swap;
 
+import static net.minecraft.util.EnumChatFormatting.WHITE;
+
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -37,7 +39,6 @@ import net.minecraft.client.gui.inventory.GuiInventory;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.play.client.C16PacketClientStatus;
-import net.minecraft.util.EnumChatFormatting;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pit12.runtime.input.InputBlocker;
@@ -335,7 +336,8 @@ final class SwapController {
                 continue;
             }
             if (!locations.containsKey(binding.identity)) {
-                problems.add(language.format("Missing item: {0}", binding.name));
+                problems.add(language.format("Missing item: {0}",
+                        Tone.WARNING.argument(WHITE, binding.name)));
             } else if (!selected.containsKey(binding.guiTarget())) {
                 selected.put(binding.guiTarget(), binding);
             }
@@ -415,14 +417,13 @@ final class SwapController {
 
     private String swapMessage(int first, int second) {
         if (current.automaticReason != null) {
-            return options.automaticMessages ? EnumChatFormatting.RESET.toString()
-                    + EnumChatFormatting.GREEN + language.format("Swapped {0} with {1} due to {2}",
-                            itemName(first), itemName(second), current.automaticReason)
+            return options.automaticMessages
+                    ? language.format("Swapped {0} with {1} due to {2}", itemName(first),
+                            itemName(second), Tone.SUCCESS.argument(WHITE, current.automaticReason))
                     : null;
         }
         return options.messages
-                ? EnumChatFormatting.RESET.toString() + EnumChatFormatting.GREEN
-                        + language.format("Swapped {0} with {1}", itemName(first), itemName(second))
+                ? language.format("Swapped {0} with {1}", itemName(first), itemName(second))
                 : null;
     }
 
@@ -431,28 +432,22 @@ final class SwapController {
         if (item != null) {
             String enchantments =
                     PitEnchantmentReader.read(item).formatBoldDisplayNames(options.showGem);
-            return EnumChatFormatting.RESET
-                    + (enchantments == null ? item.getDisplayName() : enchantments)
-                    + EnumChatFormatting.RESET + EnumChatFormatting.GREEN;
+            return Tone.SUCCESS.argument(WHITE,
+                    enchantments == null ? item.getDisplayName() : enchantments);
         }
         switch (slot) {
             case 5:
-                return EnumChatFormatting.RESET + language.translate("Helmet slot")
-                        + EnumChatFormatting.GREEN;
+                return Tone.SUCCESS.argument(WHITE, language.translate("Helmet slot"));
             case 6:
-                return EnumChatFormatting.RESET + language.translate("Chestplate slot")
-                        + EnumChatFormatting.GREEN;
+                return Tone.SUCCESS.argument(WHITE, language.translate("Chestplate slot"));
             case 7:
-                return EnumChatFormatting.RESET + language.translate("Leggings slot")
-                        + EnumChatFormatting.GREEN;
+                return Tone.SUCCESS.argument(WHITE, language.translate("Leggings slot"));
             case 8:
-                return EnumChatFormatting.RESET + language.translate("Boots slot")
-                        + EnumChatFormatting.GREEN;
+                return Tone.SUCCESS.argument(WHITE, language.translate("Boots slot"));
             default:
-                return EnumChatFormatting.RESET
-                        + (slot >= 36 ? language.format("Hotbar slot {0}", slot - 35)
-                                : language.format("Inventory slot {0}", slot - 8))
-                        + EnumChatFormatting.GREEN;
+                return Tone.SUCCESS.argument(WHITE,
+                        slot >= 36 ? language.format("Hotbar slot {0}", slot - 35)
+                                : language.format("Inventory slot {0}", slot - 8));
         }
     }
 
@@ -462,7 +457,10 @@ final class SwapController {
             return;
         for (String problem : problems)
             report.accept(Tone.WARNING,
-                    automatic ? language.format("Automatic swap: {0}", problem) : problem);
+                    automatic
+                            ? language.format("Automatic swap: {0}",
+                                    Tone.WARNING.argument(WHITE, problem))
+                            : problem);
     }
 
     void cancel() {
@@ -485,7 +483,8 @@ final class SwapController {
         clickRejected = false;
         waitingToResume = false;
         closeAt = tick + options.closeDelay;
-        report.accept(Tone.ERROR, language.format("Swap failed: {0}", message));
+        report.accept(Tone.ERROR,
+                language.format("Swap failed: {0}", Tone.ERROR.argument(WHITE, message)));
     }
 
     private void finishCancellation(Phase phase) {
@@ -663,7 +662,8 @@ final class SwapController {
             if (!binding.identity.matches(stack(source)))
                 source = find(binding.identity);
             if (source < 0) {
-                problems.add(language.format("Missing item: {0}", binding.name));
+                problems.add(language.format("Missing item: {0}",
+                        Tone.WARNING.argument(WHITE, binding.name)));
                 done = true;
                 return;
             }
@@ -671,7 +671,8 @@ final class SwapController {
             if (binding.equipment) {
                 if (!player.inventoryContainer.getSlot(binding.guiTarget())
                         .isItemValid(stack(source))) {
-                    problems.add(language.format("Item does not fit: {0}", binding.name));
+                    problems.add(language.format("Item does not fit: {0}",
+                            Tone.WARNING.argument(WHITE, binding.name)));
                     done = true;
                     return;
                 }
@@ -712,8 +713,8 @@ final class SwapController {
                 ItemStack targetItem = stack(binding.guiTarget());
                 if (source < 9 && targetItem != null && !sourceSlot.isItemValid(targetItem)
                         && player.inventory.getFirstEmptyStack() < 0) {
-                    problems.add(
-                            language.format("Not enough inventory space for {0}", binding.name));
+                    problems.add(language.format("Not enough inventory space for {0}",
+                            Tone.WARNING.argument(WHITE, binding.name)));
                     done = true;
                 } else {
                     swap(source, binding.target - 1);

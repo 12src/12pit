@@ -18,6 +18,8 @@
  */
 package pit12.feature.misc.contractreroll;
 
+import static net.minecraft.util.EnumChatFormatting.WHITE;
+
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -474,7 +476,7 @@ public final class ContractRerollFeature
 
     private void fail(String reason) {
         finish(true);
-        report(language.format("Contract reroll stopped: {0}", reason));
+        report(language.format("Contract reroll stopped: {0}", Tone.ERROR.argument(WHITE, reason)));
     }
 
     private void report(String message) {
