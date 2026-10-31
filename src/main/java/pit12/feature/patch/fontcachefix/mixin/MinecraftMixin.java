@@ -22,21 +22,20 @@ import net.minecraft.client.Minecraft;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import pit12.feature.patch.fontcachefix.FontCacheFixBinding;
-import pit12.feature.patch.fontcachefix.FontCacheFixConfig;
 
 @Mixin(Minecraft.class)
 public abstract class MinecraftMixin implements FontCacheFixBinding {
+    // PolyPatcher also measures text on its splash screen thread.
     @Unique
-    private FontCacheFixConfig pit12$fontCacheFixConfig;
+    private volatile boolean pit12$fontCacheFixEnabled = true;
 
     @Override
-    public void pit12$bindFontCacheFixConfig(FontCacheFixConfig config) {
-        pit12$fontCacheFixConfig = config;
+    public void pit12$setFontCacheFixEnabled(boolean enabled) {
+        pit12$fontCacheFixEnabled = enabled;
     }
 
     @Override
     public boolean pit12$fontCacheFixEnabled() {
-        // Fonts render before the config is bound.
-        return pit12$fontCacheFixConfig == null || pit12$fontCacheFixConfig.enabled();
+        return pit12$fontCacheFixEnabled;
     }
 }
