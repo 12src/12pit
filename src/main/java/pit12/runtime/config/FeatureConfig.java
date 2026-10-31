@@ -164,6 +164,8 @@ public abstract class FeatureConfig {
     protected final HudConfig hudConfig(String id, HudAnchor defaultAnchor, int defaultOffsetX,
             int defaultOffsetY, boolean defaultTextShadow, HudGroup grouping, String groupName) {
         String prefix = id + ".";
+        BooleanSetting showInTab = new BooleanSetting(prefix + "show_in_tab", source("Show in Tab"),
+                source("Shows the HUD while the player list key is held."), false);
         BooleanSetting textShadow =
                 new BooleanSetting(prefix + "text_shadow", source("Text shadow"),
                         source("Draws a shadow behind HUD text."), defaultTextShadow);
@@ -185,6 +187,7 @@ public abstract class FeatureConfig {
         IntegerSetting scale = new IntegerSetting(prefix + "scale", source("Scale"),
                 source("HUD size, in percent."), 100, 25, 300);
         int firstOption = options.size();
+        register(showInTab, ConfigOption.Kind.BOOLEAN);
         register(textShadow, ConfigOption.Kind.BOOLEAN);
         register(translateText, ConfigOption.Kind.BOOLEAN);
         register(font, ConfigOption.Kind.CHOICE);
@@ -203,8 +206,8 @@ public abstract class FeatureConfig {
         register(offsetX, null);
         register(offsetY, null);
         register(scale, null);
-        return new HudConfig(textShadow, translateText, font, anchor, autoAnchor, offsetX, offsetY,
-                scale);
+        return new HudConfig(showInTab, textShadow, translateText, font, anchor, autoAnchor,
+                offsetX, offsetY, scale);
     }
 
     protected final HudGroupConfig hudGroupConfig(String hudId, String groupId, String displayName,
@@ -231,8 +234,8 @@ public abstract class FeatureConfig {
         register(offsetY, null);
         register(scale, null);
         return new HudGroupConfig(independent,
-                new HudConfig(parent.textShadow(), parent.translateText(), parent.font(), anchor,
-                        autoAnchor, offsetX, offsetY, scale));
+                new HudConfig(parent.showInTab(), parent.textShadow(), parent.translateText(),
+                        parent.font(), anchor, autoAnchor, offsetX, offsetY, scale));
     }
 
     private ChoiceSetting hudAnchor(String prefix) {

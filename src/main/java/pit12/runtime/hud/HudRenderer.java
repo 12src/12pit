@@ -37,6 +37,11 @@ public final class HudRenderer extends UiRenderer {
         fontRenderer.drawString(text, x, y, color, config.textShadow().get());
     }
 
+    public static boolean visible(HudConfig config) {
+        return !Minecraft.getMinecraft().gameSettings.keyBindPlayerList.isKeyDown()
+                || config.showInTab().get();
+    }
+
     public static HudBounds layout(HudElement element, int screenWidth, int screenHeight,
             float pixelScale, boolean editing) {
         float scale = element.config().scaleFactor();

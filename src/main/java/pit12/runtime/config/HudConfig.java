@@ -20,6 +20,7 @@ package pit12.runtime.config;
 
 public final class HudConfig {
     static final int AUTO_ANCHOR = 9;
+    private final BooleanSetting showInTab;
     private final BooleanSetting textShadow;
     private final BooleanSetting translateText;
     private final ChoiceSetting font;
@@ -35,9 +36,10 @@ public final class HudConfig {
     private int elementHeight;
     private boolean placing;
 
-    HudConfig(BooleanSetting textShadow, BooleanSetting translateText, ChoiceSetting font,
-            ChoiceSetting anchor, IntegerSetting autoAnchor, IntegerSetting offsetX,
-            IntegerSetting offsetY, IntegerSetting scale) {
+    HudConfig(BooleanSetting showInTab, BooleanSetting textShadow, BooleanSetting translateText,
+            ChoiceSetting font, ChoiceSetting anchor, IntegerSetting autoAnchor,
+            IntegerSetting offsetX, IntegerSetting offsetY, IntegerSetting scale) {
+        this.showInTab = showInTab;
         this.textShadow = textShadow;
         this.translateText = translateText;
         this.font = font;
@@ -47,6 +49,10 @@ public final class HudConfig {
         this.offsetY = offsetY;
         this.scale = scale;
         anchor.beforeChange(this::changeAnchor);
+    }
+
+    public BooleanSetting showInTab() {
+        return showInTab;
     }
 
     public BooleanSetting textShadow() {
