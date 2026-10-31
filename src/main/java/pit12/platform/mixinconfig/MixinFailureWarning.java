@@ -18,6 +18,9 @@
  */
 package pit12.platform.mixinconfig;
 
+import static net.minecraft.util.EnumChatFormatting.RED;
+import static net.minecraft.util.EnumChatFormatting.WHITE;
+
 import java.util.List;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.WorldClient;
@@ -67,7 +70,8 @@ public final class MixinFailureWarning implements ClientLifecycle {
         }
         ChatFeedback.reply(minecraft.thePlayer, Tone.ERROR, language.format(
                 "{0} failed to apply: {1}. This may cause unexpected behavior. If you are unsure how this may affect the game, we recommend reporting this issue with your logs.",
-                language.translate(failedMixins.size() == 1 ? "A mixin" : "Some mixins"),
-                String.join(", ", failedMixins)));
+                Tone.ERROR.argument(RED,
+                        language.translate(failedMixins.size() == 1 ? "A mixin" : "Some mixins")),
+                Tone.ERROR.argument(WHITE, String.join(", ", failedMixins))));
     }
 }

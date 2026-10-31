@@ -18,6 +18,8 @@
  */
 package pit12.runtime.command;
 
+import static net.minecraft.util.EnumChatFormatting.AQUA;
+import static net.minecraft.util.EnumChatFormatting.WHITE;
 import static pit12.runtime.languages.Languages.source;
 import static pit12.shared.chat.ChatFeedback.reply;
 
@@ -195,12 +197,13 @@ public final class CommandRegistry implements ClientLifecycle, ConfigChangeListe
             return;
         }
         if (command.handler == null) {
-            reply(sender, Tone.ERROR, language.format("Unknown command: {0}", args[0]));
+            reply(sender, Tone.ERROR,
+                    language.format("Unknown command: {0}", Tone.ERROR.argument(WHITE, args[0])));
             help(command, sender, path);
         } else if (args.length < command.minimumArguments
                 || args.length > command.maximumArguments) {
-            reply(sender, Tone.WARNING, language.format("Usage: {0}",
-                    path + (command.arguments.isEmpty() ? "" : " " + command.arguments)));
+            reply(sender, Tone.WARNING, language.format("Usage: {0}", Tone.WARNING.argument(AQUA,
+                    path + (command.arguments.isEmpty() ? "" : " " + command.arguments))));
         } else {
             command.handler.execute(sender, args);
         }
@@ -246,18 +249,22 @@ public final class CommandRegistry implements ClientLifecycle, ConfigChangeListe
     }
 
     private void help(CommandNode command, ICommandSender sender, String path) {
-        reply(sender, Tone.INFO, path + " - " + language.translate(command.description));
+        reply(sender, Tone.INFO, Tone.INFO.argument(AQUA, path) + " - "
+                + Tone.INFO.argument(WHITE, language.translate(command.description)));
         for (CommandNode child : command.children) {
             if (available(child) && child.canUse(sender)) {
                 String aliases = child.aliases.isEmpty() ? ""
-                        : language.format(" (aliases: {0})", String.join(", ", child.aliases));
-                reply(sender, Tone.INFO, usage(child, path + " " + child.name) + aliases + " - "
-                        + language.translate(child.description));
+                        : language.format(" (aliases: {0})",
+                                Tone.INFO.argument(AQUA, String.join(", ", child.aliases)));
+                reply(sender, Tone.INFO,
+                        Tone.INFO.argument(AQUA, usage(child, path + " " + child.name)) + aliases
+                                + " - "
+                                + Tone.INFO.argument(WHITE, language.translate(child.description)));
             }
         }
         if (command.handler != null && !command.arguments.isEmpty()) {
-            reply(sender, Tone.INFO, path + " " + command.arguments + " - "
-                    + language.translate(command.description));
+            reply(sender, Tone.INFO, Tone.INFO.argument(AQUA, path + " " + command.arguments)
+                    + " - " + Tone.INFO.argument(WHITE, language.translate(command.description)));
         }
     }
 

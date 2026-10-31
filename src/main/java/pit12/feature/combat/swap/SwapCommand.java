@@ -18,6 +18,13 @@
  */
 package pit12.feature.combat.swap;
 
+import static net.minecraft.util.EnumChatFormatting.AQUA;
+import static net.minecraft.util.EnumChatFormatting.GOLD;
+import static net.minecraft.util.EnumChatFormatting.GRAY;
+import static net.minecraft.util.EnumChatFormatting.GREEN;
+import static net.minecraft.util.EnumChatFormatting.RED;
+import static net.minecraft.util.EnumChatFormatting.WHITE;
+import static net.minecraft.util.EnumChatFormatting.YELLOW;
 import static pit12.runtime.languages.Languages.source;
 import static pit12.shared.chat.ChatFeedback.reply;
 
@@ -98,8 +105,10 @@ final class SwapCommand {
         bindings.bind(binding);
         if (config.bindingMessages.get())
             reply(sender, Tone.SUCCESS,
-                    language.format("Bound {0} to {1} ({2})", binding.display(config.showGem.get()),
-                            Keyboard.getKeyName(binding.key), binding.targetName()));
+                    language.format("Bound {0} to {1} ({2})",
+                            Tone.SUCCESS.argument(WHITE, binding.display(config.showGem.get())),
+                            Tone.SUCCESS.argument(AQUA, Keyboard.getKeyName(binding.key)),
+                            Tone.SUCCESS.argument(WHITE, binding.targetName())));
     }
 
     private void unbind(ICommandSender sender, String[] args) {
@@ -114,32 +123,33 @@ final class SwapCommand {
         if (removed == 0 || config.bindingMessages.get())
             reply(sender, removed == 0 ? Tone.WARNING : Tone.SUCCESS,
                     removed == 0 ? language.translate("No matching bindings")
-                            : language.format("Removed {0} binding(s)", removed));
+                            : language.format("Removed {0} binding(s)",
+                                    Tone.SUCCESS.argument(WHITE, removed)));
     }
 
     private void list(ICommandSender sender, String[] args) {
         bindings.requireReady();
-        reply(sender, Tone.INFO, language.format("Swap bindings: {0}", bindings.count()));
+        reply(sender, Tone.INFO,
+                language.format("Swap bindings: {0}", Tone.INFO.argument(AQUA, bindings.count())));
         for (SwapBinding entry : bindings.entries())
-            reply(sender, Tone.INFO, Keyboard.getKeyName(entry.key) + ": "
-                    + entry.display(config.showGem.get()) + " -> " + entry.targetName());
+            reply(sender, Tone.INFO,
+                    Tone.INFO.argument(AQUA, Keyboard.getKeyName(entry.key)) + ": "
+                            + Tone.INFO.argument(WHITE, entry.display(config.showGem.get()))
+                            + " -> " + Tone.INFO.argument(WHITE, entry.targetName()));
     }
 
     private void status(ICommandSender sender, String[] args) {
         reply(sender, Tone.INFO,
                 language.format("Automatic swap: {0}",
-                        config.autoSwap.get() ? language.translate("enabled")
-                                : language.translate("disabled")));
+                        config.autoSwap.get()
+                                ? Tone.INFO.argument(GREEN, language.translate("enabled"))
+                                : Tone.INFO.argument(GRAY, language.translate("disabled"))));
         reply(sender, Tone.INFO, language.format("Escape Pod: {0}",
                 state(PitEnchantment.Escape_Pod, config.escapePod.get())));
         reply(sender, Tone.INFO, language.format("Phoenix: {0}",
                 state(PitEnchantment.Phoenix, config.phoenix.get())));
         reply(sender, Tone.INFO,
-                language.format("Dark: {0}",
-                        !config.dark.get() ? language.translate("disabled")
-                                : automatic.active(PitEnchantment.Somber)
-                                        ? language.translate("equipped")
-                                        : language.translate("waiting")));
+                language.format("Dark: {0}", state(PitEnchantment.Somber, config.dark.get())));
     }
 
     private void requirePlayer() {
@@ -149,18 +159,23 @@ final class SwapCommand {
 
     private String state(PitEnchantment type, boolean enabled) {
         if (!enabled)
-            return language.translate("disabled");
+            return Tone.INFO.argument(GRAY, language.translate("disabled"));
         if (automatic.used(type))
-            return language.translate("used");
+            return Tone.INFO.argument(GOLD, language.translate("used"));
+        if (!automatic.available(type))
+            return Tone.INFO.argument(RED, language.translate("unavailable"));
         if (automatic.active(type))
-            return language.translate("equipped");
-        return language.translate("unused");
+            return Tone.INFO.argument(GREEN, language.translate("equipped"));
+        return type == PitEnchantment.Somber
+                ? Tone.INFO.argument(YELLOW, language.translate("waiting"))
+                : Tone.INFO.argument(AQUA, language.translate("unused"));
     }
 
     private int key(String name) {
         int code = Keyboard.getKeyIndex(name.toUpperCase(Locale.ROOT));
         if (code == Keyboard.KEY_NONE)
-            throw new IllegalArgumentException("Unknown keyboard key: " + name);
+            throw new IllegalArgumentException(
+                    "Unknown keyboard key: " + Tone.ERROR.argument(WHITE, name));
         return code;
     }
 
