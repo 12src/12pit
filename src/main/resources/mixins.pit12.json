@@ -11,6 +11,7 @@
     "accessor.CommandHandlerAccessor",
     "accessor.MinecraftAccessor",
     "accessor.FMLModContainerAccessor",
+    "accessor.PatcherConfigAccessor",
     "client.CommandHandlerMixin",
     "client.MinecraftMixin",
     "network.FMLHandshakeClientStateMixin",
@@ -27,6 +28,7 @@
     "input.EntityPlayerSPMixin",
     "input.NetworkManagerMixin",
     "input.PlayerControllerMPMixin",
+    "rendering.VanillaFontRendererMixin",
     "rendering.OptiFineFontRendererMixin"
   ]
 }
