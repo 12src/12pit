@@ -313,7 +313,7 @@ public final class PlayerListFeature implements ClientLifecycle, PlayerEquipment
     @SubscribeEvent
     public void onRenderOverlay(RenderGameOverlayEvent.Post event) {
         if (event.type != ElementType.ALL || hudRegistry.editing() || minecraft.theWorld == null
-                || snapshot.isEmpty()) {
+                || snapshot.isEmpty() || !HudRenderer.visible(config.hud())) {
             return;
         }
         ScaledResolution resolution = event.resolution;

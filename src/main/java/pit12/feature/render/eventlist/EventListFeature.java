@@ -253,7 +253,7 @@ public final class EventListFeature implements ClientLifecycle, ConfigChangeList
     @SubscribeEvent
     public void onRenderOverlay(RenderGameOverlayEvent.Post event) {
         if (!active || event.type != ElementType.ALL || hudRegistry.editing()
-                || minecraft.theWorld == null) {
+                || minecraft.theWorld == null || !HudRenderer.visible(config.hud())) {
             return;
         }
         long now = System.currentTimeMillis();

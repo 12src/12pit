@@ -539,7 +539,7 @@ public final class TimersFeature
     public void onRenderOverlay(RenderGameOverlayEvent.Post event) {
         if (event.type != RenderGameOverlayEvent.ElementType.ALL || rows.isEmpty()
                 || hudRegistry.editing() || minecraft.theWorld == null
-                || minecraft.gameSettings.hideGUI)
+                || minecraft.gameSettings.hideGUI || !HudRenderer.visible(config.hud))
             return;
         ScaledResolution resolution = event.resolution;
         for (TimersHud hud : activeHuds) {
