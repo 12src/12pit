@@ -24,12 +24,12 @@ import java.awt.Desktop;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.lwjgl.input.Keyboard;
 import pit12.feature.client.hudeditor.api.HudEditor;
 import pit12.feature.client.profile.api.Profiles;
@@ -45,7 +45,7 @@ import pit12.shared.input.Keybind;
 import pit12.shared.lifecycle.ClientLifecycle;
 
 public final class WebUiFeature implements ClientLifecycle, ConfigChangeListener {
-    private static final Logger LOGGER = Logger.getLogger(WebUiFeature.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger(WebUiFeature.class);
     private final Minecraft minecraft = Minecraft.getMinecraft();
     private final WebUiConfig config;
     private final ConfigCatalog settings;
@@ -89,12 +89,12 @@ public final class WebUiFeature implements ClientLifecycle, ConfigChangeListener
         try {
             server.start();
         } catch (IOException failure) {
-            LOGGER.log(Level.WARNING, "Configuration interface is unavailable", failure);
+            LOGGER.warn("Configuration interface is unavailable", failure);
             return;
         }
         MinecraftForge.EVENT_BUS.register(this);
         started = true;
-        LOGGER.info("Configuration interface available at " + server.address());
+        LOGGER.info("Configuration interface available at {}", server.address());
     }
 
     @Override
@@ -140,7 +140,7 @@ public final class WebUiFeature implements ClientLifecycle, ConfigChangeListener
                 }
                 Desktop.getDesktop().browse(address);
             } catch (IOException | RuntimeException failure) {
-                LOGGER.log(Level.WARNING, "Cannot open settings page at " + address, failure);
+                LOGGER.warn("Could not open settings page at {}", address, failure);
             }
         }, "12pit-web-open");
         opener.setDaemon(true);

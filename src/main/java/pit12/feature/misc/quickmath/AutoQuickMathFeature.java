@@ -18,8 +18,6 @@
  */
 package pit12.feature.misc.quickmath;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import net.minecraft.client.Minecraft;
@@ -29,13 +27,15 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import pit12.runtime.config.ConfigCatalog;
 import pit12.runtime.config.ConfigChangeListener;
 import pit12.runtime.config.ConfigChangeSet;
 import pit12.shared.lifecycle.ClientLifecycle;
 
 public final class AutoQuickMathFeature implements ClientLifecycle, ConfigChangeListener {
-    private static final Logger LOGGER = Logger.getLogger(AutoQuickMathFeature.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger(AutoQuickMathFeature.class);
     private static final Pattern QUICK_MATHS_PATTERN = Pattern.compile(
             "^QUICK MATHS!\\s+Solve:\\s*([0-9+\\-*x×÷/()\\s]+?)\\s*$", Pattern.CASE_INSENSITIVE);
     private static final int TICKS_PER_SECOND = 20;
@@ -106,11 +106,10 @@ public final class AutoQuickMathFeature implements ClientLifecycle, ConfigChange
             long answer = QuickMathExpression.evaluate(expression);
             pendingAnswer = String.valueOf(answer);
             delayTicks = (int) Math.round(config.delay() * TICKS_PER_SECOND);
-            LOGGER.info("Solved Quick Math expression " + expression + " = " + answer
-                    + ". Answering in " + delayTicks + " ticks.");
+            LOGGER.debug("Solved Quick Math: {} = {}, answering in {} ticks", expression, answer,
+                    delayTicks);
         } catch (RuntimeException failure) {
-            LOGGER.log(Level.WARNING, "Failed to solve Quick Math expression: '" + expression + "'",
-                    failure);
+            LOGGER.warn("Failed to solve Quick Math expression: {}", expression, failure);
         }
     }
 
@@ -134,9 +133,8 @@ public final class AutoQuickMathFeature implements ClientLifecycle, ConfigChange
         clearPendingAnswer();
         try {
             player.sendChatMessage("/ac " + answer);
-            LOGGER.info("Sent Quick Math answer: " + answer);
         } catch (RuntimeException failure) {
-            LOGGER.log(Level.WARNING, "Failed to send Quick Math answer: " + answer, failure);
+            LOGGER.warn("Failed to send Quick Math answer: {}", answer, failure);
         }
     }
 

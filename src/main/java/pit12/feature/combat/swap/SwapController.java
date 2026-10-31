@@ -38,6 +38,8 @@ import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.play.client.C16PacketClientStatus;
 import net.minecraft.util.EnumChatFormatting;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import pit12.runtime.input.InputBlocker;
 import pit12.runtime.input.InputTicks.Phase;
 import pit12.runtime.input.InputTicks.Timing;
@@ -47,6 +49,7 @@ import pit12.runtime.session.ClientSession;
 import pit12.shared.chat.ChatFeedback.Tone;
 
 final class SwapController {
+    private static final Logger LOGGER = LogManager.getLogger(SwapController.class);
     private final Minecraft minecraft;
     private final Languages language;
     private final ClientSession session;
@@ -179,6 +182,7 @@ final class SwapController {
         try {
             advance(phase);
         } catch (RuntimeException failure) {
+            LOGGER.debug("Swap stopped", failure);
             fail(failure.getMessage() == null ? language.translate("Unexpected error")
                     : failure.getMessage());
             if (options != null && !waitingToResume)
@@ -537,6 +541,7 @@ final class SwapController {
                 }
             }
         } catch (RuntimeException failure) {
+            LOGGER.warn("Could not close the inventory after swapping", failure);
             fail(language.translate("Inventory could not be closed"));
         } finally {
             if (owns(minecraft.currentScreen))

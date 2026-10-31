@@ -18,19 +18,19 @@
  */
 package pit12.platform.oneconfig;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import pit12.runtime.config.ConfigCatalog;
 import pit12.runtime.hud.HudRegistry;
 import pit12.shared.lifecycle.ClientLifecycle;
 
 public final class OneConfigSupport implements ClientLifecycle {
-    private static final Logger LOGGER = Logger.getLogger(OneConfigSupport.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger(OneConfigSupport.class);
     private final ConfigCatalog catalog;
     private final HudRegistry hudRegistry;
     private ClientLifecycle adapter;
@@ -70,7 +70,7 @@ public final class OneConfigSupport implements ClientLifecycle {
             } catch (RuntimeException | LinkageError cleanupFailure) {
                 failure.addSuppressed(cleanupFailure);
             }
-            LOGGER.log(Level.WARNING, "OneConfig integration is unavailable", failure);
+            LOGGER.warn("OneConfig integration is unavailable", failure);
         }
     }
 

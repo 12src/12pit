@@ -26,8 +26,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import pit12.feature.client.profile.api.ProfileMutationResult;
 import pit12.feature.client.profile.api.Profiles;
 import pit12.feature.client.profile.api.ProfilesSnapshot;
@@ -46,7 +46,7 @@ import pit12.shared.result.OperationResult;
 
 public final class ProfilesFeature
         implements ClientLifecycle, Profiles, ProfileController.PersistenceSink {
-    private static final Logger LOGGER = Logger.getLogger(ProfilesFeature.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger(ProfilesFeature.class);
     private final ConfigCatalog catalog;
     private final Path directory;
     private final Function<ProfileCodec, ProfileStore> storeFactory;
@@ -159,7 +159,7 @@ public final class ProfilesFeature
             try {
                 listener.run();
             } catch (RuntimeException failure) {
-                LOGGER.log(Level.SEVERE, "Profile listener failed", failure);
+                LOGGER.error("Profile listener failed: {}", listener.getClass().getName(), failure);
             }
         }
     }
@@ -315,7 +315,7 @@ public final class ProfilesFeature
 
         @Override
         public void failed(String operation, Path path, IOException failure) {
-            LOGGER.log(Level.WARNING, "Profile " + operation + " failed for " + path, failure);
+            LOGGER.warn("Profile {} failed for {}", operation, path, failure);
             dispatchToClient(taskGeneration, () -> controller
                     .persistenceFailed(operation + " failed for " + path.getFileName()));
         }

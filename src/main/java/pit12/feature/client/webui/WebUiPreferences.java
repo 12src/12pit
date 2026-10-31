@@ -45,8 +45,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import pit12.runtime.config.ConfigCatalog;
 import pit12.runtime.config.ConfigChangeListener;
 import pit12.runtime.config.ConfigChangeSet;
@@ -56,7 +56,7 @@ import pit12.runtime.languages.Languages;
 import pit12.shared.storage.AtomicFile;
 
 final class WebUiPreferences implements ConfigChangeListener {
-    private static final Logger LOGGER = Logger.getLogger(WebUiPreferences.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger(WebUiPreferences.class);
     private final ConfigCatalog catalog;
     private final WebUiConfig config;
     private final Languages language;
@@ -306,8 +306,7 @@ final class WebUiPreferences implements ConfigChangeListener {
                 }
             });
         } catch (IOException | SecurityException failure) {
-            LOGGER.log(Level.WARNING, "Could not save configuration interface settings to " + path,
-                    failure);
+            LOGGER.warn("Could not save configuration interface settings to {}", path, failure);
             dispatch(activeGeneration, () -> {
                 problem = source("Could not save configuration interface settings");
                 changed.run();
@@ -317,8 +316,7 @@ final class WebUiPreferences implements ConfigChangeListener {
 
     private void failed(Exception failure) {
         problem = source("Could not load configuration interface settings");
-        LOGGER.log(Level.WARNING, "Could not load configuration interface settings from " + path,
-                failure);
+        LOGGER.warn("Could not load configuration interface settings from {}", path, failure);
         changed.run();
     }
 

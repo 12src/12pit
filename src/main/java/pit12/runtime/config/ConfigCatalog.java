@@ -26,13 +26,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import pit12.runtime.languages.Languages;
 import pit12.shared.concurrent.ClientThread;
 
 public final class ConfigCatalog {
-    private static final Logger LOGGER = Logger.getLogger(ConfigCatalog.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger(ConfigCatalog.class);
     private final List<FeatureConfig> features = new ArrayList<FeatureConfig>();
     private final Map<String, FeatureConfig> featuresById =
             new LinkedHashMap<String, FeatureConfig>();
@@ -212,8 +212,8 @@ public final class ConfigCatalog {
             try {
                 listener.onConfigChanged(changeSet);
             } catch (RuntimeException failure) {
-                LOGGER.log(Level.SEVERE,
-                        "Config listener failed after revision " + changeSet.revision(), failure);
+                LOGGER.error("Config listener {} failed after revision {}",
+                        listener.getClass().getName(), changeSet.revision(), failure);
             }
         }
     }

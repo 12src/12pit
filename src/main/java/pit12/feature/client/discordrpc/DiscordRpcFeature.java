@@ -22,8 +22,8 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import pit12.runtime.config.BooleanSetting;
 import pit12.runtime.config.ConfigCatalog;
 import pit12.runtime.config.ConfigChangeListener;
@@ -101,7 +101,7 @@ public final class DiscordRpcFeature implements ClientLifecycle, ConfigChangeLis
     }
 
     private static final class RpcWorker extends Thread {
-        private static final Logger LOGGER = Logger.getLogger(RpcWorker.class.getName());
+        private static final Logger LOGGER = LogManager.getLogger(RpcWorker.class);
         private final DiscordRpcConnection.Factory connections;
         // The client thread also uses these during shutdown, so keep them under the monitor.
         private boolean enabled;
@@ -134,7 +134,7 @@ public final class DiscordRpcFeature implements ClientLifecycle, ConfigChangeLis
                 try {
                     connection.close();
                 } catch (IOException failure) {
-                    LOGGER.log(Level.FINE, "Failed to close Discord RPC connection", failure);
+                    LOGGER.debug("Failed to close Discord RPC connection", failure);
                 }
             }
         }
@@ -156,7 +156,7 @@ public final class DiscordRpcFeature implements ClientLifecycle, ConfigChangeLis
                             opened.listen();
                         }
                     } catch (IOException failure) {
-                        LOGGER.log(Level.FINE, "Discord RPC connection ended", failure);
+                        LOGGER.debug("Discord RPC connection ended", failure);
                     } finally {
                         synchronized (this) {
                             connection = null;
@@ -171,7 +171,7 @@ public final class DiscordRpcFeature implements ClientLifecycle, ConfigChangeLis
             } catch (InterruptedException interrupted) {
                 Thread.currentThread().interrupt();
             } catch (RuntimeException | LinkageError failure) {
-                LOGGER.log(Level.WARNING, "Discord RPC stopped after an error", failure);
+                LOGGER.warn("Discord RPC stopped after an error", failure);
             }
         }
 

@@ -4,6 +4,7 @@ extend-ignore-re = ['response\.get\("sucess"\)']
 
 [files]
 extend-exclude = [
+    "src/main/java/pit12/feature/**/mixin/**",
     "src/main/java/pit12/platform/mixin/**",
     "src/main/java/pit12/runtime/item/PitEnchantment.java",
     "src/main/resources/assets/pit12/languages/*.po",

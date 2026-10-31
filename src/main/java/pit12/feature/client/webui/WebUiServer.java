@@ -42,8 +42,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import net.minecraft.client.Minecraft;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 final class WebUiServer {
+    private static final Logger LOGGER = LogManager.getLogger(WebUiServer.class);
     private static final String RESOURCES = "assets/pit12/web";
     private static final int PORT = 60916;
     private static final byte[] HEARTBEAT = ": keep-alive\n\n".getBytes(StandardCharsets.UTF_8);
@@ -128,6 +131,8 @@ final class WebUiServer {
             if (cause instanceof IllegalArgumentException) {
                 sendJson(exchange, 400, object("error", cause.getMessage()));
             } else {
+                LOGGER.error("Configuration request failed: {} {}", exchange.getRequestMethod(),
+                        exchange.getRequestURI().getPath(), cause);
                 sendJson(exchange, 500, object("error", "Settings operation failed"));
             }
         } catch (InterruptedException failure) {
@@ -217,6 +222,7 @@ final class WebUiServer {
         } catch (InterruptedException stopping) {
             Thread.currentThread().interrupt();
         } catch (ExecutionException failure) {
+            LOGGER.error("Could not read configuration interface state", failure.getCause());
             throw new IOException("Could not read configuration interface state",
                     failure.getCause());
         } finally {

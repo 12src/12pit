@@ -53,15 +53,15 @@ public final class MixinConfigPlugin implements IMixinConfigPlugin, IMixinErrorH
 
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
-        if (mixinClassName.equals(
-                "pit12.platform.mixin.feature.render.nametag.VanillaRendererLivingEntityMixin")) {
+        if (mixinClassName
+                .equals("pit12.feature.render.nametag.mixin.VanillaRendererLivingEntityMixin")) {
             return !lunar;
         }
         if (mixinClassName
-                .equals("pit12.platform.mixin.feature.render.nametag.LunarEntityLivingBaseMixin")) {
+                .equals("pit12.feature.render.nametag.mixin.LunarEntityLivingBaseMixin")) {
             return lunar;
         }
-        if (mixinClassName.startsWith("pit12.platform.mixin.feature.patch.fontcachefix.")) {
+        if (mixinClassName.startsWith("pit12.feature.patch.fontcachefix.mixin.")) {
             if (lunar) {
                 return !mixinClassName.endsWith(".FontRendererHookMixin") && Launch.classLoader
                         .getResource("optifine/OptiFineClassTransformer.class") != null;
@@ -69,7 +69,7 @@ public final class MixinConfigPlugin implements IMixinConfigPlugin, IMixinErrorH
             return !mixinClassName.endsWith(".LunarFontRendererMixin") && Launch.classLoader
                     .getResource("club/sk1er/patcher/hooks/FontRendererHook.class") != null;
         }
-        if (mixinClassName.startsWith("pit12.platform.mixin.feature.patch.resourceleakfix.")
+        if (mixinClassName.startsWith("pit12.feature.patch.resourceleakfix.mixin.")
                 || mixinClassName
                         .equals("pit12.platform.mixin.rendering.OptiFineFontRendererMixin")) {
             // Forge detects OptiFine after Mixin preparation.

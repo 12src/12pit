@@ -23,11 +23,11 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.client.ClientCommandHandler;
 import net.minecraftforge.fml.client.FMLClientHandler;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import pit12.feature.client.discordrpc.DiscordRpcFeature;
 import pit12.feature.client.hudeditor.HudEditorFeature;
 import pit12.feature.client.profile.ProfilesFeature;
@@ -136,7 +136,7 @@ import pit12.shared.rendering.OpenGlTextureState;
 import pit12.shared.rendering.TextureState;
 
 public final class ClientBootstrap {
-    private static final Logger LOGGER = Logger.getLogger(ClientBootstrap.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger(ClientBootstrap.class);
     private final List<ClientLifecycle> components = new ArrayList<>();
     private final List<ClientLifecycle> startedComponents = new ArrayList<>();
     private final ClientThread client;
@@ -528,8 +528,7 @@ public final class ClientBootstrap {
             try {
                 component.stop();
             } catch (RuntimeException failure) {
-                LOGGER.log(Level.WARNING,
-                        "Failed to stop component " + component.getClass().getName(), failure);
+                LOGGER.warn("Failed to stop component {}", component.getClass().getName(), failure);
             }
         }
         startedComponents.clear();
