@@ -78,6 +78,9 @@ import pit12.feature.patch.scoreboardfix.ScoreboardFixConfig;
 import pit12.feature.patch.scoreboardfix.ScoreboardFixFeature;
 import pit12.feature.render.eventlist.EventListConfig;
 import pit12.feature.render.eventlist.EventListFeature;
+import pit12.feature.render.freecam.FreeCameraBinding;
+import pit12.feature.render.freecam.FreeCameraConfig;
+import pit12.feature.render.freecam.FreeCameraFeature;
 import pit12.feature.render.gamma.GammaBinding;
 import pit12.feature.render.gamma.GammaConfig;
 import pit12.feature.render.gamma.GammaFeature;
@@ -218,6 +221,7 @@ public final class ClientBootstrap {
         registerSmartBlock(minecraft, configs, session, (SmartBlockBinding) minecraft);
         // Category: Render
         registerEventList(configs, hudRegistry, commands);
+        registerFreeCamera(minecraft, configs, input, (FreeCameraBinding) minecraft);
         registerGamma(configs, (GammaBinding) minecraft.entityRenderer);
         registerItemEsp(configs, session, textureStates.get());
         registerNametag(minecraft, configs, session, playerEquipment, denickNames, nicks, timers,
@@ -378,6 +382,13 @@ public final class ClientBootstrap {
         components.add(new EventListFeature(configs, config, hudRegistry, commands, language));
     }
 
+    private void registerFreeCamera(Minecraft minecraft, ConfigCatalog configs, InputBlocker input,
+            FreeCameraBinding binding) {
+        FreeCameraConfig config = new FreeCameraConfig();
+        configs.register(config);
+        components.add(new FreeCameraFeature(minecraft, configs, config, input, binding));
+    }
+
     private void registerGamma(ConfigCatalog configs, GammaBinding binding) {
         GammaConfig config = new GammaConfig();
         configs.register(config);
@@ -482,7 +493,7 @@ public final class ClientBootstrap {
     private void registerFontCacheFix(ConfigCatalog configs, FontCacheFixBinding binding) {
         FontCacheFixConfig config = new FontCacheFixConfig();
         configs.register(config);
-        components.add(new FontCacheFixFeature(config, binding));
+        components.add(new FontCacheFixFeature(configs, config, binding));
     }
 
     private void registerResourceLeakFix(ConfigCatalog configs, ResourceLeakFixBinding binding) {

@@ -19,7 +19,7 @@
 package pit12.feature.patch.fontcachefix;
 
 public interface FontCacheFixBinding {
-    void pit12$bindFontCacheFixConfig(FontCacheFixConfig config);
+    void pit12$setFontCacheFixEnabled(boolean enabled);
 
     boolean pit12$fontCacheFixEnabled();
 }
