@@ -219,6 +219,14 @@ tasks.named<JavaExec>("runClient") {
     dependsOn(buildWebUi)
 }
 
+tasks.named("generateDLIConfig") {
+    notCompatibleWithConfigurationCache("Loom reads project state when generating the launch configuration.")
+}
+
+tasks.withType<JavaExec>().configureEach {
+    notCompatibleWithConfigurationCache("Loom and IDE launch tasks use project state at execution time.")
+}
+
 tasks.processResources {
     mustRunAfter(buildWebUi)
     from("web-ui/dist") { into("assets/pit12/web") }
