@@ -81,7 +81,7 @@ final class NametagOverlayRenderer {
         ScoreObjective objective = scoreboard.getObjectiveInDisplaySlot(2);
         for (int index = 0; index < world.playerEntities.size(); index++) {
             EntityPlayer player = world.playerEntities.get(index);
-            if (player == minecraft.thePlayer || player == camera
+            if (player.isDead || player == minecraft.thePlayer || player == camera
                     || player.isInvisibleToPlayer(minecraft.thePlayer)) {
                 continue;
             }
