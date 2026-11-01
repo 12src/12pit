@@ -55,7 +55,8 @@ final class NametagOverlayRenderer {
     }
 
     void render(Minecraft minecraft, WorldClient world, Map<UUID, NametagText> texts,
-            Function<UUID, String> suffix, int upwardOffset, float scale, float partialTicks) {
+            Function<EntityPlayer, String> suffix, int upwardOffset, float scale,
+            float partialTicks) {
         Entity camera = minecraft.getRenderViewEntity();
         if (camera == null) {
             return;
@@ -112,7 +113,7 @@ final class NametagOverlayRenderer {
             }
             String name = player.getDisplayName().getFormattedText();
             if (suffix != null) {
-                name += suffix.apply(playerId);
+                name += suffix.apply(player);
             }
             String score =
                     !sneaking && distanceSquared < 100.0D && objective != null

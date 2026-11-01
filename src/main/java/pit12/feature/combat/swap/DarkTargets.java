@@ -32,6 +32,7 @@ import pit12.runtime.item.PitEnchantment;
 import pit12.runtime.item.PitEnchantments;
 import pit12.runtime.player.PlayerEquipmentAccess;
 import pit12.runtime.player.PlayerEquipmentSnapshot;
+import pit12.runtime.player.PlayerHealth;
 
 final class DarkTargets {
     private final Minecraft minecraft;
@@ -55,7 +56,7 @@ final class DarkTargets {
         if (!ready() || minecraft.theWorld == null || target.worldObj != minecraft.theWorld
                 || minecraft.theWorld.getEntityByID(target.getEntityId()) != target
                 || target == minecraft.thePlayer || target.isDead || target.isSpectator()
-                || target.getHealth() <= 0 || blocked(target))
+                || PlayerHealth.of(target).value() <= 0 || blocked(target))
             return;
         lastAttackedId = target.getUniqueID();
         lastAttackedEntityId = target.getEntityId();
@@ -75,7 +76,7 @@ final class DarkTargets {
         if (lastAttackedId != null) {
             Entity entity = minecraft.theWorld.getEntityByID(lastAttackedEntityId);
             if (entity instanceof EntityPlayer && lastAttackedId.equals(entity.getUniqueID())
-                    && !entity.isDead && ((EntityPlayer) entity).getHealth() > 0)
+                    && !entity.isDead && PlayerHealth.of((EntityPlayer) entity).value() > 0)
                 last = (EntityPlayer) entity;
             else
                 lastAttackedId = null;
@@ -111,7 +112,7 @@ final class DarkTargets {
                 || minecraft.theWorld.getEntityByID(target.getEntityId()) != target
                 || blocked(target))
             return false;
-        float health = target.getHealth();
+        float health = PlayerHealth.of(target).value();
         int range = config.darkRange.get();
         if (!(health > 0) || target.getDistanceSqToEntity(minecraft.thePlayer) > range * range
                 || health > config.darkThreshold.get()

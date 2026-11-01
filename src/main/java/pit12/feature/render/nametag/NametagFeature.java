@@ -44,6 +44,7 @@ import pit12.runtime.player.PlayerEquipmentAccess;
 import pit12.runtime.player.PlayerEquipmentCache;
 import pit12.runtime.player.PlayerEquipmentListener;
 import pit12.runtime.player.PlayerEquipmentSnapshot;
+import pit12.runtime.player.PlayerHealth;
 import pit12.runtime.session.ClientSession;
 import pit12.shared.lifecycle.ClientLifecycle;
 import pit12.shared.rendering.TextureState;
@@ -128,10 +129,8 @@ public final class NametagFeature
         } else {
             deactivate();
         }
-        binding.pit12$bindNametagNames(
-                enabled && (config.nickMarker() || config.realNames() || timerTypes != 0)
-                        ? this::nameSuffix
-                        : null,
+        binding.pit12$bindNametagNames(enabled && (config.nickMarker() || config.realNames()
+                || config.showHealth() || timerTypes != 0) ? this::nameSuffix : null,
                 enhancedVisibility);
     }
 
@@ -208,6 +207,7 @@ public final class NametagFeature
         }
         if (changes.affects("nametag", "enabled") || changes.affects("nametag", "nick_marker")
                 || changes.affects("nametag", "real_names")
+                || changes.affects("nametag", "show_health")
                 || changes.affects("nametag", "enhanced_visibility")
                 || changes.affects("nametag", "show_held_item")
                 || changes.affects("nametag", "show_leggings")
@@ -244,14 +244,18 @@ public final class NametagFeature
         }
     }
 
-    private String nameSuffix(UUID playerId) {
+    private String nameSuffix(EntityPlayer player) {
         session.checkThread();
+        UUID playerId = player.getUniqueID();
         String suffix = config.nickMarker() && nicks.isNicked(playerId) ? " §e§lN" : "";
         if (config.realNames()) {
             String realName = denickNames.realDisplayName(playerId);
             if (realName != null) {
                 suffix += " §7(" + realName + "§7)";
             }
+        }
+        if (config.showHealth()) {
+            suffix += " §c" + PlayerHealth.of(player).text();
         }
         return timerTypes == 0 ? suffix : suffix + timers.countdowns(playerId, timerTypes);
     }
