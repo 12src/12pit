@@ -153,30 +153,40 @@ public final class NametagFeature
         WorldClient world = session.world();
         if (world != null) {
             for (EntityPlayer player : world.playerEntities) {
-                updateText(player.getUniqueID());
+                updateText(player.getUniqueID(), PlayerEquipmentCache.ALL);
             }
         }
     }
 
-    private void updateText(UUID playerId) {
+    private void updateText(UUID playerId, int changedSlots) {
         PlayerEquipmentSnapshot snapshot = equipment.loadedEquipment(playerId);
         if (snapshot == null && !enhancedVisibility) {
             texts.remove(playerId);
             return;
         }
-        String heldItem = snapshot != null && config.showHeldItem() && snapshot.heldItemKnown()
-                ? PitEnchantmentFormat.format(snapshot.heldEnchantments(),
-                        config.enchantmentFormat(), config.showGem())
-                : null;
-        String leggings =
-                snapshot != null && config.showLeggings() && snapshot.leggingsKnown()
-                        ? PitEnchantmentFormat.format(snapshot.leggingsEnchantments(),
-                                config.enchantmentFormat(), config.showGem())
-                        : null;
+        NametagText text = texts.get(playerId);
+        String heldItem = text == null ? null : text.heldItem;
+        String leggings = text == null ? null : text.leggings;
+        if (text == null || (changedSlots & PlayerEquipmentCache.HELD_ITEM) != 0) {
+            heldItem =
+                    snapshot != null && config.showHeldItem() && snapshot.heldItemKnown()
+                            ? PitEnchantmentFormat.format(snapshot.heldEnchantments(),
+                                    config.enchantmentFormat(), config.showGem())
+                            : null;
+        }
+        if (text == null || (changedSlots & PlayerEquipmentCache.LEGGINGS) != 0) {
+            leggings =
+                    snapshot != null && config.showLeggings() && snapshot.leggingsKnown()
+                            ? PitEnchantmentFormat.format(snapshot.leggingsEnchantments(),
+                                    config.enchantmentFormat(), config.showGem())
+                            : null;
+        }
         if (heldItem == null && leggings == null && !enhancedVisibility) {
             texts.remove(playerId);
-        } else {
+        } else if (text == null) {
             texts.put(playerId, new NametagText(heldItem, leggings, minecraft.fontRendererObj));
+        } else {
+            text.updateEnchantments(heldItem, leggings, minecraft.fontRendererObj);
         }
     }
 
@@ -186,7 +196,7 @@ public final class NametagFeature
                 && ((config.showHeldItem() && (changedSlots & PlayerEquipmentCache.HELD_ITEM) != 0)
                         || (config.showLeggings()
                                 && (changedSlots & PlayerEquipmentCache.LEGGINGS) != 0))) {
-            updateText(playerId);
+            updateText(playerId, changedSlots);
         }
     }
 
