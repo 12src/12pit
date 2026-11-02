@@ -19,8 +19,7 @@
 package pit12.feature.render.playeresp;
 
 import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -29,11 +28,8 @@ import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import pit12.feature.client.relation.api.Relation;
 import pit12.feature.client.relation.api.RelationListener;
 import pit12.feature.client.relation.api.RelationLookup;
@@ -41,36 +37,44 @@ import pit12.feature.client.relation.api.RelationReadiness;
 import pit12.runtime.config.ConfigCatalog;
 import pit12.runtime.config.ConfigChangeListener;
 import pit12.runtime.config.ConfigChangeSet;
+import pit12.runtime.player.PlayerEntityListener;
+import pit12.runtime.player.PlayerEntityTracker;
+import pit12.runtime.player.PlayerEquipmentAccess;
+import pit12.runtime.player.PlayerEquipmentCache;
+import pit12.runtime.player.PlayerEquipmentListener;
 import pit12.runtime.player.TabPresence;
 import pit12.runtime.player.TabPresenceListener;
 import pit12.runtime.session.ClientSession;
 import pit12.shared.lifecycle.ClientLifecycle;
 import pit12.shared.rendering.TextureState;
 
-public final class PlayerEspFeature
-        implements ClientLifecycle, ConfigChangeListener, RelationListener, TabPresenceListener {
+public final class PlayerEspFeature implements ClientLifecycle, ConfigChangeListener,
+        RelationListener, TabPresenceListener, PlayerEntityListener, PlayerEquipmentListener {
     private final Minecraft minecraft = Minecraft.getMinecraft();
     private final ConfigCatalog configs;
     private final PlayerEspConfig config;
     private final ClientSession session;
     private final TabPresence presence;
     private final RelationLookup relations;
+    private final PlayerEntityTracker players;
+    private final PlayerEquipmentAccess equipment;
     private final PlayerEspRenderer renderer;
-    private final Runnable sessionChanged = this::onSessionChanged;
-    private final Map<Integer, EntityPlayer> candidates = new LinkedHashMap<>();
+    private final Map<UUID, Target> candidates = new HashMap<>();
     private final List<Target> targets = new ArrayList<>();
     private WorldClient world;
-    private boolean targetsDirty;
     private boolean started;
     private boolean active;
 
     public PlayerEspFeature(ConfigCatalog configs, PlayerEspConfig config, ClientSession session,
-            TabPresence presence, RelationLookup relations, TextureState textures) {
+            TabPresence presence, RelationLookup relations, PlayerEntityTracker players,
+            PlayerEquipmentAccess equipment, TextureState textures) {
         this.configs = configs;
         this.config = config;
         this.session = session;
         this.presence = presence;
         this.relations = relations;
+        this.players = players;
+        this.equipment = equipment;
         renderer = new PlayerEspRenderer(config, textures);
     }
 
@@ -109,11 +113,12 @@ public final class PlayerEspFeature
     private void activate() {
         active = true;
         try {
-            session.addListener(sessionChanged);
             presence.addListener(this);
             relations.addListener(this);
+            equipment.addListener(this);
+            players.addListener(this);
             MinecraftForge.EVENT_BUS.register(this);
-            onSessionChanged();
+            onPlayerEntitiesReset();
         } catch (RuntimeException failure) {
             deactivate();
             throw failure;
@@ -126,111 +131,128 @@ public final class PlayerEspFeature
         }
         active = false;
         MinecraftForge.EVENT_BUS.unregister(this);
+        players.removeListener(this);
+        equipment.removeListener(this);
         relations.removeListener(this);
         presence.removeListener(this);
-        session.removeListener(sessionChanged);
         world = null;
         candidates.clear();
         targets.clear();
-        targetsDirty = false;
         renderer.clear();
     }
 
-    private void onSessionChanged() {
-        if (!active) {
-            return;
-        }
-        WorldClient current = session.world();
-        if (world == current) {
-            return;
-        }
-        world = current;
+    @Override
+    public void onPlayerEntitiesReset() {
+        world = session.world();
         candidates.clear();
         targets.clear();
         renderer.clear();
         if (world != null) {
             for (EntityPlayer player : world.playerEntities) {
-                candidates.put(player.getEntityId(), player);
-            }
-        }
-        rebuildTargets();
-    }
-
-    @SubscribeEvent(priority = EventPriority.LOWEST)
-    public void onEntityJoin(EntityJoinWorldEvent event) {
-        if (!active || !event.world.isRemote || !(event.entity instanceof EntityPlayer)) {
-            return;
-        }
-        session.checkThread();
-        session.refresh();
-        if (event.world == world) {
-            EntityPlayer player = (EntityPlayer) event.entity;
-            if (candidates.put(player.getEntityId(), player) != player) {
-                targetsDirty = true;
+                onPlayerEntityAdded(player);
             }
         }
     }
 
-    @SubscribeEvent
-    public void onTick(ClientTickEvent event) {
-        if (!active || event.phase != Phase.END) {
+    @Override
+    public void onPlayerEntityAdded(EntityPlayer player) {
+        if (player == minecraft.thePlayer || player.isDead) {
             return;
         }
-        session.checkThread();
-        session.refresh();
-        if (world == null) {
-            return;
-        }
-        Iterator<Map.Entry<Integer, EntityPlayer>> iterator = candidates.entrySet().iterator();
-        while (iterator.hasNext()) {
-            Map.Entry<Integer, EntityPlayer> entry = iterator.next();
-            EntityPlayer player = entry.getValue();
-            if (player.isDead || world.getEntityByID(entry.getKey()) != player) {
-                iterator.remove();
-                targetsDirty = true;
-            }
-        }
-        if (targetsDirty) {
-            rebuildTargets();
+        UUID playerId = player.getUniqueID();
+        candidates.put(playerId, new Target(player));
+        updateTarget(playerId);
+    }
+
+    @Override
+    public void onPlayerEntityRemoved(EntityPlayer player) {
+        Target target = candidates.remove(player.getUniqueID());
+        if (target != null) {
+            removeTarget(target);
         }
     }
 
     private void rebuildTargets() {
-        targets.clear();
-        targetsDirty = false;
-        if (world == null || relations.readiness() != RelationReadiness.READY) {
+        for (UUID playerId : candidates.keySet()) {
+            updateTarget(playerId);
+        }
+    }
+
+    private void updateTarget(UUID playerId) {
+        Target target = candidates.get(playerId);
+        if (target == null) {
             return;
         }
-        for (EntityPlayer player : candidates.values()) {
-            if (player == minecraft.thePlayer || player.isDead
-                    || !presence.contains(player.getUniqueID())) {
-                continue;
-            }
-            Relation relation = relations.relationOf(player.getUniqueID());
-            if (config.shows(relation)) {
-                targets.add(new Target(player, relation));
-            }
+        int color = 0;
+        if (presence.contains(playerId)) {
+            Relation relation = relations.readiness() == RelationReadiness.READY
+                    ? relations.relationOf(playerId)
+                    : null;
+            color = config.color(relation,
+                    config.hasEquipmentTargets() ? equipment.loadedEquipment(playerId) : null);
         }
+        target.color = color;
+        if ((color >>> 24) != 0) {
+            if (target.index < 0) {
+                target.index = targets.size();
+                targets.add(target);
+            }
+        } else {
+            removeTarget(target);
+        }
+    }
+
+    private void removeTarget(Target target) {
+        if (target.index < 0) {
+            return;
+        }
+        Target last = targets.remove(targets.size() - 1);
+        if (last != target) {
+            targets.set(target.index, last);
+            last.index = target.index;
+        }
+        target.index = -1;
     }
 
     @Override
     public void onRelationsLoaded() {
-        targetsDirty = true;
+        rebuildTargets();
     }
 
     @Override
     public void onRelationChanged(UUID playerId, Relation previous, Relation current) {
-        targetsDirty = true;
+        updateTarget(playerId);
     }
 
     @Override
     public void onPlayerSeen(UUID playerId, String name, boolean joined) {
-        targetsDirty = true;
+        updateTarget(playerId);
     }
 
     @Override
     public void onPlayerLeft(UUID playerId) {
-        targetsDirty = true;
+        updateTarget(playerId);
+    }
+
+    @Override
+    public void onPlayerEquipmentChanged(UUID playerId, int changedSlots, long revision) {
+        if (config.hasEquipmentTargets() && (changedSlots & PlayerEquipmentCache.LEGGINGS) != 0) {
+            updateTarget(playerId);
+        }
+    }
+
+    @Override
+    public void onPlayerEquipmentRemoved(UUID playerId) {
+        if (config.hasEquipmentTargets()) {
+            updateTarget(playerId);
+        }
+    }
+
+    @Override
+    public void onPlayerEquipmentReset() {
+        if (config.hasEquipmentTargets()) {
+            rebuildTargets();
+        }
     }
 
     @Override
@@ -238,7 +260,15 @@ public final class PlayerEspFeature
         if (!started || !(changes.affects("playeresp", "enabled")
                 || changes.affects("playeresp", "show_friend")
                 || changes.affects("playeresp", "show_enemy")
-                || changes.affects("playeresp", "show_other"))) {
+                || changes.affects("playeresp", "show_other")
+                || changes.affects("playeresp", "show_venom")
+                || changes.affects("playeresp", "show_bounty_hunter")
+                || changes.affects("playeresp", "friend_color")
+                || changes.affects("playeresp", "enemy_color")
+                || changes.affects("playeresp", "other_color")
+                || changes.affects("playeresp", "venom_color")
+                || changes.affects("playeresp", "bounty_hunter_color")
+                || changes.affects("playeresp", "priority"))) {
             return;
         }
         updateActivation();
@@ -256,11 +286,11 @@ public final class PlayerEspFeature
 
     static final class Target {
         final EntityPlayer player;
-        final Relation relation;
+        int color;
+        int index = -1;
 
-        Target(EntityPlayer player, Relation relation) {
+        Target(EntityPlayer player) {
             this.player = player;
-            this.relation = relation;
         }
     }
 }

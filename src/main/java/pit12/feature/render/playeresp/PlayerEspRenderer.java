@@ -39,9 +39,6 @@ final class PlayerEspRenderer {
         if (localPlayer == null || minecraft.getRenderViewEntity() == null) {
             return;
         }
-        int friendColor = config.friendColor();
-        int enemyColor = config.enemyColor();
-        int otherColor = config.otherColor();
         boolean fade = config.distanceFade();
         int near = Math.min(config.fadeNearDistance(), config.fadeFarDistance());
         int far = Math.max(config.fadeNearDistance(), config.fadeFarDistance());
@@ -53,23 +50,10 @@ final class PlayerEspRenderer {
                 + (localPlayer.posZ - localPlayer.lastTickPosZ) * partialTicks;
         RenderManager manager = minecraft.getRenderManager();
         boxes.beginFrame(manager.viewerPosX, manager.viewerPosY, manager.viewerPosZ);
-        for (PlayerEspFeature.Target target : targets) {
+        for (int index = 0, size = targets.size(); index < size; index++) {
+            PlayerEspFeature.Target target = targets.get(index);
             EntityPlayer player = target.player;
             if (player == localPlayer || !player.isEntityAlive()) {
-                continue;
-            }
-            int color;
-            switch (target.relation) {
-                case FRIEND:
-                    color = friendColor;
-                    break;
-                case ENEMY:
-                    color = enemyColor;
-                    break;
-                default:
-                    color = otherColor;
-            }
-            if ((color >>> 24) == 0) {
                 continue;
             }
             double x = player.lastTickPosX + (player.posX - player.lastTickPosX) * partialTicks;
@@ -90,7 +74,7 @@ final class PlayerEspRenderer {
             }
             double radius = player.width * 0.5D + 0.1D;
             boxes.add(x - radius, y, z - radius, x + radius, y + player.height + 0.2D, z + radius,
-                    color, opacity * 0.5F, opacity);
+                    target.color, opacity * 0.5F, opacity);
         }
         boxes.render();
     }

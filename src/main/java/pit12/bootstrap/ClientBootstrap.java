@@ -226,7 +226,8 @@ public final class ClientBootstrap {
         registerItemEsp(configs, session, textureStates.get());
         registerNametag(minecraft, configs, session, playerEquipment, denickNames, nicks, timers,
                 textureStates.get());
-        registerPlayerEsp(configs, session, presence, relations, textureStates.get());
+        registerPlayerEsp(configs, session, presence, relations, players, playerEquipment,
+                textureStates.get());
         registerPlayerList(configs, playerNames, players, playerEquipment, pitContext, hudRegistry,
                 relations, presence, denickNames, nicks);
         registerRingHelper(minecraft, configs, session, pitContext, textureStates.get());
@@ -412,11 +413,12 @@ public final class ClientBootstrap {
     }
 
     private void registerPlayerEsp(ConfigCatalog configs, ClientSession session,
-            TabPresence presence, RelationLookup relations, TextureState textures) {
+            TabPresence presence, RelationLookup relations, PlayerEntityTracker players,
+            PlayerEquipmentAccess equipment, TextureState textures) {
         PlayerEspConfig config = new PlayerEspConfig();
         configs.register(config);
-        components
-                .add(new PlayerEspFeature(configs, config, session, presence, relations, textures));
+        components.add(new PlayerEspFeature(configs, config, session, presence, relations, players,
+                equipment, textures));
     }
 
     private void registerPlayerList(ConfigCatalog configs, PlayerNameCache playerNames,
