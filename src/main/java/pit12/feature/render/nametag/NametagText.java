@@ -78,10 +78,10 @@ final class NametagText {
         this.health = health;
         this.countdowns = countdowns;
         StringBuilder text = new StringBuilder();
-        if (nicked)
-            text.append(" §e§lN");
         if (realName != null)
-            text.append(" §7(").append(realName).append("§7)");
+            text.append(" §c(§7").append(realName).append("§c)");
+        else if (nicked)
+            text.append(" §e§lN");
         if (health != null)
             text.append(" §c").append(health);
         suffix = text.append(countdowns).toString();
