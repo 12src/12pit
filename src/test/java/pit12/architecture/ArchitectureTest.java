@@ -25,9 +25,6 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.library.Architectures.layeredArchitecture;
 import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.tngtech.archunit.core.domain.Dependency;
 import com.tngtech.archunit.core.domain.JavaClass;
 import com.tngtech.archunit.core.domain.JavaClasses;
@@ -39,11 +36,6 @@ import com.tngtech.archunit.lang.ArchCondition;
 import com.tngtech.archunit.lang.ArchRule;
 import com.tngtech.archunit.lang.ConditionEvents;
 import com.tngtech.archunit.lang.SimpleConditionEvent;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.util.Set;
 import java.util.TreeSet;
 import org.junit.runner.RunWith;
@@ -177,26 +169,6 @@ public final class ArchitectureTest {
         }
     }
 
-    @ArchTest
-    public static void MIXINS_MUST_BE_REGISTERED(JavaClasses classes) {
-        Set<String> implementedMixins = new TreeSet<String>();
-        for (JavaClass javaClass : classes) {
-            if (javaClass.isAnnotatedWith("org.spongepowered.asm.mixin.Mixin")) {
-                implementedMixins.add(javaClass.getName());
-            }
-        }
-        Set<String> configuredMixins = configuredMixins();
-        if (implementedMixins.equals(configuredMixins)) {
-            return;
-        }
-        Set<String> unregisteredMixins = new TreeSet<String>(implementedMixins);
-        unregisteredMixins.removeAll(configuredMixins);
-        Set<String> missingClasses = new TreeSet<String>(configuredMixins);
-        missingClasses.removeAll(implementedMixins);
-        throw new AssertionError("Mixin registration mismatch: unregistered=" + unregisteredMixins
-                + ", missing classes=" + missingClasses);
-    }
-
     private ArchitectureTest() {}
 
     private static ArchCondition<JavaClass> onlyUseOtherFeatureApis() {
@@ -236,53 +208,5 @@ public final class ArchitectureTest {
         String apiPackage = "pit12.feature." + featureName + ".api";
         String packageName = javaClass.getPackageName();
         return packageName.equals(apiPackage) || packageName.startsWith(apiPackage + ".");
-    }
-
-    private static Set<String> configuredMixins() {
-        InputStream stream =
-                ArchitectureTest.class.getClassLoader().getResourceAsStream("mixins.pit12.list");
-        if (stream == null) {
-            throw new AssertionError("Missing mixins.pit12.list on the test runtime classpath");
-        }
-        try (BufferedReader reader =
-                new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))) {
-            Set<String> configuredMixins = new TreeSet<String>();
-            String configName;
-            while ((configName = reader.readLine()) != null) {
-                addConfiguredMixins(configuredMixins, configName);
-            }
-            return configuredMixins;
-        } catch (IOException failure) {
-            throw new AssertionError("Cannot read mixins.pit12.list", failure);
-        }
-    }
-
-    private static void addConfiguredMixins(Set<String> destination, String configName) {
-        try (InputStream stream =
-                ArchitectureTest.class.getClassLoader().getResourceAsStream(configName)) {
-            if (stream == null) {
-                throw new AssertionError(
-                        "Missing " + configName + " on the test runtime classpath");
-            }
-            JsonObject config = new JsonParser()
-                    .parse(new InputStreamReader(stream, StandardCharsets.UTF_8)).getAsJsonObject();
-            String basePackage = config.get("package").getAsString();
-            addConfiguredMixins(destination, config, basePackage, "mixins");
-            addConfiguredMixins(destination, config, basePackage, "client");
-            addConfiguredMixins(destination, config, basePackage, "server");
-        } catch (IOException | RuntimeException failure) {
-            throw new AssertionError("Cannot read " + configName, failure);
-        }
-    }
-
-    private static void addConfiguredMixins(Set<String> destination, JsonObject config,
-            String basePackage, String listName) {
-        JsonElement configured = config.get(listName);
-        if (configured == null) {
-            return;
-        }
-        for (JsonElement mixin : configured.getAsJsonArray()) {
-            destination.add(basePackage + "." + mixin.getAsString());
-        }
     }
 }

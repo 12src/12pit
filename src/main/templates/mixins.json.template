@@ -1,14 +1,13 @@
 {
   "required": true,
   "minVersion": "0.7.11",
-  "package": "${basePackage}.feature.combat.nojumpdelay.mixin",
+  "package": "${mixinPackage}",
   "plugin": "${basePackage}.platform.mixinconfig.MixinConfigPlugin",
   "refmap": "mixins.${modId}.refmap.json",
   "target": "@env(DEFAULT)",
   "compatibilityLevel": "JAVA_8",
   "mixins": [],
   "client": [
-    "EntityLivingBaseMixin",
-    "MinecraftMixin"
+${mixinClasses}
   ]
 }
