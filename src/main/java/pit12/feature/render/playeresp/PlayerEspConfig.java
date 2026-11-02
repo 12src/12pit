@@ -22,10 +22,13 @@ import static pit12.runtime.languages.Languages.source;
 
 import pit12.feature.client.relation.api.Relation;
 import pit12.runtime.config.BooleanSetting;
+import pit12.runtime.config.ChoiceSetting;
 import pit12.runtime.config.ColorSetting;
 import pit12.runtime.config.ConfigCategory;
 import pit12.runtime.config.FeatureConfig;
 import pit12.runtime.config.IntegerSetting;
+import pit12.runtime.item.PitEnchantment;
+import pit12.runtime.player.PlayerEquipmentSnapshot;
 
 public final class PlayerEspConfig extends FeatureConfig {
     private final BooleanSetting showFriend;
@@ -34,13 +37,34 @@ public final class PlayerEspConfig extends FeatureConfig {
     private final ColorSetting friendColor;
     private final ColorSetting enemyColor;
     private final ColorSetting otherColor;
+    private final BooleanSetting showVenom;
+    private final BooleanSetting showBountyHunter;
+    private final ColorSetting venomColor;
+    private final ColorSetting bountyHunterColor;
+    private final ChoiceSetting priority;
     private final BooleanSetting distanceFade;
     private final IntegerSetting fadeNearDistance;
     private final IntegerSetting fadeFarDistance;
 
     public PlayerEspConfig() {
         super("playeresp", source("Player ESP"), ConfigCategory.RENDER,
-                source("Shows colored boxes around loaded players through blocks."), true, false);
+                source("Shows colored boxes around loaded players through blocks."));
+        subcategory("general", source("General"));
+        priority = choiceSetting("priority", source("Color priority"), source(
+                "Chooses which color to use when conflicting. Mixed averages their colors and opacity."),
+                0, new ChoiceSetting.Choice(0, source("Relations")),
+                new ChoiceSetting.Choice(1, source("Equipment")),
+                new ChoiceSetting.Choice(2, source("Mixed")));
+        subsubcategory("distance_fade", source("Distance fade"));
+        distanceFade = booleanSetting("distance_fade", source("Fade nearby players"),
+                source("Makes boxes fade out as players get closer."), true);
+        fadeNearDistance =
+                integerSliderSetting("fade_near_distance", source("Hidden distance (blocks)"),
+                        source("Hides boxes at or below the smaller distance."), 5, 0, 20, 1);
+        fadeFarDistance =
+                integerSliderSetting("fade_far_distance", source("Full color distance (blocks)"),
+                        source("Uses full color at or above the larger distance."), 10, 0, 20, 1);
+        subcategory("relations", source("Relations"));
         subsubcategory("friends", source("Friends"));
         showFriend = booleanSetting("show_friend", source("Show friends"), source("Marks friends."),
                 true);
@@ -56,42 +80,70 @@ public final class PlayerEspConfig extends FeatureConfig {
                 source("Marks players outside the friend and enemy lists."), false);
         otherColor = colorPickerSetting("other_color", source("Other player color"),
                 source("Color and opacity of boxes around other players."), 0xC0FFFFFF);
-        subsubcategory("distance_fade", source("Distance fade"));
-        distanceFade = booleanSetting("distance_fade", source("Fade nearby players"),
-                source("Makes boxes fade out as players get closer."), true);
-        fadeNearDistance =
-                integerSliderSetting("fade_near_distance", source("Hidden distance (blocks)"),
-                        source("Hides boxes at or below the smaller distance."), 5, 0, 20, 1);
-        fadeFarDistance =
-                integerSliderSetting("fade_far_distance", source("Full color distance (blocks)"),
-                        source("Uses full color at or above the larger distance."), 10, 0, 20, 1);
+        subcategory("equipment", source("Equipment"));
+        subsubcategory("venom", "Venom");
+        showVenom = booleanSetting("show_venom", source("Show Venom"),
+                source("Marks players wearing Venom leggings."), true);
+        venomColor = colorPickerSetting("venom_color", source("Venom color"),
+                source("Color and opacity of boxes around players wearing Venom leggings."),
+                0xC0AA00AA);
+        subsubcategory("bounty_hunter", "Bounty Hunter");
+        showBountyHunter = booleanSetting("show_bounty_hunter", source("Show Bounty Hunter"),
+                source("Marks players wearing golden leggings."), false);
+        bountyHunterColor = colorPickerSetting("bounty_hunter_color", source("Bounty Hunter color"),
+                source("Color and opacity of boxes around players wearing golden leggings."),
+                0xC0FFAA00);
     }
 
     public boolean hasTargets() {
-        return showFriend.get() || showEnemy.get() || showOther.get();
+        return showFriend.get() || showEnemy.get() || showOther.get() || hasEquipmentTargets();
     }
 
-    public boolean shows(Relation relation) {
-        switch (relation) {
-            case FRIEND:
-                return showFriend.get();
-            case ENEMY:
-                return showEnemy.get();
-            default:
-                return showOther.get();
+    boolean hasEquipmentTargets() {
+        return showVenom.get() || showBountyHunter.get();
+    }
+
+    int color(Relation relation, PlayerEquipmentSnapshot equipment) {
+        int relationColor = 0;
+        if (relation != null) {
+            switch (relation) {
+                case FRIEND:
+                    relationColor = showFriend.get() ? friendColor.get() : 0;
+                    break;
+                case ENEMY:
+                    relationColor = showEnemy.get() ? enemyColor.get() : 0;
+                    break;
+                default:
+                    relationColor = showOther.get() ? otherColor.get() : 0;
+            }
         }
-    }
-
-    public int friendColor() {
-        return friendColor.get();
-    }
-
-    public int enemyColor() {
-        return enemyColor.get();
-    }
-
-    public int otherColor() {
-        return otherColor.get();
+        int equipmentColor = 0;
+        if (equipment != null) {
+            if (showVenom.get()
+                    && equipment.leggingsEnchantments().contains(PitEnchantment.Combo_Venom)) {
+                equipmentColor = venomColor.get();
+            } else if (showBountyHunter.get() && equipment.hasGoldenLeggings()) {
+                equipmentColor = bountyHunterColor.get();
+            }
+        }
+        if ((relationColor >>> 24) == 0) {
+            return equipmentColor;
+        }
+        if ((equipmentColor >>> 24) == 0) {
+            return relationColor;
+        }
+        switch (priority.get()) {
+            case 0:
+                return relationColor;
+            case 1:
+                return equipmentColor;
+            default:
+                int alpha = ((relationColor >>> 24) + (equipmentColor >>> 24)) / 2;
+                int red = ((relationColor >> 16 & 0xFF) + (equipmentColor >> 16 & 0xFF)) / 2;
+                int green = ((relationColor >> 8 & 0xFF) + (equipmentColor >> 8 & 0xFF)) / 2;
+                int blue = ((relationColor & 0xFF) + (equipmentColor & 0xFF)) / 2;
+                return alpha << 24 | red << 16 | green << 8 | blue;
+        }
     }
 
     public boolean distanceFade() {
