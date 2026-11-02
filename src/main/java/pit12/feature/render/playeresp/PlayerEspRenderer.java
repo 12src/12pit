@@ -22,6 +22,7 @@ import java.util.List;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.entity.player.EntityPlayer;
+import pit12.shared.performance.HotPath;
 import pit12.shared.rendering.BoxRenderer;
 import pit12.shared.rendering.TextureState;
 
@@ -34,6 +35,7 @@ final class PlayerEspRenderer {
         boxes = new BoxRenderer(textures);
     }
 
+    @HotPath
     void render(Minecraft minecraft, List<PlayerEspFeature.Target> targets, float partialTicks) {
         EntityPlayer localPlayer = minecraft.thePlayer;
         if (localPlayer == null || minecraft.getRenderViewEntity() == null) {

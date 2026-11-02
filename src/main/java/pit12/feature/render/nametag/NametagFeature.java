@@ -47,6 +47,7 @@ import pit12.runtime.player.PlayerEquipmentSnapshot;
 import pit12.runtime.player.PlayerHealth;
 import pit12.runtime.session.ClientSession;
 import pit12.shared.lifecycle.ClientLifecycle;
+import pit12.shared.performance.HotPath;
 import pit12.shared.rendering.TextureState;
 
 public final class NametagFeature
@@ -256,6 +257,7 @@ public final class NametagFeature
         }
     }
 
+    @HotPath
     private String nameSuffix(EntityPlayer player) {
         session.checkThread();
         UUID playerId = player.getUniqueID();
@@ -272,6 +274,7 @@ public final class NametagFeature
 
     // Lunar replaces name rendering and skips Forge's Specials events.
     @SubscribeEvent
+    @HotPath
     public void onRenderName(RenderLivingEvent.Post<?> event) {
         if (!active || enhancedVisibility || !(event.entity instanceof EntityPlayer)
                 || minecraft.thePlayer == null || event.entity == minecraft.thePlayer
@@ -301,6 +304,7 @@ public final class NametagFeature
     }
 
     @SubscribeEvent
+    @HotPath
     public void onRenderWorld(RenderWorldLastEvent event) {
         WorldClient world = session.world();
         if (active && enhancedVisibility && world != null && world == minecraft.theWorld

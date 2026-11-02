@@ -62,6 +62,7 @@ import pit12.shared.chat.ChatFeedback.Tone;
 import pit12.shared.input.Keybind;
 import pit12.shared.input.MinecraftActions;
 import pit12.shared.lifecycle.ClientLifecycle;
+import pit12.shared.performance.HotPath;
 import pit12.shared.rendering.FontWidths;
 import pit12.shared.text.TextCodes;
 
@@ -515,6 +516,7 @@ public final class ContractRerollFeature
     }
 
     @SubscribeEvent
+    @HotPath
     public void onRenderOverlay(RenderGameOverlayEvent.Post event) {
         if (state == State.IDLE || event.type != RenderGameOverlayEvent.ElementType.ALL
                 || minecraft.gameSettings.hideGUI || minecraft.thePlayer == null)

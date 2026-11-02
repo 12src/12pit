@@ -37,6 +37,7 @@ import net.minecraft.util.AxisAlignedBB;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
+import pit12.shared.performance.HotPath;
 import pit12.shared.rendering.FontWidths;
 import pit12.shared.rendering.TextureState;
 import pit12.shared.rendering.WorldRenderState;
@@ -68,6 +69,7 @@ final class TelebowRenderer {
         state = new WorldRenderState(textures);
     }
 
+    @HotPath
     void render(Collection<TelebowPath> paths, Collection<TelebowAim.Target> aims, long now) {
         if (minecraft.getRenderViewEntity() == null)
             return;

@@ -42,6 +42,7 @@ import pit12.runtime.hud.HudRenderer;
 import pit12.runtime.languages.Languages;
 import pit12.shared.concurrent.ClientThread;
 import pit12.shared.lifecycle.ClientLifecycle;
+import pit12.shared.performance.HotPath;
 
 public final class EventListFeature implements ClientLifecycle, ConfigChangeListener {
     private final Minecraft minecraft = Minecraft.getMinecraft();
@@ -251,6 +252,7 @@ public final class EventListFeature implements ClientLifecycle, ConfigChangeList
     }
 
     @SubscribeEvent
+    @HotPath
     public void onRenderOverlay(RenderGameOverlayEvent.Post event) {
         if (!active || event.type != ElementType.ALL || hudRegistry.editing()
                 || minecraft.theWorld == null || !HudRenderer.visible(config.hud())) {

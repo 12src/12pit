@@ -27,6 +27,7 @@ import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.player.EntityPlayer;
 import org.lwjgl.opengl.GL11;
+import pit12.shared.performance.HotPath;
 import pit12.shared.rendering.RenderStateSnapshot;
 
 final class NametagRenderer {
@@ -35,6 +36,7 @@ final class NametagRenderer {
     static final float OFFSET_SCALE = 0.01F / WORLD_SCALE;
     private final RenderStateSnapshot state = new RenderStateSnapshot();
 
+    @HotPath
     void render(Minecraft minecraft, EntityPlayer player, NametagText text, double x, double y,
             double z, double distanceSquared, int upwardOffset) {
         FontRenderer font = minecraft.fontRendererObj;

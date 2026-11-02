@@ -40,6 +40,7 @@ import pit12.runtime.hud.HudBounds;
 import pit12.runtime.hud.HudElement;
 import pit12.runtime.hud.HudRegistry;
 import pit12.runtime.hud.HudRenderer;
+import pit12.shared.performance.HotPath;
 import pit12.shared.rendering.FontWidths;
 import pit12.shared.rendering.UiRenderState;
 
@@ -188,6 +189,7 @@ final class HudEditorController {
         return bounds;
     }
 
+    @HotPath
     void render(int mouseX, int mouseY, float partialTicks) {
         boolean removed = selected.removeIf(element -> !registry.contains(element));
         if (removed) {

@@ -40,6 +40,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.scoreboard.ScoreObjective;
 import net.minecraft.scoreboard.Scoreboard;
 import org.lwjgl.opengl.GL11;
+import pit12.shared.performance.HotPath;
 import pit12.shared.rendering.TextureState;
 import pit12.shared.rendering.WorldRenderState;
 
@@ -54,6 +55,7 @@ final class NametagOverlayRenderer {
         state = new WorldRenderState(textures);
     }
 
+    @HotPath
     void render(Minecraft minecraft, WorldClient world, Map<UUID, NametagText> texts,
             Function<EntityPlayer, String> suffix, int upwardOffset, float scale,
             float partialTicks) {

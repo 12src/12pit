@@ -23,6 +23,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.init.Items;
+import pit12.shared.performance.HotPath;
 import pit12.shared.rendering.BoxRenderer;
 import pit12.shared.rendering.TextureState;
 
@@ -35,6 +36,7 @@ final class ItemEspRenderer {
         boxes = new BoxRenderer(textures);
     }
 
+    @HotPath
     void render(Minecraft minecraft, List<ItemEspFeature.Target> targets, float partialTicks) {
         if (minecraft.getRenderViewEntity() == null) {
             return;

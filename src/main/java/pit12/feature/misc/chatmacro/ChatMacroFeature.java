@@ -47,6 +47,7 @@ import pit12.shared.chat.ChatFeedback.Tone;
 import pit12.shared.concurrent.ClientThread;
 import pit12.shared.input.Keybind;
 import pit12.shared.lifecycle.ClientLifecycle;
+import pit12.shared.performance.HotPath;
 import pit12.shared.rendering.FontWidths;
 
 public final class ChatMacroFeature
@@ -278,6 +279,7 @@ public final class ChatMacroFeature
     }
 
     @SubscribeEvent
+    @HotPath
     public void onRenderOverlay(RenderGameOverlayEvent.Post event) {
         if (!waiting || event.type != ElementType.ALL || minecraft.gameSettings.hideGUI
                 || minecraft.thePlayer == null)

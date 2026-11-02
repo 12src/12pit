@@ -41,6 +41,7 @@ import pit12.runtime.pit.PitMap;
 import pit12.runtime.pit.PitMid;
 import pit12.runtime.session.ClientSession;
 import pit12.shared.lifecycle.ClientLifecycle;
+import pit12.shared.performance.HotPath;
 import pit12.shared.rendering.TextureState;
 
 public final class RingHelperFeature implements ClientLifecycle, ConfigChangeListener {
@@ -195,6 +196,7 @@ public final class RingHelperFeature implements ClientLifecycle, ConfigChangeLis
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
+    @HotPath
     public void onRenderWorld(RenderWorldLastEvent event) {
         if (active && world == minecraft.theWorld && !targets.isEmpty() && shouldShow()) {
             renderer.render(minecraft, targets, config.color(), geometryRevision);

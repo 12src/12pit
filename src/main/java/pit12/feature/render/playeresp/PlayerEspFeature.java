@@ -46,6 +46,7 @@ import pit12.runtime.player.TabPresence;
 import pit12.runtime.player.TabPresenceListener;
 import pit12.runtime.session.ClientSession;
 import pit12.shared.lifecycle.ClientLifecycle;
+import pit12.shared.performance.HotPath;
 import pit12.shared.rendering.TextureState;
 
 public final class PlayerEspFeature implements ClientLifecycle, ConfigChangeListener,
@@ -278,6 +279,7 @@ public final class PlayerEspFeature implements ClientLifecycle, ConfigChangeList
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
+    @HotPath
     public void onRenderWorld(RenderWorldLastEvent event) {
         if (active && world != null && world == minecraft.theWorld && !targets.isEmpty()) {
             renderer.render(minecraft, targets, event.partialTicks);

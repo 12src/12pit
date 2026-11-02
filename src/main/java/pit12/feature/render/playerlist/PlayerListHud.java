@@ -42,6 +42,7 @@ import pit12.runtime.item.PitEnchantment;
 import pit12.runtime.item.PitEnchantmentFormat;
 import pit12.runtime.item.PitEnchantmentReader;
 import pit12.runtime.languages.Languages;
+import pit12.shared.performance.HotPath;
 import pit12.shared.rendering.FontWidths;
 import pit12.shared.text.TextCodes;
 
@@ -251,6 +252,7 @@ final class PlayerListHud implements HudElement {
     }
 
     @Override
+    @HotPath
     public void render(float partialTicks, boolean editing) {
         renderer.resize(pixelScale);
         PlayerListSnapshot content = editing ? sample : snapshot;

@@ -52,6 +52,7 @@ import pit12.runtime.session.ClientSession;
 import pit12.shared.entity.PlayerPositions;
 import pit12.shared.event.Listeners;
 import pit12.shared.lifecycle.ClientLifecycle;
+import pit12.shared.performance.HotPath;
 
 public final class TelebowCooldownTracker
         implements ClientLifecycle, ConfigChangeListener, ArrowListener, TelebowCooldowns {
@@ -345,6 +346,7 @@ public final class TelebowCooldownTracker
     }
 
     @SubscribeEvent
+    @HotPath
     public void onTick(ClientTickEvent event) {
         if (event.phase != Phase.END)
             return;

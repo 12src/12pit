@@ -45,6 +45,7 @@ import pit12.runtime.scoreboard.SidebarLine;
 import pit12.runtime.scoreboard.SidebarListener;
 import pit12.runtime.session.ClientSession;
 import pit12.shared.lifecycle.ClientLifecycle;
+import pit12.shared.performance.HotPath;
 import pit12.shared.rendering.TextureState;
 
 public final class ItemEspFeature
@@ -259,6 +260,7 @@ public final class ItemEspFeature
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
+    @HotPath
     public void onRenderWorld(RenderWorldLastEvent event) {
         if (active && world != null && world == minecraft.theWorld && !targets.isEmpty()) {
             renderer.render(minecraft, targets, event.partialTicks);

@@ -48,6 +48,7 @@ import pit12.runtime.pit.PitContext;
 import pit12.runtime.player.PlayerEntityTracker;
 import pit12.runtime.session.ClientSession;
 import pit12.shared.lifecycle.ClientLifecycle;
+import pit12.shared.performance.HotPath;
 import pit12.shared.rendering.TextureState;
 
 public final class TelebowFeature
@@ -284,6 +285,7 @@ public final class TelebowFeature
     }
 
     @SubscribeEvent
+    @HotPath
     public void onRenderWorld(RenderWorldLastEvent event) {
         if (paths.isEmpty() && aim.targets.isEmpty() || minecraft.gameSettings.hideGUI
                 || minecraft.theWorld != session.world())

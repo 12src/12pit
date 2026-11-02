@@ -52,6 +52,7 @@ import pit12.runtime.player.TabPresence;
 import pit12.runtime.player.TabPresenceListener;
 import pit12.shared.input.Keybind;
 import pit12.shared.lifecycle.ClientLifecycle;
+import pit12.shared.performance.HotPath;
 
 public final class PlayerListFeature implements ClientLifecycle, PlayerEquipmentListener,
         ConfigChangeListener, RelationListener, TabPresenceListener {
@@ -317,6 +318,7 @@ public final class PlayerListFeature implements ClientLifecycle, PlayerEquipment
     }
 
     @SubscribeEvent
+    @HotPath
     public void onRenderOverlay(RenderGameOverlayEvent.Post event) {
         if (event.type != ElementType.ALL || hudRegistry.editing() || minecraft.theWorld == null
                 || snapshot.isEmpty() || !HudRenderer.visible(config.hud())) {

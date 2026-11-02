@@ -59,6 +59,7 @@ import pit12.runtime.player.PlayerEquipmentAccess;
 import pit12.runtime.player.PlayerNameCache;
 import pit12.runtime.session.ClientSession;
 import pit12.shared.lifecycle.ClientLifecycle;
+import pit12.shared.performance.HotPath;
 
 public final class TimersFeature
         implements ClientLifecycle, ConfigChangeListener, TelebowCooldownListener, PlayerTimers {
@@ -540,6 +541,7 @@ public final class TimersFeature
     }
 
     @SubscribeEvent
+    @HotPath
     public void onRenderOverlay(RenderGameOverlayEvent.Post event) {
         if (event.type != RenderGameOverlayEvent.ElementType.ALL || rows.isEmpty()
                 || hudRegistry.editing() || minecraft.theWorld == null

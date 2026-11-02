@@ -28,6 +28,7 @@ import pit12.runtime.config.HudConfig;
 import pit12.runtime.config.HudGroupConfig;
 import pit12.runtime.hud.HudElement;
 import pit12.runtime.hud.HudRenderer;
+import pit12.shared.performance.HotPath;
 import pit12.shared.rendering.FontWidths;
 import pit12.shared.text.TextCodes;
 
@@ -184,6 +185,7 @@ final class TimersHud implements HudElement {
     }
 
     @Override
+    @HotPath
     public void render(float partialTicks, boolean editing) {
         renderer.resize(pixelScale);
         int y = 4;

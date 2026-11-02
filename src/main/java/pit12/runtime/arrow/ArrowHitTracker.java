@@ -35,6 +35,7 @@ import net.minecraft.entity.projectile.EntityArrow;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
+import pit12.shared.performance.HotPath;
 
 final class ArrowHitTracker {
     private final Minecraft minecraft;
@@ -218,6 +219,7 @@ final class ArrowHitTracker {
         return Math.abs(hit.at - at) <= window || window == 0 && hit.batch == atBatch;
     }
 
+    @HotPath
     void tick() {
         if (shots.isEmpty() && hits.isEmpty()) {
             batch++;
