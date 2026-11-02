@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Target tag (blank for the latest tag)'
+        description: 'Release tag (blank for the latest release tag)'
         required: false
         type: string
       pr:
@@ -26,9 +26,7 @@ jobs:
   release:
     name: Release
     if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    env:
-      GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+    runs-on: ubuntu-26.04
 
     steps:
       - name: Checkout
@@ -44,12 +42,7 @@ jobs:
           set -euo pipefail
 
           if [[ -z "${RELEASE_TAG}" ]]; then
-            RELEASE_TAG="$(git tag --sort=-creatordate --list | grep -v '^nightly$' | sed -n '1p')"
-          fi
-
-          if [[ "${RELEASE_TAG}" == nightly ]]; then
-            echo '::error::The nightly tag cannot be used for a release.'
-            exit 1
+            RELEASE_TAG="$(git tag --sort=-creatordate --list | grep -E '^[0-9]+\.[0-9]+(\.[0-9]+)?$' | sed -n '1p')"
           fi
 
           git checkout --detach "refs/tags/${RELEASE_TAG}"
@@ -72,6 +65,13 @@ jobs:
           cache: npm
           cache-dependency-path: web-ui/package-lock.json
 
+      - name: Set up JDK 8
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: '8'
+          cache-jdk: true
+
       - name: Set up JDK 25
         uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
         with:
@@ -81,16 +81,7 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
         with:
-          cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
-
-      - name: Cache Gradle configuration
-        if: env.GRADLE_ENCRYPTION_KEY != ''
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: .gradle/configuration-cache
-          key: cc-${{ runner.os }}-${{ github.workflow }}-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}-${{ github.sha }}
-          restore-keys: |
-            cc-${{ runner.os }}-${{ github.workflow }}-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}-
+          cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY || 'MTJwaXQtZW5jcnlwdGlvbg==' }}
 
       - name: Build
         run: |
@@ -130,14 +121,7 @@ jobs:
             .sort((a, b) => b.published_at.localeCompare(a.published_at));
           const previous = releases.find(release => {
             const version = versionOf(release.tag_name);
-            if ((version[0] - target[0] || version[1] - target[1] || version[2] - target[2]) >= 0)
-              return false;
-            // Include the full feature range across patch releases.
-            if (target[2] === 0 && version[2] !== 0)
-              return false;
-            return spawnSync('git', [
-              'merge-base', '--is-ancestor', `refs/tags/${release.tag_name}^{commit}`, 'HEAD'
-            ], { stdio: 'ignore' }).status === 0;
+            return (version[0] - target[0] || version[1] - target[1] || version[2] - target[2]) < 0;
           });
           const historyUrl = `${repositoryUrl}/compare/${previous.tag_name}...${tag}`;
           const pr = process.env.RELEASE_PR.trim();

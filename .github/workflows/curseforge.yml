@@ -9,8 +9,8 @@ permissions:
 
 jobs:
   upload:
-    if: github.repository == '12src/12pit' && github.event.release.tag_name != 'nightly'
-    runs-on: ubuntu-latest
+    if: github.repository == '12src/12pit' && !github.event.release.prerelease
+    runs-on: ubuntu-26.04
 
     steps:
       - env:
