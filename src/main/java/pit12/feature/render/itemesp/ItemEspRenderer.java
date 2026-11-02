@@ -59,7 +59,7 @@ final class ItemEspRenderer {
             double x = entity.lastTickPosX + (entity.posX - entity.lastTickPosX) * partialTicks;
             double y = entity.lastTickPosY + (entity.posY - entity.lastTickPosY) * partialTicks;
             double z = entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * partialTicks;
-            double radius = raffle ? 0.2D : 0.25D;
+            double radius = 0.25D;
             boxes.add(x - radius, y, z - radius, x + radius, y + radius * 2.0D, z + radius, color,
                     raffle ? 1.0F : 0.8F, 0.0F);
         }

@@ -144,6 +144,25 @@ tasks.compileJava { dependsOn(generateBuildConfig) }
 // BootstrapLayoutTest reads the comments in ClientBootstrap.java.
 tasks.test {
     inputs.file("src/main/java/pit12/bootstrap/ClientBootstrap.java")
+    val logConfig = temporaryDir.resolve("log4j2.xml")
+    systemProperty("log4j.configurationFile", logConfig.absolutePath)
+    doFirst {
+        logConfig.writeText(
+            """
+            <Configuration status="WARN">
+                <Appenders>
+                    <Console name="Console" target="SYSTEM_OUT">
+                        <PatternLayout pattern="[%d{HH:mm:ss}] [%t/%level]: %msg%n" />
+                    </Console>
+                </Appenders>
+                <Loggers>
+                    <Root level="info"><AppenderRef ref="Console" /></Root>
+                </Loggers>
+            </Configuration>
+            """
+                .trimIndent()
+        )
+    }
 }
 
 repositories {
