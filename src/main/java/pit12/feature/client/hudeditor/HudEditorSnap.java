@@ -114,7 +114,8 @@ final class HudEditorSnap {
             }
             active = null;
             int nearest = 3;
-            for (Target target : targets) {
+            for (int index = 0, size = targets.size(); index < size; index++) {
+                Target target = targets.get(index);
                 int distance = Math.abs(value - target.origin);
                 // At the same distance, prefer screen edges, then matching HUD sides.
                 if (distance < nearest || active != null && distance == nearest
