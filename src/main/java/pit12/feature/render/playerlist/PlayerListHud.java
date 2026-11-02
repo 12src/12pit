@@ -348,7 +348,8 @@ final class PlayerListHud implements HudElement {
                 if (config.showGroupName()) {
                     y += lineHeight;
                 }
-                for (PlayerListEntry entry : entries) {
+                for (int index = 0, size = entries.size(); index < size; index++) {
+                    PlayerListEntry entry = entries.get(index);
                     if (!entry.spawn() && entry.directionKnown()) {
                         updateDirection(entry, partialTicks);
                         arrows.add(y, entry.distanceKnown() ? distanceColor(entry.distance())

@@ -159,6 +159,10 @@ final class PlayerListBuilder {
                     new PlayerListEntry(playerId, player == null ? 0 : player.getEntityId(), name,
                             leggingsText, heldItemText, distance, direction, distanceKnown,
                             directionKnown, config.showSpawn() && spawn);
+            if (previous != null && Math.round(distance) == Math.round(previous.distance())
+                    && distanceKnown == previous.distanceKnown()
+                    && entry.spawn() == previous.spawn())
+                entry.distanceText = previous.distanceText;
             previousEntries.put(playerId, entry);
             if (showSpecial) {
                 add(groups, special, entry);
