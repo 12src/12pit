@@ -30,9 +30,9 @@ val mainJavaDirectory = file("src/main/java")
 // ArchitectureTest checks that these packages contain only Mixins.
 val mixinConfigurations =
     fileTree(mainJavaDirectory) {
-        val basePath = modGroup.replace('.', '/')
-        include("$basePath/platform/mixin/**/*.java", "$basePath/feature/*/*/mixin/**/*.java")
-    }
+            val basePath = modGroup.replace('.', '/')
+            include("$basePath/platform/mixin/**/*.java", "$basePath/feature/*/*/mixin/**/*.java")
+        }
         .files
         .map { it.relativeTo(mainJavaDirectory).invariantSeparatorsPath.removeSuffix(".java").replace('/', '.') }
         .sortedWith(compareBy<String> { it.startsWith("$modGroup.feature.") }.thenBy { it })
@@ -87,7 +87,7 @@ val buildConfigProperties =
         "modId" to modId,
         "modName" to modName,
         "modVersion" to modVersion,
-        "releaseBuild" to providers.gradleProperty("releaseBuild").getOrElse("false").toBoolean(),
+        "releaseBuild" to providers.gradleProperty("release").isPresent,
     )
 val generatedBuildConfigDirectory = layout.buildDirectory.dir("generated/sources/buildConfig/java/main")
 val generateBuildConfig =

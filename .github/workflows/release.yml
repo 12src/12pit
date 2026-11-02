@@ -86,7 +86,7 @@ jobs:
       - name: Build
         run: |
           chmod +x gradlew
-          ./gradlew assemble -PreleaseBuild=true --no-daemon --console=plain
+          ./gradlew assemble -Prelease --no-daemon --console=plain
 
       - name: Attest build provenance
         id: attest
