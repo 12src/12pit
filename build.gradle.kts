@@ -12,6 +12,7 @@ import org.objectweb.asm.tree.ClassNode
 
 plugins {
     java
+    jacoco
     id("com.diffplug.spotless")
     id("gg.essential.loom")
     id("dev.architectury.architectury-pack200")
@@ -164,6 +165,8 @@ tasks.test {
         )
     }
 }
+
+tasks.jacocoTestReport { reports { xml.required = true } }
 
 repositories {
     mavenCentral()
