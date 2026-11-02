@@ -156,6 +156,11 @@ public final class ImagePopupFeature
         if (phase != InputTicks.Phase.START) {
             return;
         }
+        // Expire here rather than in the overlay callback so the texture is also released while
+        // the HUD is hidden (F1) or the world is paused.
+        if (hasTexture && System.nanoTime() >= hideAt) {
+            hide();
+        }
         tick();
     }
 
