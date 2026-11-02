@@ -44,6 +44,7 @@ import pit12.runtime.player.PlayerEquipmentAccess;
 import pit12.runtime.player.PlayerEquipmentCache;
 import pit12.runtime.player.PlayerEquipmentListener;
 import pit12.runtime.player.PlayerEquipmentSnapshot;
+import pit12.runtime.player.PlayerHealth;
 import pit12.runtime.session.ClientSession;
 import pit12.shared.lifecycle.ClientLifecycle;
 import pit12.shared.rendering.TextureState;
@@ -128,10 +129,8 @@ public final class NametagFeature
         } else {
             deactivate();
         }
-        binding.pit12$bindNametagNames(
-                enabled && (config.nickMarker() || config.realNames() || timerTypes != 0)
-                        ? this::nameSuffix
-                        : null,
+        binding.pit12$bindNametagNames(enabled && (config.nickMarker() || config.realNames()
+                || config.showHealth() || timerTypes != 0) ? this::nameSuffix : null,
                 enhancedVisibility);
     }
 
@@ -154,30 +153,40 @@ public final class NametagFeature
         WorldClient world = session.world();
         if (world != null) {
             for (EntityPlayer player : world.playerEntities) {
-                updateText(player.getUniqueID());
+                updateText(player.getUniqueID(), PlayerEquipmentCache.ALL);
             }
         }
     }
 
-    private void updateText(UUID playerId) {
+    private void updateText(UUID playerId, int changedSlots) {
         PlayerEquipmentSnapshot snapshot = equipment.loadedEquipment(playerId);
         if (snapshot == null && !enhancedVisibility) {
             texts.remove(playerId);
             return;
         }
-        String heldItem = snapshot != null && config.showHeldItem() && snapshot.heldItemKnown()
-                ? PitEnchantmentFormat.format(snapshot.heldEnchantments(),
-                        config.enchantmentFormat(), config.showGem())
-                : null;
-        String leggings =
-                snapshot != null && config.showLeggings() && snapshot.leggingsKnown()
-                        ? PitEnchantmentFormat.format(snapshot.leggingsEnchantments(),
-                                config.enchantmentFormat(), config.showGem())
-                        : null;
+        NametagText text = texts.get(playerId);
+        String heldItem = text == null ? null : text.heldItem;
+        String leggings = text == null ? null : text.leggings;
+        if (text == null || (changedSlots & PlayerEquipmentCache.HELD_ITEM) != 0) {
+            heldItem =
+                    snapshot != null && config.showHeldItem() && snapshot.heldItemKnown()
+                            ? PitEnchantmentFormat.format(snapshot.heldEnchantments(),
+                                    config.enchantmentFormat(), config.showGem())
+                            : null;
+        }
+        if (text == null || (changedSlots & PlayerEquipmentCache.LEGGINGS) != 0) {
+            leggings =
+                    snapshot != null && config.showLeggings() && snapshot.leggingsKnown()
+                            ? PitEnchantmentFormat.format(snapshot.leggingsEnchantments(),
+                                    config.enchantmentFormat(), config.showGem())
+                            : null;
+        }
         if (heldItem == null && leggings == null && !enhancedVisibility) {
             texts.remove(playerId);
-        } else {
+        } else if (text == null) {
             texts.put(playerId, new NametagText(heldItem, leggings, minecraft.fontRendererObj));
+        } else {
+            text.updateEnchantments(heldItem, leggings, minecraft.fontRendererObj);
         }
     }
 
@@ -187,7 +196,7 @@ public final class NametagFeature
                 && ((config.showHeldItem() && (changedSlots & PlayerEquipmentCache.HELD_ITEM) != 0)
                         || (config.showLeggings()
                                 && (changedSlots & PlayerEquipmentCache.LEGGINGS) != 0))) {
-            updateText(playerId);
+            updateText(playerId, changedSlots);
         }
     }
 
@@ -208,6 +217,7 @@ public final class NametagFeature
         }
         if (changes.affects("nametag", "enabled") || changes.affects("nametag", "nick_marker")
                 || changes.affects("nametag", "real_names")
+                || changes.affects("nametag", "show_health")
                 || changes.affects("nametag", "enhanced_visibility")
                 || changes.affects("nametag", "show_held_item")
                 || changes.affects("nametag", "show_leggings")
@@ -244,14 +254,18 @@ public final class NametagFeature
         }
     }
 
-    private String nameSuffix(UUID playerId) {
+    private String nameSuffix(EntityPlayer player) {
         session.checkThread();
+        UUID playerId = player.getUniqueID();
         String suffix = config.nickMarker() && nicks.isNicked(playerId) ? " §e§lN" : "";
         if (config.realNames()) {
             String realName = denickNames.realDisplayName(playerId);
             if (realName != null) {
                 suffix += " §7(" + realName + "§7)";
             }
+        }
+        if (config.showHealth()) {
+            suffix += " §c" + PlayerHealth.of(player).text();
         }
         return timerTypes == 0 ? suffix : suffix + timers.countdowns(playerId, timerTypes);
     }
