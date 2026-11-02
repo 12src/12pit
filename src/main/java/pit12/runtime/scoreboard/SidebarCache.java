@@ -37,10 +37,10 @@ import net.minecraft.scoreboard.ScorePlayerTeam;
 import net.minecraft.scoreboard.Scoreboard;
 import pit12.runtime.session.ClientSession;
 import pit12.shared.event.Listeners;
-import pit12.shared.lifecycle.ClientLifecycle;
+import pit12.shared.lifecycle.DemandLifecycle;
 
 /** Use this API on the client thread. */
-public final class SidebarCache implements ClientLifecycle {
+public final class SidebarCache extends DemandLifecycle {
     private final Minecraft minecraft;
     private final ClientSession session;
     private final Runnable sessionChanged = this::onSessionChanged;
@@ -49,59 +49,62 @@ public final class SidebarCache implements ClientLifecycle {
             new TreeSet<>(Comparator.comparingInt((Row row) -> row.line.score()).reversed()
                     .thenComparing(row -> row.line.entry(), String.CASE_INSENSITIVE_ORDER)
                     .thenComparing(row -> row.line.entry()));
-    private final List<SidebarListener> listeners = new ArrayList<>();
+    private final Listeners<SidebarListener> listeners = new Listeners<>();
     private List<SidebarLine> lines = Collections.emptyList();
     private NetHandlerPlayClient boundHandler;
     private Scoreboard scoreboard;
     private ScoreObjective objective;
-    private boolean started;
 
     public SidebarCache(Minecraft minecraft, ClientSession session) {
+        super(session::checkThread);
         this.minecraft = minecraft;
         this.session = session;
     }
 
     @Override
-    public void start() {
-        session.checkThread();
-        if (started) {
-            return;
-        }
-        started = true;
+    protected void activate() {
         session.addListener(sessionChanged);
         onSessionChanged();
     }
 
     @Override
-    public void stop() {
-        session.checkThread();
-        started = false;
+    protected void deactivate() {
         session.removeListener(sessionChanged);
         bind(null);
         scoreboard = null;
         objective = null;
         rows.clear();
         ordered.clear();
-        publish();
+        lines = Collections.emptyList();
         listeners.clear();
     }
 
-    /** Display order, no title. Later changes won't affect this snapshot. */
+    /** Display order, no title. Reading while idle takes a fresh snapshot. Later changes won't affect it. */
     public List<SidebarLine> lines() {
         session.checkThread();
+        if (!isActive()) {
+            retainOwner(this);
+            try {
+                return lines;
+            } finally {
+                releaseOwner(this);
+            }
+        }
         return lines;
     }
 
     public void addListener(SidebarListener listener) {
         session.checkThread();
-        if (!listeners.contains(listener)) {
-            listeners.add(listener);
-        }
+        if (listeners.isEmpty())
+            retainOwner(listeners);
+        listeners.add(listener);
     }
 
     public void removeListener(SidebarListener listener) {
         session.checkThread();
         listeners.remove(listener);
+        if (listeners.isEmpty())
+            releaseOwner(listeners);
     }
 
     private void onSessionChanged() {
@@ -129,7 +132,7 @@ public final class SidebarCache implements ClientLifecycle {
         if (handler instanceof SidebarPacketBinding) {
             ((SidebarPacketBinding) handler).bindSidebarObserver(packet -> {
                 session.refresh();
-                if (started && boundHandler == handler && session.connection() == handler) {
+                if (isActive() && boundHandler == handler && session.connection() == handler) {
                     onPacket(packet);
                 }
             });
@@ -268,14 +271,16 @@ public final class SidebarCache implements ClientLifecycle {
         }
         lines = Collections.unmodifiableList(current);
         if (!listeners.isEmpty()) {
-            Listeners.notify(listeners, listener -> {
-                for (SidebarLine before : previous) {
+            listeners.notify(listener -> {
+                for (int index = 0, size = previous.size(); index < size; index++) {
+                    SidebarLine before = previous.get(index);
                     SidebarLine after = findLine(current, before.entry());
                     if (!sameLine(before, after)) {
                         listener.onLineChanged(before, after);
                     }
                 }
-                for (SidebarLine after : current) {
+                for (int index = 0, size = current.size(); index < size; index++) {
+                    SidebarLine after = current.get(index);
                     if (findLine(previous, after.entry()) == null) {
                         listener.onLineChanged(null, after);
                     }
@@ -285,7 +290,8 @@ public final class SidebarCache implements ClientLifecycle {
     }
 
     private static SidebarLine findLine(List<SidebarLine> lines, String entry) {
-        for (SidebarLine line : lines) {
+        for (int index = 0, size = lines.size(); index < size; index++) {
+            SidebarLine line = lines.get(index);
             if (line.entry().equals(entry)) {
                 return line;
             }

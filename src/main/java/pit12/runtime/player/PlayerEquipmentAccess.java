@@ -22,6 +22,11 @@ import java.util.UUID;
 
 /** Use this API on the client thread. Snapshots can be passed to workers. */
 public interface PlayerEquipmentAccess {
+    /** Retain while reading snapshots without a listener. */
+    void retain(Object owner);
+
+    void release(Object owner);
+
     /** Returns null if the player's entity is unloaded or has not been observed. */
     PlayerEquipmentSnapshot loadedEquipment(UUID playerId);
 

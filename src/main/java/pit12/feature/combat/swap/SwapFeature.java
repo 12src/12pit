@@ -24,6 +24,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraftforge.client.event.GuiScreenEvent;
+import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.player.AttackEntityEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
@@ -59,6 +60,7 @@ public final class SwapFeature implements ClientLifecycle, ConfigChangeListener,
     private final SwapConfig config;
     private final CommandRegistry commands;
     private final ClientSession session;
+    private final PlayerEquipmentAccess equipment;
     private final BindingBook bindings;
     private final SwapController controller;
     private final AutoSwapController automatic;
@@ -69,6 +71,7 @@ public final class SwapFeature implements ClientLifecycle, ConfigChangeListener,
     private final Runnable sessionListener = this::worldChanged;
     private boolean started;
     private boolean listening;
+    private boolean trackingEquipment;
     private boolean rightClickHeld;
     private boolean mouseGrabbed;
 
@@ -82,6 +85,7 @@ public final class SwapFeature implements ClientLifecycle, ConfigChangeListener,
         this.config = config;
         this.commands = commands;
         this.session = session;
+        this.equipment = equipment;
         this.hookBinding = hookBinding;
         this.input = input;
         this.inputTicks = inputTicks;
@@ -141,9 +145,20 @@ public final class SwapFeature implements ClientLifecycle, ConfigChangeListener,
         if (changes.affects("swap", "highlight_bindings") && !config.highlight.get())
             overlay.clear();
         automatic.onConfigChanged(changes);
+        if (changes.affects("swap", "auto_swap") || changes.affects("swap", "use_dark"))
+            updateListening();
     }
 
     private void updateListening() {
+        boolean needsEquipment =
+                started && config.enabled() && config.autoSwap.get() && config.dark.get();
+        if (trackingEquipment != needsEquipment) {
+            trackingEquipment = needsEquipment;
+            if (trackingEquipment)
+                equipment.retain(this);
+            else
+                equipment.release(this);
+        }
         boolean enabled = started && (config.enabled() || controller.busy());
         if (enabled == listening)
             return;
@@ -237,6 +252,11 @@ public final class SwapFeature implements ClientLifecycle, ConfigChangeListener,
             updateMouseGrab();
             updateListening();
         }
+    }
+
+    @SubscribeEvent
+    public void onTextureStitch(TextureStitchEvent.Post event) {
+        overlay.clear();
     }
 
     @SubscribeEvent

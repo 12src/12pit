@@ -52,6 +52,7 @@ import pit12.runtime.player.TabPresence;
 import pit12.runtime.player.TabPresenceListener;
 import pit12.shared.input.Keybind;
 import pit12.shared.lifecycle.ClientLifecycle;
+import pit12.shared.performance.HotPath;
 
 public final class PlayerListFeature implements ClientLifecycle, PlayerEquipmentListener,
         ConfigChangeListener, RelationListener, TabPresenceListener {
@@ -64,6 +65,8 @@ public final class PlayerListFeature implements ClientLifecycle, PlayerEquipment
     private final TabPresence presence;
     private final PlayerNameCache playerNames;
     private final DenickNames denickNames;
+    private final NickTracker nicks;
+    private final PitContext pitContext;
     private final PlayerListBuilder builder;
     private final List<PlayerListHud> huds = new ArrayList<>();
     private final List<PlayerListHud> activeHuds = new ArrayList<>();
@@ -93,6 +96,8 @@ public final class PlayerListFeature implements ClientLifecycle, PlayerEquipment
         this.presence = presence;
         this.playerNames = playerNames;
         this.denickNames = denickNames;
+        this.nicks = nicks;
+        this.pitContext = pitContext;
         this.hudRegistry = hudRegistry;
         builder = new PlayerListBuilder(minecraft, players, equipment, pitContext, config,
                 relations, playerNames, denickNames, nicks);
@@ -101,7 +106,8 @@ public final class PlayerListFeature implements ClientLifecycle, PlayerEquipment
             huds.add(new PlayerListHud(config, hudRenderer, language, group));
         }
         languageListener = () -> {
-            for (PlayerListHud hud : huds) {
+            for (int index = 0, size = huds.size(); index < size; index++) {
+                PlayerListHud hud = huds.get(index);
                 hud.localize();
             }
         };
@@ -132,7 +138,8 @@ public final class PlayerListFeature implements ClientLifecycle, PlayerEquipment
         configs.removeListener(this);
         language.removeListener(languageListener);
         deactivate();
-        for (PlayerListHud hud : huds) {
+        for (int index = 0, size = huds.size(); index < size; index++) {
+            PlayerListHud hud = huds.get(index);
             hudRegistry.unregister(hud);
             hud.close();
         }
@@ -141,7 +148,8 @@ public final class PlayerListFeature implements ClientLifecycle, PlayerEquipment
 
     private void updateHudLayout() {
         activeHuds.clear();
-        for (PlayerListHud hud : huds) {
+        for (int index = 0, size = huds.size(); index < size; index++) {
+            PlayerListHud hud = huds.get(index);
             if (hud.active()) {
                 hudRegistry.register(hud);
                 activeHuds.add(hud);
@@ -156,6 +164,8 @@ public final class PlayerListFeature implements ClientLifecycle, PlayerEquipment
         snapshotDirty = true;
         ticksSinceUpdate = UPDATE_INTERVAL_TICKS;
         try {
+            nicks.retain(this);
+            pitContext.retain(this);
             equipment.addListener(this);
             relations.addListener(this);
             presence.addListener(this);
@@ -179,9 +189,12 @@ public final class PlayerListFeature implements ClientLifecycle, PlayerEquipment
         denickNames.removeListener(namesChanged);
         relations.removeListener(this);
         equipment.removeListener(this);
+        pitContext.release(this);
+        nicks.release(this);
         snapshot = PlayerListSnapshot.empty();
         builder.clear();
-        for (PlayerListHud hud : huds) {
+        for (int index = 0, size = huds.size(); index < size; index++) {
+            PlayerListHud hud = huds.get(index);
             hud.snapshot(snapshot);
             hud.close();
         }
@@ -232,7 +245,8 @@ public final class PlayerListFeature implements ClientLifecycle, PlayerEquipment
         }
         for (Setting<?> setting : config.settings()) {
             if (changes.affects("playerlist", setting.id())) {
-                for (PlayerListHud hud : huds) {
+                for (int index = 0, size = huds.size(); index < size; index++) {
+                    PlayerListHud hud = huds.get(index);
                     hud.configurationChanged();
                 }
                 break;
@@ -304,13 +318,15 @@ public final class PlayerListFeature implements ClientLifecycle, PlayerEquipment
             boolean rebuildText = snapshotDirty;
             snapshotDirty = false;
             snapshot = builder.build(realNamesHeld, rebuildText);
-            for (PlayerListHud hud : huds) {
+            for (int index = 0, size = huds.size(); index < size; index++) {
+                PlayerListHud hud = huds.get(index);
                 hud.snapshot(snapshot);
             }
         }
     }
 
     @SubscribeEvent
+    @HotPath
     public void onRenderOverlay(RenderGameOverlayEvent.Post event) {
         if (event.type != ElementType.ALL || hudRegistry.editing() || minecraft.theWorld == null
                 || snapshot.isEmpty() || !HudRenderer.visible(config.hud())) {
@@ -319,7 +335,8 @@ public final class PlayerListFeature implements ClientLifecycle, PlayerEquipment
         ScaledResolution resolution = event.resolution;
         hudRenderer.beginBatch();
         try {
-            for (PlayerListHud hud : activeHuds) {
+            for (int index = 0, size = activeHuds.size(); index < size; index++) {
+                PlayerListHud hud = activeHuds.get(index);
                 HudBounds bounds = HudRenderer.layout(hud, resolution.getScaledWidth(),
                         resolution.getScaledHeight(), resolution.getScaleFactor(), false);
                 if (hud.width() > 0) {
@@ -335,7 +352,8 @@ public final class PlayerListFeature implements ClientLifecycle, PlayerEquipment
     public final class FontListener {
         @SubscribeEvent
         public void onTextureStitch(TextureStitchEvent.Post event) {
-            for (PlayerListHud hud : huds) {
+            for (int index = 0, size = huds.size(); index < size; index++) {
+                PlayerListHud hud = huds.get(index);
                 hud.configurationChanged();
             }
         }

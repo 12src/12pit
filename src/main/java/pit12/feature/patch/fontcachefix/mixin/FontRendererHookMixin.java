@@ -29,6 +29,8 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
 import pit12.feature.patch.fontcachefix.FontCacheFixBinding;
+import pit12.feature.patch.fontcachefix.FontCacheKeys;
+import pit12.shared.performance.HotPath;
 
 @Pseudo
 @Mixin(targets = "club.sk1er.patcher.hooks.FontRendererHook", remap = false)
@@ -37,7 +39,8 @@ public abstract class FontRendererHookMixin {
     @Unique
     private static final AtomicInteger pit12$nextFontId = new AtomicInteger();
     @Unique
-    private final String pit12$cachePrefix = pit12$nextFontId.getAndIncrement() + ":";
+    private final FontCacheKeys pit12$cacheKeys =
+            new FontCacheKeys(pit12$nextFontId.getAndIncrement() + ":");
     @Shadow
     @Final
     private FontRenderer fontRenderer;
@@ -45,17 +48,19 @@ public abstract class FontRendererHookMixin {
     @ModifyArg(method = "renderStringAtPos", at = @At(value = "INVOKE",
             target = "Lclub/sk1er/patcher/util/enhancement/hash/StringHash;<init>(Ljava/lang/String;FFFFZ)V"),
             index = 0, remap = false, require = 1)
+    @HotPath
     private String pit12$fontCacheKey(String text) {
         if (!((FontCacheFixBinding) Minecraft.getMinecraft()).pit12$fontCacheFixEnabled()) {
             return text;
         }
-        return pit12$cachePrefix + (fontRenderer.getUnicodeFlag() ? "\u0001" : "\u0000") + text;
+        return pit12$cacheKeys.key(text, fontRenderer.getUnicodeFlag());
     }
 
     // The width calculator captures the original text separately from the cache key.
     @ModifyArg(method = "getStringWidth", at = @At(value = "INVOKE",
             target = "Ljava/util/Map;computeIfAbsent(Ljava/lang/Object;Ljava/util/function/Function;)Ljava/lang/Object;"),
             index = 0, remap = false, require = 1)
+    @HotPath
     private Object pit12$widthCacheKey(Object text) {
         return pit12$fontCacheKey((String) text);
     }

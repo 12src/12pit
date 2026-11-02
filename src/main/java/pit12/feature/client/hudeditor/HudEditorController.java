@@ -40,6 +40,7 @@ import pit12.runtime.hud.HudBounds;
 import pit12.runtime.hud.HudElement;
 import pit12.runtime.hud.HudRegistry;
 import pit12.runtime.hud.HudRenderer;
+import pit12.shared.performance.HotPath;
 import pit12.shared.rendering.FontWidths;
 import pit12.shared.rendering.UiRenderState;
 
@@ -188,6 +189,7 @@ final class HudEditorController {
         return bounds;
     }
 
+    @HotPath
     void render(int mouseX, int mouseY, float partialTicks) {
         boolean removed = selected.removeIf(element -> !registry.contains(element));
         if (removed) {
@@ -204,7 +206,9 @@ final class HudEditorController {
         renderState.begin();
         try {
             renderer.rect(0, 0, screenWidth, screenHeight, 0x26000000);
-            for (HudElement element : registry.elements()) {
+            List<HudElement> elements = registry.elements();
+            for (int index = 0, size = elements.size(); index < size; index++) {
+                HudElement element = elements.get(index);
                 if (!selected.contains(element)) {
                     renderElement(element, mouseX, mouseY, partialTicks);
                 }
@@ -262,7 +266,9 @@ final class HudEditorController {
         }
         captureOrigins();
         List<HudEditorSnap.Box> others = new ArrayList<>();
-        for (HudElement element : registry.elements()) {
+        List<HudElement> elements = registry.elements();
+        for (int index = 0, size = elements.size(); index < size; index++) {
+            HudElement element = elements.get(index);
             if (!selected.contains(element)) {
                 HudBounds bounds = bounds(element);
                 others.add(new HudEditorSnap.Box(bounds.x, bounds.y, bounds.width, bounds.height));
@@ -311,7 +317,9 @@ final class HudEditorController {
             int top = Math.min(pressY, pointerY);
             int right = Math.max(pressX, pointerX);
             int bottom = Math.max(pressY, pointerY);
-            for (HudElement element : registry.elements()) {
+            List<HudElement> elements = registry.elements();
+            for (int index = 0, size = elements.size(); index < size; index++) {
+                HudElement element = elements.get(index);
                 HudBounds bounds = bounds(element);
                 if (bounds.x < right && bounds.x + bounds.width > left && bounds.y < bottom
                         && bounds.y + bounds.height > top) {

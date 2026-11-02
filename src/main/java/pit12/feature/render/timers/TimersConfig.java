@@ -32,9 +32,12 @@ import pit12.runtime.config.HudAnchor;
 import pit12.runtime.config.HudConfig;
 import pit12.runtime.config.HudGroupConfig;
 import pit12.runtime.config.IntegerSetting;
+import pit12.runtime.timers.TimerDemand;
+import pit12.runtime.timers.TimerKind;
+import pit12.runtime.timers.TimerSettings;
 import pit12.shared.text.TextCodes;
 
-public final class TimersConfig extends FeatureConfig {
+public final class TimersConfig extends FeatureConfig implements TimerSettings {
     final Map<TimerType, HudGroupConfig> hudGroups = new EnumMap<>(TimerType.class);
     public final BooleanSetting pinEnabled;
     public final BooleanSetting pinOwn;
@@ -157,9 +160,8 @@ public final class TimersConfig extends FeatureConfig {
                 0, 1000, 25);
         subcategory("cooldowns", source("Cooldowns"));
         subsubcategory("telebow", "Telebow");
-        telebowEnabled = booleanSetting("telebow_enabled", source("Enabled"), source(
-                "Shows estimated Telebow cooldowns. Requires Telebow Prediction to be enabled."),
-                true);
+        telebowEnabled = booleanSetting("telebow_enabled", source("Enabled"),
+                source("Shows estimated Telebow cooldowns."), true);
         telebowOwn = booleanSetting("telebow_own", source("Own"),
                 source("Shows your Telebow cooldown."), true);
         telebowFriends = booleanSetting("telebow_friends", source("Friends"),
@@ -168,5 +170,65 @@ public final class TimersConfig extends FeatureConfig {
                 source("Shows enemies' Telebow cooldowns."), true);
         telebowOthers = booleanSetting("telebow_others", source("Others"),
                 source("Shows other players' Telebow cooldowns."), true);
+    }
+
+    int timerDemand() {
+        if (!enabled())
+            return 0;
+        int pin =
+                pinEnabled.get()
+                        ? TimerDemand.groups(pinOwn.get(), pinFriends.get(), pinEnemies.get(),
+                                pinOthers.get())
+                        : 0;
+        int venom = venomEnabled.get() ? TimerDemand.groups(venomOwn.get(), venomFriends.get(),
+                venomEnemies.get(), venomOthers.get()) : 0;
+        int jump = jumpBoostEnabled.get()
+                ? TimerDemand.groups(jumpBoostOwn.get(), jumpBoostFriends.get(),
+                        jumpBoostEnemies.get(), jumpBoostOthers.get())
+                : 0;
+        int telebow =
+                telebowEnabled.get()
+                        ? TimerDemand.groups(telebowOwn.get(), telebowFriends.get(),
+                                telebowEnemies.get(), telebowOthers.get())
+                        : 0;
+        return TimerKind.PIN.select(pin)
+                | TimerKind.VENOM_WEARER.select(venomSelf.get() ? venom : 0)
+                | TimerKind.VENOM_TARGET.select(venomTargets.get() ? venom : 0)
+                | TimerKind.JUMP_BOOST.select(jump) | TimerKind.TELEBOW.select(telebow);
+    }
+
+    @Override
+    public int pinHitWindow() {
+        return pinHitWindow.get();
+    }
+
+    @Override
+    public int venomHitWindow() {
+        return venomHitWindow.get();
+    }
+
+    @Override
+    public double venomReach() {
+        return venomReach.get();
+    }
+
+    @Override
+    public double venomHitboxMargin() {
+        return venomHitboxMargin.get();
+    }
+
+    @Override
+    public boolean jumpBoostSoundRequired() {
+        return jumpBoostSoundRequired.get();
+    }
+
+    @Override
+    public boolean jumpBoostResetOnLowJump() {
+        return jumpBoostResetOnLowJump.get();
+    }
+
+    @Override
+    public int jumpBoostGrace() {
+        return jumpBoostGrace.get();
     }
 }

@@ -16,16 +16,14 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.render.telebow.api;
+package pit12.runtime.timers;
 
-import java.util.UUID;
-import net.minecraft.entity.player.EntityPlayer;
+public interface TelebowSettings {
+    boolean correctCooldown();
 
-public interface TelebowCooldownListener {
-    /** until uses System.nanoTime(). */
-    void onTelebowCooldown(EntityPlayer player, long until);
+    int cooldownDetection();
 
-    void onTelebowCooldownRemoved(UUID playerId);
+    int predictionMargin();
 
-    void onTelebowCooldownsReset();
+    int teleportExtraMargin();
 }

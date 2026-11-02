@@ -23,13 +23,18 @@ import net.minecraft.client.gui.FontRenderer;
 import org.spongepowered.asm.mixin.Dynamic;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
 import pit12.feature.patch.fontcachefix.FontCacheFixBinding;
+import pit12.feature.patch.fontcachefix.FontCacheKeys;
+import pit12.shared.performance.HotPath;
 
 @SuppressWarnings("target")
 @Mixin(FontRenderer.class)
 public abstract class LunarFontRendererMixin {
+    @Unique
+    private final FontCacheKeys pit12$cacheKeys = new FontCacheKeys("");
     @Shadow
     private boolean unicodeFlag;
 
@@ -37,17 +42,19 @@ public abstract class LunarFontRendererMixin {
     @Dynamic("Lunar's font cache lookup")
     @ModifyArg(method = "lunar$renderStringAtPos(Ljava/lang/String;ZI)V",
             at = @At(value = "INVOKE", ordinal = 0), index = 0, remap = false, require = 1)
+    @HotPath
     private String pit12$fontCacheLookup(String text) {
         if (!((FontCacheFixBinding) Minecraft.getMinecraft()).pit12$fontCacheFixEnabled()) {
             return text;
         }
-        return (unicodeFlag ? "\u0001" : "\u0000") + text;
+        return pit12$cacheKeys.key(text, unicodeFlag);
     }
 
     @Dynamic("Lunar's font cache key constructor")
     @ModifyArg(method = "lunar$renderStringAtPos(Ljava/lang/String;ZI)V",
             at = @At(value = "INVOKE", target = "<init>(Ljava/lang/String;IZ)V"), index = 0,
             remap = false, require = 1)
+    @HotPath
     private String pit12$fontCacheEntry(String text) {
         return pit12$fontCacheLookup(text);
     }

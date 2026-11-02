@@ -34,7 +34,6 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import pit12.feature.misc.denick.api.DenickNames;
-import pit12.feature.render.timers.api.PlayerTimers;
 import pit12.runtime.config.ConfigCatalog;
 import pit12.runtime.config.ConfigChangeListener;
 import pit12.runtime.config.ConfigChangeSet;
@@ -46,7 +45,9 @@ import pit12.runtime.player.PlayerEquipmentListener;
 import pit12.runtime.player.PlayerEquipmentSnapshot;
 import pit12.runtime.player.PlayerHealth;
 import pit12.runtime.session.ClientSession;
+import pit12.runtime.timers.PlayerTimers;
 import pit12.shared.lifecycle.ClientLifecycle;
+import pit12.shared.performance.HotPath;
 import pit12.shared.rendering.TextureState;
 
 public final class NametagFeature
@@ -69,6 +70,8 @@ public final class NametagFeature
     private boolean started;
     private boolean active;
     private boolean enhancedVisibility;
+    private boolean namesEnabled;
+    private boolean trackingNicks;
     private int timerTypes;
 
     public NametagFeature(Minecraft minecraft, ConfigCatalog configs, NametagConfig config,
@@ -111,9 +114,24 @@ public final class NametagFeature
 
     private void updateActivation() {
         boolean enabled = started && config.enabled();
+        boolean nickMarker = enabled && config.nickMarker();
+        if (trackingNicks != nickMarker) {
+            trackingNicks = nickMarker;
+            if (trackingNicks)
+                nicks.retain(this);
+            else
+                nicks.release(this);
+        }
         enhancedVisibility = enabled && config.enhancedVisibility();
-        timerTypes = enabled ? config.timerTypes() : 0;
-        if (enabled && (enhancedVisibility || config.showHeldItem() || config.showLeggings())) {
+        int nextTypes = enabled ? config.timerTypes() : 0;
+        if (timerTypes != nextTypes) {
+            timerTypes = nextTypes;
+            timers.setDemand(this, PlayerTimers.nametagDemand(timerTypes));
+        }
+        namesEnabled = enabled && (config.nickMarker() || config.realNames() || config.showHealth()
+                || timerTypes != 0);
+        if (enabled && (enhancedVisibility || namesEnabled || config.showHeldItem()
+                || config.showLeggings())) {
             if (!active) {
                 active = true;
                 try {
@@ -129,9 +147,7 @@ public final class NametagFeature
         } else {
             deactivate();
         }
-        binding.pit12$bindNametagNames(enabled && (config.nickMarker() || config.realNames()
-                || config.showHealth() || timerTypes != 0) ? this::nameSuffix : null,
-                enhancedVisibility);
+        binding.pit12$bindNametagNames(namesEnabled ? this::nameSuffix : null, enhancedVisibility);
     }
 
     private void deactivate() {
@@ -160,7 +176,7 @@ public final class NametagFeature
 
     private void updateText(UUID playerId, int changedSlots) {
         PlayerEquipmentSnapshot snapshot = equipment.loadedEquipment(playerId);
-        if (snapshot == null && !enhancedVisibility) {
+        if (snapshot == null && !enhancedVisibility && !namesEnabled) {
             texts.remove(playerId);
             return;
         }
@@ -181,7 +197,7 @@ public final class NametagFeature
                                     config.enchantmentFormat(), config.showGem())
                             : null;
         }
-        if (heldItem == null && leggings == null && !enhancedVisibility) {
+        if (heldItem == null && leggings == null && !enhancedVisibility && !namesEnabled) {
             texts.remove(playerId);
         } else if (text == null) {
             texts.put(playerId, new NametagText(heldItem, leggings, minecraft.fontRendererObj));
@@ -254,24 +270,24 @@ public final class NametagFeature
         }
     }
 
+    @HotPath
     private String nameSuffix(EntityPlayer player) {
         session.checkThread();
         UUID playerId = player.getUniqueID();
-        String suffix = config.nickMarker() && nicks.isNicked(playerId) ? " §e§lN" : "";
-        if (config.realNames()) {
-            String realName = denickNames.realDisplayName(playerId);
-            if (realName != null) {
-                suffix += " §7(" + realName + "§7)";
-            }
+        NametagText text = texts.get(playerId);
+        if (text == null) {
+            text = new NametagText(null, null, minecraft.fontRendererObj);
+            texts.put(playerId, text);
         }
-        if (config.showHealth()) {
-            suffix += " §c" + PlayerHealth.of(player).text();
-        }
-        return timerTypes == 0 ? suffix : suffix + timers.countdowns(playerId, timerTypes);
+        return text.updateSuffix(config.nickMarker() && nicks.isNicked(playerId),
+                config.realNames() ? denickNames.realDisplayName(playerId) : null,
+                config.showHealth() ? PlayerHealth.of(player).text() : null,
+                timerTypes == 0 ? "" : timers.countdowns(playerId, timerTypes));
     }
 
     // Lunar replaces name rendering and skips Forge's Specials events.
     @SubscribeEvent
+    @HotPath
     public void onRenderName(RenderLivingEvent.Post<?> event) {
         if (!active || enhancedVisibility || !(event.entity instanceof EntityPlayer)
                 || minecraft.thePlayer == null || event.entity == minecraft.thePlayer
@@ -293,13 +309,15 @@ public final class NametagFeature
         }
         NametagText text = texts.get(player.getUniqueID());
         // The model can render even when its nametag is hidden.
-        if (text != null && ((NametagVisibility) event.renderer).pit12$canRenderName(player)) {
+        if (text != null && (text.heldItem != null || text.leggings != null)
+                && ((NametagVisibility) event.renderer).pit12$canRenderName(player)) {
             renderer.render(minecraft, player, text, event.x, event.y, event.z, distanceSquared,
                     config.upwardOffset());
         }
     }
 
     @SubscribeEvent
+    @HotPath
     public void onRenderWorld(RenderWorldLastEvent event) {
         WorldClient world = session.world();
         if (active && enhancedVisibility && world != null && world == minecraft.theWorld

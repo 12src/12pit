@@ -16,14 +16,16 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.render.timers;
+package pit12.runtime.timers;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.BiConsumer;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.network.NetHandlerPlayClient;
 import net.minecraft.entity.player.EntityPlayer;
@@ -43,10 +45,13 @@ import pit12.shared.entity.PlayerPositions;
 public final class JumpBoostTracker implements PlayerEquipmentListener {
     private static final long DURATION_NANOS = 30_000_000_000L;
     private final Minecraft minecraft;
-    private final TimersConfig config;
+    private final TimerSettings settings;
     private final ClientSession session;
     private final PlayerEntityTracker players;
     private final PlayerEquipmentAccess equipment;
+    private final Predicate<EntityPlayer> interested;
+    private final BooleanSupplier remoteInterest;
+    private boolean listeningEquipment;
     private final BiConsumer<EntityPlayer, Long> triggered;
     private final Consumer<EntityPlayer> removed;
     private final Runnable resetTimers;
@@ -55,15 +60,18 @@ public final class JumpBoostTracker implements PlayerEquipmentListener {
     private final Map<UUID, Jump> jumps = new HashMap<>();
     private NetHandlerPlayClient boundConnection;
 
-    JumpBoostTracker(Minecraft minecraft, TimersConfig config, ClientSession session,
+    JumpBoostTracker(Minecraft minecraft, TimerSettings settings, ClientSession session,
             PlayerEntityTracker players, PlayerEquipmentAccess equipment,
+            Predicate<EntityPlayer> interested, BooleanSupplier remoteInterest,
             BiConsumer<EntityPlayer, Long> triggered, Consumer<EntityPlayer> removed,
             Runnable resetTimers) {
         this.minecraft = minecraft;
-        this.config = config;
+        this.settings = settings;
         this.session = session;
         this.players = players;
         this.equipment = equipment;
+        this.interested = interested;
+        this.remoteInterest = remoteInterest;
         this.triggered = triggered;
         this.removed = removed;
         this.resetTimers = resetTimers;
@@ -71,11 +79,11 @@ public final class JumpBoostTracker implements PlayerEquipmentListener {
 
     void active(boolean active) {
         if (active) {
-            equipment.addListener(this);
             session.addListener(sessionChanged);
             onSessionChanged();
         } else {
             equipment.removeListener(this);
+            listeningEquipment = false;
             session.removeListener(sessionChanged);
             unbind();
             onPlayerEquipmentReset();
@@ -90,10 +98,24 @@ public final class JumpBoostTracker implements PlayerEquipmentListener {
             ((JumpBoostPacketBinding) connection).bindJumpBoostTracker(this);
             boundConnection = connection;
         }
-        if (session.world() != null) {
+        refreshAudience();
+    }
+
+    void refreshAudience() {
+        boolean remote = remoteInterest.getAsBoolean();
+        if (listeningEquipment != remote) {
+            listeningEquipment = remote;
+            if (remote)
+                equipment.addListener(this);
+            else
+                equipment.removeListener(this);
+        }
+        heldPotions.values().removeIf(potion -> !interested.test(potion.player)
+                && !(remote && settings.jumpBoostSoundRequired()));
+        jumps.values().removeIf(jump -> !interested.test(jump.player));
+        if (remote && session.world() != null)
             for (EntityPlayer player : session.world().playerEntities)
                 observe(player);
-        }
     }
 
     private void unbind() {
@@ -145,7 +167,7 @@ public final class JumpBoostTracker implements PlayerEquipmentListener {
     }
 
     void trackJumps(EntityPlayer player, long until) {
-        if (config.jumpBoostResetOnLowJump.get())
+        if (settings.jumpBoostResetOnLowJump())
             jumps.put(player.getUniqueID(), new Jump(player, until, player == minecraft.thePlayer));
     }
 
@@ -155,6 +177,10 @@ public final class JumpBoostTracker implements PlayerEquipmentListener {
 
     public boolean checkingJumps() {
         return !jumps.isEmpty();
+    }
+
+    public boolean checkingRemoteJumps() {
+        return remoteInterest.getAsBoolean() && !jumps.isEmpty();
     }
 
     public void observeJump(EntityPlayer player, boolean interrupted) {
@@ -181,7 +207,7 @@ public final class JumpBoostTracker implements PlayerEquipmentListener {
                 jump.startY = jump.y;
                 // Give the potion effect time to reach the jumping player.
                 jump.jumping = System.nanoTime() >= jump.until - DURATION_NANOS
-                        + config.jumpBoostGrace.get() * (local ? 2_000_000L : 1_000_000L);
+                        + settings.jumpBoostGrace() * (local ? 2_000_000L : 1_000_000L);
             }
             // Jump Boost IV peaks near 4.15 blocks. Packets can miss the exact peak.
             if (jump.jumping && y - jump.startY >= 3.9)
@@ -209,7 +235,8 @@ public final class JumpBoostTracker implements PlayerEquipmentListener {
 
     private void observe(EntityPlayer player) {
         UUID playerId = player.getUniqueID();
-        if (!player.isEntityAlive()) {
+        if (!player.isEntityAlive() || !interested.test(player)
+                && !(remoteInterest.getAsBoolean() && settings.jumpBoostSoundRequired())) {
             heldPotions.remove(playerId);
             return;
         }
@@ -222,7 +249,7 @@ public final class JumpBoostTracker implements PlayerEquipmentListener {
         if (previous != null) {
             heldPotions.remove(playerId);
             if (previous.player == player && stack != null && stack.getItem() == Items.glass_bottle
-                    && (config.jumpBoostSoundRequired.get()
+                    && (settings.jumpBoostSoundRequired()
                             ? previous.lastDrinkSound != 0
                                     && now - previous.lastDrinkSound <= 500_000_000L
                             : now - previous.heldSince >= previous.stack.getMaxItemUseDuration()
@@ -235,7 +262,8 @@ public final class JumpBoostTracker implements PlayerEquipmentListener {
         List<PotionEffect> effects = Items.potionitem.getEffects(stack);
         if (effects == null)
             return;
-        for (PotionEffect effect : effects) {
+        for (int index = 0, size = effects.size(); index < size; index++) {
+            PotionEffect effect = effects.get(index);
             if (effect.getPotionID() == Potion.jump.id && effect.getAmplifier() == 3) {
                 heldPotions.put(playerId, new HeldPotion(player, stack, now));
                 return;
@@ -251,7 +279,8 @@ public final class JumpBoostTracker implements PlayerEquipmentListener {
     }
 
     public void sound(double x, double y, double z) {
-        if (!config.jumpBoostSoundRequired.get() || heldPotions.isEmpty())
+        if (!remoteInterest.getAsBoolean() || !settings.jumpBoostSoundRequired()
+                || heldPotions.isEmpty())
             return;
         // Sound packets have a position but no player ID.
         HeldPotion closest = null;

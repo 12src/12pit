@@ -35,6 +35,11 @@ public interface ArrowListener {
         return -1;
     }
 
+    /** Checked after arrow matching so excluded targets still compete. */
+    default boolean acceptsHit(EntityPlayer target) {
+        return true;
+    }
+
     /** Candidates are nonempty. Only apply effects shared by all candidates. */
     default void onArrowHit(EntityPlayer target, List<ArrowHit> candidates, long hitAt) {}
 

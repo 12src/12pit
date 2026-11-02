@@ -33,45 +33,36 @@ import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import pit12.runtime.session.ClientSession;
 import pit12.shared.event.Listeners;
-import pit12.shared.lifecycle.ClientLifecycle;
+import pit12.shared.lifecycle.DemandLifecycle;
 
-public final class PlayerEquipmentTracker implements ClientLifecycle, PlayerEquipmentAccess,
-        PlayerEquipmentPacketObserver, PlayerEntityListener {
+public final class PlayerEquipmentTracker extends DemandLifecycle
+        implements PlayerEquipmentAccess, PlayerEquipmentPacketObserver, PlayerEntityListener {
     private final ClientSession session;
     private final PlayerEntityTracker players;
     private final Runnable sessionChanged;
     private final PlayerEquipmentCache cache = new PlayerEquipmentCache();
-    private final List<PlayerEquipmentListener> listeners = new ArrayList<>();
+    private final Listeners<PlayerEquipmentListener> listeners = new Listeners<>();
     private NetHandlerPlayClient boundNetHandler;
-    private boolean started;
 
     public PlayerEquipmentTracker(ClientSession session, PlayerEntityTracker players) {
+        super(session::checkThread);
         this.session = session;
         this.players = players;
         sessionChanged = () -> bindNetHandler(session.connection());
     }
 
     @Override
-    public void start() {
-        session.checkThread();
-        if (started) {
-            return;
-        }
+    protected void activate() {
         MinecraftForge.EVENT_BUS.register(this);
-        started = true;
         players.addListener(this);
         session.addListener(sessionChanged);
         sessionChanged.run();
         onPlayerEntitiesReset();
+        applyDirty();
     }
 
     @Override
-    public void stop() {
-        session.checkThread();
-        if (!started) {
-            return;
-        }
-        started = false;
+    protected void deactivate() {
         session.removeListener(sessionChanged);
         players.removeListener(this);
         unbindNetHandler();
@@ -89,15 +80,17 @@ public final class PlayerEquipmentTracker implements ClientLifecycle, PlayerEqui
     @Override
     public void addListener(PlayerEquipmentListener listener) {
         session.checkThread();
-        if (!listeners.contains(listener)) {
-            listeners.add(listener);
-        }
+        if (listeners.isEmpty())
+            retainOwner(listeners);
+        listeners.add(listener);
     }
 
     @Override
     public void removeListener(PlayerEquipmentListener listener) {
         session.checkThread();
         listeners.remove(listener);
+        if (listeners.isEmpty())
+            releaseOwner(listeners);
     }
 
     @Override
@@ -118,8 +111,7 @@ public final class PlayerEquipmentTracker implements ClientLifecycle, PlayerEqui
             cache.markDirty(playerId, slots);
             ItemStack stack = equipmentSlot == 0 ? player.getHeldItem()
                     : player.getCurrentArmor(equipmentSlot - 1);
-            Listeners.notify(listeners,
-                    listener -> listener.onPlayerEquipmentReceived(playerId, stack));
+            listeners.notify(listener -> listener.onPlayerEquipmentReceived(playerId, stack));
         }
     }
 
@@ -170,7 +162,7 @@ public final class PlayerEquipmentTracker implements ClientLifecycle, PlayerEqui
             ((PlayerEquipmentPacketBinding) netHandler)
                     .bindPlayerEquipmentObserver((entityId, slot) -> {
                         session.refresh();
-                        if (started && session.connection() == netHandler)
+                        if (isActive() && session.connection() == netHandler)
                             onEquipmentPacket(entityId, slot);
                     });
             boundNetHandler = netHandler;
@@ -208,15 +200,15 @@ public final class PlayerEquipmentTracker implements ClientLifecycle, PlayerEqui
         boolean hadEquipment = !cache.isEmpty();
         cache.clear();
         if (hadEquipment)
-            Listeners.notify(listeners, PlayerEquipmentListener::onPlayerEquipmentReset);
+            listeners.notify(PlayerEquipmentListener::onPlayerEquipmentReset);
     }
 
     private void notifyChanged(PlayerEquipmentSnapshot snapshot, int changedSlots) {
-        Listeners.notify(listeners, listener -> listener
-                .onPlayerEquipmentChanged(snapshot.playerId(), changedSlots, snapshot.revision()));
+        listeners.notify(listener -> listener.onPlayerEquipmentChanged(snapshot.playerId(),
+                changedSlots, snapshot.revision()));
     }
 
     private void notifyRemoved(UUID playerId) {
-        Listeners.notify(listeners, listener -> listener.onPlayerEquipmentRemoved(playerId));
+        listeners.notify(listener -> listener.onPlayerEquipmentRemoved(playerId));
     }
 }

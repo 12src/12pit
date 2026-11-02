@@ -75,8 +75,8 @@ public final class RelationFeature implements ClientLifecycle, Relations, TabPre
     private final boolean installAdapters;
     private final RelationBook book;
     private final Languages language;
-    private final List<RelationListener> listeners = new ArrayList<>();
-    private final List<Runnable> changeListeners = new ArrayList<>();
+    private final Listeners<RelationListener> listeners = new Listeners<>();
+    private final Listeners<Runnable> changeListeners = new Listeners<>();
     private RelationIoWorker worker;
     private ExecutorService lookupWorker;
     private PendingLookups lookups;
@@ -255,8 +255,7 @@ public final class RelationFeature implements ClientLifecycle, Relations, TabPre
     @Override
     public void addListener(RelationListener listener) {
         client.check();
-        if (!listeners.contains(listener))
-            listeners.add(listener);
+        listeners.add(listener);
     }
 
     @Override
@@ -268,8 +267,7 @@ public final class RelationFeature implements ClientLifecycle, Relations, TabPre
     @Override
     public void addChangeListener(Runnable listener) {
         client.check();
-        if (!changeListeners.contains(listener))
-            changeListeners.add(listener);
+        changeListeners.add(listener);
     }
 
     @Override
@@ -288,7 +286,7 @@ public final class RelationFeature implements ClientLifecycle, Relations, TabPre
             }
         }
         shownLookupProblems = problems;
-        Listeners.notify(changeListeners, Runnable::run);
+        changeListeners.notify(Runnable::run);
     }
 
     @Override
@@ -411,11 +409,11 @@ public final class RelationFeature implements ClientLifecycle, Relations, TabPre
             Relation oldRelation = before.getOrDefault(id, Relation.NONE);
             Relation newRelation = after.getOrDefault(id, Relation.NONE);
             if (oldRelation != newRelation)
-                Listeners.notify(listeners,
+                listeners.notify(
                         listener -> listener.onRelationChanged(id, oldRelation, newRelation));
         }
         if (loaded)
-            Listeners.notify(listeners, RelationListener::onRelationsLoaded);
+            listeners.notify(RelationListener::onRelationsLoaded);
         notifyChanged();
     }
 

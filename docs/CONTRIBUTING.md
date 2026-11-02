@@ -22,7 +22,7 @@ See [architecture guide](ARCHITECTURE.md) on the structure of dependencies and t
 
 Look around in the code before making any changes and reuse the helpers where appropriate. Put a new behavior into the feature owning it; extract common functionality only if needed and don't bundle unrelated cleanup into your pull request.
 
-[BootstrapLayoutTest](../src/test/java/pit12/architecture/BootstrapLayoutTest.java) creates instances of configuration classes and verifies their categories and registration order. Configuration classes not having injected dependencies have public no-argument constructors; if you introduce a configuration class requiring additional parameters, adjust the test to pass them.
+[BootstrapLayoutTest](../src/test/java/pit12/BootstrapLayoutTest.java) creates instances of configuration classes and verifies their categories and registration order. Configuration classes not having injected dependencies have public no-argument constructors; if you introduce a configuration class requiring additional parameters, adjust the test to pass them.
 
 User-visible strings, logs, and documentation should be clear and natural.
 

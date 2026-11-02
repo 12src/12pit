@@ -16,12 +16,15 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.render.telebow.api;
+package pit12.shared.performance;
 
-/** Use this API on the client thread. */
-public interface TelebowCooldowns {
-    /** Sends current cooldowns before returning. */
-    void addListener(TelebowCooldownListener listener);
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-    void removeListener(TelebowCooldownListener listener);
+/** Marks a frequent entry point and its project calls for performance checks. Packaging removes it. */
+@Retention(RetentionPolicy.CLASS)
+@Target(ElementType.METHOD)
+public @interface HotPath {
 }

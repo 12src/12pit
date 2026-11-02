@@ -1,4 +1,4 @@
-name: Architecture
+name: Tests
 
 on:
   push:
@@ -15,8 +15,8 @@ concurrency:
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' && !startsWith(github.ref, 'refs/tags/') }}
 
 jobs:
-  architecture-check:
-    name: Check architecture
+  tests:
+    name: Run tests
     runs-on: ubuntu-26.04
 
     steps:
@@ -41,7 +41,7 @@ jobs:
         with:
           cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY || 'MTJwaXQtZW5jcnlwdGlvbg==' }}
 
-      - name: Check architecture
+      - name: Run tests
         run: |
           chmod +x gradlew
-          ./gradlew test --tests 'pit12.architecture.*' --no-daemon --console=plain
+          ./gradlew test --no-daemon --console=plain

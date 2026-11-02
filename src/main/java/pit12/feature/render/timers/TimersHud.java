@@ -28,6 +28,7 @@ import pit12.runtime.config.HudConfig;
 import pit12.runtime.config.HudGroupConfig;
 import pit12.runtime.hud.HudElement;
 import pit12.runtime.hud.HudRenderer;
+import pit12.shared.performance.HotPath;
 import pit12.shared.rendering.FontWidths;
 import pit12.shared.text.TextCodes;
 
@@ -133,7 +134,8 @@ final class TimersHud implements HudElement {
         if (metricsDirty) {
             Arrays.fill(titleWidths, -1);
             if (editing) {
-                for (Row row : rows) {
+                for (int index = 0, size = rows.size(); index < size; index++) {
+                    Row row = rows.get(index);
                     row.nameWidth = -1;
                     row.timeWidth = -1;
                 }
@@ -144,7 +146,8 @@ final class TimersHud implements HudElement {
         int titleWidth = 0;
         int lines = content.size();
         TimerType previousType = null;
-        for (Row row : content) {
+        for (int rowIndex = 0, size = content.size(); rowIndex < size; rowIndex++) {
+            Row row = content.get(rowIndex);
             if (metricsDirty) {
                 row.nameWidth = -1;
                 row.timeWidth = -1;
@@ -182,11 +185,13 @@ final class TimersHud implements HudElement {
     }
 
     @Override
+    @HotPath
     public void render(float partialTicks, boolean editing) {
         renderer.resize(pixelScale);
         int y = 4;
         TimerType previousType = null;
-        for (Row row : content) {
+        for (int index = 0, size = content.size(); index < size; index++) {
+            Row row = content.get(index);
             if (previousType != null && previousType != row.type)
                 y += lineHeight;
             if (!editing && y >= visibleHeight + lineHeight)
@@ -256,6 +261,7 @@ final class TimersHud implements HudElement {
         String name;
         String time;
         long until;
+        long refresh;
         private long tenths = Long.MIN_VALUE;
         int nameWidth = -1;
         int timeWidth = -1;

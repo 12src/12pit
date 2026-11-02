@@ -25,6 +25,7 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.util.BlockPos;
 import org.lwjgl.opengl.GL11;
+import pit12.shared.performance.HotPath;
 import pit12.shared.rendering.TextureState;
 import pit12.shared.rendering.WorldRenderState;
 
@@ -37,6 +38,7 @@ final class RingRenderer {
         state = new WorldRenderState(textures);
     }
 
+    @HotPath
     void render(Minecraft minecraft, List<BlockPos> blocks, int color, long revision) {
         if (minecraft.getRenderViewEntity() == null) {
             return;
@@ -74,7 +76,8 @@ final class RingRenderer {
     private static void draw(List<BlockPos> blocks) {
         GL11.glBegin(GL11.GL_LINES);
         try {
-            for (BlockPos position : blocks) {
+            for (int index = 0, size = blocks.size(); index < size; index++) {
+                BlockPos position = blocks.get(index);
                 double x = position.getX();
                 double bottomY = position.getY() + 1.0D;
                 double z = position.getZ();

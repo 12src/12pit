@@ -19,6 +19,7 @@
 package pit12.feature.misc.chatmacro;
 
 import java.nio.file.Path;
+import java.util.List;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.FontRenderer;
@@ -46,6 +47,7 @@ import pit12.shared.chat.ChatFeedback.Tone;
 import pit12.shared.concurrent.ClientThread;
 import pit12.shared.input.Keybind;
 import pit12.shared.lifecycle.ClientLifecycle;
+import pit12.shared.performance.HotPath;
 import pit12.shared.rendering.FontWidths;
 
 public final class ChatMacroFeature
@@ -223,7 +225,9 @@ public final class ChatMacroFeature
     }
 
     private boolean canSpawn() {
-        for (SidebarLine line : sidebar.lines()) {
+        List<SidebarLine> lines = sidebar.lines();
+        for (int index = 0, size = lines.size(); index < size; index++) {
+            SidebarLine line = lines.get(index);
             String text = line.formattedText(minecraft.fontRendererObj);
             if (text.contains("Fighting") || text.contains("战斗中"))
                 return false;
@@ -275,6 +279,7 @@ public final class ChatMacroFeature
     }
 
     @SubscribeEvent
+    @HotPath
     public void onRenderOverlay(RenderGameOverlayEvent.Post event) {
         if (!waiting || event.type != ElementType.ALL || minecraft.gameSettings.hideGUI
                 || minecraft.thePlayer == null)

@@ -1,6 +1,14 @@
 import dev.architectury.pack200.java.Pack200Adapter
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
+import java.util.zip.ZipEntry
+import java.util.zip.ZipFile
+import java.util.zip.ZipOutputStream
 import net.fabricmc.loom.task.RemapJarTask
 import org.apache.commons.lang3.SystemUtils
+import org.objectweb.asm.ClassReader
+import org.objectweb.asm.ClassWriter
+import org.objectweb.asm.tree.ClassNode
 
 plugins {
     java
@@ -136,6 +144,25 @@ tasks.compileJava { dependsOn(generateBuildConfig) }
 // BootstrapLayoutTest reads the comments in ClientBootstrap.java.
 tasks.test {
     inputs.file("src/main/java/pit12/bootstrap/ClientBootstrap.java")
+    val logConfig = temporaryDir.resolve("log4j2.xml")
+    systemProperty("log4j.configurationFile", logConfig.absolutePath)
+    doFirst {
+        logConfig.writeText(
+            """
+            <Configuration status="WARN">
+                <Appenders>
+                    <Console name="Console" target="SYSTEM_OUT">
+                        <PatternLayout pattern="[%d{HH:mm:ss}] [%t/%level]: %msg%n" />
+                    </Console>
+                </Appenders>
+                <Loggers>
+                    <Root level="info"><AppenderRef ref="Console" /></Root>
+                </Loggers>
+            </Configuration>
+            """
+                .trimIndent()
+        )
+    }
 }
 
 repositories {
@@ -307,6 +334,44 @@ tasks.shadowJar {
 
     exclude("LICENSE.txt")
     exclude("META-INF/*.DSA", "META-INF/*.RSA", "META-INF/*.SF")
+
+    val hotPath = "pit12/shared/performance/HotPath"
+    exclude("$hotPath.class")
+    // Tests read the original classes. Strip the marker only from the packaged copy.
+    doLast {
+        val archive = archiveFile.get().asFile
+        val stripped = temporaryDir.resolve("stripped.jar")
+        ZipFile(archive).use { source ->
+            ZipOutputStream(stripped.outputStream().buffered()).use { output ->
+                for (entry in source.entries().asSequence()) {
+                    output.putNextEntry(ZipEntry(entry.name).apply { time = entry.time })
+                    source.getInputStream(entry).use { input ->
+                        if (entry.name.startsWith("pit12/") && entry.name.endsWith(".class")) {
+                            var bytes = input.readBytes()
+                            val node = ClassNode()
+                            ClassReader(bytes).accept(node, 0)
+                            var changed = false
+                            for (method in node.methods) {
+                                if (method.invisibleAnnotations?.removeIf { it.desc == "L$hotPath;" } == true) {
+                                    changed = true
+                                }
+                            }
+                            if (changed) {
+                                val writer = ClassWriter(0)
+                                node.accept(writer)
+                                bytes = writer.toByteArray()
+                            }
+                            output.write(bytes)
+                        } else {
+                            input.copyTo(output)
+                        }
+                    }
+                    output.closeEntry()
+                }
+            }
+        }
+        Files.move(stripped.toPath(), archive.toPath(), StandardCopyOption.REPLACE_EXISTING)
+    }
 }
 
 tasks.assemble { dependsOn(remapJar) }

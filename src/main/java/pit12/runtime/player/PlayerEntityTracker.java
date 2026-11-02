@@ -18,9 +18,7 @@
  */
 package pit12.runtime.player;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import net.minecraft.client.multiplayer.WorldClient;
@@ -28,39 +26,30 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import pit12.runtime.session.ClientSession;
 import pit12.shared.event.Listeners;
-import pit12.shared.lifecycle.ClientLifecycle;
+import pit12.shared.lifecycle.DemandLifecycle;
 
-/** Use this API on the client thread. Returned entities are live. */
-public final class PlayerEntityTracker implements ClientLifecycle, PlayerEntityWorldObserver {
+/** Use this API on the client thread. Returned entities are live. Retain while reading without a listener. */
+public final class PlayerEntityTracker extends DemandLifecycle
+        implements PlayerEntityWorldObserver {
     private final ClientSession session;
     private final Runnable sessionChanged = this::onSessionChanged;
     private final Map<UUID, EntityPlayer> players = new HashMap<>();
-    private final List<PlayerEntityListener> listeners = new ArrayList<>();
+    private final Listeners<PlayerEntityListener> listeners = new Listeners<>();
     private WorldClient boundWorld;
-    private boolean started;
 
     public PlayerEntityTracker(ClientSession session) {
+        super(session::checkThread);
         this.session = session;
     }
 
     @Override
-    public void start() {
-        session.checkThread();
-        if (started) {
-            return;
-        }
-        started = true;
+    protected void activate() {
         session.addListener(sessionChanged);
         onSessionChanged();
     }
 
     @Override
-    public void stop() {
-        session.checkThread();
-        if (!started) {
-            return;
-        }
-        started = false;
+    protected void deactivate() {
         session.removeListener(sessionChanged);
         unbindWorld();
         players.clear();
@@ -77,21 +66,23 @@ public final class PlayerEntityTracker implements ClientLifecycle, PlayerEntityW
     /** Listeners run after the index is updated. Remove them when their owner stops. */
     public void addListener(PlayerEntityListener listener) {
         session.checkThread();
-        if (!listeners.contains(listener)) {
-            listeners.add(listener);
-        }
+        if (listeners.isEmpty())
+            retainOwner(listeners);
+        listeners.add(listener);
     }
 
     public void removeListener(PlayerEntityListener listener) {
         session.checkThread();
         listeners.remove(listener);
+        if (listeners.isEmpty())
+            releaseOwner(listeners);
     }
 
     @Override
     public void onPlayerAdded(EntityPlayer player) {
         session.checkThread();
         session.refresh();
-        if (!started || player.worldObj != boundWorld || player.isDead) {
+        if (!isActive() || player.worldObj != boundWorld || player.isDead) {
             return;
         }
         EntityPlayer previous = players.put(player.getUniqueID(), player);
@@ -99,16 +90,16 @@ public final class PlayerEntityTracker implements ClientLifecycle, PlayerEntityW
             return;
         }
         if (previous != null) {
-            Listeners.notify(listeners, listener -> listener.onPlayerEntityRemoved(previous));
+            listeners.notify(listener -> listener.onPlayerEntityRemoved(previous));
         }
-        Listeners.notify(listeners, listener -> listener.onPlayerEntityAdded(player));
+        listeners.notify(listener -> listener.onPlayerEntityAdded(player));
     }
 
     @Override
     public void onPlayerRemoved(EntityPlayer player) {
         session.checkThread();
         session.refresh();
-        if (!started || player.worldObj != boundWorld) {
+        if (!isActive() || player.worldObj != boundWorld) {
             return;
         }
         UUID playerId = player.getUniqueID();
@@ -117,7 +108,7 @@ public final class PlayerEntityTracker implements ClientLifecycle, PlayerEntityW
             return;
         }
         players.remove(playerId);
-        Listeners.notify(listeners, listener -> listener.onPlayerEntityRemoved(player));
+        listeners.notify(listener -> listener.onPlayerEntityRemoved(player));
     }
 
     private void onSessionChanged() {
@@ -138,7 +129,7 @@ public final class PlayerEntityTracker implements ClientLifecycle, PlayerEntityW
                 }
             }
         }
-        Listeners.notify(listeners, PlayerEntityListener::onPlayerEntitiesReset);
+        listeners.notify(PlayerEntityListener::onPlayerEntitiesReset);
     }
 
     private void unbindWorld() {

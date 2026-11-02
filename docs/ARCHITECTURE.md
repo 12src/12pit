@@ -34,4 +34,4 @@ Each feature has its own settings. `ConfigCatalog` keeps track of all the live c
 
 ## Architecture checks
 
-[ArchitectureTest](../src/test/java/pit12/architecture/ArchitectureTest.java) ensures the proper package boundaries, dependency direction, module cycles, lifecycle ownership, and Mixin package rules. [BootstrapLayoutTest](../src/test/java/pit12/architecture/BootstrapLayoutTest.java) ensures correct order of component registration and section grouping in `ClientBootstrap`.
+[ArchitectureTest](../src/test/java/pit12/ArchitectureTest.java) ensures the proper package boundaries, dependency direction, module cycles, lifecycle ownership, and Mixin package rules. [BootstrapLayoutTest](../src/test/java/pit12/BootstrapLayoutTest.java) ensures correct order of component registration and section grouping in `ClientBootstrap`.

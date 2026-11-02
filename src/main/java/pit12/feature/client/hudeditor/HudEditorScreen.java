@@ -28,6 +28,7 @@ import org.lwjgl.input.Mouse;
 import pit12.runtime.hud.HudRenderer;
 import pit12.runtime.languages.Languages;
 import pit12.shared.input.Keybind;
+import pit12.shared.performance.HotPath;
 import pit12.shared.rendering.FontWidths;
 import pit12.shared.rendering.UiRenderState;
 
@@ -102,6 +103,7 @@ final class HudEditorScreen extends GuiScreen {
     }
 
     @Override
+    @HotPath
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         if (Mouse.isButtonDown(0)) {
             controller.mouseDragged(mouseX, mouseY, alt());

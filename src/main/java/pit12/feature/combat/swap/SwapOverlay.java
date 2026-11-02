@@ -19,8 +19,10 @@
 package pit12.feature.combat.swap;
 
 import java.util.IdentityHashMap;
+import java.util.List;
 import java.util.Map;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.inventory.Slot;
@@ -55,14 +57,17 @@ final class SwapOverlay {
             return;
         }
         boolean containerScreen = minecraft.currentScreen instanceof GuiContainer;
-        for (Slot slot : minecraft.thePlayer.inventoryContainer.inventorySlots) {
+        List<Slot> inventorySlots = minecraft.thePlayer.inventoryContainer.inventorySlots;
+        for (int index = 0, size = inventorySlots.size(); index < size; index++) {
+            Slot slot = inventorySlots.get(index);
             if (containerScreen || slot.slotNumber >= 36
                     || slot.slotNumber >= 5 && slot.slotNumber <= 8)
                 addIdentity(slot.getStack());
         }
         if (containerScreen) {
-            for (Slot slot : minecraft.thePlayer.openContainer.inventorySlots) {
-                addIdentity(slot.getStack());
+            List<Slot> containerSlots = minecraft.thePlayer.openContainer.inventorySlots;
+            for (int index = 0, size = containerSlots.size(); index < size; index++) {
+                addIdentity(containerSlots.get(index).getStack());
             }
         }
         cache.keySet().retainAll(identities.keySet());
@@ -74,9 +79,15 @@ final class SwapOverlay {
                     minecraft.thePlayer.inventoryContainer.getSlot(binding.guiTarget()).getStack();
             if (binding.identity.equals(identities.get(target)))
                 continue;
-            String name = "§c§l" + Keyboard.getKeyName(binding.key);
-            labels.put(entry.getKey(), new Label(name, binding.equipment,
-                    FontWidths.measure(minecraft.fontRendererObj, name)));
+            CachedIdentity cached = cache.get(entry.getKey());
+            FontRenderer font = minecraft.fontRendererObj;
+            Label label = cached.label;
+            if (label == null || label.binding != binding || label.font != font
+                    || label.unicode != font.getUnicodeFlag()) {
+                label = new Label(binding, font);
+                cached.label = label;
+            }
+            labels.put(entry.getKey(), label);
         }
     }
 
@@ -100,7 +111,7 @@ final class SwapOverlay {
         Label label = labels.get(stack);
         if (label == null)
             return;
-        int textX = label.equipment ? x + 14 - label.width : x + 2;
+        int textX = label.binding.equipment ? x + 14 - label.width : x + 2;
         // The rest of the overlay needs lighting and depth back on when we're done.
         GlStateManager.disableLighting();
         GlStateManager.disableDepth();
@@ -111,19 +122,24 @@ final class SwapOverlay {
     }
 
     private static final class Label {
+        final SwapBinding binding;
+        final FontRenderer font;
+        final boolean unicode;
         final String text;
-        final boolean equipment;
         final int width;
 
-        Label(String text, boolean equipment, int width) {
-            this.text = text;
-            this.equipment = equipment;
-            this.width = width;
+        Label(SwapBinding binding, FontRenderer font) {
+            this.binding = binding;
+            this.font = font;
+            unicode = font.getUnicodeFlag();
+            text = "§c§l" + Keyboard.getKeyName(binding.key);
+            width = FontWidths.measure(font, text);
         }
     }
     private static final class CachedIdentity {
         final ItemStack snapshot;
         final ItemIdentity identity;
+        Label label;
 
         CachedIdentity(ItemStack snapshot, ItemIdentity identity) {
             this.snapshot = snapshot;

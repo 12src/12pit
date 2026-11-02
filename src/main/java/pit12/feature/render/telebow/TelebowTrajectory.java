@@ -122,7 +122,8 @@ final class TelebowTrajectory {
                     new AxisAlignedBB(minX - 1, minY - 1, minZ - 1, maxX + 1, maxY + 1, maxZ + 1));
             boxes.clear();
             int shooterIndex = -1;
-            for (Entity entity : entities) {
+            for (int index = 0, size = entities.size(); index < size; index++) {
+                Entity entity = entities.get(index);
                 if (entity.isDead || !entity.canBeCollidedWith())
                     continue;
                 if (entity instanceof EntityPlayer

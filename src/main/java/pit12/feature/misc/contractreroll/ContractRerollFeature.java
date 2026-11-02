@@ -20,6 +20,7 @@ package pit12.feature.misc.contractreroll;
 
 import static net.minecraft.util.EnumChatFormatting.WHITE;
 
+import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -61,6 +62,7 @@ import pit12.shared.chat.ChatFeedback.Tone;
 import pit12.shared.input.Keybind;
 import pit12.shared.input.MinecraftActions;
 import pit12.shared.lifecycle.ClientLifecycle;
+import pit12.shared.performance.HotPath;
 import pit12.shared.rendering.FontWidths;
 import pit12.shared.text.TextCodes;
 
@@ -129,6 +131,8 @@ public final class ContractRerollFeature
         started = true;
         input.addHandler(this);
         configs.addListener(this);
+        if (config.key.get() != Keyboard.KEY_NONE)
+            pit.retain(this);
     }
 
     @Override
@@ -138,6 +142,7 @@ public final class ContractRerollFeature
         finish(false);
         input.removeHandler(this);
         configs.removeListener(this);
+        pit.release(this);
     }
 
     @Override
@@ -275,7 +280,9 @@ public final class ContractRerollFeature
 
     private void refreshContract() {
         hasContract = false;
-        for (SidebarLine line : sidebar.lines()) {
+        List<SidebarLine> lines = sidebar.lines();
+        for (int index = 0, size = lines.size(); index < size; index++) {
+            SidebarLine line = lines.get(index);
             String text = line.formattedText(minecraft.fontRendererObj);
             if (text.contains("Contract") || text.contains("合同")) {
                 hasContract = true;
@@ -471,8 +478,14 @@ public final class ContractRerollFeature
 
     @Override
     public void onConfigChanged(ConfigChangeSet changes) {
-        if (changes.affects("contractreroll", "key") && config.key.get() == Keyboard.KEY_NONE)
-            finish(true);
+        if (changes.affects("contractreroll", "key")) {
+            if (config.key.get() == Keyboard.KEY_NONE) {
+                finish(true);
+                pit.release(this);
+            } else if (started) {
+                pit.retain(this);
+            }
+        }
     }
 
     private void failedAction(RuntimeException failure) {
@@ -512,6 +525,7 @@ public final class ContractRerollFeature
     }
 
     @SubscribeEvent
+    @HotPath
     public void onRenderOverlay(RenderGameOverlayEvent.Post event) {
         if (state == State.IDLE || event.type != RenderGameOverlayEvent.ElementType.ALL
                 || minecraft.gameSettings.hideGUI || minecraft.thePlayer == null)

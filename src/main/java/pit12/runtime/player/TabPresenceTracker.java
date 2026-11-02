@@ -33,37 +33,30 @@ import net.minecraft.network.play.server.S38PacketPlayerListItem.Action;
 import net.minecraft.network.play.server.S38PacketPlayerListItem.AddPlayerData;
 import pit12.runtime.session.ClientSession;
 import pit12.shared.event.Listeners;
-import pit12.shared.lifecycle.ClientLifecycle;
+import pit12.shared.lifecycle.DemandLifecycle;
 
 /** Use this API and deliver packets on the client thread. */
-public final class TabPresenceTracker implements ClientLifecycle, TabPresence, TabPacketObserver {
+public final class TabPresenceTracker extends DemandLifecycle
+        implements TabPresence, TabPacketObserver {
     private final ClientSession session;
     private final Runnable sessionChanged = this::onSessionChanged;
     private final Set<UUID> present = new LinkedHashSet<>();
-    private final List<TabPresenceListener> listeners = new ArrayList<>();
+    private final Listeners<TabPresenceListener> listeners = new Listeners<>();
     private NetHandlerPlayClient boundHandler;
-    private boolean started;
 
     public TabPresenceTracker(ClientSession session) {
+        super(session::checkThread);
         this.session = session;
     }
 
     @Override
-    public void start() {
-        session.checkThread();
-        if (started)
-            return;
-        started = true;
+    protected void activate() {
         session.addListener(sessionChanged);
         onSessionChanged();
     }
 
     @Override
-    public void stop() {
-        session.checkThread();
-        if (!started)
-            return;
-        started = false;
+    protected void deactivate() {
         session.removeListener(sessionChanged);
         bind(null);
         listeners.clear();
@@ -97,25 +90,30 @@ public final class TabPresenceTracker implements ClientLifecycle, TabPresence, T
     @Override
     public void addListener(TabPresenceListener listener) {
         session.checkThread();
-        if (!listeners.contains(listener))
-            listeners.add(listener);
+        if (listeners.isEmpty())
+            retainOwner(listeners);
+        listeners.add(listener);
     }
 
     @Override
     public void removeListener(TabPresenceListener listener) {
         session.checkThread();
         listeners.remove(listener);
+        if (listeners.isEmpty())
+            releaseOwner(listeners);
     }
 
     @Override
     public void onTabPacket(S38PacketPlayerListItem packet) {
         session.checkThread();
         Action action = packet.getAction();
+        List<AddPlayerData> entries = packet.getEntries();
         if (action == Action.UPDATE_DISPLAY_NAME) {
-            for (AddPlayerData entry : packet.getEntries()) {
+            for (int index = 0, size = entries.size(); index < size; index++) {
+                AddPlayerData entry = entries.get(index);
                 UUID playerId = entry.getProfile().getId();
                 if (playerId != null) {
-                    Listeners.notify(listeners, listener -> listener.onTabDisplayChanged(playerId));
+                    listeners.notify(listener -> listener.onTabDisplayChanged(playerId));
                 }
             }
             return;
@@ -123,21 +121,22 @@ public final class TabPresenceTracker implements ClientLifecycle, TabPresence, T
         if (action != Action.ADD_PLAYER && action != Action.REMOVE_PLAYER)
             return;
         List<Runnable> notifications = new ArrayList<>();
-        for (AddPlayerData entry : packet.getEntries()) {
+        for (int index = 0, size = entries.size(); index < size; index++) {
+            AddPlayerData entry = entries.get(index);
             UUID id = entry.getProfile().getId();
             if (id == null)
                 continue;
             if (action == Action.REMOVE_PLAYER) {
                 if (present.remove(id))
-                    notifications.add(() -> Listeners.notify(listeners,
-                            listener -> listener.onPlayerLeft(id)));
+                    notifications
+                            .add(() -> listeners.notify(listener -> listener.onPlayerLeft(id)));
             } else {
                 NetworkPlayerInfo info = boundHandler.getPlayerInfo(id);
                 if (info != null) {
                     String name = info.getGameProfile().getName();
                     boolean joined = present.add(id);
-                    notifications.add(() -> Listeners.notify(listeners,
-                            listener -> listener.onPlayerSeen(id, name, joined)));
+                    notifications.add(() -> listeners
+                            .notify(listener -> listener.onPlayerSeen(id, name, joined)));
                 }
             }
         }
@@ -159,7 +158,7 @@ public final class TabPresenceTracker implements ClientLifecycle, TabPresence, T
         if (handler instanceof TabPacketBinding) {
             ((TabPacketBinding) handler).bindTabObserver(packet -> {
                 session.refresh();
-                if (started && boundHandler == handler && session.connection() == handler)
+                if (isActive() && boundHandler == handler && session.connection() == handler)
                     onTabPacket(packet);
             });
         }
@@ -171,8 +170,8 @@ public final class TabPresenceTracker implements ClientLifecycle, TabPresence, T
         }
         Map<UUID, String> current = currentPlayers();
         for (UUID id : previous)
-            Listeners.notify(listeners, listener -> listener.onPlayerLeft(id));
-        current.forEach((id, name) -> Listeners.notify(listeners,
-                listener -> listener.onPlayerSeen(id, name, true)));
+            listeners.notify(listener -> listener.onPlayerLeft(id));
+        current.forEach(
+                (id, name) -> listeners.notify(listener -> listener.onPlayerSeen(id, name, true)));
     }
 }

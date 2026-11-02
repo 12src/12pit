@@ -30,7 +30,7 @@ public final class PlayerListEntry {
     private final String leggingsText;
     private final String heldItemText;
     private final float distance;
-    private final String distanceText;
+    String distanceText;
     private final float direction;
     private final boolean spawn;
     private final boolean distanceKnown;
@@ -45,7 +45,6 @@ public final class PlayerListEntry {
         this.leggingsText = leggingsText;
         this.heldItemText = heldItemText;
         this.distance = distance;
-        this.distanceText = spawn ? "SPAWN" : distanceKnown ? Math.round(distance) + "m" : ">MAX";
         this.direction = direction;
         this.spawn = spawn;
         this.distanceKnown = distanceKnown;
@@ -77,6 +76,8 @@ public final class PlayerListEntry {
     }
 
     public String distanceText() {
+        if (distanceText == null)
+            distanceText = spawn ? "SPAWN" : distanceKnown ? Math.round(distance) + "m" : ">MAX";
         return distanceText;
     }
 

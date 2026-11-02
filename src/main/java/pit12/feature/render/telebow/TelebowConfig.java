@@ -28,8 +28,9 @@ import pit12.runtime.config.ConfigCategory;
 import pit12.runtime.config.DoubleSetting;
 import pit12.runtime.config.FeatureConfig;
 import pit12.runtime.config.IntegerSetting;
+import pit12.runtime.timers.TelebowSettings;
 
-public final class TelebowConfig extends FeatureConfig {
+public final class TelebowConfig extends FeatureConfig implements TelebowSettings {
     public final BooleanSetting own;
     public final BooleanSetting friends;
     public final BooleanSetting enemies;
@@ -116,5 +117,25 @@ public final class TelebowConfig extends FeatureConfig {
                 source("Time for predictions to fade after the hold time."), 1000, 100, 3000, 100);
         showNames = booleanSetting("show_names", source("Show names"),
                 source("Shows the shooter's display name at the predicted landing point."), true);
+    }
+
+    @Override
+    public boolean correctCooldown() {
+        return correctCooldown.get();
+    }
+
+    @Override
+    public int cooldownDetection() {
+        return cooldownDetection.get();
+    }
+
+    @Override
+    public int predictionMargin() {
+        return predictionMargin.get();
+    }
+
+    @Override
+    public int teleportExtraMargin() {
+        return teleportExtraMargin.get();
     }
 }

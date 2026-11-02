@@ -16,8 +16,24 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.render.timers;
+package pit12.runtime.timers;
 
-public interface JumpBoostPacketBinding {
-    void bindJumpBoostTracker(JumpBoostTracker tracker);
+public enum TimerKind {
+    PIN("§e"), VENOM_WEARER("§d"), VENOM_TARGET("§d"), JUMP_BOOST("§a"), TELEBOW("§b");
+
+    final String color;
+    final int shift;
+
+    TimerKind(String color) {
+        this.color = color;
+        shift = ordinal() * 4;
+    }
+
+    public int select(int groups) {
+        return groups << shift;
+    }
+
+    public int groups(int selection) {
+        return selection >>> shift & TimerDemand.ALL;
+    }
 }

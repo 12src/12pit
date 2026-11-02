@@ -41,6 +41,7 @@ import pit12.runtime.pit.PitMap;
 import pit12.runtime.pit.PitMid;
 import pit12.runtime.session.ClientSession;
 import pit12.shared.lifecycle.ClientLifecycle;
+import pit12.shared.performance.HotPath;
 import pit12.shared.rendering.TextureState;
 
 public final class RingHelperFeature implements ClientLifecycle, ConfigChangeListener {
@@ -98,11 +99,13 @@ public final class RingHelperFeature implements ClientLifecycle, ConfigChangeLis
         }
         active = enabled;
         if (enabled) {
+            pitContext.retain(this);
             session.addListener(sessionChanged);
             MinecraftForge.EVENT_BUS.register(this);
         } else {
             MinecraftForge.EVENT_BUS.unregister(this);
             session.removeListener(sessionChanged);
+            pitContext.release(this);
         }
         reset();
     }
@@ -159,7 +162,8 @@ public final class RingHelperFeature implements ClientLifecycle, ConfigChangeLis
             return;
         }
         List<BlockPos> edgeColumns = mid.edgeColumns();
-        for (BlockPos column : edgeColumns) {
+        for (int index = 0, size = edgeColumns.size(); index < size; index++) {
+            BlockPos column = edgeColumns.get(index);
             probeBlock.set(column.getX(), baseY + 2, column.getZ());
             if (world.isBlockLoaded(probeBlock) && world.isAirBlock(probeBlock)) {
                 int targetIndex = nextTargets.size();
@@ -194,6 +198,7 @@ public final class RingHelperFeature implements ClientLifecycle, ConfigChangeLis
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
+    @HotPath
     public void onRenderWorld(RenderWorldLastEvent event) {
         if (active && world == minecraft.theWorld && !targets.isEmpty() && shouldShow()) {
             renderer.render(minecraft, targets, config.color(), geometryRevision);

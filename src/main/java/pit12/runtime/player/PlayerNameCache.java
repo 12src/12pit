@@ -18,10 +18,8 @@
  */
 package pit12.runtime.player;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -39,12 +37,12 @@ import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import pit12.runtime.session.ClientSession;
 import pit12.shared.event.Listeners;
-import pit12.shared.lifecycle.ClientLifecycle;
+import pit12.shared.lifecycle.DemandLifecycle;
 import pit12.shared.text.PlayerNameFormatter;
 
-/** Use this API on the client thread. */
-public final class PlayerNameCache
-        implements ClientLifecycle, TabPresenceListener, PlayerTeamObserver {
+/** Use this API on the client thread. Retain while reading without a listener. */
+public final class PlayerNameCache extends DemandLifecycle
+        implements TabPresenceListener, PlayerTeamObserver {
     private final Minecraft minecraft;
     private final ClientSession session;
     private final TabPresence presence;
@@ -52,24 +50,19 @@ public final class PlayerNameCache
     private final Map<UUID, NameEntry> entries = new HashMap<>();
     private final Map<String, UUID> byName = new HashMap<>();
     private final Set<UUID> dirty = new LinkedHashSet<>();
-    private final List<Runnable> listeners = new ArrayList<>();
+    private final Listeners<Runnable> listeners = new Listeners<>();
     private NetHandlerPlayClient connection;
     private Scoreboard scoreboard;
-    private boolean started;
 
     public PlayerNameCache(Minecraft minecraft, ClientSession session, TabPresence presence) {
+        super(session::checkThread);
         this.minecraft = minecraft;
         this.session = session;
         this.presence = presence;
     }
 
     @Override
-    public void start() {
-        session.checkThread();
-        if (started) {
-            return;
-        }
-        started = true;
+    protected void activate() {
         session.addListener(sessionChanged);
         presence.addListener(this);
         MinecraftForge.EVENT_BUS.register(this);
@@ -77,12 +70,7 @@ public final class PlayerNameCache
     }
 
     @Override
-    public void stop() {
-        session.checkThread();
-        if (!started) {
-            return;
-        }
-        started = false;
+    protected void deactivate() {
         MinecraftForge.EVENT_BUS.unregister(this);
         presence.removeListener(this);
         session.removeListener(sessionChanged);
@@ -117,14 +105,16 @@ public final class PlayerNameCache
 
     public void addListener(Runnable listener) {
         session.checkThread();
-        if (!listeners.contains(listener)) {
-            listeners.add(listener);
-        }
+        if (listeners.isEmpty())
+            retainOwner(listeners);
+        listeners.add(listener);
     }
 
     public void removeListener(Runnable listener) {
         session.checkThread();
         listeners.remove(listener);
+        if (listeners.isEmpty())
+            releaseOwner(listeners);
     }
 
     /**
@@ -156,7 +146,7 @@ public final class PlayerNameCache
         if (entry != null) {
             ((PlayerNameBinding) entry.info).bindPlayerNameObserver(null);
             byName.remove(entry.info.getGameProfile().getName(), playerId);
-            Listeners.notify(listeners, Runnable::run);
+            listeners.notify(Runnable::run);
         }
     }
 
@@ -208,7 +198,7 @@ public final class PlayerNameCache
                     observe(info);
                 }
             }
-            Listeners.notify(listeners, Runnable::run);
+            listeners.notify(Runnable::run);
         }
         WorldClient world = session.world();
         Scoreboard current = world == null ? null : world.getScoreboard();
@@ -245,7 +235,7 @@ public final class PlayerNameCache
             ((PlayerNameBinding) info).bindPlayerNameObserver(() -> {
                 session.checkThread();
                 NameEntry current = entries.get(playerId);
-                if (started && current != null && current.info == info) {
+                if (isActive() && current != null && current.info == info) {
                     dirty.add(playerId);
                 }
             });
@@ -286,7 +276,7 @@ public final class PlayerNameCache
             if (entry.displayNameObserver != null) {
                 entry.displayNameObserver.accept(name);
             }
-            Listeners.notify(listeners, Runnable::run);
+            listeners.notify(Runnable::run);
         }
     }
 

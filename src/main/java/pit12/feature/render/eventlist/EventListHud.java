@@ -25,6 +25,7 @@ import pit12.runtime.config.HudConfig;
 import pit12.runtime.hud.HudElement;
 import pit12.runtime.hud.HudRenderer;
 import pit12.runtime.languages.Languages;
+import pit12.shared.performance.HotPath;
 import pit12.shared.rendering.FontWidths;
 
 final class EventListHud implements HudElement {
@@ -168,6 +169,7 @@ final class EventListHud implements HudElement {
     }
 
     @Override
+    @HotPath
     public void render(float partialTicks, boolean editing) {
         int y = PADDING;
         if (!content.dayName.isEmpty()) {
