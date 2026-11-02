@@ -68,8 +68,8 @@ final class PinTracker implements ArrowListener {
     }
 
     @Override
-    public long hitWindowNanos() {
-        return config.pinHitWindow.get() * 1_000_000L;
+    public long hitWindowNanos(boolean local) {
+        return config.pinHitWindow.get() * (local ? 2_000_000L : 1_000_000L);
     }
 
     @Override

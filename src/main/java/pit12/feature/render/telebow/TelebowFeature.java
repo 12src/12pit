@@ -75,7 +75,8 @@ public final class TelebowFeature
         this.session = session;
         this.arrows = arrows;
         this.relations = relations;
-        cooldowns = new TelebowCooldownTracker(configs, config, session, arrows, players, pit);
+        cooldowns = new TelebowCooldownTracker(minecraft, configs, config, session, arrows, players,
+                pit);
         renderer = new TelebowRenderer(minecraft, config, textures);
         aim = new TelebowAim(minecraft, config, player -> colorOf(player, true));
     }
@@ -205,8 +206,8 @@ public final class TelebowFeature
         if (config.ignoreCooldown.get()
                 && cooldowns.blocksArrow(shooter.getUniqueID(), arrow.getEntityId()))
             return false;
-        if (!sneaking && (lastSneakingNanos == 0
-                || System.nanoTime() - lastSneakingNanos > config.sneakWindow.get() * 1_000_000L))
+        if (!sneaking && (lastSneakingNanos == 0 || System.nanoTime()
+                - lastSneakingNanos > cooldowns.hitWindowNanos(shooter == minecraft.thePlayer)))
             return false;
         int color = colorOf(shooter, false);
         if ((color >>> 24) == 0

@@ -30,8 +30,8 @@ public interface ArrowListener {
     boolean onArrowSpawn(EntityArrow arrow, EntityPlayer shooter, ItemStack bow, boolean sneaking,
             long lastSneakingNanos);
 
-    /** Negative disables hit matching. Zero only matches events within the same client tick. */
-    default long hitWindowNanos() {
+    /** local refers to the shooter. Negative disables matching. Zero matches within one client tick. */
+    default long hitWindowNanos(boolean local) {
         return -1;
     }
 
@@ -45,8 +45,8 @@ public interface ArrowListener {
 
     default void onArrowCorrected(EntityArrow arrow, boolean velocityChanged) {}
 
-    /** Reports server teleport packets, including absolute position sync. */
-    default void onShooterTeleport(EntityPlayer shooter, double distanceSquared) {}
+    /** Coordinates are the packet destination, including absolute position sync. */
+    default void onShooterTeleport(EntityPlayer shooter, double x, double y, double z) {}
 
     default void onBlockChanged(BlockPos position) {}
 

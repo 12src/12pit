@@ -104,7 +104,7 @@ public final class TimersConfig extends FeatureConfig {
         pinOthers = booleanSetting("others", source("Others"),
                 source("Shows other players' Pin timers."), true);
         pinHitWindow = integerSliderSetting("pin_hit_window_ms", source("Prediction margin (ms)"),
-                source("Time allowed for delayed damage to count as a Pin hit."), 250, 50, 1000,
+                source("Time allowed for delayed damage to count as a Pin hit."), 250, 25, 1000,
                 25);
         subsubcategory("venom", "Venom");
         venomEnabled = booleanSetting("venom_enabled", source("Enabled"),
@@ -123,7 +123,7 @@ public final class TimersConfig extends FeatureConfig {
                 source("Shows other players' Venom timers."), true);
         venomHitWindow =
                 integerSliderSetting("venom_hit_window_ms", source("Prediction margin (ms)"),
-                        source("Time allowed for delayed damage to count as a Venom hit."), 250, 50,
+                        source("Time allowed for delayed damage to count as a Venom hit."), 250, 25,
                         1500, 25);
         venomReach = doubleSliderSetting("venom_reach_blocks", source("Maximum reach (blocks)"),
                 source("Maximum distance at which hits count toward Venom estimates."), 4.5, 2, 6,

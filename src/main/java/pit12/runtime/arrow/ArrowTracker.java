@@ -40,7 +40,6 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import pit12.runtime.session.ClientSession;
-import pit12.shared.entity.PlayerPositions;
 import pit12.shared.lifecycle.ClientLifecycle;
 
 public final class ArrowTracker implements ClientLifecycle, ArrowPacketObserver, ArrowObserver {
@@ -119,7 +118,7 @@ public final class ArrowTracker implements ClientLifecycle, ArrowPacketObserver,
         boolean enabled = false;
         if (started) {
             for (ArrowListener listener : listeners) {
-                if (listener.hitWindowNanos() >= 0) {
+                if (listener.hitWindowNanos(true) >= 0) {
                     enabled = true;
                     break;
                 }
@@ -289,10 +288,8 @@ public final class ArrowTracker implements ClientLifecycle, ArrowPacketObserver,
         if (!(entity instanceof EntityPlayer))
             return;
         EntityPlayer player = (EntityPlayer) entity;
-        double distanceSquared =
-                PlayerPositions.serverDistanceSquared(player, minecraft.thePlayer, x, y, z);
         for (ArrowListener listener : listeners) {
-            listener.onShooterTeleport(player, distanceSquared);
+            listener.onShooterTeleport(player, x, y, z);
         }
     }
 

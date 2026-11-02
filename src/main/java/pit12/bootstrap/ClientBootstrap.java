@@ -30,6 +30,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pit12.feature.client.discordrpc.DiscordRpcFeature;
 import pit12.feature.client.hudeditor.HudEditorFeature;
+import pit12.feature.client.prediction.PredictionMarginsFeature;
 import pit12.feature.client.profile.ProfilesFeature;
 import pit12.feature.client.profile.api.Profiles;
 import pit12.feature.client.relation.RelationFeature;
@@ -200,7 +201,7 @@ public final class ClientBootstrap {
                 new File(minecraft.mcDataDir, "12pit/swap-bindings.json").toPath(),
                 (SwapHooksBinding) minecraft, input, inputTicks);
         // Category: Client
-        BooleanSetting discordRpc =
+        WebUiConfig webUiConfig =
                 registerWebUi(webUiConfigs, configs, profiles, relations, hudEditor, swapBindings,
                         commands, new File(minecraft.mcDataDir, "12pit/webui.json").toPath());
         // Category: Render
@@ -214,7 +215,9 @@ public final class ClientBootstrap {
                 new File(minecraft.mcDataDir, "12pit/denick-cache.json").toPath());
         // Features
         // Category: Client
-        registerDiscordRpc(webUiConfigs, discordRpc);
+        registerDiscordRpc(webUiConfigs, webUiConfig.discordRpc());
+        registerPredictionMargins(webUiConfigs, webUiConfig.autoPredictionMargins(), configs,
+                session);
         // Category: Combat
         registerAutoSprint(configs, (AutoSprintBinding) minecraft);
         registerNoJumpDelay(configs, (NoJumpDelayBinding) minecraft);
@@ -297,7 +300,7 @@ public final class ClientBootstrap {
     }
 
     // Category: Client
-    private BooleanSetting registerWebUi(ConfigCatalog configs, ConfigCatalog featureConfigs,
+    private WebUiConfig registerWebUi(ConfigCatalog configs, ConfigCatalog featureConfigs,
             Profiles profiles, Relations relations, HudEditorFeature hudEditor,
             SwapBindings swapBindings, CommandRegistry commands, Path path) {
         WebUiConfig config = new WebUiConfig();
@@ -306,7 +309,7 @@ public final class ClientBootstrap {
                 hudEditor, swapBindings, config, commands, language, path);
         hudEditor.setWebUiOpener(config.keybind()::get, webUi::open);
         components.add(webUi);
-        return config.discordRpc();
+        return config;
     }
 
     // Category: Render
@@ -352,6 +355,11 @@ public final class ClientBootstrap {
     // Category: Client
     private void registerDiscordRpc(ConfigCatalog configs, BooleanSetting enabled) {
         components.add(new DiscordRpcFeature(configs, enabled, DiscordIpcConnection::open));
+    }
+
+    private void registerPredictionMargins(ConfigCatalog settings, BooleanSetting enabled,
+            ConfigCatalog configs, ClientSession session) {
+        components.add(new PredictionMarginsFeature(settings, enabled, configs, session));
     }
 
     // Category: Combat

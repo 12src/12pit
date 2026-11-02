@@ -31,6 +31,7 @@ public final class WebUiConfig extends FeatureConfig {
     private final BooleanSetting languageHint;
     private final StringSetting language;
     private final BooleanSetting discordRpc;
+    private final BooleanSetting autoPredictionMargins;
 
     public WebUiConfig() {
         super("webui", source("Settings"), null,
@@ -42,6 +43,10 @@ public final class WebUiConfig extends FeatureConfig {
                 source("Sets the interface accent color."), 0x7BADE2);
         discordRpc = booleanSetting("discord_rpc", "Discord RPC",
                 source("Shows 12pit activity and elapsed time on your Discord profile."), true);
+        autoPredictionMargins = booleanSetting("auto_prediction_margins",
+                source("Set prediction margins automatically"),
+                source("Adjusts prediction margins once after joining or switching servers."),
+                true);
         keybind = keybindSetting("keybind", source("Interface key"),
                 source("Opens the HUD editor. Press again with no HUD selected to open settings."),
                 Keyboard.KEY_RSHIFT);
@@ -62,5 +67,9 @@ public final class WebUiConfig extends FeatureConfig {
 
     public BooleanSetting discordRpc() {
         return discordRpc;
+    }
+
+    public BooleanSetting autoPredictionMargins() {
+        return autoPredictionMargins;
     }
 }

@@ -181,7 +181,7 @@ public final class JumpBoostTracker implements PlayerEquipmentListener {
                 jump.startY = jump.y;
                 // Give the potion effect time to reach the jumping player.
                 jump.jumping = System.nanoTime() >= jump.until - DURATION_NANOS
-                        + config.jumpBoostGrace.get() * 1_000_000L;
+                        + config.jumpBoostGrace.get() * (local ? 2_000_000L : 1_000_000L);
             }
             // Jump Boost IV peaks near 4.15 blocks. Packets can miss the exact peak.
             if (jump.jumping && y - jump.startY >= 3.9)

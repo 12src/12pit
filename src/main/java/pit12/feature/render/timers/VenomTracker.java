@@ -191,7 +191,8 @@ public final class VenomTracker implements PlayerEquipmentListener {
         AxisAlignedBB displayBox = null;
         AxisAlignedBB serverBox = null;
         for (Combo combo : wearers.values()) {
-            if (combo.player == player || combo.swungAt == 0 || now - combo.swungAt > window
+            if (combo.player == player || combo.swungAt == 0
+                    || now - combo.swungAt > window * (combo.player == minecraft.thePlayer ? 2 : 1)
                     || combo.player.getDistanceSqToEntity(player) > rangeSq)
                 continue;
             if (combo.localTarget != null && combo.localTarget != player)
