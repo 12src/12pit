@@ -29,6 +29,7 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
 import pit12.feature.patch.fontcachefix.FontCacheFixBinding;
+import pit12.feature.patch.fontcachefix.FontCacheKeys;
 
 @Pseudo
 @Mixin(targets = "club.sk1er.patcher.hooks.FontRendererHook", remap = false)
@@ -37,7 +38,8 @@ public abstract class FontRendererHookMixin {
     @Unique
     private static final AtomicInteger pit12$nextFontId = new AtomicInteger();
     @Unique
-    private final String pit12$cachePrefix = pit12$nextFontId.getAndIncrement() + ":";
+    private final FontCacheKeys pit12$cacheKeys =
+            new FontCacheKeys(pit12$nextFontId.getAndIncrement() + ":");
     @Shadow
     @Final
     private FontRenderer fontRenderer;
@@ -49,7 +51,7 @@ public abstract class FontRendererHookMixin {
         if (!((FontCacheFixBinding) Minecraft.getMinecraft()).pit12$fontCacheFixEnabled()) {
             return text;
         }
-        return pit12$cachePrefix + (fontRenderer.getUnicodeFlag() ? "\u0001" : "\u0000") + text;
+        return pit12$cacheKeys.key(text, fontRenderer.getUnicodeFlag());
     }
 
     // The width calculator captures the original text separately from the cache key.
