@@ -235,7 +235,8 @@ public final class JumpBoostTracker implements PlayerEquipmentListener {
         List<PotionEffect> effects = Items.potionitem.getEffects(stack);
         if (effects == null)
             return;
-        for (PotionEffect effect : effects) {
+        for (int index = 0, size = effects.size(); index < size; index++) {
+            PotionEffect effect = effects.get(index);
             if (effect.getPotionID() == Potion.jump.id && effect.getAmplifier() == 3) {
                 heldPotions.put(playerId, new HeldPotion(player, stack, now));
                 return;

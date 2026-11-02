@@ -75,7 +75,8 @@ final class PinTracker implements ArrowListener {
     @Override
     public void onArrowHit(EntityPlayer target, List<ArrowHit> candidates, long hitAt) {
         int seconds = -1;
-        for (ArrowHit candidate : candidates) {
+        for (int index = 0, size = candidates.size(); index < size; index++) {
+            ArrowHit candidate = candidates.get(index);
             Shot shot = shots.get(candidate.arrow.getEntityId());
             int effect =
                     shot != null && (shot.megaLongbow || candidate.critical) ? shot.seconds : 0;

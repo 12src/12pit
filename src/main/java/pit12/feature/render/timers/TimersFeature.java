@@ -172,7 +172,8 @@ public final class TimersFeature
             hud.rows.clear();
             hud.invalidate();
         }
-        for (TimersHud.Row row : rows) {
+        for (int index = 0, size = rows.size(); index < size; index++) {
+            TimersHud.Row row = rows.get(index);
             huds[config.hudGroups.get(row.type).independent() ? row.type.ordinal() + 1 : 0].rows
                     .add(row);
         }
@@ -443,9 +444,12 @@ public final class TimersFeature
         if (now < nextRefresh) {
             boolean expired = false;
             boolean changed = false;
-            for (TimersHud hud : activeHuds) {
+            for (int hudIndex = 0, hudCount = activeHuds.size(); hudIndex < hudCount; hudIndex++) {
+                TimersHud hud = activeHuds.get(hudIndex);
                 boolean hudChanged = false;
-                for (TimersHud.Row row : hud.rows) {
+                for (int rowIndex = 0,
+                        rowCount = hud.rows.size(); rowIndex < rowCount; rowIndex++) {
+                    TimersHud.Row row = hud.rows.get(rowIndex);
                     if (now >= row.until) {
                         expired = true;
                     } else {
@@ -544,7 +548,8 @@ public final class TimersFeature
         ScaledResolution resolution = event.resolution;
         renderer.beginBatch();
         try {
-            for (TimersHud hud : activeHuds) {
+            for (int index = 0, size = activeHuds.size(); index < size; index++) {
+                TimersHud hud = activeHuds.get(index);
                 if (hud.rows.isEmpty()) {
                     continue;
                 }
