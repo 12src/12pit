@@ -267,13 +267,15 @@ public final class SidebarCache implements ClientLifecycle {
         lines = Collections.unmodifiableList(current);
         if (!listeners.isEmpty()) {
             listeners.notify(listener -> {
-                for (SidebarLine before : previous) {
+                for (int index = 0, size = previous.size(); index < size; index++) {
+                    SidebarLine before = previous.get(index);
                     SidebarLine after = findLine(current, before.entry());
                     if (!sameLine(before, after)) {
                         listener.onLineChanged(before, after);
                     }
                 }
-                for (SidebarLine after : current) {
+                for (int index = 0, size = current.size(); index < size; index++) {
+                    SidebarLine after = current.get(index);
                     if (findLine(previous, after.entry()) == null) {
                         listener.onLineChanged(null, after);
                     }
@@ -283,7 +285,8 @@ public final class SidebarCache implements ClientLifecycle {
     }
 
     private static SidebarLine findLine(List<SidebarLine> lines, String entry) {
-        for (SidebarLine line : lines) {
+        for (int index = 0, size = lines.size(); index < size; index++) {
+            SidebarLine line = lines.get(index);
             if (line.entry().equals(entry)) {
                 return line;
             }

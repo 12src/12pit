@@ -159,7 +159,8 @@ public final class RingHelperFeature implements ClientLifecycle, ConfigChangeLis
             return;
         }
         List<BlockPos> edgeColumns = mid.edgeColumns();
-        for (BlockPos column : edgeColumns) {
+        for (int index = 0, size = edgeColumns.size(); index < size; index++) {
+            BlockPos column = edgeColumns.get(index);
             probeBlock.set(column.getX(), baseY + 2, column.getZ());
             if (world.isBlockLoaded(probeBlock) && world.isAirBlock(probeBlock)) {
                 int targetIndex = nextTargets.size();

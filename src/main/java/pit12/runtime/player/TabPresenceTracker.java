@@ -110,8 +110,10 @@ public final class TabPresenceTracker implements ClientLifecycle, TabPresence, T
     public void onTabPacket(S38PacketPlayerListItem packet) {
         session.checkThread();
         Action action = packet.getAction();
+        List<AddPlayerData> entries = packet.getEntries();
         if (action == Action.UPDATE_DISPLAY_NAME) {
-            for (AddPlayerData entry : packet.getEntries()) {
+            for (int index = 0, size = entries.size(); index < size; index++) {
+                AddPlayerData entry = entries.get(index);
                 UUID playerId = entry.getProfile().getId();
                 if (playerId != null) {
                     listeners.notify(listener -> listener.onTabDisplayChanged(playerId));
@@ -122,7 +124,8 @@ public final class TabPresenceTracker implements ClientLifecycle, TabPresence, T
         if (action != Action.ADD_PLAYER && action != Action.REMOVE_PLAYER)
             return;
         List<Runnable> notifications = new ArrayList<>();
-        for (AddPlayerData entry : packet.getEntries()) {
+        for (int index = 0, size = entries.size(); index < size; index++) {
+            AddPlayerData entry = entries.get(index);
             UUID id = entry.getProfile().getId();
             if (id == null)
                 continue;

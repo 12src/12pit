@@ -19,6 +19,7 @@
 package pit12.feature.misc.chatmacro;
 
 import java.nio.file.Path;
+import java.util.List;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.FontRenderer;
@@ -223,7 +224,9 @@ public final class ChatMacroFeature
     }
 
     private boolean canSpawn() {
-        for (SidebarLine line : sidebar.lines()) {
+        List<SidebarLine> lines = sidebar.lines();
+        for (int index = 0, size = lines.size(); index < size; index++) {
+            SidebarLine line = lines.get(index);
             String text = line.formattedText(minecraft.fontRendererObj);
             if (text.contains("Fighting") || text.contains("战斗中"))
                 return false;

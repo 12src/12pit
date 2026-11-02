@@ -20,6 +20,7 @@ package pit12.feature.combat.swap;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import net.minecraft.client.Minecraft;
@@ -91,7 +92,9 @@ final class DarkTargets {
                 iterator.remove();
         }
         if (nearby) {
-            for (EntityPlayer target : minecraft.theWorld.playerEntities) {
+            List<EntityPlayer> players = minecraft.theWorld.playerEntities;
+            for (int index = 0, size = players.size(); index < size; index++) {
+                EntityPlayer target = players.get(index);
                 if (!targets.containsKey(target.getUniqueID()) && matches(target, false))
                     targets.put(target.getUniqueID(), target);
             }

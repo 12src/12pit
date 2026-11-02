@@ -20,6 +20,7 @@ package pit12.feature.misc.contractreroll;
 
 import static net.minecraft.util.EnumChatFormatting.WHITE;
 
+import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -275,7 +276,9 @@ public final class ContractRerollFeature
 
     private void refreshContract() {
         hasContract = false;
-        for (SidebarLine line : sidebar.lines()) {
+        List<SidebarLine> lines = sidebar.lines();
+        for (int index = 0, size = lines.size(); index < size; index++) {
+            SidebarLine line = lines.get(index);
             String text = line.formattedText(minecraft.fontRendererObj);
             if (text.contains("Contract") || text.contains("合同")) {
                 hasContract = true;

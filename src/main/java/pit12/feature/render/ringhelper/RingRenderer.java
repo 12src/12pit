@@ -74,7 +74,8 @@ final class RingRenderer {
     private static void draw(List<BlockPos> blocks) {
         GL11.glBegin(GL11.GL_LINES);
         try {
-            for (BlockPos position : blocks) {
+            for (int index = 0, size = blocks.size(); index < size; index++) {
+                BlockPos position = blocks.get(index);
                 double x = position.getX();
                 double bottomY = position.getY() + 1.0D;
                 double z = position.getZ();

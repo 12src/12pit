@@ -128,7 +128,9 @@ final class SwapController {
     void enqueueKey(int key) {
         if (inputBlocked())
             return;
-        for (SwapBinding binding : bindings.forKey(key)) {
+        List<SwapBinding> candidates = bindings.forKey(key);
+        for (int index = 0, size = candidates.size(); index < size; index++) {
+            SwapBinding binding = candidates.get(index);
             if (!binding.identity.matches(minecraft.thePlayer.inventoryContainer
                     .getSlot(binding.guiTarget()).getStack())) {
                 enqueue(new Request(key, null), key);
@@ -309,8 +311,8 @@ final class SwapController {
         List<SwapBinding> candidates;
         if (current.automatic != null) {
             candidates = new ArrayList<>();
-            for (Target target : current.automatic)
-                candidates.add(target.binding);
+            for (int index = 0, size = current.automatic.size(); index < size; index++)
+                candidates.add(current.automatic.get(index).binding);
         } else
             candidates = current.direct == null ? bindings.forKey(current.key)
                     : Collections.singletonList(current.direct);
@@ -323,13 +325,16 @@ final class SwapController {
             addLocation(locations, slot);
         if (current.automatic != null) {
             // Same enchantments can have different Lives. Keep the source we picked.
-            for (Target target : current.automatic)
+            for (int index = 0, size = current.automatic.size(); index < size; index++) {
+                Target target = current.automatic.get(index);
                 if (target.binding.identity.matches(stack(target.source)))
                     locations.put(target.binding.identity, target.source);
+            }
         }
         LinkedHashMap<Integer, SwapBinding> selected = new LinkedHashMap<>();
         LinkedHashMap<Integer, SwapBinding> satisfiedSlots = new LinkedHashMap<>();
-        for (SwapBinding binding : candidates) {
+        for (int index = 0, size = candidates.size(); index < size; index++) {
+            SwapBinding binding = candidates.get(index);
             if (binding.identity.matches(stack(binding.guiTarget()))) {
                 if (!binding.equipment)
                     satisfiedSlots.putIfAbsent(binding.guiTarget(), binding);

@@ -176,7 +176,8 @@ public final class InputBlocker implements ClientLifecycle {
             blockedKey(key, pressed, repeat);
             return true;
         }
-        for (InputHandler handler : handlers) {
+        for (int index = 0, size = handlers.size(); index < size; index++) {
+            InputHandler handler = handlers.get(index);
             if (handler.key(key, pressed, repeat))
                 return true;
         }
@@ -249,7 +250,8 @@ public final class InputBlocker implements ClientLifecycle {
         for (KeyBinding keyBinding : minecraft.gameSettings.keyBindings) {
             int key = keyBinding.getKeyCode();
             boolean consumed = false;
-            for (InputHandler handler : handlers) {
+            for (int index = 0, size = handlers.size(); index < size; index++) {
+                InputHandler handler = handlers.get(index);
                 if (handler.consumesKey(key)) {
                     consumed = true;
                     break;

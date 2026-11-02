@@ -43,7 +43,8 @@ final class ItemEspRenderer {
         int goldColor = config.goldColor();
         RenderManager manager = minecraft.getRenderManager();
         boxes.beginFrame(manager.viewerPosX, manager.viewerPosY, manager.viewerPosZ);
-        for (ItemEspFeature.Target target : targets) {
+        for (int index = 0, size = targets.size(); index < size; index++) {
+            ItemEspFeature.Target target = targets.get(index);
             EntityItem entity = target.entity;
             if (entity.isDead) {
                 continue;
