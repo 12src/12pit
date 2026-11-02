@@ -31,10 +31,10 @@ jobs:
             gameVersionNames: ["Client", "Forge", "1.8.9"],
             releaseType: "release",
             relations: {
-              projects: [{
-                slug: "oneconfig",
-                type: "optionalDependency"
-              }]
+              projects: [
+                { slug: "oneconfig", projectID: "1148006", type: "optionalDependency" },
+                { slug: "patcher", projectID: "1147741", type: "optionalDependency" }
+              ]
             }
           }' "$GITHUB_EVENT_PATH" > metadata.json
 
