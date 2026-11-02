@@ -98,10 +98,8 @@ import pit12.feature.render.ringhelper.RingHelperConfig;
 import pit12.feature.render.ringhelper.RingHelperFeature;
 import pit12.feature.render.telebow.TelebowConfig;
 import pit12.feature.render.telebow.TelebowFeature;
-import pit12.feature.render.telebow.api.TelebowCooldowns;
 import pit12.feature.render.timers.TimersConfig;
 import pit12.feature.render.timers.TimersFeature;
-import pit12.feature.render.timers.api.PlayerTimers;
 import pit12.feature.render.tooltip.TooltipConfig;
 import pit12.feature.render.tooltip.TooltipFeature;
 import pit12.platform.discord.DiscordIpcConnection;
@@ -132,6 +130,7 @@ import pit12.runtime.player.TabPresenceTracker;
 import pit12.runtime.scoreboard.SidebarCache;
 import pit12.runtime.session.ClientSession;
 import pit12.runtime.session.ClientSessionBinding;
+import pit12.runtime.timers.PlayerTimers;
 import pit12.shared.concurrent.ClientThread;
 import pit12.shared.input.MinecraftActions;
 import pit12.shared.lifecycle.ClientLifecycle;
@@ -186,6 +185,9 @@ public final class ClientBootstrap {
         components.add(nicks);
         SidebarCache sidebar = new SidebarCache(minecraft, session);
         components.add(sidebar);
+        PlayerTimers timers =
+                new PlayerTimers(minecraft, session, arrows, players, playerEquipment, pitContext);
+        components.add(timers);
         HudRegistry hudRegistry = new HudRegistry(client);
         Supplier<TextureState> textureStates = OpenGlTextureState::new;
         // Feature providers
@@ -204,11 +206,6 @@ public final class ClientBootstrap {
         WebUiConfig webUiConfig =
                 registerWebUi(webUiConfigs, configs, profiles, relations, hudEditor, swapBindings,
                         commands, new File(minecraft.mcDataDir, "12pit/webui.json").toPath());
-        // Category: Render
-        TelebowCooldowns telebowCooldowns = registerTelebow(minecraft, configs, session, arrows,
-                relations, textureStates.get(), players, pitContext);
-        PlayerTimers timers = registerTimers(minecraft, configs, session, arrows, relations,
-                playerNames, hudRegistry, telebowCooldowns, players, playerEquipment, pitContext);
         // Category: Misc
         DenickNames denickNames = registerDenick(minecraft, configs, session, pitContext, presence,
                 playerNames, nicks, players, playerEquipment, commands,
@@ -234,6 +231,9 @@ public final class ClientBootstrap {
         registerPlayerList(configs, playerNames, players, playerEquipment, pitContext, hudRegistry,
                 relations, presence, denickNames, nicks);
         registerRingHelper(minecraft, configs, session, pitContext, textureStates.get());
+        registerTelebow(minecraft, configs, session, arrows, relations, textureStates.get(),
+                timers);
+        registerTimers(minecraft, configs, session, relations, playerNames, hudRegistry, timers);
         registerTooltip(configs);
         // Category: Misc
         registerAutoFish(configs, session, (MinecraftActions) minecraft);
@@ -311,31 +311,6 @@ public final class ClientBootstrap {
         hudEditor.setWebUiOpener(config.keybind()::get, webUi::open);
         components.add(webUi);
         return config;
-    }
-
-    // Category: Render
-    private TelebowCooldowns registerTelebow(Minecraft minecraft, ConfigCatalog configs,
-            ClientSession session, ArrowTracker arrows, RelationLookup relations,
-            TextureState textures, PlayerEntityTracker players, PitContext pit) {
-        TelebowConfig config = new TelebowConfig();
-        configs.register(config);
-        TelebowFeature feature = new TelebowFeature(minecraft, configs, config, session, arrows,
-                relations, textures, players, pit);
-        components.add(feature);
-        return feature.cooldowns();
-    }
-
-    private PlayerTimers registerTimers(Minecraft minecraft, ConfigCatalog configs,
-            ClientSession session, ArrowTracker arrows, RelationLookup relations,
-            PlayerNameCache playerNames, HudRegistry hudRegistry, TelebowCooldowns telebowCooldowns,
-            PlayerEntityTracker players, PlayerEquipmentAccess playerEquipment, PitContext pit) {
-        TimersConfig config = new TimersConfig();
-        configs.register(config);
-        TimersFeature feature =
-                new TimersFeature(minecraft, configs, config, session, arrows, relations,
-                        playerNames, hudRegistry, telebowCooldowns, players, playerEquipment, pit);
-        components.add(feature);
-        return feature;
     }
 
     // Category: Misc
@@ -445,6 +420,24 @@ public final class ClientBootstrap {
         configs.register(config);
         components.add(
                 new RingHelperFeature(minecraft, configs, config, session, pitContext, textures));
+    }
+
+    private void registerTelebow(Minecraft minecraft, ConfigCatalog configs, ClientSession session,
+            ArrowTracker arrows, RelationLookup relations, TextureState textures,
+            PlayerTimers timers) {
+        TelebowConfig config = new TelebowConfig();
+        configs.register(config);
+        components.add(new TelebowFeature(minecraft, configs, config, session, arrows, relations,
+                textures, timers));
+    }
+
+    private void registerTimers(Minecraft minecraft, ConfigCatalog configs, ClientSession session,
+            RelationLookup relations, PlayerNameCache playerNames, HudRegistry hudRegistry,
+            PlayerTimers timers) {
+        TimersConfig config = new TimersConfig();
+        configs.register(config);
+        components.add(new TimersFeature(minecraft, configs, config, session, relations,
+                playerNames, hudRegistry, timers));
     }
 
     private void registerTooltip(ConfigCatalog configs) {

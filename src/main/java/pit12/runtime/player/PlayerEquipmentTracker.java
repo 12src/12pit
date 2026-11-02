@@ -33,45 +33,36 @@ import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import pit12.runtime.session.ClientSession;
 import pit12.shared.event.Listeners;
-import pit12.shared.lifecycle.ClientLifecycle;
+import pit12.shared.lifecycle.DemandLifecycle;
 
-public final class PlayerEquipmentTracker implements ClientLifecycle, PlayerEquipmentAccess,
-        PlayerEquipmentPacketObserver, PlayerEntityListener {
+public final class PlayerEquipmentTracker extends DemandLifecycle
+        implements PlayerEquipmentAccess, PlayerEquipmentPacketObserver, PlayerEntityListener {
     private final ClientSession session;
     private final PlayerEntityTracker players;
     private final Runnable sessionChanged;
     private final PlayerEquipmentCache cache = new PlayerEquipmentCache();
     private final Listeners<PlayerEquipmentListener> listeners = new Listeners<>();
     private NetHandlerPlayClient boundNetHandler;
-    private boolean started;
 
     public PlayerEquipmentTracker(ClientSession session, PlayerEntityTracker players) {
+        super(session::checkThread);
         this.session = session;
         this.players = players;
         sessionChanged = () -> bindNetHandler(session.connection());
     }
 
     @Override
-    public void start() {
-        session.checkThread();
-        if (started) {
-            return;
-        }
+    protected void activate() {
         MinecraftForge.EVENT_BUS.register(this);
-        started = true;
         players.addListener(this);
         session.addListener(sessionChanged);
         sessionChanged.run();
         onPlayerEntitiesReset();
+        applyDirty();
     }
 
     @Override
-    public void stop() {
-        session.checkThread();
-        if (!started) {
-            return;
-        }
-        started = false;
+    protected void deactivate() {
         session.removeListener(sessionChanged);
         players.removeListener(this);
         unbindNetHandler();
@@ -89,6 +80,8 @@ public final class PlayerEquipmentTracker implements ClientLifecycle, PlayerEqui
     @Override
     public void addListener(PlayerEquipmentListener listener) {
         session.checkThread();
+        if (listeners.isEmpty())
+            retainOwner(listeners);
         listeners.add(listener);
     }
 
@@ -96,6 +89,8 @@ public final class PlayerEquipmentTracker implements ClientLifecycle, PlayerEqui
     public void removeListener(PlayerEquipmentListener listener) {
         session.checkThread();
         listeners.remove(listener);
+        if (listeners.isEmpty())
+            releaseOwner(listeners);
     }
 
     @Override
@@ -167,7 +162,7 @@ public final class PlayerEquipmentTracker implements ClientLifecycle, PlayerEqui
             ((PlayerEquipmentPacketBinding) netHandler)
                     .bindPlayerEquipmentObserver((entityId, slot) -> {
                         session.refresh();
-                        if (started && session.connection() == netHandler)
+                        if (isActive() && session.connection() == netHandler)
                             onEquipmentPacket(entityId, slot);
                     });
             boundNetHandler = netHandler;

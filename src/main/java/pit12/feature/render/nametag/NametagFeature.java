@@ -34,7 +34,6 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import pit12.feature.misc.denick.api.DenickNames;
-import pit12.feature.render.timers.api.PlayerTimers;
 import pit12.runtime.config.ConfigCatalog;
 import pit12.runtime.config.ConfigChangeListener;
 import pit12.runtime.config.ConfigChangeSet;
@@ -46,6 +45,7 @@ import pit12.runtime.player.PlayerEquipmentListener;
 import pit12.runtime.player.PlayerEquipmentSnapshot;
 import pit12.runtime.player.PlayerHealth;
 import pit12.runtime.session.ClientSession;
+import pit12.runtime.timers.PlayerTimers;
 import pit12.shared.lifecycle.ClientLifecycle;
 import pit12.shared.performance.HotPath;
 import pit12.shared.rendering.TextureState;
@@ -71,6 +71,7 @@ public final class NametagFeature
     private boolean active;
     private boolean enhancedVisibility;
     private boolean namesEnabled;
+    private boolean trackingNicks;
     private int timerTypes;
 
     public NametagFeature(Minecraft minecraft, ConfigCatalog configs, NametagConfig config,
@@ -113,8 +114,20 @@ public final class NametagFeature
 
     private void updateActivation() {
         boolean enabled = started && config.enabled();
+        boolean nickMarker = enabled && config.nickMarker();
+        if (trackingNicks != nickMarker) {
+            trackingNicks = nickMarker;
+            if (trackingNicks)
+                nicks.retain(this);
+            else
+                nicks.release(this);
+        }
         enhancedVisibility = enabled && config.enhancedVisibility();
-        timerTypes = enabled ? config.timerTypes() : 0;
+        int nextTypes = enabled ? config.timerTypes() : 0;
+        if (timerTypes != nextTypes) {
+            timerTypes = nextTypes;
+            timers.setDemand(this, PlayerTimers.nametagDemand(timerTypes));
+        }
         namesEnabled = enabled && (config.nickMarker() || config.realNames() || config.showHealth()
                 || timerTypes != 0);
         if (enabled && (enhancedVisibility || namesEnabled || config.showHeldItem()

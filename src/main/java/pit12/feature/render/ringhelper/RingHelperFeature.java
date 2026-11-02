@@ -99,11 +99,13 @@ public final class RingHelperFeature implements ClientLifecycle, ConfigChangeLis
         }
         active = enabled;
         if (enabled) {
+            pitContext.retain(this);
             session.addListener(sessionChanged);
             MinecraftForge.EVENT_BUS.register(this);
         } else {
             MinecraftForge.EVENT_BUS.unregister(this);
             session.removeListener(sessionChanged);
+            pitContext.release(this);
         }
         reset();
     }

@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.render.timers;
+package pit12.runtime.timers;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -39,7 +39,7 @@ import pit12.runtime.session.ClientSession;
 
 public final class VenomTracker implements PlayerEquipmentListener {
     private final Minecraft minecraft;
-    private final TimersConfig config;
+    private final TimerSettings settings;
     private final ClientSession session;
     private final PlayerEntityTracker players;
     private final PlayerEquipmentAccess equipment;
@@ -49,11 +49,11 @@ public final class VenomTracker implements PlayerEquipmentListener {
     private final Map<UUID, Combo> wearers = new HashMap<>();
     private NetHandlerPlayClient boundConnection;
 
-    VenomTracker(Minecraft minecraft, TimersConfig config, ClientSession session,
+    VenomTracker(Minecraft minecraft, TimerSettings settings, ClientSession session,
             PlayerEntityTracker players, PlayerEquipmentAccess equipment,
             BiConsumer<EntityPlayer, EntityPlayer> triggered, Runnable resetTimers) {
         this.minecraft = minecraft;
-        this.config = config;
+        this.settings = settings;
         this.session = session;
         this.players = players;
         this.equipment = equipment;
@@ -159,7 +159,7 @@ public final class VenomTracker implements PlayerEquipmentListener {
                 player.serverPosY / 32.0 + player.getEyeHeight(), player.serverPosZ / 32.0);
         float yaw = combo.yaw * (float) Math.PI / 180;
         float pitch = combo.pitch * (float) Math.PI / 180;
-        double reach = config.venomReach.get();
+        double reach = settings.venomReach();
         double horizontal = MathHelper.cos(pitch) * reach;
         Vec3 to = from.addVector(-MathHelper.sin(yaw) * horizontal, -MathHelper.sin(pitch) * reach,
                 MathHelper.cos(yaw) * horizontal);
@@ -181,12 +181,12 @@ public final class VenomTracker implements PlayerEquipmentListener {
     }
 
     public void hurt(EntityPlayer player) {
-        double margin = config.venomHitboxMargin.get();
+        double margin = settings.venomHitboxMargin();
         // This coarse check also allows for eye height and the hitbox margin.
-        double range = config.venomReach.get() + 2 + margin;
+        double range = settings.venomReach() + 2 + margin;
         double rangeSq = range * range;
         long now = System.nanoTime();
-        long window = config.venomHitWindow.get() * 1_000_000L;
+        long window = settings.venomHitWindow() * 1_000_000L;
         Combo attacker = null;
         AxisAlignedBB displayBox = null;
         AxisAlignedBB serverBox = null;
@@ -211,7 +211,7 @@ public final class VenomTracker implements PlayerEquipmentListener {
                         combo.from.yCoord - displayBox.maxY));
                 double z = Math.max(0, Math.max(displayBox.minZ - combo.from.zCoord,
                         combo.from.zCoord - displayBox.maxZ));
-                double reach = config.venomReach.get();
+                double reach = settings.venomReach();
                 if (x * x + y * y + z * z > reach * reach)
                     continue;
             } else if (misses(combo, serverBox)

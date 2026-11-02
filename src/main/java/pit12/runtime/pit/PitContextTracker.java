@@ -29,9 +29,9 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import pit12.runtime.session.ClientSession;
-import pit12.shared.lifecycle.ClientLifecycle;
+import pit12.shared.lifecycle.DemandLifecycle;
 
-public final class PitContextTracker implements ClientLifecycle, PitContext {
+public final class PitContextTracker extends DemandLifecycle implements PitContext {
     private static final int ORIGIN_X = 0;
     private static final int ORIGIN_Z = 0;
     private final ClientSession session;
@@ -39,32 +39,23 @@ public final class PitContextTracker implements ClientLifecycle, PitContext {
     private WorldClient boundWorld;
     private PitSnapshot snapshot = new PitSnapshot(PitMap.UNKNOWN);
     private boolean detectionPending;
-    private boolean started;
 
     public PitContextTracker(ClientSession session) {
+        super(session::checkThread);
         this.session = session;
     }
 
     @Override
-    public void start() {
-        session.checkThread();
-        if (started) {
-            return;
-        }
+    protected void activate() {
         MinecraftForge.EVENT_BUS.register(this);
-        started = true;
         session.addListener(sessionChanged);
         onSessionChanged();
     }
 
     @Override
-    public void stop() {
-        session.checkThread();
-        if (started) {
-            started = false;
-            session.removeListener(sessionChanged);
-            MinecraftForge.EVENT_BUS.unregister(this);
-        }
+    protected void deactivate() {
+        session.removeListener(sessionChanged);
+        MinecraftForge.EVENT_BUS.unregister(this);
         reset();
     }
 

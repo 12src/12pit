@@ -40,9 +40,10 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import pit12.runtime.session.ClientSession;
-import pit12.shared.lifecycle.ClientLifecycle;
+import pit12.shared.lifecycle.DemandLifecycle;
 
-public final class ArrowTracker implements ClientLifecycle, ArrowPacketObserver, ArrowObserver {
+public final class ArrowTracker extends DemandLifecycle
+        implements ArrowPacketObserver, ArrowObserver {
     private final Minecraft minecraft;
     private final ClientSession session;
     private final List<ArrowListener> listeners = new ArrayList<>();
@@ -53,30 +54,24 @@ public final class ArrowTracker implements ClientLifecycle, ArrowPacketObserver,
     private final Runnable sessionChanged = this::refresh;
     private NetHandlerPlayClient connection;
     private WorldClient world;
-    private boolean started;
     private boolean trackingHits;
 
     public ArrowTracker(Minecraft minecraft, ClientSession session) {
+        super(session::checkThread);
         this.minecraft = minecraft;
         this.session = session;
         hits = new ArrowHitTracker(minecraft, listeners);
     }
 
     @Override
-    public void start() {
-        session.checkThread();
-        if (started)
-            return;
-        started = true;
+    protected void activate() {
         updateHitTracking();
         session.addListener(sessionChanged);
         refresh();
     }
 
     @Override
-    public void stop() {
-        session.checkThread();
-        started = false;
+    protected void deactivate() {
         updateHitTracking();
         session.removeListener(sessionChanged);
         unbind();
@@ -89,8 +84,12 @@ public final class ArrowTracker implements ClientLifecycle, ArrowPacketObserver,
         session.checkThread();
         if (!listeners.contains(listener)) {
             listeners.add(listener);
-            updateHitTracking();
-            refresh();
+            if (listeners.size() == 1)
+                retainOwner(listeners);
+            else if (isActive()) {
+                updateHitTracking();
+                refresh();
+            }
         }
     }
 
@@ -108,15 +107,13 @@ public final class ArrowTracker implements ClientLifecycle, ArrowPacketObserver,
                 iterator.remove();
             }
         }
-        if (listeners.isEmpty()) {
-            unbind();
-            clear();
-        }
+        if (listeners.isEmpty())
+            releaseOwner(listeners);
     }
 
     private void updateHitTracking() {
         boolean enabled = false;
-        if (started) {
+        if (isActive()) {
             for (int index = 0, size = listeners.size(); index < size; index++) {
                 ArrowListener listener = listeners.get(index);
                 if (listener.hitWindowNanos(true) >= 0) {
@@ -142,7 +139,8 @@ public final class ArrowTracker implements ClientLifecycle, ArrowPacketObserver,
             clear();
             world = nextWorld;
         }
-        NetHandlerPlayClient next = started && !listeners.isEmpty() ? session.connection() : null;
+        NetHandlerPlayClient next =
+                isActive() && !listeners.isEmpty() ? session.connection() : null;
         if (connection != next) {
             unbind();
             connection = next;

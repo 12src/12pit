@@ -37,10 +37,10 @@ import net.minecraft.scoreboard.ScorePlayerTeam;
 import net.minecraft.scoreboard.Scoreboard;
 import pit12.runtime.session.ClientSession;
 import pit12.shared.event.Listeners;
-import pit12.shared.lifecycle.ClientLifecycle;
+import pit12.shared.lifecycle.DemandLifecycle;
 
 /** Use this API on the client thread. */
-public final class SidebarCache implements ClientLifecycle {
+public final class SidebarCache extends DemandLifecycle {
     private final Minecraft minecraft;
     private final ClientSession session;
     private final Runnable sessionChanged = this::onSessionChanged;
@@ -54,52 +54,57 @@ public final class SidebarCache implements ClientLifecycle {
     private NetHandlerPlayClient boundHandler;
     private Scoreboard scoreboard;
     private ScoreObjective objective;
-    private boolean started;
 
     public SidebarCache(Minecraft minecraft, ClientSession session) {
+        super(session::checkThread);
         this.minecraft = minecraft;
         this.session = session;
     }
 
     @Override
-    public void start() {
-        session.checkThread();
-        if (started) {
-            return;
-        }
-        started = true;
+    protected void activate() {
         session.addListener(sessionChanged);
         onSessionChanged();
     }
 
     @Override
-    public void stop() {
-        session.checkThread();
-        started = false;
+    protected void deactivate() {
         session.removeListener(sessionChanged);
         bind(null);
         scoreboard = null;
         objective = null;
         rows.clear();
         ordered.clear();
-        publish();
+        lines = Collections.emptyList();
         listeners.clear();
     }
 
-    /** Display order, no title. Later changes won't affect this snapshot. */
+    /** Display order, no title. Reading while idle takes a fresh snapshot. Later changes won't affect it. */
     public List<SidebarLine> lines() {
         session.checkThread();
+        if (!isActive()) {
+            retainOwner(this);
+            try {
+                return lines;
+            } finally {
+                releaseOwner(this);
+            }
+        }
         return lines;
     }
 
     public void addListener(SidebarListener listener) {
         session.checkThread();
+        if (listeners.isEmpty())
+            retainOwner(listeners);
         listeners.add(listener);
     }
 
     public void removeListener(SidebarListener listener) {
         session.checkThread();
         listeners.remove(listener);
+        if (listeners.isEmpty())
+            releaseOwner(listeners);
     }
 
     private void onSessionChanged() {
@@ -127,7 +132,7 @@ public final class SidebarCache implements ClientLifecycle {
         if (handler instanceof SidebarPacketBinding) {
             ((SidebarPacketBinding) handler).bindSidebarObserver(packet -> {
                 session.refresh();
-                if (started && boundHandler == handler && session.connection() == handler) {
+                if (isActive() && boundHandler == handler && session.connection() == handler) {
                     onPacket(packet);
                 }
             });

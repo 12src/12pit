@@ -261,6 +261,7 @@ final class TimersHud implements HudElement {
         String name;
         String time;
         long until;
+        long refresh;
         private long tenths = Long.MIN_VALUE;
         int nameWidth = -1;
         int timeWidth = -1;

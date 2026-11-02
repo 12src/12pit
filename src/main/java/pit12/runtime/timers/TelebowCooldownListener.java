@@ -16,8 +16,16 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.render.timers;
+package pit12.runtime.timers;
 
-public interface VenomPacketBinding {
-    void bindVenomTracker(VenomTracker tracker);
+import java.util.UUID;
+import net.minecraft.entity.player.EntityPlayer;
+
+interface TelebowCooldownListener {
+    /** until uses System.nanoTime(). */
+    void onTelebowCooldown(EntityPlayer player, long until);
+
+    void onTelebowCooldownRemoved(UUID playerId);
+
+    void onTelebowCooldownsReset();
 }

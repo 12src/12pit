@@ -280,7 +280,8 @@ final class ArrowHitTracker {
             for (int shotIndex = 0,
                     shotCount = delivery.candidates.size(); shotIndex < shotCount; shotIndex++)
                 delivery.candidates.get(shotIndex).usedBy.add(delivery.listener);
-            if (delivery.ambiguous || delivery.candidates.isEmpty())
+            if (delivery.ambiguous || delivery.candidates.isEmpty()
+                    || !delivery.listener.acceptsHit(delivery.hit.player))
                 continue;
             List<ArrowHit> candidates = new ArrayList<>(delivery.candidates.size());
             for (int shotIndex = 0,

@@ -65,6 +65,8 @@ public final class PlayerListFeature implements ClientLifecycle, PlayerEquipment
     private final TabPresence presence;
     private final PlayerNameCache playerNames;
     private final DenickNames denickNames;
+    private final NickTracker nicks;
+    private final PitContext pitContext;
     private final PlayerListBuilder builder;
     private final List<PlayerListHud> huds = new ArrayList<>();
     private final List<PlayerListHud> activeHuds = new ArrayList<>();
@@ -94,6 +96,8 @@ public final class PlayerListFeature implements ClientLifecycle, PlayerEquipment
         this.presence = presence;
         this.playerNames = playerNames;
         this.denickNames = denickNames;
+        this.nicks = nicks;
+        this.pitContext = pitContext;
         this.hudRegistry = hudRegistry;
         builder = new PlayerListBuilder(minecraft, players, equipment, pitContext, config,
                 relations, playerNames, denickNames, nicks);
@@ -160,6 +164,8 @@ public final class PlayerListFeature implements ClientLifecycle, PlayerEquipment
         snapshotDirty = true;
         ticksSinceUpdate = UPDATE_INTERVAL_TICKS;
         try {
+            nicks.retain(this);
+            pitContext.retain(this);
             equipment.addListener(this);
             relations.addListener(this);
             presence.addListener(this);
@@ -183,6 +189,8 @@ public final class PlayerListFeature implements ClientLifecycle, PlayerEquipment
         denickNames.removeListener(namesChanged);
         relations.removeListener(this);
         equipment.removeListener(this);
+        pitContext.release(this);
+        nicks.release(this);
         snapshot = PlayerListSnapshot.empty();
         builder.clear();
         for (int index = 0, size = huds.size(); index < size; index++) {

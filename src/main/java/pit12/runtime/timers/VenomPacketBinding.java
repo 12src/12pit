@@ -16,17 +16,8 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.render.timers.api;
+package pit12.runtime.timers;
 
-import java.util.UUID;
-
-/** Use this API on the client thread. */
-public interface PlayerTimers {
-    int PIN = 1;
-    int VENOM = 2;
-    int JUMP_BOOST = 4;
-    int TELEBOW = 8;
-
-    /** Returns colored countdowns with a leading space, or an empty string if none are visible. */
-    String countdowns(UUID playerId, int types);
+public interface VenomPacketBinding {
+    void bindVenomTracker(VenomTracker tracker);
 }

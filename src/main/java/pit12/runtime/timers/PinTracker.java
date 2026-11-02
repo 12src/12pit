@@ -16,12 +16,13 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.render.timers;
+package pit12.runtime.timers;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
+import java.util.function.Predicate;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.projectile.EntityArrow;
 import net.minecraft.item.ItemStack;
@@ -32,16 +33,18 @@ import pit12.runtime.item.PitEnchantment;
 import pit12.runtime.item.PitEnchantmentReader;
 
 final class PinTracker implements ArrowListener {
-    private final TimersConfig config;
+    private final TimerSettings settings;
     private final ArrowTracker arrows;
+    private final Predicate<EntityPlayer> interested;
     private final BiConsumer<EntityPlayer, Long> triggered;
     private final Runnable resetTimers;
     private final Map<Integer, Shot> shots = new HashMap<>();
 
-    PinTracker(TimersConfig config, ArrowTracker arrows, BiConsumer<EntityPlayer, Long> triggered,
-            Runnable resetTimers) {
-        this.config = config;
+    PinTracker(TimerSettings settings, ArrowTracker arrows, Predicate<EntityPlayer> interested,
+            BiConsumer<EntityPlayer, Long> triggered, Runnable resetTimers) {
+        this.settings = settings;
         this.arrows = arrows;
+        this.interested = interested;
         this.triggered = triggered;
         this.resetTimers = resetTimers;
     }
@@ -69,7 +72,12 @@ final class PinTracker implements ArrowListener {
 
     @Override
     public long hitWindowNanos(boolean local) {
-        return config.pinHitWindow.get() * (local ? 2_000_000L : 1_000_000L);
+        return settings.pinHitWindow() * (local ? 2_000_000L : 1_000_000L);
+    }
+
+    @Override
+    public boolean acceptsHit(EntityPlayer target) {
+        return interested.test(target);
     }
 
     @Override

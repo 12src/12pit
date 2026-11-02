@@ -20,6 +20,11 @@ package pit12.runtime.pit;
 
 /** Query on the client thread. Snapshots are fine to pass to workers. */
 public interface PitContext {
+    /** Retain while using the current map and spawn state. */
+    void retain(Object owner);
+
+    void release(Object owner);
+
     /** The map stays UNKNOWN until the center chunk matches a known map. */
     PitSnapshot current();
 }

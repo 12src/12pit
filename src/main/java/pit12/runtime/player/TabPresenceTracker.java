@@ -33,37 +33,30 @@ import net.minecraft.network.play.server.S38PacketPlayerListItem.Action;
 import net.minecraft.network.play.server.S38PacketPlayerListItem.AddPlayerData;
 import pit12.runtime.session.ClientSession;
 import pit12.shared.event.Listeners;
-import pit12.shared.lifecycle.ClientLifecycle;
+import pit12.shared.lifecycle.DemandLifecycle;
 
 /** Use this API and deliver packets on the client thread. */
-public final class TabPresenceTracker implements ClientLifecycle, TabPresence, TabPacketObserver {
+public final class TabPresenceTracker extends DemandLifecycle
+        implements TabPresence, TabPacketObserver {
     private final ClientSession session;
     private final Runnable sessionChanged = this::onSessionChanged;
     private final Set<UUID> present = new LinkedHashSet<>();
     private final Listeners<TabPresenceListener> listeners = new Listeners<>();
     private NetHandlerPlayClient boundHandler;
-    private boolean started;
 
     public TabPresenceTracker(ClientSession session) {
+        super(session::checkThread);
         this.session = session;
     }
 
     @Override
-    public void start() {
-        session.checkThread();
-        if (started)
-            return;
-        started = true;
+    protected void activate() {
         session.addListener(sessionChanged);
         onSessionChanged();
     }
 
     @Override
-    public void stop() {
-        session.checkThread();
-        if (!started)
-            return;
-        started = false;
+    protected void deactivate() {
         session.removeListener(sessionChanged);
         bind(null);
         listeners.clear();
@@ -97,6 +90,8 @@ public final class TabPresenceTracker implements ClientLifecycle, TabPresence, T
     @Override
     public void addListener(TabPresenceListener listener) {
         session.checkThread();
+        if (listeners.isEmpty())
+            retainOwner(listeners);
         listeners.add(listener);
     }
 
@@ -104,6 +99,8 @@ public final class TabPresenceTracker implements ClientLifecycle, TabPresence, T
     public void removeListener(TabPresenceListener listener) {
         session.checkThread();
         listeners.remove(listener);
+        if (listeners.isEmpty())
+            releaseOwner(listeners);
     }
 
     @Override
@@ -161,7 +158,7 @@ public final class TabPresenceTracker implements ClientLifecycle, TabPresence, T
         if (handler instanceof TabPacketBinding) {
             ((TabPacketBinding) handler).bindTabObserver(packet -> {
                 session.refresh();
-                if (started && boundHandler == handler && session.connection() == handler)
+                if (isActive() && boundHandler == handler && session.connection() == handler)
                     onTabPacket(packet);
             });
         }

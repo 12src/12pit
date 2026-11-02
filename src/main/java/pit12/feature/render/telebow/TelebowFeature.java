@@ -36,7 +36,6 @@ import pit12.feature.client.relation.api.Relation;
 import pit12.feature.client.relation.api.RelationListener;
 import pit12.feature.client.relation.api.RelationLookup;
 import pit12.feature.client.relation.api.RelationReadiness;
-import pit12.feature.render.telebow.api.TelebowCooldowns;
 import pit12.runtime.arrow.ArrowListener;
 import pit12.runtime.arrow.ArrowTracker;
 import pit12.runtime.config.ConfigCatalog;
@@ -44,9 +43,10 @@ import pit12.runtime.config.ConfigChangeListener;
 import pit12.runtime.config.ConfigChangeSet;
 import pit12.runtime.item.PitEnchantment;
 import pit12.runtime.item.PitEnchantmentReader;
-import pit12.runtime.pit.PitContext;
-import pit12.runtime.player.PlayerEntityTracker;
 import pit12.runtime.session.ClientSession;
+import pit12.runtime.timers.PlayerTimers;
+import pit12.runtime.timers.TimerDemand;
+import pit12.runtime.timers.TimerKind;
 import pit12.shared.lifecycle.ClientLifecycle;
 import pit12.shared.performance.HotPath;
 import pit12.shared.rendering.TextureState;
@@ -59,7 +59,7 @@ public final class TelebowFeature
     private final ClientSession session;
     private final ArrowTracker arrows;
     private final RelationLookup relations;
-    private final TelebowCooldownTracker cooldowns;
+    private final PlayerTimers timers;
     private final Map<Integer, TelebowPath> paths = new LinkedHashMap<>();
     private final TelebowRenderer renderer;
     private final TelebowAim aim;
@@ -69,21 +69,17 @@ public final class TelebowFeature
 
     public TelebowFeature(Minecraft minecraft, ConfigCatalog configs, TelebowConfig config,
             ClientSession session, ArrowTracker arrows, RelationLookup relations,
-            TextureState textures, PlayerEntityTracker players, PitContext pit) {
+            TextureState textures, PlayerTimers timers) {
         this.minecraft = minecraft;
         this.configs = configs;
         this.config = config;
         this.session = session;
         this.arrows = arrows;
         this.relations = relations;
-        cooldowns = new TelebowCooldownTracker(minecraft, configs, config, session, arrows, players,
-                pit);
+        this.timers = timers;
+        timers.configureTelebow(config);
         renderer = new TelebowRenderer(minecraft, config, textures);
         aim = new TelebowAim(minecraft, config, player -> colorOf(player, true));
-    }
-
-    public TelebowCooldowns cooldowns() {
-        return cooldowns;
     }
 
     @Override
@@ -92,7 +88,6 @@ public final class TelebowFeature
         if (started)
             return;
         started = true;
-        cooldowns.start();
         configs.addListener(this);
         updateActivation();
     }
@@ -103,7 +98,6 @@ public final class TelebowFeature
         started = false;
         configs.removeListener(this);
         updateActivation();
-        cooldowns.stop();
     }
 
     private void updateActivation() {
@@ -116,8 +110,10 @@ public final class TelebowFeature
                         || config.aimEnemies.get() && (config.enemyColor.get() >>> 24) != 0
                         || config.aimOthers.get() && (config.otherColor.get() >>> 24) != 0);
         boolean enabled = started && config.enabled() && (prediction || aimActive);
-        if (enabled == active)
+        if (enabled == active) {
+            updateTimerDemand();
             return;
+        }
         active = enabled;
         if (active) {
             arrows.addListener(this);
@@ -129,10 +125,28 @@ public final class TelebowFeature
             arrows.removeListener(this);
             onArrowsReset();
         }
+        updateTimerDemand();
+    }
+
+    private void updateTimerDemand() {
+        int groups = 0;
+        if (active && config.ignoreCooldown.get()) {
+            groups = TimerDemand.groups(config.own.get() && (config.ownColor.get() >>> 24) != 0,
+                    (config.friends.get() || aimActive && config.aimFriends.get())
+                            && (config.friendColor.get() >>> 24) != 0,
+                    (config.enemies.get() || aimActive && config.aimEnemies.get())
+                            && (config.enemyColor.get() >>> 24) != 0,
+                    (config.others.get() || aimActive && config.aimOthers.get())
+                            && (config.otherColor.get() >>> 24) != 0);
+        }
+        timers.setDemand(this, TimerKind.TELEBOW.select(groups));
     }
 
     @Override
     public void onConfigChanged(ConfigChangeSet changes) {
+        if (changes.affects("telebow", "cooldown_detection")
+                || changes.affects("telebow", "correct_cooldown"))
+            timers.telebowSettingsChanged(changes.affects("telebow", "cooldown_detection"));
         if (!started || !(changes.affects("telebow", "enabled") || changes.affects("telebow", "own")
                 || changes.affects("telebow", "friends") || changes.affects("telebow", "enemies")
                 || changes.affects("telebow", "others") || changes.affects("telebow", "own_color")
@@ -205,10 +219,11 @@ public final class TelebowFeature
         if (!active)
             return false;
         if (config.ignoreCooldown.get()
-                && cooldowns.blocksArrow(shooter.getUniqueID(), arrow.getEntityId()))
+                && timers.blocksArrow(shooter.getUniqueID(), arrow.getEntityId()))
             return false;
-        if (!sneaking && (lastSneakingNanos == 0 || System.nanoTime()
-                - lastSneakingNanos > cooldowns.hitWindowNanos(shooter == minecraft.thePlayer)))
+        if (!sneaking && (lastSneakingNanos == 0
+                || System.nanoTime() - lastSneakingNanos > config.predictionMargin.get()
+                        * (shooter == minecraft.thePlayer ? 2_000_000L : 1_000_000L)))
             return false;
         int color = colorOf(shooter, false);
         if ((color >>> 24) == 0

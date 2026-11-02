@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.render.telebow;
+package pit12.runtime.timers;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -24,6 +24,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Predicate;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.projectile.EntityArrow;
@@ -33,75 +34,47 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
-import pit12.feature.render.telebow.api.TelebowCooldownListener;
-import pit12.feature.render.telebow.api.TelebowCooldowns;
 import pit12.runtime.arrow.ArrowAccess;
 import pit12.runtime.arrow.ArrowHit;
 import pit12.runtime.arrow.ArrowListener;
 import pit12.runtime.arrow.ArrowTracker;
-import pit12.runtime.config.ConfigCatalog;
-import pit12.runtime.config.ConfigChangeListener;
-import pit12.runtime.config.ConfigChangeSet;
 import pit12.runtime.item.PitEnchantment;
 import pit12.runtime.item.PitEnchantmentReader;
 import pit12.runtime.pit.PitContext;
 import pit12.runtime.pit.PitSnapshot;
 import pit12.runtime.pit.SpawnState;
 import pit12.runtime.player.PlayerEntityTracker;
-import pit12.runtime.session.ClientSession;
 import pit12.shared.entity.PlayerPositions;
-import pit12.shared.event.Listeners;
-import pit12.shared.lifecycle.ClientLifecycle;
 import pit12.shared.performance.HotPath;
 
-public final class TelebowCooldownTracker
-        implements ClientLifecycle, ConfigChangeListener, ArrowListener, TelebowCooldowns {
+/** Forge's generated event handler needs a public class. */
+public final class TelebowCooldownTracker implements ArrowListener {
     private final Minecraft minecraft;
-    private final ConfigCatalog configs;
-    private final TelebowConfig config;
-    private final ClientSession session;
+    private final TelebowSettings settings;
     private final ArrowTracker arrows;
     private final PlayerEntityTracker players;
     private final PitContext pit;
-    private final Listeners<TelebowCooldownListener> listeners = new Listeners<>();
+    private final TelebowCooldownListener timers;
+    private final Predicate<EntityPlayer> interested;
     private final Map<UUID, Cooldown> cooldowns = new HashMap<>();
     private final Map<Integer, Shot> shots = new HashMap<>();
     private final List<Shot> attempts = new ArrayList<>();
     private long tick;
-    private boolean started;
     private boolean active;
 
-    TelebowCooldownTracker(Minecraft minecraft, ConfigCatalog configs, TelebowConfig config,
-            ClientSession session, ArrowTracker arrows, PlayerEntityTracker players,
-            PitContext pit) {
+    TelebowCooldownTracker(Minecraft minecraft, TelebowSettings settings, ArrowTracker arrows,
+            PlayerEntityTracker players, PitContext pit, Predicate<EntityPlayer> interested,
+            TelebowCooldownListener timers) {
         this.minecraft = minecraft;
-        this.configs = configs;
-        this.config = config;
-        this.session = session;
+        this.settings = settings;
         this.arrows = arrows;
         this.players = players;
         this.pit = pit;
+        this.interested = interested;
+        this.timers = timers;
     }
 
-    @Override
-    public void start() {
-        session.checkThread();
-        started = true;
-        configs.addListener(this);
-        updateActivation();
-    }
-
-    @Override
-    public void stop() {
-        session.checkThread();
-        started = false;
-        configs.removeListener(this);
-        updateActivation();
-        listeners.clear();
-    }
-
-    private void updateActivation() {
-        boolean enabled = started && config.enabled();
+    void active(boolean enabled) {
         if (active == enabled)
             return;
         active = enabled;
@@ -115,33 +88,17 @@ public final class TelebowCooldownTracker
         }
     }
 
-    @Override
-    public void onConfigChanged(ConfigChangeSet changes) {
-        if (changes.affects("telebow", "enabled"))
-            updateActivation();
-        if (changes.affects("telebow", "cooldown_detection"))
+    void settingsChanged(boolean detectionChanged) {
+        if (detectionChanged)
             attempts.clear();
-        if (changes.affects("telebow", "correct_cooldown") && !config.correctCooldown.get())
+        else if (!settings.correctCooldown())
             attempts.removeIf(shot -> shot.correction);
     }
 
-    @Override
-    public void addListener(TelebowCooldownListener listener) {
-        session.checkThread();
-        if (!listeners.add(listener))
-            return;
-        long now = System.nanoTime();
-        PitSnapshot snapshot = pit.current();
-        for (Cooldown cooldown : cooldowns.values()) {
-            if (now < cooldown.until && refreshCooldown(cooldown, snapshot))
-                listener.onTelebowCooldown(cooldown.player, cooldown.until);
-        }
-    }
-
-    @Override
-    public void removeListener(TelebowCooldownListener listener) {
-        session.checkThread();
-        listeners.remove(listener);
+    void refreshAudience() {
+        cooldowns.values().removeIf(cooldown -> !interested.test(cooldown.player));
+        shots.values().removeIf(shot -> !interested.test(shot.shooter));
+        attempts.removeIf(shot -> !interested.test(shot.shooter));
     }
 
     boolean blocksArrow(UUID shooterId, int arrowId) {
@@ -153,13 +110,15 @@ public final class TelebowCooldownTracker
     @Override
     public boolean onArrowSpawn(EntityArrow arrow, EntityPlayer shooter, ItemStack bow,
             boolean sneaking, long lastSneakingNanos) {
+        if (!interested.test(shooter))
+            return false;
         long now = System.nanoTime();
         UUID shooterId = shooter.getUniqueID();
         Cooldown cooldown = cooldowns.get(shooterId);
         PitSnapshot snapshot = pit.current();
         if (cooldown != null && (now >= cooldown.until || !refreshCooldown(cooldown, snapshot))) {
             cooldowns.remove(shooterId);
-            listeners.notify(listener -> listener.onTelebowCooldownRemoved(shooterId));
+            timers.onTelebowCooldownRemoved(shooterId);
             cooldown = null;
         }
         boolean attempt = sneaking || lastSneakingNanos != 0
@@ -181,10 +140,10 @@ public final class TelebowCooldownTracker
         if (seconds == 0)
             return false;
         Cooldown estimate = null;
-        if (attempt && (cooldown == null || config.correctCooldown.get())) {
+        if (attempt && (cooldown == null || settings.correctCooldown())) {
             estimate = new Cooldown(shooter, arrow.getEntityId(), now,
                     now + seconds * 1_000_000_000L, snapshot);
-            if (cooldown == null && config.cooldownDetection.get() == 0) {
+            if (cooldown == null && settings.cooldownDetection() == 0) {
                 cooldowns.put(shooterId, estimate);
                 publish(estimate);
                 estimate = null;
@@ -199,7 +158,7 @@ public final class TelebowCooldownTracker
 
     @Override
     public long hitWindowNanos(boolean local) {
-        return config.predictionMargin.get() * (local ? 2_000_000L : 1_000_000L);
+        return settings.predictionMargin() * (local ? 2_000_000L : 1_000_000L);
     }
 
     @Override
@@ -288,7 +247,7 @@ public final class TelebowCooldownTracker
 
     private long teleportWindowNanos(Shot shot) {
         return hitWindowNanos(shot.shooter == minecraft.thePlayer)
-                + config.teleportExtraMargin.get() * 1_000_000L;
+                + settings.teleportExtraMargin() * 1_000_000L;
     }
 
     private boolean matchesTeleport(Shot shot) {
@@ -315,7 +274,7 @@ public final class TelebowCooldownTracker
             Shot pending = iterator.next();
             if (!pending.shooter.getUniqueID().equals(playerId))
                 continue;
-            if (pending.firedAt <= shot.firedAt || !config.correctCooldown.get())
+            if (pending.firedAt <= shot.firedAt || !settings.correctCooldown())
                 iterator.remove();
             else
                 pending.correction = true;
@@ -324,7 +283,7 @@ public final class TelebowCooldownTracker
     }
 
     private void publish(Cooldown cooldown) {
-        listeners.notify(listener -> listener.onTelebowCooldown(cooldown.player, cooldown.until));
+        timers.onTelebowCooldown(cooldown.player, cooldown.until);
     }
 
     private boolean refreshCooldown(Cooldown cooldown, PitSnapshot pit) {
@@ -361,7 +320,7 @@ public final class TelebowCooldownTracker
             Cooldown cooldown = entry.getValue();
             if (now >= cooldown.until || !refreshCooldown(cooldown, snapshot)) {
                 iterator.remove();
-                listeners.notify(listener -> listener.onTelebowCooldownRemoved(entry.getKey()));
+                timers.onTelebowCooldownRemoved(entry.getKey());
             }
         }
         int remaining = 0;
@@ -383,7 +342,7 @@ public final class TelebowCooldownTracker
         shots.clear();
         attempts.clear();
         cooldowns.clear();
-        listeners.notify(TelebowCooldownListener::onTelebowCooldownsReset);
+        timers.onTelebowCooldownsReset();
     }
 
     private static final class Cooldown {

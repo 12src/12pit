@@ -193,6 +193,8 @@ public final class DenickFeature implements ClientLifecycle, DenickNames, TabPre
                 if (storageWorker == null) {
                     loadCache();
                 }
+                players.retain(this);
+                pit.retain(this);
                 nicks.addListener(this);
                 presence.addListener(this);
                 session.addListener(sessionChanged);
@@ -204,6 +206,8 @@ public final class DenickFeature implements ClientLifecycle, DenickNames, TabPre
                 session.removeListener(sessionChanged);
                 presence.removeListener(this);
                 nicks.removeListener(this);
+                pit.release(this);
+                players.release(this);
                 // noinspection NonAtomicOperationOnVolatileField
                 generation++;
                 for (Target target : targets.values()) {

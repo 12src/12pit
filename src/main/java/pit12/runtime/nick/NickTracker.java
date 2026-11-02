@@ -29,11 +29,11 @@ import pit12.runtime.player.TabPresence;
 import pit12.runtime.player.TabPresenceListener;
 import pit12.shared.concurrent.ClientThread;
 import pit12.shared.event.Listeners;
-import pit12.shared.lifecycle.ClientLifecycle;
+import pit12.shared.lifecycle.DemandLifecycle;
 import pit12.shared.text.TextCodes;
 
-/** Use this API on the client thread. */
-public final class NickTracker implements ClientLifecycle, TabPresenceListener {
+/** Use this API on the client thread. Retain while reading without a listener. */
+public final class NickTracker extends DemandLifecycle implements TabPresenceListener {
     private static final Pattern NPC_TAB_NAME = Pattern.compile("[a-z0-9]{10}(?![A-Za-z0-9_])");
     private final ClientThread client;
     private final TabPresence presence;
@@ -41,29 +41,23 @@ public final class NickTracker implements ClientLifecycle, TabPresenceListener {
     private final Set<UUID> checked = new HashSet<>();
     private final Map<UUID, String> nicked = new HashMap<>();
     private final Listeners<NickListener> listeners = new Listeners<>();
-    private boolean started;
 
     public NickTracker(ClientThread client, TabPresence presence, PlayerNameCache names) {
+        super(client::check);
         this.client = client;
         this.presence = presence;
         this.names = names;
     }
 
     @Override
-    public void start() {
-        client.check();
-        if (started) {
-            return;
-        }
-        started = true;
+    protected void activate() {
+        names.retain(this);
         presence.addListener(this);
         presence.players().forEach((id, name) -> onPlayerSeen(id, name, true));
     }
 
     @Override
-    public void stop() {
-        client.check();
-        started = false;
+    protected void deactivate() {
         presence.removeListener(this);
         for (UUID playerId : nicked.keySet()) {
             names.bindDisplayNameObserver(playerId, null);
@@ -71,6 +65,7 @@ public final class NickTracker implements ClientLifecycle, TabPresenceListener {
         nicked.clear();
         checked.clear();
         listeners.clear();
+        names.release(this);
     }
 
     public boolean isNicked(UUID playerId) {
@@ -80,12 +75,16 @@ public final class NickTracker implements ClientLifecycle, TabPresenceListener {
 
     public void addListener(NickListener listener) {
         client.check();
+        if (listeners.isEmpty())
+            retainOwner(listeners);
         listeners.add(listener);
     }
 
     public void removeListener(NickListener listener) {
         client.check();
         listeners.remove(listener);
+        if (listeners.isEmpty())
+            releaseOwner(listeners);
     }
 
     @Override

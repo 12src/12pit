@@ -131,6 +131,8 @@ public final class ContractRerollFeature
         started = true;
         input.addHandler(this);
         configs.addListener(this);
+        if (config.key.get() != Keyboard.KEY_NONE)
+            pit.retain(this);
     }
 
     @Override
@@ -140,6 +142,7 @@ public final class ContractRerollFeature
         finish(false);
         input.removeHandler(this);
         configs.removeListener(this);
+        pit.release(this);
     }
 
     @Override
@@ -475,8 +478,14 @@ public final class ContractRerollFeature
 
     @Override
     public void onConfigChanged(ConfigChangeSet changes) {
-        if (changes.affects("contractreroll", "key") && config.key.get() == Keyboard.KEY_NONE)
-            finish(true);
+        if (changes.affects("contractreroll", "key")) {
+            if (config.key.get() == Keyboard.KEY_NONE) {
+                finish(true);
+                pit.release(this);
+            } else if (started) {
+                pit.retain(this);
+            }
+        }
     }
 
     private void failedAction(RuntimeException failure) {

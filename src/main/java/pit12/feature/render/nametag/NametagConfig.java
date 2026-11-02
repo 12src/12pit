@@ -20,13 +20,13 @@ package pit12.feature.render.nametag;
 
 import static pit12.runtime.languages.Languages.source;
 
-import pit12.feature.render.timers.api.PlayerTimers;
 import pit12.runtime.config.BooleanSetting;
 import pit12.runtime.config.ChoiceSetting;
 import pit12.runtime.config.ConfigCategory;
 import pit12.runtime.config.FeatureConfig;
 import pit12.runtime.config.IntegerSetting;
 import pit12.runtime.item.PitEnchantmentFormat;
+import pit12.runtime.timers.PlayerTimers;
 
 public final class NametagConfig extends FeatureConfig {
     private final BooleanSetting nickMarker;

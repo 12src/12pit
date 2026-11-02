@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.render.timers.mixin;
+package pit12.platform.mixin.network;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.network.NetHandlerPlayClient;
@@ -34,14 +34,13 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import pit12.feature.render.timers.JumpBoostPacketBinding;
-import pit12.feature.render.timers.JumpBoostTracker;
-import pit12.feature.render.timers.VenomPacketBinding;
-import pit12.feature.render.timers.VenomTracker;
+import pit12.runtime.timers.JumpBoostPacketBinding;
+import pit12.runtime.timers.JumpBoostTracker;
+import pit12.runtime.timers.VenomPacketBinding;
+import pit12.runtime.timers.VenomTracker;
 
 @Mixin(NetHandlerPlayClient.class)
-public abstract class NetHandlerPlayClientMixin
-        implements VenomPacketBinding, JumpBoostPacketBinding {
+public abstract class TimerPacketsMixin implements VenomPacketBinding, JumpBoostPacketBinding {
     @Shadow
     private Minecraft gameController;
     @Unique
@@ -70,7 +69,8 @@ public abstract class NetHandlerPlayClientMixin
     private void pit12$afterPlayerMovement(S14PacketEntity packet, CallbackInfo ci) {
         boolean venom = pit12$venomTracker != null && pit12$venomTracker.trackingHits()
                 && packet.func_149060_h(); // has rotation
-        boolean jumping = pit12$jumpBoostTracker != null && pit12$jumpBoostTracker.checkingJumps();
+        boolean jumping =
+                pit12$jumpBoostTracker != null && pit12$jumpBoostTracker.checkingRemoteJumps();
         if ((!venom && !jumping) || (Object) this != gameController.getNetHandler()
                 || gameController.theWorld == null)
             return;
@@ -87,7 +87,8 @@ public abstract class NetHandlerPlayClientMixin
     @Inject(method = "handleEntityTeleport", at = @At("TAIL"))
     private void pit12$afterPlayerTeleport(S18PacketEntityTeleport packet, CallbackInfo ci) {
         boolean venom = pit12$venomTracker != null && pit12$venomTracker.trackingHits();
-        boolean jumping = pit12$jumpBoostTracker != null && pit12$jumpBoostTracker.checkingJumps();
+        boolean jumping =
+                pit12$jumpBoostTracker != null && pit12$jumpBoostTracker.checkingRemoteJumps();
         if ((!venom && !jumping) || (Object) this != gameController.getNetHandler()
                 || gameController.theWorld == null)
             return;

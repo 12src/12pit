@@ -16,12 +16,14 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.render.telebow.api;
+package pit12.runtime.timers;
 
-/** Use this API on the client thread. */
-public interface TelebowCooldowns {
-    /** Sends current cooldowns before returning. */
-    void addListener(TelebowCooldownListener listener);
+public interface TelebowSettings {
+    boolean correctCooldown();
 
-    void removeListener(TelebowCooldownListener listener);
+    int cooldownDetection();
+
+    int predictionMargin();
+
+    int teleportExtraMargin();
 }
