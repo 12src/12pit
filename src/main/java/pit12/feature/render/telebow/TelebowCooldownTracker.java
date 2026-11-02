@@ -165,7 +165,8 @@ public final class TelebowCooldownTracker
                 && now - lastSneakingNanos <= hitWindowNanos(shooter == minecraft.thePlayer);
         if (cooldown == null && !attempt) {
             boolean pending = false;
-            for (Shot shot : attempts) {
+            for (int index = 0, size = attempts.size(); index < size; index++) {
+                Shot shot = attempts.get(index);
                 if (shot.shooter.getUniqueID().equals(shooterId)) {
                     pending = true;
                     break;
@@ -226,7 +227,8 @@ public final class TelebowCooldownTracker
     public void onArrowHit(EntityPlayer target, List<ArrowHit> candidates, long hitAt) {
         EntityPlayer shooter = null;
         long firstShot = Long.MAX_VALUE;
-        for (ArrowHit candidate : candidates) {
+        for (int index = 0, size = candidates.size(); index < size; index++) {
+            ArrowHit candidate = candidates.get(index);
             Shot shot = shots.get(candidate.arrow.getEntityId());
             if (shot == null || target.getUniqueID().equals(shot.shooter.getUniqueID())
                     || shooter != null && !shooter.getUniqueID().equals(shot.shooter.getUniqueID()))
@@ -242,7 +244,8 @@ public final class TelebowCooldownTracker
             cooldown.until -= 3_000_000_000L;
             publish(cooldown);
         }
-        for (Shot pending : attempts) {
+        for (int index = 0, size = attempts.size(); index < size; index++) {
+            Shot pending = attempts.get(index);
             if (pending.shooter.getUniqueID().equals(shooter.getUniqueID())
                     && firstShot >= pending.firedAt)
                 pending.estimate.until -= 3_000_000_000L;
@@ -359,12 +362,18 @@ public final class TelebowCooldownTracker
                 listeners.notify(listener -> listener.onTelebowCooldownRemoved(entry.getKey()));
             }
         }
-        attempts.removeIf(shot -> {
+        int remaining = 0;
+        for (int index = 0, size = attempts.size(); index < size; index++) {
+            Shot shot = attempts.get(index);
             long margin = teleportWindowNanos(shot);
-            return shot.landedAt != 0
+            if (shot.landedAt != 0
                     && (margin == 0 ? shot.landedTick != tick : now - shot.landedAt > margin)
-                    || now >= shot.estimate.until || !refreshCooldown(shot.estimate, snapshot);
-        });
+                    || now >= shot.estimate.until || !refreshCooldown(shot.estimate, snapshot))
+                continue;
+            attempts.set(remaining++, shot);
+        }
+        for (int index = attempts.size() - 1; index >= remaining; index--)
+            attempts.remove(index);
     }
 
     @Override

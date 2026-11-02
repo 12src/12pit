@@ -173,7 +173,8 @@ final class TelebowRenderer {
                 bindFadeTexture();
                 GL11.glBegin(GL11.GL_QUADS);
                 try {
-                    for (Mesh mesh : visible) {
+                    for (int index = 0, size = visible.size(); index < size; index++) {
+                        Mesh mesh = visible.get(index);
                         if (mesh.geometryVisible && mesh.path.trajectory.hasImpact)
                             drawBeam(mesh.path, mesh.alpha);
                     }
@@ -182,7 +183,8 @@ final class TelebowRenderer {
                 }
             }
             textures.setEnabled(false);
-            for (Mesh mesh : visible) {
+            for (int index = 0, size = visible.size(); index < size; index++) {
+                Mesh mesh = visible.get(index);
                 TelebowPath path = mesh.path;
                 if (mesh.geometryVisible) {
                     if (mesh.revision != path.revision) {
@@ -197,12 +199,14 @@ final class TelebowRenderer {
                     GlStateManager.callList(mesh.lines);
                 }
             }
-            for (Mesh mesh : visible) {
+            for (int index = 0, size = visible.size(); index < size; index++) {
+                Mesh mesh = visible.get(index);
                 if (mesh.nameVisible) {
                     drawName(mesh.path, mesh.nameWidth, mesh.nameScale, font, camera, mesh.alpha);
                 }
             }
-            for (TelebowAim.Target target : visibleAims) {
+            for (int index = 0, size = visibleAims.size(); index < size; index++) {
+                TelebowAim.Target target = visibleAims.get(index);
                 drawAim(target, aimNames, font, camera);
             }
         } finally {
