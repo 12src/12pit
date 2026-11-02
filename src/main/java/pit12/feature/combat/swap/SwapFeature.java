@@ -24,6 +24,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraftforge.client.event.GuiScreenEvent;
+import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.player.AttackEntityEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
@@ -237,6 +238,11 @@ public final class SwapFeature implements ClientLifecycle, ConfigChangeListener,
             updateMouseGrab();
             updateListening();
         }
+    }
+
+    @SubscribeEvent
+    public void onTextureStitch(TextureStitchEvent.Post event) {
+        overlay.clear();
     }
 
     @SubscribeEvent
