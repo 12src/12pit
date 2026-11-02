@@ -21,6 +21,8 @@ package pit12.feature.render.telebow;
 import static pit12.runtime.languages.Languages.source;
 
 import pit12.runtime.config.BooleanSetting;
+import pit12.runtime.config.ChoiceSetting;
+import pit12.runtime.config.ChoiceSetting.Choice;
 import pit12.runtime.config.ColorSetting;
 import pit12.runtime.config.ConfigCategory;
 import pit12.runtime.config.DoubleSetting;
@@ -32,9 +34,11 @@ public final class TelebowConfig extends FeatureConfig {
     public final BooleanSetting friends;
     public final BooleanSetting enemies;
     public final BooleanSetting others;
-    public final IntegerSetting sneakWindow;
+    public final IntegerSetting predictionMargin;
+    public final IntegerSetting teleportExtraMargin;
     public final BooleanSetting ignoreCooldown;
     public final BooleanSetting correctCooldown;
+    public final ChoiceSetting cooldownDetection;
     public final BooleanSetting aimPoints;
     public final BooleanSetting aimHoldingOnly;
     public final BooleanSetting aimFriends;
@@ -68,9 +72,16 @@ public final class TelebowConfig extends FeatureConfig {
                 true);
         correctCooldown = booleanSetting("correct_cooldown", source("Correct cooldown estimates"),
                 source("Updates cooldown estimates after successful Telebow teleports."), true);
-        sneakWindow = integerSliderSetting("sneak_window_ms", source("Prediction margin (ms)"),
-                source("Predicts shots fired within this time after sneaking ends. Also allows this much delay for arrow hits that shorten cooldowns."),
-                250, 0, 1000, 25);
+        cooldownDetection = choiceSetting("cooldown_detection", source("Cooldown detection"),
+                source("Shows cooldowns immediately after shooting or after a successful teleport."),
+                1, new Choice(0, source("On shot")), new Choice(1, source("On teleport")));
+        predictionMargin =
+                integerSliderSetting("prediction_margin_ms", source("Prediction margin (ms)"),
+                        source("Allows for delays when predicting shots and tracking cooldowns."),
+                        250, 0, 1000, 25);
+        teleportExtraMargin = integerSliderSetting("teleport_extra_margin_ms",
+                source("Extra teleport margin (ms)"),
+                source("Adds to the prediction margin for Telebow teleports."), 100, 0, 1000, 25);
         subcategory("aim", source("Aim points"));
         aimPoints = booleanSetting("aim_points", source("Show aim points"), source(
                 "Shows where to aim to land near another player's predicted Telebow landing point. Use a fully drawn shot while sneaking."),

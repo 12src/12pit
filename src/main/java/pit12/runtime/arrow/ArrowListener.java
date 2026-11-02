@@ -45,8 +45,8 @@ public interface ArrowListener {
 
     default void onArrowCorrected(EntityArrow arrow, boolean velocityChanged) {}
 
-    /** Reports server teleport packets, including absolute position sync. */
-    default void onShooterTeleport(EntityPlayer shooter, double distanceSquared) {}
+    /** Coordinates are the packet destination, including absolute position sync. */
+    default void onShooterTeleport(EntityPlayer shooter, double x, double y, double z) {}
 
     default void onBlockChanged(BlockPos position) {}
 

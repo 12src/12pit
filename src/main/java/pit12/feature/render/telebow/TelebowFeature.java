@@ -205,8 +205,8 @@ public final class TelebowFeature
         if (config.ignoreCooldown.get()
                 && cooldowns.blocksArrow(shooter.getUniqueID(), arrow.getEntityId()))
             return false;
-        if (!sneaking && (lastSneakingNanos == 0
-                || System.nanoTime() - lastSneakingNanos > config.sneakWindow.get() * 1_000_000L))
+        if (!sneaking && (lastSneakingNanos == 0 || System.nanoTime()
+                - lastSneakingNanos > config.predictionMargin.get() * 1_000_000L))
             return false;
         int color = colorOf(shooter, false);
         if ((color >>> 24) == 0

@@ -27,6 +27,7 @@ import java.util.UUID;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.projectile.EntityArrow;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.Vec3;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
@@ -47,12 +48,12 @@ import pit12.runtime.pit.PitSnapshot;
 import pit12.runtime.pit.SpawnState;
 import pit12.runtime.player.PlayerEntityTracker;
 import pit12.runtime.session.ClientSession;
+import pit12.shared.entity.PlayerPositions;
 import pit12.shared.event.Listeners;
 import pit12.shared.lifecycle.ClientLifecycle;
 
 public final class TelebowCooldownTracker
         implements ClientLifecycle, ConfigChangeListener, ArrowListener, TelebowCooldowns {
-    private static final long TELEPORT_WINDOW_NANOS = 1_000_000_000L;
     private final ConfigCatalog configs;
     private final TelebowConfig config;
     private final ClientSession session;
@@ -63,6 +64,7 @@ public final class TelebowCooldownTracker
     private final Map<UUID, Cooldown> cooldowns = new HashMap<>();
     private final Map<Integer, Shot> shots = new HashMap<>();
     private final List<Shot> attempts = new ArrayList<>();
+    private long tick;
     private boolean started;
     private boolean active;
 
@@ -112,8 +114,10 @@ public final class TelebowCooldownTracker
     public void onConfigChanged(ConfigChangeSet changes) {
         if (changes.affects("telebow", "enabled"))
             updateActivation();
-        if (changes.affects("telebow", "correct_cooldown") && !config.correctCooldown.get())
+        if (changes.affects("telebow", "cooldown_detection"))
             attempts.clear();
+        if (changes.affects("telebow", "correct_cooldown") && !config.correctCooldown.get())
+            attempts.removeIf(shot -> shot.correction);
     }
 
     @Override
@@ -155,33 +159,42 @@ public final class TelebowCooldownTracker
             cooldown = null;
         }
         boolean attempt = sneaking || lastSneakingNanos != 0
-                && now - lastSneakingNanos <= config.sneakWindow.get() * 1_000_000L;
-        if (cooldown == null && !attempt)
-            return false;
+                && now - lastSneakingNanos <= config.predictionMargin.get() * 1_000_000L;
+        if (cooldown == null && !attempt) {
+            boolean pending = false;
+            for (Shot shot : attempts) {
+                if (shot.shooter.getUniqueID().equals(shooterId)) {
+                    pending = true;
+                    break;
+                }
+            }
+            if (!pending)
+                return false;
+        }
         int level = PitEnchantmentReader.levelOf(bow, PitEnchantment.Telebow);
         int seconds = level == 1 ? 90 : level == 2 ? 45 : level == 3 ? 20 : 0;
         if (seconds == 0)
             return false;
-        Cooldown retry = null;
-        if (cooldown == null) {
-            cooldown = new Cooldown(shooter, arrow.getEntityId(), now,
+        Cooldown estimate = null;
+        if (attempt && (cooldown == null || config.correctCooldown.get())) {
+            estimate = new Cooldown(shooter, arrow.getEntityId(), now,
                     now + seconds * 1_000_000_000L, snapshot);
-            cooldowns.put(shooterId, cooldown);
-            publish(cooldown);
-        } else if (attempt && config.correctCooldown.get()) {
-            retry = new Cooldown(shooter, arrow.getEntityId(), now, now + seconds * 1_000_000_000L,
-                    snapshot);
+            if (cooldown == null && config.cooldownDetection.get() == 0) {
+                cooldowns.put(shooterId, estimate);
+                publish(estimate);
+                estimate = null;
+            }
         }
-        Shot shot = new Shot(shooter, now, retry);
+        Shot shot = new Shot(shooter, now, estimate, cooldown != null);
         shots.put(arrow.getEntityId(), shot);
-        if (retry != null)
+        if (estimate != null)
             attempts.add(shot);
         return true;
     }
 
     @Override
     public long hitWindowNanos() {
-        return config.sneakWindow.get() * 1_000_000L;
+        return config.predictionMargin.get() * 1_000_000L;
     }
 
     @Override
@@ -191,12 +204,14 @@ public final class TelebowCooldownTracker
             return;
         boolean inGround = ((ArrowAccess) arrow).pit12$isInGround();
         long now = System.nanoTime();
-        if (shot.retry != null && attempts.contains(shot)) {
+        if (shot.estimate != null && attempts.contains(shot)) {
             if (serverRemoved || inGround || arrow.isDead) {
                 shot.landedAt = now;
-                if (shot.teleportedAt != 0 && now - shot.teleportedAt <= TELEPORT_WINDOW_NANOS) {
-                    confirm(shot);
+                shot.landedTick = tick;
+                shot.landedPosition = new Vec3(arrow.posX, arrow.posY, arrow.posZ);
+                if (matchesTeleport(shot)) {
                     attempts.remove(shot);
+                    confirm(shot);
                 }
             } else {
                 attempts.remove(shot);
@@ -227,7 +242,7 @@ public final class TelebowCooldownTracker
         for (Shot pending : attempts) {
             if (pending.shooter.getUniqueID().equals(shooter.getUniqueID())
                     && firstShot >= pending.firedAt)
-                pending.retry.until -= 3_000_000_000L;
+                pending.estimate.until -= 3_000_000_000L;
         }
     }
 
@@ -237,21 +252,26 @@ public final class TelebowCooldownTracker
     }
 
     @Override
-    public void onShooterTeleport(EntityPlayer shooter, double distanceSquared) {
-        // Absolute position sync also uses teleport packets.
-        if (distanceSquared < 16)
+    public void onShooterTeleport(EntityPlayer shooter, double x, double y, double z) {
+        if (attempts.isEmpty())
+            return;
+        // Absolute position syncs also use teleport packets.
+        if (PlayerPositions.serverDistanceSquared(shooter, minecraft.thePlayer, x, y, z) < 16)
             return;
         long now = System.nanoTime();
+        Vec3 position = new Vec3(x, y, z);
         Shot latest = null;
         Iterator<Shot> iterator = attempts.iterator();
         while (iterator.hasNext()) {
             Shot shot = iterator.next();
             if (!shot.shooter.getUniqueID().equals(shooter.getUniqueID()))
                 continue;
-            // Teleport and arrow removal packets may arrive in either order.
             shot.teleportedAt = now;
-            if (shot.landedAt != 0 && now - shot.landedAt <= TELEPORT_WINDOW_NANOS) {
-                latest = shot;
+            shot.teleportedTick = tick;
+            shot.teleportPosition = position;
+            if (matchesTeleport(shot)) {
+                if (latest == null || shot.firedAt > latest.firedAt)
+                    latest = shot;
                 iterator.remove();
             }
         }
@@ -259,16 +279,37 @@ public final class TelebowCooldownTracker
             confirm(latest);
     }
 
+    private boolean matchesTeleport(Shot shot) {
+        long margin =
+                (config.predictionMargin.get() + config.teleportExtraMargin.get()) * 1_000_000L;
+        // Teleport and arrow removal packets may arrive in either order.
+        return shot.landedAt != 0 && shot.teleportedAt != 0
+                && (margin == 0 ? shot.landedTick == shot.teleportedTick
+                        : Math.abs(shot.landedAt - shot.teleportedAt) <= margin)
+                && shot.landedPosition.squareDistanceTo(shot.teleportPosition) <= 9;
+    }
+
     private void confirm(Shot shot) {
-        if (!refreshCooldown(shot.retry, pit.current()))
+        if (System.nanoTime() >= shot.estimate.until
+                || !refreshCooldown(shot.estimate, pit.current()))
             return;
         UUID playerId = shot.shooter.getUniqueID();
         Cooldown current = cooldowns.get(playerId);
         if (current != null && current.startedAt > shot.firedAt)
             return;
         // Flight time counts toward the cooldown.
-        cooldowns.put(playerId, shot.retry);
-        publish(shot.retry);
+        cooldowns.put(playerId, shot.estimate);
+        Iterator<Shot> iterator = attempts.iterator();
+        while (iterator.hasNext()) {
+            Shot pending = iterator.next();
+            if (!pending.shooter.getUniqueID().equals(playerId))
+                continue;
+            if (pending.firedAt <= shot.firedAt || !config.correctCooldown.get())
+                iterator.remove();
+            else
+                pending.correction = true;
+        }
+        publish(shot.estimate);
     }
 
     private void publish(Cooldown cooldown) {
@@ -296,7 +337,10 @@ public final class TelebowCooldownTracker
 
     @SubscribeEvent
     public void onTick(ClientTickEvent event) {
-        if (event.phase != Phase.END || cooldowns.isEmpty() && attempts.isEmpty())
+        if (event.phase != Phase.END)
+            return;
+        tick++;
+        if (cooldowns.isEmpty() && attempts.isEmpty())
             return;
         long now = System.nanoTime();
         PitSnapshot snapshot = pit.current();
@@ -310,8 +354,11 @@ public final class TelebowCooldownTracker
                         listener -> listener.onTelebowCooldownRemoved(entry.getKey()));
             }
         }
-        attempts.removeIf(shot -> shot.landedAt != 0 && now - shot.landedAt > TELEPORT_WINDOW_NANOS
-                || !refreshCooldown(shot.retry, snapshot));
+        long margin =
+                (config.predictionMargin.get() + config.teleportExtraMargin.get()) * 1_000_000L;
+        attempts.removeIf(shot -> shot.landedAt != 0
+                && (margin == 0 ? shot.landedTick != tick : now - shot.landedAt > margin)
+                || now >= shot.estimate.until || !refreshCooldown(shot.estimate, snapshot));
     }
 
     @Override
@@ -341,14 +388,20 @@ public final class TelebowCooldownTracker
     private static final class Shot {
         final EntityPlayer shooter;
         final long firedAt;
-        final Cooldown retry;
+        final Cooldown estimate;
+        boolean correction;
         long landedAt;
         long teleportedAt;
+        long landedTick;
+        long teleportedTick;
+        Vec3 landedPosition;
+        Vec3 teleportPosition;
 
-        Shot(EntityPlayer shooter, long firedAt, Cooldown retry) {
+        Shot(EntityPlayer shooter, long firedAt, Cooldown estimate, boolean correction) {
             this.shooter = shooter;
             this.firedAt = firedAt;
-            this.retry = retry;
+            this.estimate = estimate;
+            this.correction = correction;
         }
     }
 }

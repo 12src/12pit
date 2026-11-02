@@ -165,7 +165,6 @@ public abstract class NetHandlerPlayClientMixin implements PlayerEquipmentPacket
             target = "Lnet/minecraft/entity/player/EntityPlayer;setPositionAndRotation(DDDFF)V"))
     private void pit12$observeLocalTeleport(EntityPlayer player, double x, double y, double z,
             float yaw, float pitch) {
-        // The observer compares against the player's old position.
         if (pit12$arrowObserver != null) {
             pit12$arrowObserver.onShooterTeleport(player.getEntityId(), x, y, z);
         }
