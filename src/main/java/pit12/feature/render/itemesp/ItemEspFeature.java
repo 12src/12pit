@@ -40,15 +40,20 @@ import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import pit12.runtime.config.ConfigCatalog;
 import pit12.runtime.config.ConfigChangeListener;
 import pit12.runtime.config.ConfigChangeSet;
+import pit12.runtime.scoreboard.SidebarCache;
+import pit12.runtime.scoreboard.SidebarLine;
+import pit12.runtime.scoreboard.SidebarListener;
 import pit12.runtime.session.ClientSession;
 import pit12.shared.lifecycle.ClientLifecycle;
 import pit12.shared.rendering.TextureState;
 
-public final class ItemEspFeature implements ClientLifecycle, ConfigChangeListener {
+public final class ItemEspFeature
+        implements ClientLifecycle, ConfigChangeListener, SidebarListener {
     private final Minecraft minecraft = Minecraft.getMinecraft();
     private final ConfigCatalog configs;
     private final ItemEspConfig config;
     private final ClientSession session;
+    private final SidebarCache sidebar;
     private final ItemEspRenderer renderer;
     private final Runnable sessionChanged = this::onSessionChanged;
     private final Map<Integer, Target> candidates = new LinkedHashMap<>();
@@ -57,12 +62,14 @@ public final class ItemEspFeature implements ClientLifecycle, ConfigChangeListen
     private boolean targetsDirty;
     private boolean started;
     private boolean active;
+    private boolean goldContract;
 
     public ItemEspFeature(ConfigCatalog configs, ItemEspConfig config, ClientSession session,
-            TextureState textures) {
+            SidebarCache sidebar, TextureState textures) {
         this.configs = configs;
         this.config = config;
         this.session = session;
+        this.sidebar = sidebar;
         renderer = new ItemEspRenderer(config, textures);
     }
 
@@ -102,6 +109,14 @@ public final class ItemEspFeature implements ClientLifecycle, ConfigChangeListen
         active = true;
         try {
             session.addListener(sessionChanged);
+            sidebar.addListener(this);
+            goldContract = false;
+            for (SidebarLine line : sidebar.lines()) {
+                if (isIngotLine(line)) {
+                    goldContract = true;
+                    break;
+                }
+            }
             MinecraftForge.EVENT_BUS.register(this);
             onSessionChanged();
         } catch (RuntimeException failure) {
@@ -117,11 +132,29 @@ public final class ItemEspFeature implements ClientLifecycle, ConfigChangeListen
         active = false;
         MinecraftForge.EVENT_BUS.unregister(this);
         session.removeListener(sessionChanged);
+        sidebar.removeListener(this);
         world = null;
         candidates.clear();
         targets.clear();
         targetsDirty = false;
         renderer.clear();
+    }
+
+    @Override
+    public void onLineChanged(SidebarLine previous, SidebarLine current) {
+        boolean matches = isIngotLine(current);
+        if ((matches || isIngotLine(previous)) && goldContract != matches) {
+            goldContract = matches;
+            targetsDirty = true;
+        }
+    }
+
+    private boolean isIngotLine(SidebarLine line) {
+        if (line == null) {
+            return false;
+        }
+        String text = line.formattedText(minecraft.fontRendererObj);
+        return text.contains("Ingots") || text.contains("金锭");
     }
 
     private void onSessionChanged() {
@@ -202,7 +235,7 @@ public final class ItemEspFeature implements ClientLifecycle, ConfigChangeListen
         targets.clear();
         targetsDirty = false;
         boolean raffle = config.showRaffle();
-        boolean gold = config.showGold();
+        boolean gold = config.showGold() && (!config.ingotContractOnly() || goldContract);
         for (Target target : candidates.values()) {
             if ((raffle && target.item == Items.name_tag)
                     || (gold && target.item == Items.gold_ingot)) {
@@ -215,7 +248,8 @@ public final class ItemEspFeature implements ClientLifecycle, ConfigChangeListen
     public void onConfigChanged(ConfigChangeSet changes) {
         if (!started || !(changes.affects("itemesp", "enabled")
                 || changes.affects("itemesp", "show_raffle")
-                || changes.affects("itemesp", "show_gold"))) {
+                || changes.affects("itemesp", "show_gold")
+                || changes.affects("itemesp", "ingot_contract_only"))) {
             return;
         }
         updateActivation();

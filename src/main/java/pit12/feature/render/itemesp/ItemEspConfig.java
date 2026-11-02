@@ -28,13 +28,13 @@ import pit12.runtime.config.FeatureConfig;
 public final class ItemEspConfig extends FeatureConfig {
     private final BooleanSetting showRaffle;
     private final BooleanSetting showGold;
+    private final BooleanSetting ingotContractOnly;
     private final ColorSetting raffleColor;
     private final ColorSetting goldColor;
 
     public ItemEspConfig() {
         super("itemesp", source("Item ESP"), ConfigCategory.RENDER,
-                source("Shows dropped raffle tickets and gold ingots through blocks."), true,
-                false);
+                source("Shows dropped raffle tickets and gold ingots through blocks."));
         subsubcategory("raffle_tickets", source("Raffle tickets"));
         showRaffle = booleanSetting("show_raffle", source("Show raffle tickets"),
                 source("Marks dropped raffle tickets."), true);
@@ -43,6 +43,8 @@ public final class ItemEspConfig extends FeatureConfig {
         subsubcategory("gold_ingots", source("Gold ingots"));
         showGold = booleanSetting("show_gold", source("Show gold ingots"),
                 source("Marks dropped gold ingots."), true);
+        ingotContractOnly = booleanSetting("ingot_contract_only", source("Ingot contract only"),
+                source("Shows gold ingots only during a gold ingot contract."), true);
         goldColor = colorPickerSetting("gold_color", source("Gold ingot color"),
                 source("Color and opacity of dropped gold ingot boxes."), 0x80FFD700);
     }
@@ -57,6 +59,10 @@ public final class ItemEspConfig extends FeatureConfig {
 
     public boolean showGold() {
         return showGold.get();
+    }
+
+    public boolean ingotContractOnly() {
+        return ingotContractOnly.get();
     }
 
     public int raffleColor() {

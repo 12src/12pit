@@ -226,7 +226,7 @@ public final class ClientBootstrap {
         registerEventList(configs, hudRegistry, commands);
         registerFreeCamera(minecraft, configs, input, (FreeCameraBinding) minecraft);
         registerGamma(configs, (GammaBinding) minecraft.entityRenderer);
-        registerItemEsp(configs, session, textureStates.get());
+        registerItemEsp(configs, session, sidebar, textureStates.get());
         registerNametag(minecraft, configs, session, playerEquipment, denickNames, nicks, timers,
                 textureStates.get());
         registerPlayerEsp(configs, session, presence, relations, textureStates.get());
@@ -403,11 +403,11 @@ public final class ClientBootstrap {
         components.add(new GammaFeature(configs, config, binding));
     }
 
-    private void registerItemEsp(ConfigCatalog configs, ClientSession session,
+    private void registerItemEsp(ConfigCatalog configs, ClientSession session, SidebarCache sidebar,
             TextureState textures) {
         ItemEspConfig config = new ItemEspConfig();
         configs.register(config);
-        components.add(new ItemEspFeature(configs, config, session, textures));
+        components.add(new ItemEspFeature(configs, config, session, sidebar, textures));
     }
 
     private void registerNametag(Minecraft minecraft, ConfigCatalog configs, ClientSession session,
