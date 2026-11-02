@@ -26,7 +26,28 @@ val oneConfigVersion = providers.gradleProperty("oneConfigVersion").get()
 val ktfmtVersion = providers.gradleProperty("ktfmtVersion").get()
 val licenseHeaderPath = providers.gradleProperty("licenseHeaderPath").get()
 val eclipseFormatterConfigPath = providers.gradleProperty("eclipseFormatterConfigPath").get()
-val mixinConfigNames = file("src/main/resources/mixins.$modId.list").readLines()
+val mainJavaDirectory = file("src/main/java")
+// ArchitectureTest checks that these packages contain only Mixins.
+val mixinConfigurations =
+    fileTree(mainJavaDirectory) {
+            val basePath = modGroup.replace('.', '/')
+            include("$basePath/platform/mixin/**/*.java", "$basePath/feature/*/*/mixin/**/*.java")
+        }
+        .files
+        .map { it.relativeTo(mainJavaDirectory).invariantSeparatorsPath.removeSuffix(".java").replace('/', '.') }
+        .sortedWith(compareBy<String> { it.startsWith("$modGroup.feature.") }.thenBy { it })
+        .groupBy { it.substringBefore(".mixin.") + ".mixin" }
+        .map { (mixinPackage, mixins) ->
+            val configName =
+                if (mixinPackage == "$modGroup.platform.mixin") "mixins.$modId.json"
+                else "mixins.$modId.${mixinPackage.removePrefix("$modGroup.feature.").removeSuffix(".mixin")}.json"
+            configName to
+                mapOf(
+                    "mixinPackage" to mixinPackage,
+                    "mixinClasses" to mixins.joinToString(",\n") { "    \"${it.removePrefix("$mixinPackage.")}\"" },
+                )
+        }
+        .toMap()
 
 group = modGroup
 
@@ -51,7 +72,7 @@ loom {
     forge {
         pack200Provider.set(Pack200Adapter())
         accessTransformer("src/main/resources/META-INF/${modId}_at.cfg")
-        mixinConfigNames.forEach { mixinConfig(it) }
+        mixinConfigurations.keys.forEach { mixinConfig(it) }
     }
 
     mixin {
@@ -66,7 +87,7 @@ val buildConfigProperties =
         "modId" to modId,
         "modName" to modName,
         "modVersion" to modVersion,
-        "releaseBuild" to providers.gradleProperty("releaseBuild").getOrElse("false").toBoolean(),
+        "releaseBuild" to providers.gradleProperty("release").isPresent,
     )
 val generatedBuildConfigDirectory = layout.buildDirectory.dir("generated/sources/buildConfig/java/main")
 val generateBuildConfig =
@@ -82,8 +103,25 @@ val generateBuildConfig =
         into(generatedBuildConfigDirectory)
     }
 
+val generateMixinConfigs =
+    tasks.register<Sync>("generateMixinConfigs") {
+        val properties = mapOf("modId" to modId, "basePackage" to modGroup)
+        inputs.properties(properties)
+        inputs.property("mixinConfigurations", mixinConfigurations)
+        filteringCharset = "UTF-8"
+
+        mixinConfigurations.forEach { (configName, configuration) ->
+            from("src/main/templates/mixins.json.template") {
+                expand(properties + configuration)
+                rename { configName }
+            }
+        }
+        into(layout.buildDirectory.dir("generated/mixinConfigs"))
+    }
+
 sourceSets.main {
     java.srcDir(generatedBuildConfigDirectory)
+    resources.srcDir(generateMixinConfigs)
     output.setResourcesDir(sourceSets.main.flatMap { it.java.classesDirectory })
 }
 
@@ -189,7 +227,7 @@ tasks.withType<Jar> {
         this["FMLCorePluginContainsFMLMod"] = "true"
         this["ForceLoadAsMod"] = "true"
         this["TweakClass"] = "org.spongepowered.asm.launch.MixinTweaker"
-        this["MixinConfigs"] = mixinConfigNames.joinToString(",")
+        this["MixinConfigs"] = mixinConfigurations.keys.joinToString(",")
         this["FMLAT"] = "${modId}_at.cfg"
     }
 }
@@ -239,13 +277,12 @@ tasks.processResources {
             "mcversion" to minecraftVersion,
             "modId" to modId,
             "modName" to modName,
-            "basePackage" to modGroup,
         )
 
     inputs.properties(properties)
     filteringCharset = "UTF-8"
 
-    filesMatching(listOf("mcmod.info") + mixinConfigNames) { expand(properties) }
+    filesMatching("mcmod.info") { expand(properties) }
 }
 
 val remapJar =

@@ -26,8 +26,6 @@ Features define their commands and actions. `runtime.command` handles routing, h
 
 The packages directly under `runtime`, `shared`, and `platform` are modules. Each package at `feature.<category>.<feature>` is a feature module. Modules within each layer have no circular dependencies. Shared Mixins are in `platform.mixin`. Feature-specific Mixins are in `feature.<category>.<feature>.mixin`, respecting the feature boundary.
 
-Each Mixin package has its own configuration. `src/main/resources/mixins.pit12.list` sets the configuration order for development, packaged builds, and architecture checks. The configurations share one refmap and plugin.
-
 ## State and resources
 
 Each piece of mutable state belongs to a single owner. Each component properly cleans up the workers, subscriptions and rendering resources created by itself.
@@ -36,4 +34,4 @@ Each feature has its own settings. `ConfigCatalog` keeps track of all the live c
 
 ## Architecture checks
 
-[ArchitectureTest](../src/test/java/pit12/architecture/ArchitectureTest.java) ensures the proper package boundaries, dependency direction, module cycles, lifecycle ownership, and proper Mixin registration. [BootstrapLayoutTest](../src/test/java/pit12/architecture/BootstrapLayoutTest.java) ensures correct order of component registration and section grouping in `ClientBootstrap`.
+[ArchitectureTest](../src/test/java/pit12/architecture/ArchitectureTest.java) ensures the proper package boundaries, dependency direction, module cycles, lifecycle ownership, and Mixin package rules. [BootstrapLayoutTest](../src/test/java/pit12/architecture/BootstrapLayoutTest.java) ensures correct order of component registration and section grouping in `ClientBootstrap`.
