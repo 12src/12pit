@@ -24,6 +24,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.projectile.EntityArrow;
 import net.minecraft.item.ItemStack;
@@ -54,6 +55,7 @@ import pit12.shared.lifecycle.ClientLifecycle;
 
 public final class TelebowCooldownTracker
         implements ClientLifecycle, ConfigChangeListener, ArrowListener, TelebowCooldowns {
+    private final Minecraft minecraft;
     private final ConfigCatalog configs;
     private final TelebowConfig config;
     private final ClientSession session;
@@ -68,8 +70,10 @@ public final class TelebowCooldownTracker
     private boolean started;
     private boolean active;
 
-    TelebowCooldownTracker(ConfigCatalog configs, TelebowConfig config, ClientSession session,
-            ArrowTracker arrows, PlayerEntityTracker players, PitContext pit) {
+    TelebowCooldownTracker(Minecraft minecraft, ConfigCatalog configs, TelebowConfig config,
+            ClientSession session, ArrowTracker arrows, PlayerEntityTracker players,
+            PitContext pit) {
+        this.minecraft = minecraft;
         this.configs = configs;
         this.config = config;
         this.session = session;
@@ -159,7 +163,7 @@ public final class TelebowCooldownTracker
             cooldown = null;
         }
         boolean attempt = sneaking || lastSneakingNanos != 0
-                && now - lastSneakingNanos <= config.predictionMargin.get() * 1_000_000L;
+                && now - lastSneakingNanos <= hitWindowNanos(shooter == minecraft.thePlayer);
         if (cooldown == null && !attempt) {
             boolean pending = false;
             for (Shot shot : attempts) {
@@ -193,8 +197,8 @@ public final class TelebowCooldownTracker
     }
 
     @Override
-    public long hitWindowNanos() {
-        return config.predictionMargin.get() * 1_000_000L;
+    public long hitWindowNanos(boolean local) {
+        return config.predictionMargin.get() * (local ? 2_000_000L : 1_000_000L);
     }
 
     @Override
@@ -279,9 +283,13 @@ public final class TelebowCooldownTracker
             confirm(latest);
     }
 
+    private long teleportWindowNanos(Shot shot) {
+        return hitWindowNanos(shot.shooter == minecraft.thePlayer)
+                + config.teleportExtraMargin.get() * 1_000_000L;
+    }
+
     private boolean matchesTeleport(Shot shot) {
-        long margin =
-                (config.predictionMargin.get() + config.teleportExtraMargin.get()) * 1_000_000L;
+        long margin = teleportWindowNanos(shot);
         // Teleport and arrow removal packets may arrive in either order.
         return shot.landedAt != 0 && shot.teleportedAt != 0
                 && (margin == 0 ? shot.landedTick == shot.teleportedTick
@@ -354,11 +362,12 @@ public final class TelebowCooldownTracker
                         listener -> listener.onTelebowCooldownRemoved(entry.getKey()));
             }
         }
-        long margin =
-                (config.predictionMargin.get() + config.teleportExtraMargin.get()) * 1_000_000L;
-        attempts.removeIf(shot -> shot.landedAt != 0
-                && (margin == 0 ? shot.landedTick != tick : now - shot.landedAt > margin)
-                || now >= shot.estimate.until || !refreshCooldown(shot.estimate, snapshot));
+        attempts.removeIf(shot -> {
+            long margin = teleportWindowNanos(shot);
+            return shot.landedAt != 0
+                    && (margin == 0 ? shot.landedTick != tick : now - shot.landedAt > margin)
+                    || now >= shot.estimate.until || !refreshCooldown(shot.estimate, snapshot);
+        });
     }
 
     @Override

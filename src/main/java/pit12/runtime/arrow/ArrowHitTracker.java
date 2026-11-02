@@ -49,9 +49,10 @@ final class ArrowHitTracker {
     }
 
     private long window() {
+        // Collect with the longer window, then match each arrow with its shooter's window.
         long window = 0;
         for (ArrowListener listener : listeners)
-            window = Math.max(window, listener.hitWindowNanos());
+            window = Math.max(window, listener.hitWindowNanos(true));
         return window;
     }
 
@@ -90,7 +91,7 @@ final class ArrowHitTracker {
             return;
         Hit hit = new Hit(player, System.nanoTime(), player == minecraft.thePlayer, batch);
         for (ArrowListener listener : listeners) {
-            if (listener.hitWindowNanos() >= 0)
+            if (listener.hitWindowNanos(true) >= 0)
                 hit.pending.add(listener);
         }
         long window = window();
@@ -226,12 +227,12 @@ final class ArrowHitTracker {
         // Resolve the whole batch before any listener consumes its candidates.
         for (Hit hit : hits) {
             for (ArrowListener listener : hit.pending) {
-                long window = listener.hitWindowNanos();
+                long window = listener.hitWindowNanos(true);
                 if (now - hit.at < window)
                     continue;
                 List<Shot> candidates = new ArrayList<>();
                 for (Shot shot : hit.candidates.keySet()) {
-                    if (matches(shot, hit, listener, window))
+                    if (matches(shot, hit, listener))
                         candidates.add(shot);
                 }
                 boolean ambiguous = false;
@@ -240,7 +241,7 @@ final class ArrowHitTracker {
                         ownersByListener = new HashMap<>();
                     Map<Shot, Hit> owners = ownersByListener.get(listener);
                     if (owners == null) {
-                        owners = matchOwners(listener, window);
+                        owners = matchOwners(listener);
                         ownersByListener.put(listener, owners);
                     }
                     for (Shot shot : candidates) {
@@ -277,12 +278,12 @@ final class ArrowHitTracker {
         batch++;
     }
 
-    private Map<Shot, Hit> matchOwners(ArrowListener listener, long window) {
+    private Map<Shot, Hit> matchOwners(ArrowListener listener) {
         // Null marks arrows shared by multiple hits, including hits still waiting.
         Map<Shot, Hit> owners = new HashMap<>();
         for (Hit hit : hits) {
             for (Shot shot : hit.candidates.keySet()) {
-                if (!matches(shot, hit, listener, window))
+                if (!matches(shot, hit, listener))
                     continue;
                 if (owners.containsKey(shot))
                     owners.put(shot, null);
@@ -293,7 +294,8 @@ final class ArrowHitTracker {
         return owners;
     }
 
-    private boolean matches(Shot shot, Hit hit, ArrowListener listener, long window) {
+    private boolean matches(Shot shot, Hit hit, ArrowListener listener) {
+        long window = listener.hitWindowNanos(shot.arrow.shootingEntity == minecraft.thePlayer);
         Evidence evidence = hit.candidates.get(shot);
         return evidence != null && (evidence.age <= window || window == 0 && evidence.sameBatch)
                 && !shot.usedBy.contains(listener) && shot.removedAt != 0
@@ -302,7 +304,7 @@ final class ArrowHitTracker {
 
     private void finished(int entityId) {
         for (ArrowListener listener : listeners) {
-            if (listener.hitWindowNanos() >= 0)
+            if (listener.hitWindowNanos(true) >= 0)
                 listener.onArrowFinished(entityId);
         }
     }

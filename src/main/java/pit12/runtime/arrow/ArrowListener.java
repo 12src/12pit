@@ -30,8 +30,8 @@ public interface ArrowListener {
     boolean onArrowSpawn(EntityArrow arrow, EntityPlayer shooter, ItemStack bow, boolean sneaking,
             long lastSneakingNanos);
 
-    /** Negative disables hit matching. Zero only matches events within the same client tick. */
-    default long hitWindowNanos() {
+    /** local refers to the shooter. Negative disables matching. Zero matches within one client tick. */
+    default long hitWindowNanos(boolean local) {
         return -1;
     }
 

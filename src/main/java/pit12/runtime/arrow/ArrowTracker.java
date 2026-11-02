@@ -118,7 +118,7 @@ public final class ArrowTracker implements ClientLifecycle, ArrowPacketObserver,
         boolean enabled = false;
         if (started) {
             for (ArrowListener listener : listeners) {
-                if (listener.hitWindowNanos() >= 0) {
+                if (listener.hitWindowNanos(true) >= 0) {
                     enabled = true;
                     break;
                 }
