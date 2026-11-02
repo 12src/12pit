@@ -47,7 +47,7 @@ final class BindingBook implements SwapBindings {
     private final BindingStore store;
     private final LinkedHashMap<ItemIdentity, SwapBinding> bindings = new LinkedHashMap<>();
     private final Set<Integer> keys = new HashSet<>();
-    private final List<Runnable> listeners = new ArrayList<>();
+    private final Listeners<Runnable> listeners = new Listeners<>();
     private final Consumer<String> report;
     private ExecutorService worker;
     private boolean loading = true;
@@ -203,7 +203,7 @@ final class BindingBook implements SwapBindings {
         for (SwapBinding binding : bindings.values())
             keys.add(binding.key);
         revision++;
-        Listeners.notify(listeners, Runnable::run);
+        listeners.notify(Runnable::run);
     }
 
     @Override
@@ -270,8 +270,7 @@ final class BindingBook implements SwapBindings {
     @Override
     public void addChangeListener(Runnable listener) {
         client.check();
-        if (!listeners.contains(listener))
-            listeners.add(listener);
+        listeners.add(listener);
     }
 
     @Override

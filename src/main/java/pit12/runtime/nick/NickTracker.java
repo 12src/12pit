@@ -18,10 +18,8 @@
  */
 package pit12.runtime.nick;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -42,7 +40,7 @@ public final class NickTracker implements ClientLifecycle, TabPresenceListener {
     private final PlayerNameCache names;
     private final Set<UUID> checked = new HashSet<>();
     private final Map<UUID, String> nicked = new HashMap<>();
-    private final List<NickListener> listeners = new ArrayList<>();
+    private final Listeners<NickListener> listeners = new Listeners<>();
     private boolean started;
 
     public NickTracker(ClientThread client, TabPresence presence, PlayerNameCache names) {
@@ -82,9 +80,7 @@ public final class NickTracker implements ClientLifecycle, TabPresenceListener {
 
     public void addListener(NickListener listener) {
         client.check();
-        if (!listeners.contains(listener)) {
-            listeners.add(listener);
-        }
+        listeners.add(listener);
     }
 
     public void removeListener(NickListener listener) {
@@ -108,11 +104,10 @@ public final class NickTracker implements ClientLifecycle, TabPresenceListener {
                 // Stay in checked, or a repeated ADD packet marks this NPC as Nick again.
                 nicked.remove(playerId);
                 names.bindDisplayNameObserver(playerId, null);
-                Listeners.notify(listeners,
-                        listener -> listener.onNickChanged(playerId, name, false));
+                listeners.notify(listener -> listener.onNickChanged(playerId, name, false));
             }
         });
-        Listeners.notify(listeners, listener -> listener.onNickChanged(playerId, name, true));
+        listeners.notify(listener -> listener.onNickChanged(playerId, name, true));
     }
 
     @Override
@@ -121,7 +116,7 @@ public final class NickTracker implements ClientLifecycle, TabPresenceListener {
         String name = nicked.remove(playerId);
         if (name != null) {
             names.bindDisplayNameObserver(playerId, null);
-            Listeners.notify(listeners, listener -> listener.onNickChanged(playerId, name, false));
+            listeners.notify(listener -> listener.onNickChanged(playerId, name, false));
         }
     }
 

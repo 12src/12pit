@@ -62,7 +62,7 @@ public final class TelebowCooldownTracker
     private final ArrowTracker arrows;
     private final PlayerEntityTracker players;
     private final PitContext pit;
-    private final List<TelebowCooldownListener> listeners = new ArrayList<>();
+    private final Listeners<TelebowCooldownListener> listeners = new Listeners<>();
     private final Map<UUID, Cooldown> cooldowns = new HashMap<>();
     private final Map<Integer, Shot> shots = new HashMap<>();
     private final List<Shot> attempts = new ArrayList<>();
@@ -127,9 +127,8 @@ public final class TelebowCooldownTracker
     @Override
     public void addListener(TelebowCooldownListener listener) {
         session.checkThread();
-        if (listeners.contains(listener))
+        if (!listeners.add(listener))
             return;
-        listeners.add(listener);
         long now = System.nanoTime();
         PitSnapshot snapshot = pit.current();
         for (Cooldown cooldown : cooldowns.values()) {
@@ -159,7 +158,7 @@ public final class TelebowCooldownTracker
         PitSnapshot snapshot = pit.current();
         if (cooldown != null && (now >= cooldown.until || !refreshCooldown(cooldown, snapshot))) {
             cooldowns.remove(shooterId);
-            Listeners.notify(listeners, listener -> listener.onTelebowCooldownRemoved(shooterId));
+            listeners.notify(listener -> listener.onTelebowCooldownRemoved(shooterId));
             cooldown = null;
         }
         boolean attempt = sneaking || lastSneakingNanos != 0
@@ -321,8 +320,7 @@ public final class TelebowCooldownTracker
     }
 
     private void publish(Cooldown cooldown) {
-        Listeners.notify(listeners,
-                listener -> listener.onTelebowCooldown(cooldown.player, cooldown.until));
+        listeners.notify(listener -> listener.onTelebowCooldown(cooldown.player, cooldown.until));
     }
 
     private boolean refreshCooldown(Cooldown cooldown, PitSnapshot pit) {
@@ -358,8 +356,7 @@ public final class TelebowCooldownTracker
             Cooldown cooldown = entry.getValue();
             if (now >= cooldown.until || !refreshCooldown(cooldown, snapshot)) {
                 iterator.remove();
-                Listeners.notify(listeners,
-                        listener -> listener.onTelebowCooldownRemoved(entry.getKey()));
+                listeners.notify(listener -> listener.onTelebowCooldownRemoved(entry.getKey()));
             }
         }
         attempts.removeIf(shot -> {
@@ -375,7 +372,7 @@ public final class TelebowCooldownTracker
         shots.clear();
         attempts.clear();
         cooldowns.clear();
-        Listeners.notify(listeners, TelebowCooldownListener::onTelebowCooldownsReset);
+        listeners.notify(TelebowCooldownListener::onTelebowCooldownsReset);
     }
 
     private static final class Cooldown {

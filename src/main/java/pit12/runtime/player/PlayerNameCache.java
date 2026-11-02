@@ -18,10 +18,8 @@
  */
 package pit12.runtime.player;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -52,7 +50,7 @@ public final class PlayerNameCache
     private final Map<UUID, NameEntry> entries = new HashMap<>();
     private final Map<String, UUID> byName = new HashMap<>();
     private final Set<UUID> dirty = new LinkedHashSet<>();
-    private final List<Runnable> listeners = new ArrayList<>();
+    private final Listeners<Runnable> listeners = new Listeners<>();
     private NetHandlerPlayClient connection;
     private Scoreboard scoreboard;
     private boolean started;
@@ -117,9 +115,7 @@ public final class PlayerNameCache
 
     public void addListener(Runnable listener) {
         session.checkThread();
-        if (!listeners.contains(listener)) {
-            listeners.add(listener);
-        }
+        listeners.add(listener);
     }
 
     public void removeListener(Runnable listener) {
@@ -156,7 +152,7 @@ public final class PlayerNameCache
         if (entry != null) {
             ((PlayerNameBinding) entry.info).bindPlayerNameObserver(null);
             byName.remove(entry.info.getGameProfile().getName(), playerId);
-            Listeners.notify(listeners, Runnable::run);
+            listeners.notify(Runnable::run);
         }
     }
 
@@ -208,7 +204,7 @@ public final class PlayerNameCache
                     observe(info);
                 }
             }
-            Listeners.notify(listeners, Runnable::run);
+            listeners.notify(Runnable::run);
         }
         WorldClient world = session.world();
         Scoreboard current = world == null ? null : world.getScoreboard();
@@ -286,7 +282,7 @@ public final class PlayerNameCache
             if (entry.displayNameObserver != null) {
                 entry.displayNameObserver.accept(name);
             }
-            Listeners.notify(listeners, Runnable::run);
+            listeners.notify(Runnable::run);
         }
     }
 

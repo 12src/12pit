@@ -41,7 +41,7 @@ public final class PlayerEquipmentTracker implements ClientLifecycle, PlayerEqui
     private final PlayerEntityTracker players;
     private final Runnable sessionChanged;
     private final PlayerEquipmentCache cache = new PlayerEquipmentCache();
-    private final List<PlayerEquipmentListener> listeners = new ArrayList<>();
+    private final Listeners<PlayerEquipmentListener> listeners = new Listeners<>();
     private NetHandlerPlayClient boundNetHandler;
     private boolean started;
 
@@ -89,9 +89,7 @@ public final class PlayerEquipmentTracker implements ClientLifecycle, PlayerEqui
     @Override
     public void addListener(PlayerEquipmentListener listener) {
         session.checkThread();
-        if (!listeners.contains(listener)) {
-            listeners.add(listener);
-        }
+        listeners.add(listener);
     }
 
     @Override
@@ -118,8 +116,7 @@ public final class PlayerEquipmentTracker implements ClientLifecycle, PlayerEqui
             cache.markDirty(playerId, slots);
             ItemStack stack = equipmentSlot == 0 ? player.getHeldItem()
                     : player.getCurrentArmor(equipmentSlot - 1);
-            Listeners.notify(listeners,
-                    listener -> listener.onPlayerEquipmentReceived(playerId, stack));
+            listeners.notify(listener -> listener.onPlayerEquipmentReceived(playerId, stack));
         }
     }
 
@@ -208,15 +205,15 @@ public final class PlayerEquipmentTracker implements ClientLifecycle, PlayerEqui
         boolean hadEquipment = !cache.isEmpty();
         cache.clear();
         if (hadEquipment)
-            Listeners.notify(listeners, PlayerEquipmentListener::onPlayerEquipmentReset);
+            listeners.notify(PlayerEquipmentListener::onPlayerEquipmentReset);
     }
 
     private void notifyChanged(PlayerEquipmentSnapshot snapshot, int changedSlots) {
-        Listeners.notify(listeners, listener -> listener
-                .onPlayerEquipmentChanged(snapshot.playerId(), changedSlots, snapshot.revision()));
+        listeners.notify(listener -> listener.onPlayerEquipmentChanged(snapshot.playerId(),
+                changedSlots, snapshot.revision()));
     }
 
     private void notifyRemoved(UUID playerId) {
-        Listeners.notify(listeners, listener -> listener.onPlayerEquipmentRemoved(playerId));
+        listeners.notify(listener -> listener.onPlayerEquipmentRemoved(playerId));
     }
 }

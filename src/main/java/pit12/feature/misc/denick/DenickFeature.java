@@ -95,7 +95,7 @@ public final class DenickFeature implements ClientLifecycle, DenickNames, TabPre
     private final DenickStore store;
     private final Map<UUID, Target> targets = new LinkedHashMap<>();
     private final Map<String, String> mappings = new LinkedHashMap<>();
-    private final List<Runnable> listeners = new ArrayList<>();
+    private final Listeners<Runnable> listeners = new Listeners<>();
     private final Runnable sessionChanged = this::resetWorld;
     private ExecutorService queryWorker;
     private ExecutorService storageWorker;
@@ -639,9 +639,7 @@ public final class DenickFeature implements ClientLifecycle, DenickNames, TabPre
     @Override
     public void addListener(Runnable listener) {
         client.check();
-        if (!listeners.contains(listener)) {
-            listeners.add(listener);
-        }
+        listeners.add(listener);
     }
 
     @Override
@@ -651,7 +649,7 @@ public final class DenickFeature implements ClientLifecycle, DenickNames, TabPre
     }
 
     private void changed() {
-        Listeners.notify(listeners, Runnable::run);
+        listeners.notify(Runnable::run);
     }
 
     private static final class Search {

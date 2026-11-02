@@ -49,7 +49,7 @@ public final class SidebarCache implements ClientLifecycle {
             new TreeSet<>(Comparator.comparingInt((Row row) -> row.line.score()).reversed()
                     .thenComparing(row -> row.line.entry(), String.CASE_INSENSITIVE_ORDER)
                     .thenComparing(row -> row.line.entry()));
-    private final List<SidebarListener> listeners = new ArrayList<>();
+    private final Listeners<SidebarListener> listeners = new Listeners<>();
     private List<SidebarLine> lines = Collections.emptyList();
     private NetHandlerPlayClient boundHandler;
     private Scoreboard scoreboard;
@@ -94,9 +94,7 @@ public final class SidebarCache implements ClientLifecycle {
 
     public void addListener(SidebarListener listener) {
         session.checkThread();
-        if (!listeners.contains(listener)) {
-            listeners.add(listener);
-        }
+        listeners.add(listener);
     }
 
     public void removeListener(SidebarListener listener) {
@@ -268,7 +266,7 @@ public final class SidebarCache implements ClientLifecycle {
         }
         lines = Collections.unmodifiableList(current);
         if (!listeners.isEmpty()) {
-            Listeners.notify(listeners, listener -> {
+            listeners.notify(listener -> {
                 for (SidebarLine before : previous) {
                     SidebarLine after = findLine(current, before.entry());
                     if (!sameLine(before, after)) {

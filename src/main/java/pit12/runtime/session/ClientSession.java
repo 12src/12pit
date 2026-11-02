@@ -18,8 +18,6 @@
  */
 package pit12.runtime.session;
 
-import java.util.ArrayList;
-import java.util.List;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.network.NetHandlerPlayClient;
@@ -39,7 +37,7 @@ public final class ClientSession implements ClientLifecycle {
     private final ClientThread client;
     private final ClientSessionBinding binding;
     private final SessionState<NetHandlerPlayClient, WorldClient> state = new SessionState<>();
-    private final List<Runnable> listeners = new ArrayList<>();
+    private final Listeners<Runnable> listeners = new Listeners<>();
     private long lastTickRevision;
     private long notifiedRevision;
     private boolean started;
@@ -72,8 +70,7 @@ public final class ClientSession implements ClientLifecycle {
 
     public void addListener(Runnable listener) {
         client.check();
-        if (!listeners.contains(listener))
-            listeners.add(listener);
+        listeners.add(listener);
     }
 
     public void removeListener(Runnable listener) {
@@ -109,7 +106,7 @@ public final class ClientSession implements ClientLifecycle {
         state.clear();
         if (notifiedRevision != state.revision()) {
             notifiedRevision = state.revision();
-            Listeners.notify(listeners, Runnable::run);
+            listeners.notify(Runnable::run);
         }
         listeners.clear();
     }
@@ -134,7 +131,7 @@ public final class ClientSession implements ClientLifecycle {
         }
         if (notifiedRevision != revision) {
             notifiedRevision = revision;
-            Listeners.notify(listeners, Runnable::run);
+            listeners.notify(Runnable::run);
         }
     }
 
