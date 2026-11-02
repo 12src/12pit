@@ -20,6 +20,11 @@ package pit12.feature.render.nametag;
 
 import java.util.Objects;
 import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.scoreboard.ScoreObjective;
+import net.minecraft.scoreboard.ScorePlayerTeam;
+import net.minecraft.scoreboard.Scoreboard;
+import net.minecraft.scoreboard.Team;
 import pit12.shared.rendering.FontWidths;
 
 final class NametagText {
@@ -34,6 +39,19 @@ final class NametagText {
     float x;
     float y;
     float scale;
+    private String displayName;
+    private String teamPrefix;
+    private String teamSuffix;
+    private String baseName;
+    private String nameSuffix;
+    private boolean dynamicName;
+    private boolean nicked;
+    private String realName;
+    private String health;
+    private String countdowns;
+    private String suffix = "";
+    private int scorePoints;
+    private String scoreTitle;
 
     NametagText(String heldItem, String leggings, FontRenderer font) {
         updateEnchantments(heldItem, leggings, font);
@@ -50,16 +68,67 @@ final class NametagText {
         }
     }
 
-    void updateName(String name, String score, FontRenderer font) {
-        if (!name.equals(this.name)) {
-            this.name = name;
+    String updateSuffix(boolean nicked, String realName, String health, String countdowns) {
+        if (this.nicked == nicked && Objects.equals(this.realName, realName)
+                && Objects.equals(this.health, health)
+                && Objects.equals(this.countdowns, countdowns))
+            return suffix;
+        this.nicked = nicked;
+        this.realName = realName;
+        this.health = health;
+        this.countdowns = countdowns;
+        StringBuilder text = new StringBuilder();
+        if (nicked)
+            text.append(" §e§lN");
+        if (realName != null)
+            text.append(" §7(").append(realName).append("§7)");
+        if (health != null)
+            text.append(" §c").append(health);
+        suffix = text.append(countdowns).toString();
+        return suffix;
+    }
+
+    void updateName(EntityPlayer player, String suffix, FontRenderer font) {
+        String displayName = player.getDisplayNameString();
+        Team team = player.getTeam();
+        String prefix =
+                team instanceof ScorePlayerTeam ? ((ScorePlayerTeam) team).getColorPrefix() : null;
+        String suffixText =
+                team instanceof ScorePlayerTeam ? ((ScorePlayerTeam) team).getColorSuffix() : null;
+        boolean dynamicName = !player.getPrefixes().isEmpty() || !player.getSuffixes().isEmpty()
+                || team != null && team.getClass() != ScorePlayerTeam.class;
+        String baseName = this.baseName;
+        // Extra Forge components and custom teams can change their formatting in place.
+        if (baseName == null || !Objects.equals(this.displayName, displayName)
+                || !Objects.equals(teamPrefix, prefix) || !Objects.equals(teamSuffix, suffixText)
+                || this.dynamicName || dynamicName) {
+            baseName = player.getDisplayName().getFormattedText();
+            this.displayName = displayName;
+            teamPrefix = prefix;
+            teamSuffix = suffixText;
+        }
+        this.dynamicName = dynamicName;
+        if (!Objects.equals(this.baseName, baseName) || !Objects.equals(nameSuffix, suffix)) {
+            this.baseName = baseName;
+            nameSuffix = suffix;
+            name = suffix.isEmpty() ? baseName : baseName + suffix;
             nameWidth = FontWidths.measure(font, name);
         }
-        if (score == null) {
-            this.score = null;
+    }
+
+    void updateScore(EntityPlayer player, Scoreboard scoreboard, ScoreObjective objective,
+            FontRenderer font) {
+        if (objective == null) {
+            score = null;
             scoreWidth = 0;
-        } else if (!score.equals(this.score)) {
-            this.score = score;
+            return;
+        }
+        int points = scoreboard.getValueFromObjective(player.getName(), objective).getScorePoints();
+        String title = objective.getDisplayName();
+        if (score == null || scorePoints != points || !Objects.equals(scoreTitle, title)) {
+            scorePoints = points;
+            scoreTitle = title;
+            score = points + " " + title;
             scoreWidth = FontWidths.measure(font, score);
         }
     }

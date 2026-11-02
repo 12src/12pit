@@ -69,6 +69,7 @@ public final class NametagFeature
     private boolean started;
     private boolean active;
     private boolean enhancedVisibility;
+    private boolean namesEnabled;
     private int timerTypes;
 
     public NametagFeature(Minecraft minecraft, ConfigCatalog configs, NametagConfig config,
@@ -113,7 +114,10 @@ public final class NametagFeature
         boolean enabled = started && config.enabled();
         enhancedVisibility = enabled && config.enhancedVisibility();
         timerTypes = enabled ? config.timerTypes() : 0;
-        if (enabled && (enhancedVisibility || config.showHeldItem() || config.showLeggings())) {
+        namesEnabled = enabled && (config.nickMarker() || config.realNames() || config.showHealth()
+                || timerTypes != 0);
+        if (enabled && (enhancedVisibility || namesEnabled || config.showHeldItem()
+                || config.showLeggings())) {
             if (!active) {
                 active = true;
                 try {
@@ -129,9 +133,7 @@ public final class NametagFeature
         } else {
             deactivate();
         }
-        binding.pit12$bindNametagNames(enabled && (config.nickMarker() || config.realNames()
-                || config.showHealth() || timerTypes != 0) ? this::nameSuffix : null,
-                enhancedVisibility);
+        binding.pit12$bindNametagNames(namesEnabled ? this::nameSuffix : null, enhancedVisibility);
     }
 
     private void deactivate() {
@@ -160,7 +162,7 @@ public final class NametagFeature
 
     private void updateText(UUID playerId, int changedSlots) {
         PlayerEquipmentSnapshot snapshot = equipment.loadedEquipment(playerId);
-        if (snapshot == null && !enhancedVisibility) {
+        if (snapshot == null && !enhancedVisibility && !namesEnabled) {
             texts.remove(playerId);
             return;
         }
@@ -181,7 +183,7 @@ public final class NametagFeature
                                     config.enchantmentFormat(), config.showGem())
                             : null;
         }
-        if (heldItem == null && leggings == null && !enhancedVisibility) {
+        if (heldItem == null && leggings == null && !enhancedVisibility && !namesEnabled) {
             texts.remove(playerId);
         } else if (text == null) {
             texts.put(playerId, new NametagText(heldItem, leggings, minecraft.fontRendererObj));
@@ -257,17 +259,15 @@ public final class NametagFeature
     private String nameSuffix(EntityPlayer player) {
         session.checkThread();
         UUID playerId = player.getUniqueID();
-        String suffix = config.nickMarker() && nicks.isNicked(playerId) ? " §e§lN" : "";
-        if (config.realNames()) {
-            String realName = denickNames.realDisplayName(playerId);
-            if (realName != null) {
-                suffix += " §7(" + realName + "§7)";
-            }
+        NametagText text = texts.get(playerId);
+        if (text == null) {
+            text = new NametagText(null, null, minecraft.fontRendererObj);
+            texts.put(playerId, text);
         }
-        if (config.showHealth()) {
-            suffix += " §c" + PlayerHealth.of(player).text();
-        }
-        return timerTypes == 0 ? suffix : suffix + timers.countdowns(playerId, timerTypes);
+        return text.updateSuffix(config.nickMarker() && nicks.isNicked(playerId),
+                config.realNames() ? denickNames.realDisplayName(playerId) : null,
+                config.showHealth() ? PlayerHealth.of(player).text() : null,
+                timerTypes == 0 ? "" : timers.countdowns(playerId, timerTypes));
     }
 
     // Lunar replaces name rendering and skips Forge's Specials events.
@@ -293,7 +293,8 @@ public final class NametagFeature
         }
         NametagText text = texts.get(player.getUniqueID());
         // The model can render even when its nametag is hidden.
-        if (text != null && ((NametagVisibility) event.renderer).pit12$canRenderName(player)) {
+        if (text != null && (text.heldItem != null || text.leggings != null)
+                && ((NametagVisibility) event.renderer).pit12$canRenderName(player)) {
             renderer.render(minecraft, player, text, event.x, event.y, event.z, distanceSquared,
                     config.upwardOffset());
         }
