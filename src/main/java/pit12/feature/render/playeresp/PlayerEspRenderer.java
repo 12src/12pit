@@ -74,9 +74,8 @@ final class PlayerEspRenderer {
                     opacity = (float) ((Math.sqrt(distanceSquared) - near) / (far - near));
                 }
             }
-            double radius = player.width * 0.5D + 0.1D;
-            boxes.add(x - radius, y, z - radius, x + radius, y + player.height + 0.2D, z + radius,
-                    target.color, opacity * 0.5F, opacity);
+            boxes.add(x - 0.4D, y, z - 0.4D, x + 0.4D, y + 2.0D, z + 0.4D, target.color,
+                    opacity * 0.5F, opacity);
         }
         boxes.render();
     }
