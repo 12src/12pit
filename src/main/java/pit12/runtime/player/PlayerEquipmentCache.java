@@ -86,11 +86,17 @@ public final class PlayerEquipmentCache {
         PitEnchantments leggingsEnchantments =
                 previous == null ? PitEnchantments.empty() : previous.leggingsEnchantments();
         if ((slots & HELD_ITEM) != 0) {
-            heldEnchantments = PitEnchantmentReader.read(equipment[0]);
+            PitEnchantments updated = PitEnchantmentReader.read(equipment[0]);
+            if (!heldEnchantments.sameContents(updated)) {
+                heldEnchantments = updated;
+            }
             knownSlots |= HELD_ITEM;
         }
         if ((slots & LEGGINGS) != 0) {
-            leggingsEnchantments = PitEnchantmentReader.read(equipment[2]);
+            PitEnchantments updated = PitEnchantmentReader.read(equipment[2]);
+            if (!leggingsEnchantments.sameContents(updated)) {
+                leggingsEnchantments = updated;
+            }
             knownSlots |= LEGGINGS;
         }
         long revision = previous == null ? 1L : previous.revision() + 1L;

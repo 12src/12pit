@@ -18,7 +18,6 @@
  */
 package pit12.feature.render.nametag.mixin;
 
-import java.util.UUID;
 import java.util.function.Function;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.EntityLivingBase;
@@ -46,13 +45,13 @@ public abstract class LunarEntityLivingBaseMixin {
     @Inject(method = "bridge$getDisplayNameComponent", at = @At("RETURN"), cancellable = true,
             remap = false, require = 1)
     private void pit12$displayName(CallbackInfoReturnable<Object> callback) {
-        Function<UUID, String> names =
+        Function<EntityPlayer, String> names =
                 ((NametagNamesBinding) Minecraft.getMinecraft()).pit12$nametagNames();
         if (names == null || !((Object) this instanceof EntityPlayer)) {
             return;
         }
         EntityPlayer player = (EntityPlayer) (Object) this;
-        String suffix = names.apply(player.getUniqueID());
+        String suffix = names.apply(player);
         if (suffix.isEmpty()) {
             pit12$originalName = null;
             pit12$nameSuffix = null;

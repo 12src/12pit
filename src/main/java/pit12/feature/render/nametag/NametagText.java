@@ -18,14 +18,15 @@
  */
 package pit12.feature.render.nametag;
 
+import java.util.Objects;
 import net.minecraft.client.gui.FontRenderer;
 import pit12.shared.rendering.FontWidths;
 
 final class NametagText {
-    final String heldItem;
-    final String leggings;
-    final int heldItemWidth;
-    final int leggingsWidth;
+    String heldItem;
+    String leggings;
+    int heldItemWidth;
+    int leggingsWidth;
     String name;
     int nameWidth;
     String score;
@@ -35,10 +36,18 @@ final class NametagText {
     float scale;
 
     NametagText(String heldItem, String leggings, FontRenderer font) {
-        this.heldItem = heldItem;
-        this.leggings = leggings;
-        heldItemWidth = heldItem == null ? 0 : FontWidths.measure(font, heldItem);
-        leggingsWidth = leggings == null ? 0 : FontWidths.measure(font, leggings);
+        updateEnchantments(heldItem, leggings, font);
+    }
+
+    void updateEnchantments(String heldItem, String leggings, FontRenderer font) {
+        if (!Objects.equals(this.heldItem, heldItem)) {
+            this.heldItem = heldItem;
+            heldItemWidth = heldItem == null ? 0 : FontWidths.measure(font, heldItem);
+        }
+        if (!Objects.equals(this.leggings, leggings)) {
+            this.leggings = leggings;
+            leggingsWidth = leggings == null ? 0 : FontWidths.measure(font, leggings);
+        }
     }
 
     void updateName(String name, String score, FontRenderer font) {

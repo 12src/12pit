@@ -18,7 +18,6 @@
  */
 package pit12.feature.render.nametag.mixin;
 
-import java.util.UUID;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.RendererLivingEntity;
 import net.minecraft.entity.EntityLivingBase;
@@ -34,7 +33,7 @@ import pit12.feature.render.nametag.NametagNamesBinding;
 @Mixin(RendererLivingEntity.class)
 public abstract class VanillaRendererLivingEntityMixin {
     @Unique
-    private UUID pit12$nametagPlayer;
+    private EntityPlayer pit12$nametagPlayer;
 
     @Inject(method = "renderName(Lnet/minecraft/entity/EntityLivingBase;DDD)V", at = @At(
             value = "INVOKE",
@@ -42,19 +41,19 @@ public abstract class VanillaRendererLivingEntityMixin {
     private void pit12$capturePlayer(EntityLivingBase entity, double x, double y, double z,
             CallbackInfo ci) {
         if (((NametagNamesBinding) Minecraft.getMinecraft()).pit12$nametagNames() != null) {
-            pit12$nametagPlayer = entity instanceof EntityPlayer ? entity.getUniqueID() : null;
+            pit12$nametagPlayer = entity instanceof EntityPlayer ? (EntityPlayer) entity : null;
         }
     }
 
     @ModifyVariable(method = "renderName(Lnet/minecraft/entity/EntityLivingBase;DDD)V",
             at = @At("STORE"), ordinal = 0)
     private String pit12$displayName(String original) {
-        UUID playerId = pit12$nametagPlayer;
-        if (playerId == null) {
+        EntityPlayer player = pit12$nametagPlayer;
+        if (player == null) {
             return original;
         }
         pit12$nametagPlayer = null;
         return original.concat(((NametagNamesBinding) Minecraft.getMinecraft()).pit12$nametagNames()
-                .apply(playerId));
+                .apply(player));
     }
 }

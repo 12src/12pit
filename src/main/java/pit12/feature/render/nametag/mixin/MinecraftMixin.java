@@ -18,9 +18,9 @@
  */
 package pit12.feature.render.nametag.mixin;
 
-import java.util.UUID;
 import java.util.function.Function;
 import net.minecraft.client.Minecraft;
+import net.minecraft.entity.player.EntityPlayer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import pit12.feature.render.nametag.NametagNamesBinding;
@@ -28,18 +28,19 @@ import pit12.feature.render.nametag.NametagNamesBinding;
 @Mixin(Minecraft.class)
 public abstract class MinecraftMixin implements NametagNamesBinding {
     @Unique
-    private Function<UUID, String> pit12$nametagSuffix;
+    private Function<EntityPlayer, String> pit12$nametagSuffix;
     @Unique
     private boolean pit12$enhancedNametags;
 
     @Override
-    public void pit12$bindNametagNames(Function<UUID, String> suffix, boolean enhancedVisibility) {
+    public void pit12$bindNametagNames(Function<EntityPlayer, String> suffix,
+            boolean enhancedVisibility) {
         pit12$nametagSuffix = suffix;
         pit12$enhancedNametags = enhancedVisibility;
     }
 
     @Override
-    public Function<UUID, String> pit12$nametagNames() {
+    public Function<EntityPlayer, String> pit12$nametagNames() {
         return pit12$nametagSuffix;
     }
 

@@ -26,6 +26,8 @@ public final class PitEnchantments implements Iterable<PitEnchantments.Entry> {
     private static final PitEnchantments EMPTY = new PitEnchantments(new Entry[0], false);
     private final Entry[] entries;
     private final boolean gemmed;
+    // An empty string caches a result with no known enchantments.
+    private volatile String[] displayNames;
 
     private PitEnchantments(Entry[] entries, boolean gemmed) {
         this.entries = entries;
@@ -47,22 +49,22 @@ public final class PitEnchantments implements Iterable<PitEnchantments.Entry> {
 
     /** Returns null when this result contains no known enchantments. */
     public String formatDisplayNames(boolean showGem) {
-        return formatDisplayNames(false, true, false, showGem);
+        return formatDisplayNames(PitEnchantmentFormat.PLAIN_LEVELS, showGem);
     }
 
     /** Returns null when this result contains no known enchantments. */
     public String formatBoldDisplayNames(boolean showGem) {
-        return formatDisplayNames(true, true, false, showGem);
+        return formatDisplayNames(PitEnchantmentFormat.BOLD_LEVELS, showGem);
     }
 
     /** Returns null when this result contains no known enchantments. */
     public String formatBoldDisplayNamesWithoutLevelThree(boolean showGem) {
-        return formatDisplayNames(true, true, true, showGem);
+        return formatDisplayNames(PitEnchantmentFormat.HIDE_LEVEL_THREE, showGem);
     }
 
     /** Returns null when this result contains no known enchantments. */
     public String formatBoldDisplayNamesWithoutLevels(boolean showGem) {
-        return formatDisplayNames(true, false, false, showGem);
+        return formatDisplayNames(PitEnchantmentFormat.NAMES_ONLY, showGem);
     }
 
     public boolean gemmed() {
@@ -78,8 +80,46 @@ public final class PitEnchantments implements Iterable<PitEnchantments.Entry> {
         return false;
     }
 
-    private String formatDisplayNames(boolean bold, boolean showLevels, boolean hideLevelThree,
-            boolean showGem) {
+    public boolean sameContents(PitEnchantments other) {
+        if (this == other) {
+            return true;
+        }
+        if (gemmed != other.gemmed || entries.length != other.entries.length) {
+            return false;
+        }
+        for (int index = 0; index < entries.length; index++) {
+            Entry entry = entries[index];
+            Entry otherEntry = other.entries[index];
+            if (entry.level != otherEntry.level || !entry.key.equals(otherEntry.key)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private String formatDisplayNames(int format, boolean showGem) {
+        int index = format * 2 + (showGem && gemmed ? 1 : 0);
+        String[] cached = displayNames;
+        String text = cached == null ? null : cached[index];
+        if (text == null) {
+            text = cacheDisplayNames(index);
+        }
+        return text.isEmpty() ? null : text;
+    }
+
+    // Equipment snapshots can also be formatted by workers.
+    private synchronized String cacheDisplayNames(int index) {
+        if (displayNames == null) {
+            displayNames = new String[8];
+        }
+        String cached = displayNames[index];
+        if (cached != null) {
+            return cached;
+        }
+        int format = index / 2;
+        boolean bold = format != PitEnchantmentFormat.PLAIN_LEVELS;
+        boolean showLevels = format != PitEnchantmentFormat.NAMES_ONLY;
+        boolean hideLevelThree = format == PitEnchantmentFormat.HIDE_LEVEL_THREE;
         StringBuilder text = null;
         for (Entry entry : entries) {
             PitEnchantment enchantment = entry.enchantment;
@@ -101,10 +141,9 @@ public final class PitEnchantments implements Iterable<PitEnchantments.Entry> {
                 text.append(entry.level);
             }
         }
-        if (text == null) {
-            return null;
-        }
-        return showGem && gemmed ? text + " §a♦" : text.toString();
+        String result = text == null ? "" : (index & 1) != 0 ? text + " §a♦" : text.toString();
+        displayNames[index] = result;
+        return result;
     }
 
     private static void appendDisplayName(StringBuilder text, String displayName, boolean bold) {

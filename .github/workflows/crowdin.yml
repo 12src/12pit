@@ -16,7 +16,7 @@ jobs:
   upload:
     name: Upload source text
     if: github.repository == '12src/12pit' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
 
     steps:
       - name: Checkout

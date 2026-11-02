@@ -31,6 +31,7 @@ import pit12.runtime.item.PitEnchantmentFormat;
 public final class NametagConfig extends FeatureConfig {
     private final BooleanSetting nickMarker;
     private final BooleanSetting realNames;
+    private final BooleanSetting showHealth;
     private final BooleanSetting pinTimer;
     private final BooleanSetting venomTimer;
     private final BooleanSetting jumpBoostTimer;
@@ -44,8 +45,8 @@ public final class NametagConfig extends FeatureConfig {
     private final IntegerSetting upwardOffset;
 
     public NametagConfig() {
-        super("nametag", source("Nametags"), ConfigCategory.RENDER,
-                source("Adds real names, Pit enchantments, and timers to player nametags."));
+        super("nametag", source("Nametags"), ConfigCategory.RENDER, source(
+                "Adds real names, health, Pit enchantments, and timers to player nametags."));
         subsubcategory("names", "Denick");
         nickMarker = booleanSetting("nick_marker", source("Show nick marker"),
                 source("Adds N to nicked players' names."), true);
@@ -64,7 +65,9 @@ public final class NametagConfig extends FeatureConfig {
         upwardOffset = integerSliderSetting("enchantment_offset", source("Upward offset"),
                 source("Moves enchantments above the player name and scales with the nametag."), 30,
                 20, 40, 1);
-        subsubcategory("timers", source("Timers"));
+        subsubcategory("display", source("Display"));
+        showHealth = booleanSetting("show_health", source("Show health"),
+                source("Shows HP in red before timers."), true);
         pinTimer = booleanSetting("pin_timer", source("Show Pin timer"),
                 source("Shows Pin timers after player names when enabled in Timers HUD."), true);
         venomTimer = booleanSetting("venom_timer", source("Show Venom timer"),
@@ -89,6 +92,10 @@ public final class NametagConfig extends FeatureConfig {
 
     public boolean realNames() {
         return realNames.get();
+    }
+
+    public boolean showHealth() {
+        return showHealth.get();
     }
 
     public int timerTypes() {

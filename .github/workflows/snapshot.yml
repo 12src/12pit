@@ -1,0 +1,68 @@
+name: Snapshot
+
+on:
+  workflow_run:
+    workflows: [Build]
+    branches: [main]
+    types: [completed]
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  release:
+    name: Release snapshot
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_sha == github.sha
+    runs-on: ubuntu-26.04
+    concurrency:
+      group: snapshot-release
+      cancel-in-progress: true
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BUILD_RUN_ID: ${{ github.event.workflow_run.id }}
+          BUILD_RUN_ATTEMPT: ${{ github.event.workflow_run.run_attempt }}
+        run: |
+          set -euo pipefail
+
+          gh run download "${BUILD_RUN_ID}" \
+            --repo "${GITHUB_REPOSITORY}" \
+            --name 12pit-linux \
+            --dir build/libs
+
+          commit_sha="$(git rev-parse HEAD)"
+          branch_sha="$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/heads/main" --jq '.object.sha')"
+          if [[ "${commit_sha}" != "${branch_sha}" ]]; then
+            echo 'Skipping an outdated build.'
+            exit 0
+          fi
+
+          git tag --force snapshot
+          git push --force origin refs/tags/snapshot
+          release_notes="_The attached JAR was built from commit [${commit_sha::7}](https://github.com/${GITHUB_REPOSITORY}/commit/${commit_sha}) by [GitHub Actions](https://github.com/${GITHUB_REPOSITORY}/actions/runs/${BUILD_RUN_ID}/attempts/${BUILD_RUN_ATTEMPT})._"
+
+          if gh release view snapshot --repo "${GITHUB_REPOSITORY}" > /dev/null 2>&1; then
+            gh release upload snapshot build/libs/12pit.jar \
+              --repo "${GITHUB_REPOSITORY}" \
+              --clobber
+            gh release edit snapshot \
+              --repo "${GITHUB_REPOSITORY}" \
+              --notes "${release_notes}"
+          else
+            gh release create snapshot build/libs/12pit.jar \
+              --repo "${GITHUB_REPOSITORY}" \
+              --title "12pit Snapshot" \
+              --notes "${release_notes}" \
+              --prerelease
+          fi

@@ -18,13 +18,13 @@
  */
 package pit12.feature.render.nametag;
 
-import java.util.UUID;
 import java.util.function.Function;
+import net.minecraft.entity.player.EntityPlayer;
 
 public interface NametagNamesBinding {
-    void pit12$bindNametagNames(Function<UUID, String> suffix, boolean enhancedVisibility);
+    void pit12$bindNametagNames(Function<EntityPlayer, String> suffix, boolean enhancedVisibility);
 
-    Function<UUID, String> pit12$nametagNames();
+    Function<EntityPlayer, String> pit12$nametagNames();
 
     boolean pit12$enhancedNametags();
 }

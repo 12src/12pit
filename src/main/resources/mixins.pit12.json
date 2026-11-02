@@ -17,6 +17,8 @@
     "network.FMLHandshakeClientStateMixin",
     "network.NetHandlerPlayClientMixin",
     "network.NetworkPlayerInfoMixin",
+    "player.EntityMixin",
+    "player.EntityPlayerMixin",
     "projectile.EntityArrowMixin",
     "oneconfig.ModCardMixin",
     "oneconfig.ModsPageMixin",
