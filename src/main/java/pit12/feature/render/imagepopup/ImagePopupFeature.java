@@ -64,6 +64,10 @@ public final class ImagePopupFeature
     private static final Logger LOGGER = LogManager.getLogger(ImagePopupFeature.class);
     private static final long NANOS_PER_SECOND = 1_000_000_000L;
     private static final int MAX_TEXTURE_SIZE = 4096;
+    // 1.8.9 TextureManager.deleteTexture only frees the GL texture: the map entry survives, so
+    // per-file locations would keep every decoded image alive. Reuse one location instead.
+    private static final ResourceLocation TEXTURE =
+            new ResourceLocation("pit12", "image_popup/current");
     private final Minecraft minecraft;
     private final ClientThread client;
     private final ConfigCatalog configs;
@@ -79,7 +83,7 @@ public final class ImagePopupFeature
     private long nextShowAt;
     private long showStart;
     private long hideAt;
-    private ResourceLocation texture;
+    private boolean hasTexture;
     private int textureWidth;
     private int textureHeight;
     private int requestCounter;
@@ -157,7 +161,7 @@ public final class ImagePopupFeature
 
     @SubscribeEvent
     public void onRenderOverlay(RenderGameOverlayEvent.Post event) {
-        if (event.type != ElementType.ALL || !started || texture == null || !config.enabled()
+        if (event.type != ElementType.ALL || !started || !hasTexture || !config.enabled()
                 || minecraft.gameSettings.hideGUI || minecraft.thePlayer == null) {
             return;
         }
@@ -182,7 +186,7 @@ public final class ImagePopupFeature
         if (config.dimBackground().get()) {
             renderer.rect(0, 0, screenWidth, screenHeight, (alpha * 0x66 / 255) << 24);
         }
-        drawTexture(texture, x, y, width, height, (alpha << 24) | 0xFFFFFF);
+        drawTexture(TEXTURE, x, y, width, height, (alpha << 24) | 0xFFFFFF);
     }
 
     private void drawTexture(ResourceLocation location, int x, int y, int width, int height,
@@ -250,10 +254,11 @@ public final class ImagePopupFeature
         }
         releaseTexture();
         String name = file.getFileName().toString();
-        ResourceLocation location = new ResourceLocation("pit12",
-                "image_popup/" + Integer.toHexString(name.hashCode()));
-        minecraft.getTextureManager().loadTexture(location, new DynamicTexture(image));
-        texture = location;
+        // The placeholder installed by releaseTexture still owns a GL texture: free it before the
+        // map entry is replaced, otherwise every popup would leak one texture id.
+        minecraft.getTextureManager().deleteTexture(TEXTURE);
+        minecraft.getTextureManager().loadTexture(TEXTURE, new DynamicTexture(image));
+        hasTexture = true;
         textureWidth = image.getWidth();
         textureHeight = image.getHeight();
         lastFile = name;
@@ -282,9 +287,12 @@ public final class ImagePopupFeature
     }
 
     private void releaseTexture() {
-        if (texture != null) {
-            minecraft.getTextureManager().deleteTexture(texture);
-            texture = null;
+        if (hasTexture) {
+            // Free the GL texture and shrink the surviving map entry, so the decoded pixels can be
+            // collected while the popup is hidden.
+            minecraft.getTextureManager().deleteTexture(TEXTURE);
+            minecraft.getTextureManager().loadTexture(TEXTURE, new DynamicTexture(1, 1));
+            hasTexture = false;
         }
         textureWidth = 0;
         textureHeight = 0;
