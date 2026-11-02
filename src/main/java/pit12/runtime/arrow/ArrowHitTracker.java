@@ -51,8 +51,8 @@ final class ArrowHitTracker {
     private long window() {
         // Collect with the longer window, then match each arrow with its shooter's window.
         long window = 0;
-        for (ArrowListener listener : listeners)
-            window = Math.max(window, listener.hitWindowNanos(true));
+        for (int index = 0, size = listeners.size(); index < size; index++)
+            window = Math.max(window, listeners.get(index).hitWindowNanos(true));
         return window;
     }
 
@@ -70,7 +70,8 @@ final class ArrowHitTracker {
         shot.hitAt = System.nanoTime();
         shot.hitBatch = batch;
         long window = window();
-        for (Hit hit : hits) {
+        for (int index = 0, size = hits.size(); index < size; index++) {
+            Hit hit = hits.get(index);
             if (hit.player == target
                     && (within(shot.hitAt, batch, hit, window) || hit.batch == batch))
                 candidate(shot, hit, shot.hitAt, batch);
@@ -90,7 +91,8 @@ final class ArrowHitTracker {
         if (shots.isEmpty())
             return;
         Hit hit = new Hit(player, System.nanoTime(), player == minecraft.thePlayer, batch);
-        for (ArrowListener listener : listeners) {
+        for (int index = 0, size = listeners.size(); index < size; index++) {
+            ArrowListener listener = listeners.get(index);
             if (listener.hitWindowNanos(true) >= 0)
                 hit.pending.add(listener);
         }
@@ -174,7 +176,8 @@ final class ArrowHitTracker {
         // Damage packets can arrive after the arrow has already passed the target.
         Segment segment = new Segment(from, to, now, batch, shot.arrow.ticksExisted >= 5);
         shot.path.addLast(segment);
-        for (Hit hit : hits) {
+        for (int index = 0, size = hits.size(); index < size; index++) {
+            Hit hit = hits.get(index);
             if (intersects(segment, hit, hit.player == shot.arrow.shootingEntity, window))
                 candidate(shot, hit, now, batch);
         }
@@ -221,12 +224,22 @@ final class ArrowHitTracker {
             return;
         }
         long now = System.nanoTime();
-        hits.removeIf(hit -> hit.player.worldObj != minecraft.theWorld);
-        List<Delivery> deliveries = new ArrayList<>();
+        int remaining = 0;
+        for (int index = 0, size = hits.size(); index < size; index++) {
+            Hit hit = hits.get(index);
+            if (hit.player.worldObj == minecraft.theWorld)
+                hits.set(remaining++, hit);
+        }
+        for (int index = hits.size() - 1; index >= remaining; index--)
+            hits.remove(index);
+        List<Delivery> deliveries = null;
         Map<ArrowListener, Map<Shot, Hit>> ownersByListener = null;
         // Resolve the whole batch before any listener consumes its candidates.
-        for (Hit hit : hits) {
-            for (ArrowListener listener : hit.pending) {
+        for (int hitIndex = 0, hitCount = hits.size(); hitIndex < hitCount; hitIndex++) {
+            Hit hit = hits.get(hitIndex);
+            for (int listenerIndex = 0, listenerCount =
+                    hit.pending.size(); listenerIndex < listenerCount; listenerIndex++) {
+                ArrowListener listener = hit.pending.get(listenerIndex);
                 long window = listener.hitWindowNanos(true);
                 if (now - hit.at < window)
                     continue;
@@ -244,28 +257,45 @@ final class ArrowHitTracker {
                         owners = matchOwners(listener);
                         ownersByListener.put(listener, owners);
                     }
-                    for (Shot shot : candidates) {
+                    for (int shotIndex = 0,
+                            shotCount = candidates.size(); shotIndex < shotCount; shotIndex++) {
+                        Shot shot = candidates.get(shotIndex);
                         if (owners.get(shot) != hit) {
                             ambiguous = true;
                             break;
                         }
                     }
                 }
+                if (deliveries == null)
+                    deliveries = new ArrayList<>();
                 deliveries.add(new Delivery(hit, listener, candidates, ambiguous));
             }
         }
-        for (Delivery delivery : deliveries) {
+        for (int index = 0,
+                size = deliveries == null ? 0 : deliveries.size(); index < size; index++) {
+            Delivery delivery = deliveries.get(index);
             delivery.hit.pending.remove(delivery.listener);
-            for (Shot shot : delivery.candidates)
-                shot.usedBy.add(delivery.listener);
+            for (int shotIndex = 0,
+                    shotCount = delivery.candidates.size(); shotIndex < shotCount; shotIndex++)
+                delivery.candidates.get(shotIndex).usedBy.add(delivery.listener);
             if (delivery.ambiguous || delivery.candidates.isEmpty())
                 continue;
             List<ArrowHit> candidates = new ArrayList<>(delivery.candidates.size());
-            for (Shot shot : delivery.candidates)
+            for (int shotIndex = 0,
+                    shotCount = delivery.candidates.size(); shotIndex < shotCount; shotIndex++) {
+                Shot shot = delivery.candidates.get(shotIndex);
                 candidates.add(new ArrowHit(shot.arrow, shot.critical));
+            }
             delivery.listener.onArrowHit(delivery.hit.player, candidates, delivery.hit.at);
         }
-        hits.removeIf(hit -> hit.pending.isEmpty());
+        remaining = 0;
+        for (int index = 0, size = hits.size(); index < size; index++) {
+            Hit hit = hits.get(index);
+            if (!hit.pending.isEmpty())
+                hits.set(remaining++, hit);
+        }
+        for (int index = hits.size() - 1; index >= remaining; index--)
+            hits.remove(index);
         long window = window();
         Iterator<Shot> iterator = shots.values().iterator();
         while (iterator.hasNext()) {
@@ -281,7 +311,8 @@ final class ArrowHitTracker {
     private Map<Shot, Hit> matchOwners(ArrowListener listener) {
         // Null marks arrows shared by multiple hits, including hits still waiting.
         Map<Shot, Hit> owners = new HashMap<>();
-        for (Hit hit : hits) {
+        for (int index = 0, size = hits.size(); index < size; index++) {
+            Hit hit = hits.get(index);
             for (Shot shot : hit.candidates.keySet()) {
                 if (!matches(shot, hit, listener))
                     continue;
@@ -303,15 +334,16 @@ final class ArrowHitTracker {
     }
 
     private void finished(int entityId) {
-        for (ArrowListener listener : listeners) {
+        for (int index = 0, size = listeners.size(); index < size; index++) {
+            ArrowListener listener = listeners.get(index);
             if (listener.hitWindowNanos(true) >= 0)
                 listener.onArrowFinished(entityId);
         }
     }
 
     void removeListener(ArrowListener listener) {
-        for (Hit hit : hits)
-            hit.pending.remove(listener);
+        for (int index = 0, size = hits.size(); index < size; index++)
+            hits.get(index).pending.remove(listener);
     }
 
     void clear() {

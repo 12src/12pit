@@ -117,7 +117,8 @@ public final class ArrowTracker implements ClientLifecycle, ArrowPacketObserver,
     private void updateHitTracking() {
         boolean enabled = false;
         if (started) {
-            for (ArrowListener listener : listeners) {
+            for (int index = 0, size = listeners.size(); index < size; index++) {
+                ArrowListener listener = listeners.get(index);
                 if (listener.hitWindowNanos(true) >= 0) {
                     enabled = true;
                     break;
@@ -166,7 +167,8 @@ public final class ArrowTracker implements ClientLifecycle, ArrowPacketObserver,
         hits.clear();
         shooters.clear();
         releases.clear();
-        for (ArrowListener listener : listeners) {
+        for (int index = 0, size = listeners.size(); index < size; index++) {
+            ArrowListener listener = listeners.get(index);
             listener.onArrowsReset();
         }
     }
@@ -219,7 +221,8 @@ public final class ArrowTracker implements ClientLifecycle, ArrowPacketObserver,
         }
         if (bow == null || !(bow.getItem() instanceof ItemBow))
             return tracked;
-        for (ArrowListener listener : listeners) {
+        for (int index = 0, size = listeners.size(); index < size; index++) {
+            ArrowListener listener = listeners.get(index);
             if (listener.onArrowSpawn(arrow, shooter, bow, sneaking, lastSneaking)) {
                 if (tracked == null)
                     tracked = new TrackedArrow(arrow);
@@ -288,7 +291,8 @@ public final class ArrowTracker implements ClientLifecycle, ArrowPacketObserver,
         if (!(entity instanceof EntityPlayer))
             return;
         EntityPlayer player = (EntityPlayer) entity;
-        for (ArrowListener listener : listeners) {
+        for (int index = 0, size = listeners.size(); index < size; index++) {
+            ArrowListener listener = listeners.get(index);
             listener.onShooterTeleport(player, x, y, z);
         }
     }
@@ -309,7 +313,8 @@ public final class ArrowTracker implements ClientLifecycle, ArrowPacketObserver,
     public void onArrowCorrected(int entityId, boolean velocityChanged) {
         TrackedArrow tracked = arrows.get(entityId);
         if (tracked != null) {
-            for (ArrowListener listener : tracked.listeners) {
+            for (int index = 0, size = tracked.listeners.size(); index < size; index++) {
+                ArrowListener listener = tracked.listeners.get(index);
                 listener.onArrowCorrected(tracked.arrow, velocityChanged);
             }
         }
@@ -343,7 +348,8 @@ public final class ArrowTracker implements ClientLifecycle, ArrowPacketObserver,
     public void onBlockChanged(BlockPos position) {
         if (arrows.isEmpty())
             return;
-        for (ArrowListener listener : listeners) {
+        for (int index = 0, size = listeners.size(); index < size; index++) {
+            ArrowListener listener = listeners.get(index);
             listener.onBlockChanged(position);
         }
     }
@@ -353,7 +359,8 @@ public final class ArrowTracker implements ClientLifecycle, ArrowPacketObserver,
         if (tracked == null)
             return;
         ((ArrowAccess) tracked.arrow).pit12$bindArrowObserver(null);
-        for (ArrowListener listener : tracked.listeners) {
+        for (int index = 0, size = tracked.listeners.size(); index < size; index++) {
+            ArrowListener listener = tracked.listeners.get(index);
             listener.onArrowRemoved(tracked.arrow, serverRemoved);
         }
         hits.removed(tracked.arrow, serverRemoved);
