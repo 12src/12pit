@@ -260,7 +260,14 @@ public final class EventListFeature implements ClientLifecycle, ConfigChangeList
         }
         long now = System.currentTimeMillis();
         if (now / 1000L != displayedSecond) {
-            events.removeIf(scheduled -> scheduled.endsAt <= now);
+            int remaining = 0;
+            for (int index = 0, size = events.size(); index < size; index++) {
+                PitEvent scheduled = events.get(index);
+                if (scheduled.endsAt > now)
+                    events.set(remaining++, scheduled);
+            }
+            for (int index = events.size() - 1; index >= remaining; index--)
+                events.remove(index);
             rebuild(now);
         }
         hudRenderer.render(hud, HudRenderer.layout(hud, event.resolution.getScaledWidth(),

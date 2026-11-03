@@ -33,6 +33,7 @@ import pit12.shared.rendering.FontWidths;
 import pit12.shared.text.TextCodes;
 
 final class TimersHud implements HudElement {
+    private static final TimerType[] TYPES = TimerType.values();
     private final Minecraft minecraft;
     private final TimersConfig config;
     private final HudRenderer renderer;
@@ -50,7 +51,7 @@ final class TimersHud implements HudElement {
     private int height;
     private int lineHeight;
     private boolean metricsDirty = true;
-    private final int[] titleWidths = new int[TimerType.values().length];
+    private final int[] titleWidths = new int[TYPES.length];
     float visibleHeight = Float.POSITIVE_INFINITY;
 
     TimersHud(Minecraft minecraft, TimersConfig config, HudRenderer renderer, TimerType type) {
@@ -122,7 +123,7 @@ final class TimersHud implements HudElement {
         unicode = nextUnicode;
         if (editing) {
             content = new ArrayList<>();
-            for (TimerType next : TimerType.values()) {
+            for (TimerType next : TYPES) {
                 if (type == null ? !config.hudGroups.get(next).independent() : type == next) {
                     content.add(sampleRow(next));
                 }
