@@ -19,27 +19,68 @@
 package pit12.platform.mixinconfig;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiFunction;
 import net.minecraft.launchwrapper.Launch;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.spongepowered.asm.lib.ClassReader;
+import org.spongepowered.asm.lib.tree.AbstractInsnNode;
+import org.spongepowered.asm.lib.tree.AnnotationNode;
 import org.spongepowered.asm.lib.tree.ClassNode;
+import org.spongepowered.asm.lib.tree.MethodInsnNode;
+import org.spongepowered.asm.lib.tree.MethodNode;
 import org.spongepowered.asm.mixin.Mixins;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfig;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinErrorHandler;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
+import org.spongepowered.asm.mixin.injection.struct.InjectionInfo;
+import org.spongepowered.asm.mixin.transformer.ClassInfo;
+import org.spongepowered.asm.util.Annotations;
 import pit12.platform.lunar.LunarSupport;
 
 public final class MixinConfigPlugin implements IMixinConfigPlugin, IMixinErrorHandler {
+    private static final Logger LOGGER = LogManager.getLogger(MixinConfigPlugin.class);
     // Mixin creates a separate instance for error callbacks.
     private static final Set<String> FAILED_MIXINS = new ConcurrentSkipListSet<>();
+    private static final AtomicInteger FAILURE_COUNT = new AtomicInteger();
+    private final BiFunction<String, MethodNode, String> handlerSignature;
     private boolean lunar;
     private boolean optifine;
     private boolean patcher;
 
+    public MixinConfigPlugin() {
+        this((mixinClassName, method) -> {
+            // Use Mixin's name mapping instead of depending on its handler naming format.
+            ClassInfo.Method handler =
+                    ClassInfo.forName(mixinClassName).findMethod(method, ClassInfo.INCLUDE_ALL);
+            return handler.getName() + handler.getDesc();
+        });
+    }
+
+    MixinConfigPlugin(BiFunction<String, MethodNode, String> handlerSignature) {
+        this.handlerSignature = handlerSignature;
+    }
+
     public static List<String> failedMixinNames() {
         return new ArrayList<>(FAILED_MIXINS);
+    }
+
+    public static int failedMixinCount() {
+        return FAILURE_COUNT.get();
+    }
+
+    private static void recordFailure(String mixinName) {
+        if (FAILED_MIXINS.add(mixinName)) {
+            FAILURE_COUNT.incrementAndGet();
+        }
     }
 
     @Override
@@ -116,13 +157,71 @@ public final class MixinConfigPlugin implements IMixinConfigPlugin, IMixinErrorH
 
     @Override
     public void postApply(String targetClassName, ClassNode targetClass, String mixinClassName,
-            IMixinInfo mixinInfo) {}
+            IMixinInfo mixinInfo) {
+        ClassNode mixin = mixinInfo.getClassNode(
+                ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
+        Map<String, Integer> expectedCalls = new LinkedHashMap<>();
+        for (MethodNode method : mixin.methods) {
+            AnnotationNode injector = InjectionInfo.getInjectorAnnotation(mixinInfo, method);
+            if (injector == null) {
+                continue;
+            }
+            int required = Annotations.getValue(injector, "require", -1);
+            if (required == 0) {
+                continue;
+            }
+            expectedCalls.put(handlerSignature.apply(mixinClassName, method),
+                    Math.max(1, Math.max(required, Annotations.getValue(injector, "expect", 1))));
+        }
+        List<String> missing = missingInjections(targetClass, expectedCalls);
+        if (!missing.isEmpty()) {
+            recordFailure(mixinInfo.getName());
+            LOGGER.warn("Mixin {} has missing injections in {}: {}", mixinClassName,
+                    targetClassName, String.join(", ", missing));
+        }
+    }
+
+    private static List<String> missingInjections(ClassNode targetClass,
+            Map<String, Integer> expectedCalls) {
+        List<String> missing = new ArrayList<>();
+        if (expectedCalls.isEmpty()) {
+            return missing;
+        }
+        Map<String, Integer> actualCalls = new HashMap<>();
+        for (MethodNode method : targetClass.methods) {
+            if (expectedCalls.containsKey(method.name + method.desc)) {
+                continue;
+            }
+            for (AbstractInsnNode instruction =
+                    method.instructions.getFirst(); instruction != null; instruction =
+                            instruction.getNext()) {
+                if (!(instruction instanceof MethodInsnNode)) {
+                    continue;
+                }
+                MethodInsnNode call = (MethodInsnNode) instruction;
+                if (call.owner.equals(targetClass.name)) {
+                    String handler = call.name + call.desc;
+                    if (expectedCalls.containsKey(handler)) {
+                        actualCalls.merge(handler, 1, Integer::sum);
+                    }
+                }
+            }
+        }
+        for (Map.Entry<String, Integer> expected : expectedCalls.entrySet()) {
+            int actual = actualCalls.getOrDefault(expected.getKey(), 0);
+            if (actual < expected.getValue()) {
+                missing.add(expected.getKey() + " (expected at least " + expected.getValue()
+                        + ", found " + actual + ")");
+            }
+        }
+        return missing;
+    }
 
     @Override
     public ErrorAction onPrepareError(IMixinConfig config, Throwable failure, IMixinInfo mixin,
             ErrorAction action) {
         if (config.getPlugin() instanceof MixinConfigPlugin) {
-            FAILED_MIXINS.add(mixin.getName());
+            recordFailure(mixin.getName());
         }
         return action;
     }
@@ -131,7 +230,7 @@ public final class MixinConfigPlugin implements IMixinConfigPlugin, IMixinErrorH
     public ErrorAction onApplyError(String targetClassName, Throwable failure, IMixinInfo mixin,
             ErrorAction action) {
         if (mixin.getConfig().getPlugin() instanceof MixinConfigPlugin) {
-            FAILED_MIXINS.add(mixin.getName());
+            recordFailure(mixin.getName());
         }
         return action;
     }

@@ -24,6 +24,10 @@ import static net.minecraft.util.EnumChatFormatting.WHITE;
 import java.util.List;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.WorldClient;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import pit12.runtime.languages.Languages;
 import pit12.runtime.session.ClientSession;
 import pit12.shared.chat.ChatFeedback;
@@ -36,6 +40,7 @@ public final class MixinFailureWarning implements ClientLifecycle {
     private final Languages language;
     private final Runnable sessionChanged = this::onSessionChanged;
     private WorldClient world;
+    private int warnedFailureCount = -1;
 
     public MixinFailureWarning(Minecraft minecraft, ClientSession session, Languages language) {
         this.minecraft = minecraft;
@@ -46,13 +51,24 @@ public final class MixinFailureWarning implements ClientLifecycle {
     @Override
     public void start() {
         session.addListener(sessionChanged);
+        MinecraftForge.EVENT_BUS.register(this);
         onSessionChanged();
     }
 
     @Override
     public void stop() {
+        MinecraftForge.EVENT_BUS.unregister(this);
         session.removeListener(sessionChanged);
         world = null;
+        warnedFailureCount = -1;
+    }
+
+    @SubscribeEvent
+    public void onClientTick(ClientTickEvent event) {
+        if (event.phase == Phase.END) {
+            session.checkThread();
+            warnIfNeeded();
+        }
     }
 
     private void onSessionChanged() {
@@ -61,13 +77,23 @@ public final class MixinFailureWarning implements ClientLifecycle {
             return;
         }
         world = nextWorld;
+        warnedFailureCount = -1;
+        warnIfNeeded();
+    }
+
+    private void warnIfNeeded() {
         if (world == null || minecraft.thePlayer == null) {
             return;
         }
-        List<String> failedMixins = MixinConfigPlugin.failedMixinNames();
-        if (failedMixins.isEmpty()) {
+        int failureCount = MixinConfigPlugin.failedMixinCount();
+        if (failureCount == warnedFailureCount) {
             return;
         }
+        warnedFailureCount = failureCount;
+        if (failureCount == 0) {
+            return;
+        }
+        List<String> failedMixins = MixinConfigPlugin.failedMixinNames();
         ChatFeedback.reply(minecraft.thePlayer, Tone.ERROR, language.format(
                 "{0} failed to apply: {1}. This may cause unexpected behavior. If you are unsure how this may affect the game, we recommend reporting this issue with your logs.",
                 Tone.ERROR.argument(RED,
