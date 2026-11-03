@@ -50,7 +50,7 @@ final class PlayerListArrows {
         pixelSize = Math.max(1, Math.round(size * pixelScale));
         inverseScale = 1.0D / pixelScale;
         centerX = (Math.round(x * pixelScale) + pixelSize / 2.0D) * inverseScale;
-        // Keep the old half-pixel offset for odd arrow sizes.
+        // Keep the half-pixel offset for odd arrow sizes.
         minimum = (-pixelSize / 2) * inverseScale;
         maximum = minimum + pixelSize * inverseScale;
     }
