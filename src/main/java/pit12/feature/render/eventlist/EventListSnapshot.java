@@ -47,7 +47,8 @@ final class EventListSnapshot {
         List<Row> rows = new ArrayList<>();
         boolean translate = config.hud().translateText().get();
         boolean hasEvents = false;
-        for (PitEvent event : events) {
+        for (int index = 0, size = events.size(); index < size; index++) {
+            PitEvent event = events.get(index);
             PitEvent.Phase phase = event.phase(now);
             if (phase == PitEvent.Phase.ENDED) {
                 continue;

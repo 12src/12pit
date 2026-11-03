@@ -29,13 +29,14 @@ import pit12.shared.performance.HotPath;
 import pit12.shared.rendering.FontWidths;
 
 final class EventListHud implements HudElement {
+    private static final EventType[] TYPES = EventType.values();
     private static final int PADDING = 4;
     private static final int GAP = 8;
     private final EventListConfig config;
     private final HudConfig hudConfig;
     private final HudRenderer renderer;
     private final Languages language;
-    private final String[] eventNames = new String[EventType.values().length];
+    private final String[] eventNames = new String[TYPES.length];
     private EventListSnapshot snapshot;
     private EventListSnapshot content;
     private float pixelScale = Float.NaN;
@@ -111,7 +112,7 @@ final class EventListHud implements HudElement {
         resize(pixelScale);
         if (languageDirty) {
             boolean translate = hudConfig.translateText().get();
-            for (EventType type : EventType.values()) {
+            for (EventType type : TYPES) {
                 eventNames[type.ordinal()] = language.translate(type.displayName, translate);
             }
             languageDirty = false;
