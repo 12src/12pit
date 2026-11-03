@@ -375,7 +375,6 @@ final class PlayerListHud implements HudElement {
         WorldClient world = minecraft.theWorld;
         if (entry.playerId() != null && renderDirectionReady && world != null) {
             Entity entity = world.getEntityByID(entry.entityId());
-            // The entity must still match the snapshot's player.
             if (entity instanceof EntityPlayer && !entity.isDead
                     && entry.playerId().equals(entity.getUniqueID())) {
                 EntityPlayer player = (EntityPlayer) entity;
