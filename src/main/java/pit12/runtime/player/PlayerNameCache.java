@@ -103,6 +103,23 @@ public final class PlayerNameCache extends DemandLifecycle
         return entry.shortName;
     }
 
+    /** Returns the Minecraft color index (0-15) from the team prefix, or -1 if unknown. */
+    public int teamNameColor(UUID playerId) {
+        session.checkThread();
+        // Session changes are published after a quiet tick.
+        if (minecraft.theWorld == null || minecraft.theWorld.getScoreboard() != scoreboard)
+            return -1;
+        NameEntry entry = ready(playerId);
+        if (entry == null)
+            return -1;
+        if (entry.teamColorDirty) {
+            ScorePlayerTeam team = entry.info.getPlayerTeam();
+            entry.teamColor = team == null ? -1 : teamColor(team.getColorPrefix());
+            entry.teamColorDirty = false;
+        }
+        return entry.teamColor;
+    }
+
     public void addListener(Runnable listener) {
         session.checkThread();
         if (listeners.isEmpty())
@@ -255,6 +272,7 @@ public final class PlayerNameCache extends DemandLifecycle
         if (entry == null) {
             return;
         }
+        entry.teamColorDirty = true;
         NetworkPlayerInfo info = entry.info;
         String name;
         if (info.getDisplayName() == null && info.getGameProfile().getName() == null) {
@@ -289,10 +307,27 @@ public final class PlayerNameCache extends DemandLifecycle
         dirty.clear();
     }
 
+    private static int teamColor(String prefix) {
+        for (int index = prefix.length() - 2; index >= 0; index--) {
+            if (prefix.charAt(index) != '\u00a7')
+                continue;
+            char code = Character.toLowerCase(prefix.charAt(index + 1));
+            if (code >= '0' && code <= '9')
+                return code - '0';
+            if (code >= 'a' && code <= 'f')
+                return code - 'a' + 10;
+            if (code == 'r')
+                return -1;
+        }
+        return -1;
+    }
+
     private static final class NameEntry {
         private NetworkPlayerInfo info;
         private String displayName;
         private String shortName;
+        private int teamColor = -1;
+        private boolean teamColorDirty = true;
         private Consumer<String> displayNameObserver;
 
         private NameEntry(NetworkPlayerInfo info) {

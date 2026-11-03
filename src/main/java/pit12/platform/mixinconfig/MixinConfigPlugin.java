@@ -77,6 +77,13 @@ public final class MixinConfigPlugin implements IMixinConfigPlugin, IMixinErrorH
                 .equals("pit12.feature.render.nametag.mixin.PatcherRendererLivingEntityMixin")) {
             return patcher;
         }
+        if (mixinClassName.startsWith("pit12.feature.render.focus.mixin.OptiFine")) {
+            return optifine
+                    && Launch.classLoader.getResource("net/optifine/shaders/Shaders.class") != null;
+        }
+        if (mixinClassName.equals("pit12.feature.render.focus.mixin.LunarRenderItemMixin")) {
+            return lunar;
+        }
         if (mixinClassName.startsWith("pit12.platform.mixin.oneconfig.")) {
             return Launch.classLoader
                     .getResource("cc/polyfrost/oneconfig/config/Config.class") != null;
