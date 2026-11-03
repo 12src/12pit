@@ -23,7 +23,10 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-/** Marks a frequent entry point and its project calls for performance checks. Packaging removes it. */
+/**
+ * Marks a per-frame entry point, its project calls, and overrides for static performance checks. Mark callback targets
+ * reached through external interfaces or bound outside this call graph.
+ */
 @Retention(RetentionPolicy.CLASS)
 @Target(ElementType.METHOD)
 public @interface HotPath {

@@ -19,6 +19,7 @@
 package pit12.runtime.hud;
 
 import pit12.runtime.config.HudConfig;
+import pit12.shared.performance.HotPath;
 
 public interface HudElement {
     /** Keep this ID stable while registered. */
@@ -32,22 +33,27 @@ public interface HudElement {
     HudConfig config();
 
     /** pixelScale combines GUI scale and this HUD's scale. */
+    @HotPath
     void resize(float pixelScale);
 
     /** Prepare live or sample content before the caller reads its bounds. */
+    @HotPath
     default void prepare(float pixelScale, boolean editing) {
         resize(pixelScale);
     }
 
     /** Unscaled width. This gets called every frame, so keep it cheap. */
+    @HotPath
     int width();
 
     /** Unscaled height. This gets called every frame, so keep it cheap. */
+    @HotPath
     int height();
 
     /**
      * Draw at (0, 0). The caller handles transforms and GL state. Show samples while editing, even for disabled HUDs. Live
      * previews use the normal overlay callbacks.
      */
+    @HotPath
     void render(float partialTicks, boolean editing);
 }
