@@ -55,7 +55,6 @@ import pit12.shared.lifecycle.ClientLifecycle;
 
 public final class PlayerListFeature implements ClientLifecycle, PlayerEquipmentListener,
         ConfigChangeListener, RelationListener, TabPresenceListener {
-    static final int UPDATE_INTERVAL_TICKS = 2;
     private final Minecraft minecraft = Minecraft.getMinecraft();
     private final ConfigCatalog configs;
     private final PlayerListConfig config;
@@ -76,7 +75,7 @@ public final class PlayerListFeature implements ClientLifecycle, PlayerEquipment
     private boolean snapshotDirty = true;
     private boolean realNamesHeld;
     private final Runnable namesChanged = () -> snapshotDirty = true;
-    private int ticksSinceUpdate = UPDATE_INTERVAL_TICKS;
+    private int ticksSinceUpdate;
     private boolean started;
     private boolean active;
 
@@ -96,6 +95,7 @@ public final class PlayerListFeature implements ClientLifecycle, PlayerEquipment
         this.hudRegistry = hudRegistry;
         builder = new PlayerListBuilder(minecraft, players, equipment, pitContext, config,
                 relations, playerNames, denickNames, nicks);
+        ticksSinceUpdate = config.updateIntervalTicks();
         huds.add(new PlayerListHud(config, hudRenderer, language, null));
         for (PlayerListGroup group : PlayerListGroup.values()) {
             huds.add(new PlayerListHud(config, hudRenderer, language, group));
@@ -154,7 +154,7 @@ public final class PlayerListFeature implements ClientLifecycle, PlayerEquipment
     private void activate() {
         active = true;
         snapshotDirty = true;
-        ticksSinceUpdate = UPDATE_INTERVAL_TICKS;
+        ticksSinceUpdate = config.updateIntervalTicks();
         try {
             equipment.addListener(this);
             relations.addListener(this);
@@ -185,7 +185,7 @@ public final class PlayerListFeature implements ClientLifecycle, PlayerEquipment
             hud.snapshot(snapshot);
             hud.close();
         }
-        ticksSinceUpdate = UPDATE_INTERVAL_TICKS;
+        ticksSinceUpdate = config.updateIntervalTicks();
         snapshotDirty = true;
         realNamesHeld = false;
     }
@@ -254,6 +254,10 @@ public final class PlayerListFeature implements ClientLifecycle, PlayerEquipment
                 deactivate();
             }
         }
+        if (changes.affects("playerlist", "update_interval_ticks")) {
+            ticksSinceUpdate = config.updateIntervalTicks();
+            snapshotDirty = true;
+        }
         if (active && (changes.affects("playerlist", "show_held_item")
                 || changes.affects("playerlist", "show_leggings")
                 || changes.affects("playerlist", "enchantment_format")
@@ -291,10 +295,10 @@ public final class PlayerListFeature implements ClientLifecycle, PlayerEquipment
         if (realNames != realNamesHeld) {
             realNamesHeld = realNames;
             snapshotDirty = true;
-            ticksSinceUpdate = UPDATE_INTERVAL_TICKS;
+            ticksSinceUpdate = config.updateIntervalTicks();
         }
         ticksSinceUpdate++;
-        if (ticksSinceUpdate < UPDATE_INTERVAL_TICKS) {
+        if (ticksSinceUpdate < config.updateIntervalTicks()) {
             return;
         }
         ticksSinceUpdate = 0;

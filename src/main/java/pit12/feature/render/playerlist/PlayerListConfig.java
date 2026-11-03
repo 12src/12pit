@@ -30,6 +30,7 @@ import pit12.runtime.config.FeatureConfig;
 import pit12.runtime.config.HudAnchor;
 import pit12.runtime.config.HudConfig;
 import pit12.runtime.config.HudGroupConfig;
+import pit12.runtime.config.IntegerSetting;
 import pit12.runtime.config.KeybindSetting;
 import pit12.runtime.item.PitEnchantmentFormat;
 import pit12.shared.text.TextCodes;
@@ -55,12 +56,16 @@ public final class PlayerListConfig extends FeatureConfig {
     private final BooleanSetting showDark;
     private final BooleanSetting showBountyHunter;
     private final HudConfig hud;
+    private final IntegerSetting updateIntervalTicks;
 
     public PlayerListConfig() {
         super("playerlist", source("Player List HUD"), ConfigCategory.RENDER,
                 source("Shows player names, equipment, distance, and direction in a HUD."));
         subcategory("display", source("Display"));
         hud = hudConfig("player_list", HudAnchor.TOP_LEFT, 6, 6, true);
+        updateIntervalTicks = integerSliderSetting("update_interval_ticks",
+                source("Update interval (ticks)"),
+                source("How often the player list snapshot is rebuilt, in ticks."), 2, 1, 200, 1);
         for (PlayerListGroup group : PlayerListGroup.values()) {
             hudGroups.put(group, hudGroupConfig("player_list", group.id(),
                     TextCodes.strip(group.displayName()), hud, group.ordinal() * 40));
@@ -107,6 +112,10 @@ public final class PlayerListConfig extends FeatureConfig {
                 source("Shows players wearing Somber leggings."), true);
         showBountyHunter = booleanSetting("show_bounty_hunter", source("Show Bounty Hunter group"),
                 source("Shows players wearing golden leggings."), false);
+    }
+
+    public int updateIntervalTicks() {
+        return updateIntervalTicks.get();
     }
 
     public boolean showHeldItem() {
