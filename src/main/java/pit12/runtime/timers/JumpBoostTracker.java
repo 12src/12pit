@@ -40,6 +40,7 @@ import pit12.runtime.player.PlayerEquipmentAccess;
 import pit12.runtime.player.PlayerEquipmentCache;
 import pit12.runtime.player.PlayerEquipmentListener;
 import pit12.runtime.session.ClientSession;
+import pit12.shared.entity.HurtTimeAccess;
 import pit12.shared.entity.PlayerPositions;
 
 public final class JumpBoostTracker implements PlayerEquipmentListener {
@@ -198,9 +199,10 @@ public final class JumpBoostTracker implements PlayerEquipmentListener {
         double dx = x - jump.x;
         double dy = y - jump.y;
         double dz = z - jump.z;
-        if (interrupted || dx * dx + dy * dy + dz * dz > 16 || player.hurtTime > 0
-                || player.isRiding() || player.capabilities.isFlying || player.isInWater()
-                || player.isInLava() || player.isOnLadder()) {
+        if (interrupted || dx * dx + dy * dy + dz * dz > 16
+                || ((HurtTimeAccess) player).pit12$realHurtTime() > 0 || player.isRiding()
+                || player.capabilities.isFlying || player.isInWater() || player.isInLava()
+                || player.isOnLadder()) {
             jump.jumping = false;
         } else {
             if (jump.grounded && !player.onGround && y > jump.y + 0.1) {

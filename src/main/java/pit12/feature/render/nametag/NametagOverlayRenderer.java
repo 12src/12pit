@@ -40,6 +40,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.scoreboard.ScoreObjective;
 import net.minecraft.scoreboard.Scoreboard;
 import org.lwjgl.opengl.GL11;
+import pit12.feature.render.focus.api.FocusOpacity;
 import pit12.shared.performance.HotPath;
 import pit12.shared.rendering.TextureState;
 import pit12.shared.rendering.WorldRenderState;
@@ -81,12 +82,16 @@ final class NametagOverlayRenderer {
         float offset = upwardOffset * NametagRenderer.OFFSET_SCALE;
         Scoreboard scoreboard = world.getScoreboard();
         ScoreObjective objective = scoreboard.getObjectiveInDisplaySlot(2);
+        FocusOpacity focus = (FocusOpacity) minecraft;
         for (int index = 0; index < world.playerEntities.size(); index++) {
             EntityPlayer player = world.playerEntities.get(index);
             if (player.isDead || player == minecraft.thePlayer || player == camera
                     || player.isInvisibleToPlayer(minecraft.thePlayer)) {
                 continue;
             }
+            float opacity = focus.pit12$focusOpacity(player);
+            if (opacity == 0.0F)
+                continue;
             boolean sneaking = player.isSneaking();
             double distanceSquared = player.getDistanceSqToEntity(camera);
             float range = sneaking ? RendererLivingEntity.NAME_TAG_RANGE_SNEAK
@@ -117,6 +122,7 @@ final class NametagOverlayRenderer {
             text.updateScore(player, scoreboard,
                     !sneaking && distanceSquared < 100.0D ? objective : null, font);
             text.scale = (float) Math.max(1.0D, vanillaScale / w);
+            text.opacity = opacity;
             text.x = (float) ((1.0D
                     + (matrix[0] * x + matrix[4] * y + matrix[8] * z + matrix[12]) / w) * width
                     * 0.5D);
@@ -151,31 +157,37 @@ final class NametagOverlayRenderer {
         try {
             GlStateManager.disableCull();
             GlStateManager.enableAlpha();
-            GlStateManager.alphaFunc(GL11.GL_GREATER, 0.1F);
+            GlStateManager.alphaFunc(GL11.GL_GREATER, 0.0F);
             Tessellator tessellator = Tessellator.getInstance();
             WorldRenderer vertices = tessellator.getWorldRenderer();
             vertices.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
             for (int index = 0; index < visible.size(); index++) {
                 NametagText text = visible.get(index);
-                background(vertices, text.x, text.y, text.nameWidth, text.scale);
+                float alpha = 0.25F * text.opacity;
+                background(vertices, text.x, text.y, text.nameWidth, text.scale, alpha);
                 if (text.score != null) {
                     background(vertices, text.x, text.y + scoreOffset * text.scale, text.scoreWidth,
-                            text.scale);
+                            text.scale, alpha);
                 }
                 if (text.leggings != null) {
                     background(vertices, text.x, text.y - offset * text.scale, text.leggingsWidth,
-                            text.scale);
+                            text.scale, alpha);
                 }
                 if (text.heldItem != null) {
                     background(vertices, text.x, text.y
                             - (offset + (text.leggings == null ? 0 : lineHeight)) * text.scale,
-                            text.heldItemWidth, text.scale);
+                            text.heldItemWidth, text.scale, alpha);
                 }
             }
             tessellator.draw();
             textures.setEnabled(true);
             for (int index = 0; index < visible.size(); index++) {
                 NametagText text = visible.get(index);
+                int alpha = Math.round(255.0F * text.opacity);
+                // FontRenderer treats alpha values below four as fully opaque.
+                if (alpha < 4)
+                    continue;
+                int color = alpha << 24 | 0xFFFFFF;
                 float x = text.x;
                 float y = text.y;
                 boolean enlarged = text.scale > 1.0F;
@@ -187,18 +199,18 @@ final class NametagOverlayRenderer {
                     y = 0.0F;
                 }
                 try {
-                    font.drawString(text.name, x - text.nameWidth / 2, y, 0xFFFFFFFF, false);
+                    font.drawString(text.name, x - text.nameWidth / 2, y, color, false);
                     if (text.score != null) {
-                        font.drawString(text.score, x - text.scoreWidth / 2, y + scoreOffset,
-                                0xFFFFFFFF, false);
+                        font.drawString(text.score, x - text.scoreWidth / 2, y + scoreOffset, color,
+                                false);
                     }
                     if (text.leggings != null) {
                         font.drawString(text.leggings, x - text.leggingsWidth / 2, y - offset,
-                                0xFFFFFFFF, false);
+                                color, false);
                     }
                     if (text.heldItem != null) {
                         font.drawString(text.heldItem, x - text.heldItemWidth / 2,
-                                y - offset - (text.leggings == null ? 0 : lineHeight), 0xFFFFFFFF,
+                                y - offset - (text.leggings == null ? 0 : lineHeight), color,
                                 false);
                     }
                 } finally {
@@ -217,16 +229,16 @@ final class NametagOverlayRenderer {
         }
     }
 
-    private static void background(WorldRenderer vertices, float x, float y, int width,
-            float scale) {
+    private static void background(WorldRenderer vertices, float x, float y, int width, float scale,
+            float alpha) {
         float halfWidth = (width / 2 + 1) * scale;
         float left = x - halfWidth;
         float right = x + halfWidth;
         float top = y - scale;
         float bottom = y + 8 * scale;
-        vertices.pos(left, top, 0.0D).color(0.0F, 0.0F, 0.0F, 0.25F).endVertex();
-        vertices.pos(left, bottom, 0.0D).color(0.0F, 0.0F, 0.0F, 0.25F).endVertex();
-        vertices.pos(right, bottom, 0.0D).color(0.0F, 0.0F, 0.0F, 0.25F).endVertex();
-        vertices.pos(right, top, 0.0D).color(0.0F, 0.0F, 0.0F, 0.25F).endVertex();
+        vertices.pos(left, top, 0.0D).color(0.0F, 0.0F, 0.0F, alpha).endVertex();
+        vertices.pos(left, bottom, 0.0D).color(0.0F, 0.0F, 0.0F, alpha).endVertex();
+        vertices.pos(right, bottom, 0.0D).color(0.0F, 0.0F, 0.0F, alpha).endVertex();
+        vertices.pos(right, top, 0.0D).color(0.0F, 0.0F, 0.0F, alpha).endVertex();
     }
 }

@@ -79,6 +79,9 @@ import pit12.feature.patch.scoreboardfix.ScoreboardFixConfig;
 import pit12.feature.patch.scoreboardfix.ScoreboardFixFeature;
 import pit12.feature.render.eventlist.EventListConfig;
 import pit12.feature.render.eventlist.EventListFeature;
+import pit12.feature.render.focus.FocusBinding;
+import pit12.feature.render.focus.FocusConfig;
+import pit12.feature.render.focus.FocusFeature;
 import pit12.feature.render.freecam.FreeCameraBinding;
 import pit12.feature.render.freecam.FreeCameraConfig;
 import pit12.feature.render.freecam.FreeCameraFeature;
@@ -221,6 +224,7 @@ public final class ClientBootstrap {
         registerSmartBlock(minecraft, configs, session, (SmartBlockBinding) minecraft);
         // Category: Render
         registerEventList(configs, hudRegistry, commands);
+        registerFocus(minecraft, configs, input, relations, playerNames);
         registerFreeCamera(minecraft, configs, input, (FreeCameraBinding) minecraft);
         registerGamma(configs, (GammaBinding) minecraft.entityRenderer);
         registerItemEsp(configs, session, sidebar, textureStates.get());
@@ -364,6 +368,14 @@ public final class ClientBootstrap {
         EventListConfig config = new EventListConfig();
         configs.register(config);
         components.add(new EventListFeature(configs, config, hudRegistry, commands, language));
+    }
+
+    private void registerFocus(Minecraft minecraft, ConfigCatalog configs, InputBlocker input,
+            RelationLookup relations, PlayerNameCache playerNames) {
+        FocusConfig config = new FocusConfig();
+        configs.register(config);
+        components.add(new FocusFeature(minecraft, configs, config, input, relations, playerNames,
+                language, (FocusBinding) minecraft));
     }
 
     private void registerFreeCamera(Minecraft minecraft, ConfigCatalog configs, InputBlocker input,

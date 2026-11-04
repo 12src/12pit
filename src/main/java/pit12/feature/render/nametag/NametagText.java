@@ -39,6 +39,7 @@ final class NametagText {
     float x;
     float y;
     float scale;
+    float opacity;
     private String displayName;
     private String teamPrefix;
     private String teamSuffix;
