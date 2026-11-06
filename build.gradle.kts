@@ -80,7 +80,7 @@ loom {
 
     forge {
         pack200Provider.set(Pack200Adapter())
-        accessTransformer("src/main/resources/META-INF/${modId}_at.cfg")
+        accessTransformer("src/main/resources/META-INF/at.cfg")
         mixinConfigurations.keys.forEach { mixinConfig(it) }
     }
 
@@ -258,7 +258,7 @@ tasks.withType<Jar> {
         this["ForceLoadAsMod"] = "true"
         this["TweakClass"] = "org.spongepowered.asm.launch.MixinTweaker"
         this["MixinConfigs"] = mixinConfigurations.keys.joinToString(",")
-        this["FMLAT"] = "${modId}_at.cfg"
+        this["FMLAT"] = "at.cfg"
     }
 }
 
