@@ -31,7 +31,6 @@ import static pit12.shared.chat.ChatFeedback.reply;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
 import net.minecraft.client.Minecraft;
 import net.minecraft.command.ICommandSender;
 import org.lwjgl.input.Keyboard;
@@ -107,7 +106,7 @@ final class SwapCommand {
             reply(sender, Tone.SUCCESS,
                     language.format("Bound {0} to {1} ({2})",
                             Tone.SUCCESS.argument(WHITE, binding.display(config.showGem.get())),
-                            Tone.SUCCESS.argument(AQUA, Keyboard.getKeyName(binding.key)),
+                            Tone.SUCCESS.argument(AQUA, SwapKeys.name(binding.key)),
                             Tone.SUCCESS.argument(WHITE, binding.targetName())));
     }
 
@@ -133,7 +132,7 @@ final class SwapCommand {
                 language.format("Swap bindings: {0}", Tone.INFO.argument(AQUA, bindings.count())));
         for (SwapBinding entry : bindings.entries())
             reply(sender, Tone.INFO,
-                    Tone.INFO.argument(AQUA, Keyboard.getKeyName(entry.key)) + ": "
+                    Tone.INFO.argument(AQUA, SwapKeys.name(entry.key)) + ": "
                             + Tone.INFO.argument(WHITE, entry.display(config.showGem.get()))
                             + " -> " + Tone.INFO.argument(WHITE, entry.targetName()));
     }
@@ -172,10 +171,9 @@ final class SwapCommand {
     }
 
     private int key(String name) {
-        int code = Keyboard.getKeyIndex(name.toUpperCase(Locale.ROOT));
+        int code = SwapKeys.parse(name);
         if (code == Keyboard.KEY_NONE)
-            throw new IllegalArgumentException(
-                    "Unknown keyboard key: " + Tone.ERROR.argument(WHITE, name));
+            throw new IllegalArgumentException("Unknown key: " + Tone.ERROR.argument(WHITE, name));
         return code;
     }
 
@@ -183,19 +181,13 @@ final class SwapCommand {
         if (args.length == 2) {
             return Arrays.asList("1", "2", "3", "4", "5", "6", "7", "8", "9");
         }
-        List<String> keys = new ArrayList<>();
-        for (int code = 1; code < Keyboard.KEYBOARD_SIZE; code++) {
-            String name = Keyboard.getKeyName(code);
-            if (name != null)
-                keys.add(name);
-        }
-        return keys;
+        return SwapKeys.suggestions();
     }
 
     private List<String> unbindSuggestions(ICommandSender sender, String[] args) {
         List<String> keys = new ArrayList<>();
         for (SwapBinding entry : bindings.entries())
-            keys.add(Keyboard.getKeyName(entry.key));
+            keys.add(SwapKeys.name(entry.key));
         return keys;
     }
 }

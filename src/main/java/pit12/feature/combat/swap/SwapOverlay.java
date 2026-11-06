@@ -27,7 +27,6 @@ import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
-import org.lwjgl.input.Keyboard;
 import pit12.shared.rendering.FontWidths;
 
 final class SwapOverlay {
@@ -132,7 +131,7 @@ final class SwapOverlay {
             this.binding = binding;
             this.font = font;
             unicode = font.getUnicodeFlag();
-            text = "§c§l" + Keyboard.getKeyName(binding.key);
+            text = "§c§l" + SwapKeys.overlayName(binding.key);
             width = FontWidths.measure(font, text);
         }
     }

@@ -33,7 +33,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.lwjgl.input.Keyboard;
 import pit12.shared.storage.AtomicFile;
 
 final class BindingStore {
@@ -121,8 +120,8 @@ final class BindingStore {
             boolean equipment = "EQUIPMENT".equals(type);
             int target = integer(entry, "target");
             String name = string(entry, "name");
-            if (key <= 0 || key >= Keyboard.KEYBOARD_SIZE || Keyboard.getKeyName(key) == null
-                    || target < 1 || target > (equipment ? 4 : 9) || name.isEmpty()) {
+            if (!SwapKeys.valid(key) || target < 1 || target > (equipment ? 4 : 9)
+                    || name.isEmpty()) {
                 throw new IllegalArgumentException("Invalid swap binding");
             }
             JsonElement gemmed = entry.get("gemmed");
