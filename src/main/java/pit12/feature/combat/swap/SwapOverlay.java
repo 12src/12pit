@@ -81,8 +81,7 @@ final class SwapOverlay {
             CachedIdentity cached = cache.get(entry.getKey());
             FontRenderer font = minecraft.fontRendererObj;
             Label label = cached.label;
-            if (label == null || label.binding != binding || label.font != font
-                    || label.unicode != font.getUnicodeFlag()) {
+            if (label == null || label.binding != binding || label.font != font) {
                 label = new Label(binding, font);
                 cached.label = label;
             }
@@ -110,29 +109,40 @@ final class SwapOverlay {
         Label label = labels.get(stack);
         if (label == null)
             return;
-        int textX = label.binding.equipment ? x + 14 - label.width : x + 2;
-        // The rest of the overlay needs lighting and depth back on when we're done.
-        GlStateManager.disableLighting();
-        GlStateManager.disableDepth();
-        GlStateManager.disableBlend();
-        minecraft.fontRendererObj.drawStringWithShadow(label.text, textX, y + 7, 0xFFFFFF);
-        GlStateManager.enableLighting();
-        GlStateManager.enableDepth();
+        boolean unicode = label.font.getUnicodeFlag();
+        label.font.setUnicodeFlag(true);
+        try {
+            GlStateManager.disableLighting();
+            GlStateManager.disableDepth();
+            GlStateManager.disableBlend();
+            label.font.drawStringWithShadow(label.text,
+                    label.binding.equipment ? x + 16 - label.width : x + 2,
+                    y + 17 - label.font.FONT_HEIGHT, 0xFFFFFF);
+        } finally {
+            label.font.setUnicodeFlag(unicode);
+            // The rest of the overlay needs lighting and depth back on when we're done.
+            GlStateManager.enableLighting();
+            GlStateManager.enableDepth();
+        }
     }
 
     private static final class Label {
         final SwapBinding binding;
         final FontRenderer font;
-        final boolean unicode;
         final String text;
         final int width;
 
         Label(SwapBinding binding, FontRenderer font) {
             this.binding = binding;
             this.font = font;
-            unicode = font.getUnicodeFlag();
             text = "§c§l" + SwapKeys.overlayName(binding.key);
-            width = FontWidths.measure(font, text);
+            boolean unicode = font.getUnicodeFlag();
+            font.setUnicodeFlag(true);
+            try {
+                width = FontWidths.measure(font, text);
+            } finally {
+                font.setUnicodeFlag(unicode);
+            }
         }
     }
     private static final class CachedIdentity {
