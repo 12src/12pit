@@ -337,44 +337,6 @@ tasks.shadowJar {
 
     exclude("LICENSE.txt")
     exclude("META-INF/*.DSA", "META-INF/*.RSA", "META-INF/*.SF")
-
-    val hotPath = "pit12/shared/performance/HotPath"
-    exclude("$hotPath.class")
-    // Tests read the original classes. Strip the marker only from the packaged copy.
-    doLast {
-        val archive = archiveFile.get().asFile
-        val stripped = temporaryDir.resolve("stripped.jar")
-        ZipFile(archive).use { source ->
-            ZipOutputStream(stripped.outputStream().buffered()).use { output ->
-                for (entry in source.entries().asSequence()) {
-                    output.putNextEntry(ZipEntry(entry.name).apply { time = entry.time })
-                    source.getInputStream(entry).use { input ->
-                        if (entry.name.startsWith("pit12/") && entry.name.endsWith(".class")) {
-                            var bytes = input.readBytes()
-                            val node = ClassNode()
-                            ClassReader(bytes).accept(node, 0)
-                            var changed = false
-                            for (method in node.methods) {
-                                if (method.invisibleAnnotations?.removeIf { it.desc == "L$hotPath;" } == true) {
-                                    changed = true
-                                }
-                            }
-                            if (changed) {
-                                val writer = ClassWriter(0)
-                                node.accept(writer)
-                                bytes = writer.toByteArray()
-                            }
-                            output.write(bytes)
-                        } else {
-                            input.copyTo(output)
-                        }
-                    }
-                    output.closeEntry()
-                }
-            }
-        }
-        Files.move(stripped.toPath(), archive.toPath(), StandardCopyOption.REPLACE_EXISTING)
-    }
 }
 
 tasks.assemble { dependsOn(remapJar) }
