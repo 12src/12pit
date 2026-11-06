@@ -62,10 +62,8 @@ public final class TelebowFeature
     private final PlayerTimers timers;
     private final Map<Integer, TelebowPath> paths = new LinkedHashMap<>();
     private final TelebowRenderer renderer;
-    private final TelebowAim aim;
     private boolean started;
     private boolean active;
-    private boolean aimActive;
 
     public TelebowFeature(Minecraft minecraft, ConfigCatalog configs, TelebowConfig config,
             ClientSession session, ArrowTracker arrows, RelationLookup relations,
@@ -79,7 +77,6 @@ public final class TelebowFeature
         this.timers = timers;
         timers.configureTelebow(config);
         renderer = new TelebowRenderer(minecraft, config, textures);
-        aim = new TelebowAim(minecraft, config, player -> colorOf(player, true));
     }
 
     @Override
@@ -101,15 +98,11 @@ public final class TelebowFeature
     }
 
     private void updateActivation() {
-        boolean prediction = config.own.get() && (config.ownColor.get() >>> 24) != 0
-                || config.friends.get() && (config.friendColor.get() >>> 24) != 0
-                || config.enemies.get() && (config.enemyColor.get() >>> 24) != 0
-                || config.others.get() && (config.otherColor.get() >>> 24) != 0;
-        aimActive = started && config.enabled() && config.aimPoints.get()
-                && (config.aimFriends.get() && (config.friendColor.get() >>> 24) != 0
-                        || config.aimEnemies.get() && (config.enemyColor.get() >>> 24) != 0
-                        || config.aimOthers.get() && (config.otherColor.get() >>> 24) != 0);
-        boolean enabled = started && config.enabled() && (prediction || aimActive);
+        boolean enabled = started && config.enabled()
+                && (config.own.get() && (config.ownColor.get() >>> 24) != 0
+                        || config.friends.get() && (config.friendColor.get() >>> 24) != 0
+                        || config.enemies.get() && (config.enemyColor.get() >>> 24) != 0
+                        || config.others.get() && (config.otherColor.get() >>> 24) != 0);
         if (enabled == active) {
             updateTimerDemand();
             return;
@@ -132,12 +125,9 @@ public final class TelebowFeature
         int groups = 0;
         if (active && config.ignoreCooldown.get()) {
             groups = TimerDemand.groups(config.own.get() && (config.ownColor.get() >>> 24) != 0,
-                    (config.friends.get() || aimActive && config.aimFriends.get())
-                            && (config.friendColor.get() >>> 24) != 0,
-                    (config.enemies.get() || aimActive && config.aimEnemies.get())
-                            && (config.enemyColor.get() >>> 24) != 0,
-                    (config.others.get() || aimActive && config.aimOthers.get())
-                            && (config.otherColor.get() >>> 24) != 0);
+                    config.friends.get() && (config.friendColor.get() >>> 24) != 0,
+                    config.enemies.get() && (config.enemyColor.get() >>> 24) != 0,
+                    config.others.get() && (config.otherColor.get() >>> 24) != 0);
         }
         timers.setDemand(this, TimerKind.TELEBOW.select(groups));
     }
@@ -153,25 +143,18 @@ public final class TelebowFeature
                 || changes.affects("telebow", "friend_color")
                 || changes.affects("telebow", "enemy_color")
                 || changes.affects("telebow", "other_color")
-                || changes.affects("telebow", "aim_points")
-                || changes.affects("telebow", "aim_friends")
-                || changes.affects("telebow", "aim_enemies")
-                || changes.affects("telebow", "aim_others")
-                || changes.affects("telebow", "aim_tolerance_blocks")
                 || changes.affects("telebow", "ignore_cooldown")))
             return;
         updateActivation();
         refreshPaths();
-        aim.clear();
     }
 
     private void refreshPaths() {
         Iterator<TelebowPath> iterator = paths.values().iterator();
         while (iterator.hasNext()) {
             TelebowPath path = iterator.next();
-            int color = colorOf(path.shooter, false);
-            if ((color >>> 24) == 0
-                    && (!config.aimPoints.get() || (colorOf(path.shooter, true) >>> 24) == 0)) {
+            int color = colorOf(path.shooter);
+            if ((color >>> 24) == 0) {
                 renderer.remove(path);
                 iterator.remove();
             } else {
@@ -190,26 +173,20 @@ public final class TelebowFeature
         refreshPaths();
     }
 
-    private int colorOf(EntityPlayer shooter, boolean aiming) {
+    private int colorOf(EntityPlayer shooter) {
         if (minecraft.thePlayer == null)
             return 0;
         if (shooter.getUniqueID().equals(minecraft.thePlayer.getUniqueID()))
-            return !aiming && config.own.get() ? config.ownColor.get() : 0;
+            return config.own.get() ? config.ownColor.get() : 0;
         if (relations.readiness() != RelationReadiness.READY)
             return 0;
         switch (relations.relationOf(shooter.getUniqueID())) {
             case FRIEND:
-                return (aiming ? config.aimFriends.get() : config.friends.get())
-                        ? config.friendColor.get()
-                        : 0;
+                return config.friends.get() ? config.friendColor.get() : 0;
             case ENEMY:
-                return (aiming ? config.aimEnemies.get() : config.enemies.get())
-                        ? config.enemyColor.get()
-                        : 0;
+                return config.enemies.get() ? config.enemyColor.get() : 0;
             default:
-                return (aiming ? config.aimOthers.get() : config.others.get())
-                        ? config.otherColor.get()
-                        : 0;
+                return config.others.get() ? config.otherColor.get() : 0;
         }
     }
 
@@ -225,9 +202,8 @@ public final class TelebowFeature
                 || System.nanoTime() - lastSneakingNanos > config.predictionMargin.get()
                         * (shooter == minecraft.thePlayer ? 2_000_000L : 1_000_000L)))
             return false;
-        int color = colorOf(shooter, false);
-        if ((color >>> 24) == 0
-                && (!config.aimPoints.get() || (colorOf(shooter, true) >>> 24) == 0))
+        int color = colorOf(shooter);
+        if ((color >>> 24) == 0)
             return false;
         if (PitEnchantmentReader.levelOf(bow, PitEnchantment.Telebow) == 0)
             return false;
@@ -284,29 +260,20 @@ public final class TelebowFeature
             if (path.dirty)
                 path.predict();
         }
-        if (aimActive) {
-            if (minecraft.theWorld == session.world())
-                aim.update(paths.values());
-            else
-                aim.clear();
-        }
     }
 
     @Override
     public void onArrowsReset() {
         paths.clear();
-        aim.clear();
         renderer.clear();
     }
 
     @SubscribeEvent
     @HotPath
     public void onRenderWorld(RenderWorldLastEvent event) {
-        if (paths.isEmpty() && aim.targets.isEmpty() || minecraft.gameSettings.hideGUI
+        if (paths.isEmpty() || minecraft.gameSettings.hideGUI
                 || minecraft.theWorld != session.world())
             return;
-        if (aimActive)
-            aim.interpolate(event.partialTicks);
-        renderer.render(paths.values(), aim.targets.values(), System.nanoTime());
+        renderer.render(paths.values(), System.nanoTime());
     }
 }

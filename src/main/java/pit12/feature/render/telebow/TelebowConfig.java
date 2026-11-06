@@ -25,7 +25,6 @@ import pit12.runtime.config.ChoiceSetting;
 import pit12.runtime.config.ChoiceSetting.Choice;
 import pit12.runtime.config.ColorSetting;
 import pit12.runtime.config.ConfigCategory;
-import pit12.runtime.config.DoubleSetting;
 import pit12.runtime.config.FeatureConfig;
 import pit12.runtime.config.IntegerSetting;
 import pit12.runtime.timers.TelebowSettings;
@@ -40,13 +39,6 @@ public final class TelebowConfig extends FeatureConfig implements TelebowSetting
     public final BooleanSetting ignoreCooldown;
     public final BooleanSetting correctCooldown;
     public final ChoiceSetting cooldownDetection;
-    public final BooleanSetting aimPoints;
-    public final BooleanSetting aimHoldingOnly;
-    public final BooleanSetting aimFriends;
-    public final BooleanSetting aimEnemies;
-    public final BooleanSetting aimOthers;
-    public final BooleanSetting aimNames;
-    public final DoubleSetting aimTolerance;
     public final ColorSetting ownColor;
     public final ColorSetting friendColor;
     public final ColorSetting enemyColor;
@@ -83,24 +75,6 @@ public final class TelebowConfig extends FeatureConfig implements TelebowSetting
         teleportExtraMargin = integerSliderSetting("teleport_extra_margin_ms",
                 source("Extra teleport margin (ms)"),
                 source("Adds to the prediction margin for Telebow teleports."), 100, 0, 1000, 25);
-        subcategory("aim", source("Aim points"));
-        aimPoints = booleanSetting("aim_points", source("Show aim points"), source(
-                "Shows where to aim to land near another player's predicted Telebow landing point. Use a fully drawn shot while sneaking."),
-                false);
-        aimHoldingOnly = booleanSetting("aim_holding_only", source("Only while holding Telebow"),
-                source("Shows aim points only while holding a Telebow."), true);
-        aimFriends = booleanSetting("aim_friends", source("Friends"),
-                source("Shows aim points for landing near friends' Telebow landing points."), true);
-        aimEnemies = booleanSetting("aim_enemies", source("Enemies"),
-                source("Shows aim points for landing near enemies' Telebow landing points."), true);
-        aimOthers = booleanSetting("aim_others", source("Others"),
-                source("Shows aim points for landing near other players' Telebow landing points."),
-                true);
-        aimNames = booleanSetting("aim_names", source("Show names"),
-                source("Shows player names next to aim points."), true);
-        aimTolerance = doubleSliderSetting("aim_tolerance_blocks", source("Tolerance (blocks)"),
-                source("Maximum distance between your predicted landing point and the other player's landing point."),
-                2, 0.25, 8, 0.25);
         subcategory("appearance", source("Appearance"));
         ownColor = colorPickerSetting("own_color", source("Own color"),
                 source("Color and opacity of your Telebow predictions."), 0xFF55FFFF);
