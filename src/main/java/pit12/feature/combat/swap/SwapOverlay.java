@@ -26,7 +26,9 @@ import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.inventory.Slot;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTBase.NBTPrimitive;
 import pit12.shared.rendering.FontWidths;
 
 final class SwapOverlay {
@@ -93,13 +95,8 @@ final class SwapOverlay {
         if (stack == null || identities.containsKey(stack))
             return;
         CachedIdentity cached = cache.get(stack);
-        // NBT can change on the same stack. Compare with our copy before reusing its identity.
-        if (cached == null || stack.getItem() != cached.snapshot.getItem()
-                || stack.getItem().getHasSubtypes()
-                        && stack.getMetadata() != cached.snapshot.getMetadata()
-                || !ItemStack.areItemStackTagsEqual(stack, cached.snapshot)
-                || (stack.stackSize > 0) != (cached.snapshot.stackSize > 0)) {
-            cached = new CachedIdentity(stack.copy(), ItemIdentity.read(stack));
+        if (cached == null || !cached.matches(stack)) {
+            cached = new CachedIdentity(stack);
             cache.put(stack, cached);
         }
         identities.put(stack, cached.identity);
@@ -146,13 +143,33 @@ final class SwapOverlay {
         }
     }
     private static final class CachedIdentity {
+        private final Item item;
+        private final int metadata;
+        private final boolean present;
+        private final long nonce;
         final ItemStack snapshot;
         final ItemIdentity identity;
         Label label;
 
-        CachedIdentity(ItemStack snapshot, ItemIdentity identity) {
-            this.snapshot = snapshot;
-            this.identity = identity;
+        CachedIdentity(ItemStack stack) {
+            item = stack.getItem();
+            metadata = stack.getMetadata();
+            present = stack.stackSize > 0;
+            identity = ItemIdentity.read(stack);
+            boolean byNonce = identity != null && identity.kind == ItemIdentity.Kind.NONCE;
+            nonce = byNonce ? ItemIdentity.nonce(stack).getLong() : 0;
+            // Only nonce-based identities can ignore other NBT changes.
+            snapshot = byNonce ? null : stack.copy();
+        }
+
+        boolean matches(ItemStack stack) {
+            if (stack.getItem() != item || item.getHasSubtypes() && stack.getMetadata() != metadata
+                    || (stack.stackSize > 0) != present)
+                return false;
+            if (snapshot != null)
+                return ItemStack.areItemStackTagsEqual(stack, snapshot);
+            NBTPrimitive currentNonce = ItemIdentity.nonce(stack);
+            return currentNonce != null && currentNonce.getLong() == nonce;
         }
     }
 }
