@@ -1,14 +1,6 @@
 import dev.architectury.pack200.java.Pack200Adapter
-import java.nio.file.Files
-import java.nio.file.StandardCopyOption
-import java.util.zip.ZipEntry
-import java.util.zip.ZipFile
-import java.util.zip.ZipOutputStream
 import net.fabricmc.loom.task.RemapJarTask
 import org.apache.commons.lang3.SystemUtils
-import org.objectweb.asm.ClassReader
-import org.objectweb.asm.ClassWriter
-import org.objectweb.asm.tree.ClassNode
 
 plugins {
     java
@@ -267,7 +259,15 @@ val installWebUi =
     tasks.register<Exec>("installWebUi") {
         inputs.files("web-ui/package.json", "web-ui/package-lock.json")
         outputs.file("web-ui/node_modules/.package-lock.json")
-        commandLine(npm, "ci", "--prefix", "web-ui")
+        commandLine(
+            npm,
+            if (providers.environmentVariable("CI").orElse("false").get().toBoolean()) "ci" else "install",
+            "--prefer-offline",
+            "--no-audit",
+            "--no-fund",
+            "--prefix",
+            "web-ui",
+        )
     }
 val buildWebUi =
     tasks.register<Exec>("buildWebUi") {
