@@ -158,7 +158,7 @@ final class BindingBook implements SwapBindings {
         requireReady();
         int before = bindings.size();
         bindings.values().removeIf(
-                binding -> key > 0 ? binding.key == key : binding.identity.equals(identity));
+                binding -> key != 0 ? binding.key == key : binding.identity.equals(identity));
         int removed = before - bindings.size();
         if (removed > 0)
             persist();
