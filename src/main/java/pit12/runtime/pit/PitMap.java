@@ -22,6 +22,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 
+@SuppressWarnings("PMD.NonSerializableClass")
 public enum PitMap {
     UNKNOWN(0, 0, null, 0, null),
     GENESIS(86, 26, Blocks.air, 0, PitMid.GENESIS),

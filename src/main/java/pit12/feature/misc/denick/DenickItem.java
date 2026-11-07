@@ -61,7 +61,7 @@ final class DenickItem {
         if (maxLives <= 0) {
             return null;
         }
-        StringBuilder query = new StringBuilder();
+        StringBuilder query = new StringBuilder(64);
         NBTTagList enchantments = extra.getTagList("CustomEnchants", Constants.NBT.TAG_COMPOUND);
         if (enchantments.tagCount() == 0) {
             return null;

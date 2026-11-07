@@ -274,9 +274,7 @@ final class SwapController {
 
     // noinspection BooleanMethodIsAlwaysInverted
     private boolean clickReady(int delay, Phase phase) {
-        if (tick - lastClickTick < delay)
-            return false;
-        return clickTiming.ready(phase, randomClickTiming());
+        return tick - lastClickTick >= delay && clickTiming.ready(phase, randomClickTiming());
     }
 
     void clickSent(int windowId, short actionNumber) {

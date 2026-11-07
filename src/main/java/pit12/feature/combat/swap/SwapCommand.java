@@ -94,7 +94,7 @@ final class SwapCommand {
             try {
                 target = Integer.parseInt(args[1]);
             } catch (NumberFormatException failure) {
-                throw new IllegalArgumentException("Hotbar slot must be from 1 to 9");
+                throw new IllegalArgumentException("Hotbar slot must be from 1 to 9", failure);
             }
             if (target < 1 || target > 9) {
                 throw new IllegalArgumentException("Hotbar slot must be from 1 to 9");
@@ -127,7 +127,7 @@ final class SwapCommand {
                                     Tone.SUCCESS.argument(WHITE, removed)));
     }
 
-    private void list(ICommandSender sender, String[] args) {
+    private void list(ICommandSender sender, String[] unusedArgs) {
         bindings.requireReady();
         reply(sender, Tone.INFO,
                 language.format("Swap bindings: {0}", Tone.INFO.argument(AQUA, bindings.count())));
@@ -138,7 +138,7 @@ final class SwapCommand {
                             + " -> " + Tone.INFO.argument(WHITE, entry.targetName()));
     }
 
-    private void status(ICommandSender sender, String[] args) {
+    private void status(ICommandSender sender, String[] unusedArgs) {
         reply(sender, Tone.INFO,
                 language.format("Automatic swap: {0}",
                         config.autoSwap.get()
@@ -179,7 +179,7 @@ final class SwapCommand {
         return code;
     }
 
-    private List<String> bindSuggestions(ICommandSender sender, String[] args) {
+    private List<String> bindSuggestions(ICommandSender unusedSender, String[] args) {
         if (args.length == 2) {
             return Arrays.asList("1", "2", "3", "4", "5", "6", "7", "8", "9");
         }
@@ -192,7 +192,7 @@ final class SwapCommand {
         return keys;
     }
 
-    private List<String> unbindSuggestions(ICommandSender sender, String[] args) {
+    private List<String> unbindSuggestions(ICommandSender unusedSender, String[] unusedArgs) {
         List<String> keys = new ArrayList<>();
         for (SwapBinding entry : bindings.entries())
             keys.add(Keyboard.getKeyName(entry.key));

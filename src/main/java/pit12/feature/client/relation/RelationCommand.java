@@ -78,7 +78,7 @@ final class RelationCommand {
                 .build();
     }
 
-    private void list(ICommandSender sender, String[] args) {
+    private void list(ICommandSender sender, String[] unusedArgs) {
         if (!feature.commandReady(sender))
             return;
         List<RelationEntry> entries = feature.entries(relation);

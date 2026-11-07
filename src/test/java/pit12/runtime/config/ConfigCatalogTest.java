@@ -36,8 +36,8 @@ import pit12.shared.concurrent.ClientThread;
 
 public final class ConfigCatalogTest {
     private final ConfigCatalog catalog = new ConfigCatalog(ClientThread.current());
-    private final TestConfig first = new TestConfig("first");
-    private final TestConfig second = new TestConfig("second");
+    private final StubConfig first = new StubConfig("first");
+    private final StubConfig second = new StubConfig("second");
 
     @Before
     public void registerConfigs() {
@@ -119,10 +119,10 @@ public final class ConfigCatalogTest {
         return new ConfigSnapshot(features);
     }
 
-    private static final class TestConfig extends FeatureConfig {
+    private static final class StubConfig extends FeatureConfig {
         final IntegerSetting limit = integerSliderSetting("limit", "Limit", "", 2, 0, 10, 1);
 
-        TestConfig(String id) {
+        StubConfig(String id) {
             super(id, id, null, "");
         }
     }

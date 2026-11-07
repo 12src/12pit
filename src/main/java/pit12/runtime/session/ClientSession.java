@@ -18,6 +18,9 @@
  */
 package pit12.runtime.session;
 
+import static edu.umd.cs.findbugs.annotations.SuppressMatchType.EXACT;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.network.NetHandlerPlayClient;
@@ -41,6 +44,8 @@ public final class ClientSession implements ClientLifecycle {
     private long lastTickRevision;
     private long notifiedRevision;
     private boolean started;
+    @SuppressFBWarnings(value = "VO_VOLATILE_INCREMENT", matchType = EXACT,
+            justification = "Only the client thread writes the generation.")
     private volatile long generation;
 
     public ClientSession(Minecraft minecraft, ClientThread client, ClientSessionBinding binding) {

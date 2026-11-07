@@ -18,6 +18,9 @@
  */
 package pit12.feature.client.webui;
 
+import static edu.umd.cs.findbugs.annotations.SuppressMatchType.EXACT;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -51,6 +54,7 @@ final class WebUiEvents {
         streams.clear();
     }
 
+    @SuppressFBWarnings(value = "RV_RETURN_VALUE_IGNORED_BAD_PRACTICE", matchType = EXACT)
     void changed(String resource) {
         for (Stream stream : streams) {
             stream.pending.add(resource);

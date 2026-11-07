@@ -30,9 +30,12 @@ import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.regex.Pattern;
 import pit12.shared.storage.AtomicFile;
 
 final class DenickStore {
+    private static final Pattern PLAYER_NAME = Pattern.compile("[A-Za-z0-9_]{1,16}");
+    private static final Pattern PLAYER_ID = Pattern.compile("[0-9a-fA-F]{1,32}");
     private final Path path;
 
     DenickStore(Path path) {
@@ -51,9 +54,9 @@ final class DenickStore {
             }
             for (Map.Entry<String, JsonElement> entry : parsed.getAsJsonObject().entrySet()) {
                 JsonElement value = entry.getValue();
-                if (!entry.getKey().matches("[A-Za-z0-9_]{1,16}") || !value.isJsonPrimitive()
+                if (!PLAYER_NAME.matcher(entry.getKey()).matches() || !value.isJsonPrimitive()
                         || !value.getAsJsonPrimitive().isString()
-                        || !value.getAsString().matches("[0-9a-fA-F]{1,32}")) {
+                        || !PLAYER_ID.matcher(value.getAsString()).matches()) {
                     throw new IOException("Denick cache contains an invalid identity");
                 }
                 String name = entry.getKey().toLowerCase(Locale.ROOT);

@@ -60,7 +60,7 @@ public final class ProfilesFeatureTest {
     private final BlockingQueue<Runnable> clientTasks = new LinkedBlockingQueue<>();
     private final ConfigCatalog catalog = new ConfigCatalog(
             new ClientThread(() -> Thread.currentThread() == clientThread, clientTasks::add));
-    private final TestConfig config = new TestConfig();
+    private final StubConfig config = new StubConfig();
     private final UUID firstId = UUID.randomUUID();
     private final UUID secondId = UUID.randomUUID();
     private final Store store = new Store();
@@ -201,10 +201,10 @@ public final class ProfilesFeatureTest {
         return profile;
     }
 
-    private static final class TestConfig extends FeatureConfig {
+    private static final class StubConfig extends FeatureConfig {
         final IntegerSetting limit = integerSliderSetting("limit", "Limit", "", 2, 0, 10, 1);
 
-        TestConfig() {
+        StubConfig() {
             super("sample", "Sample", null, "");
         }
     }

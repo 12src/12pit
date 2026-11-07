@@ -36,6 +36,7 @@ import java.net.InetSocketAddress;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -64,6 +65,7 @@ final class WebUiServer {
     }
 
     void start() throws IOException {
+        @SuppressWarnings("PMD.AvoidUsingHardCodedIP")
         InetAddress loopback = InetAddress.getByName("127.0.0.1");
         HttpServer created;
         try {
@@ -180,7 +182,7 @@ final class WebUiServer {
             return;
         }
         String type = exchange.getRequestHeaders().getFirst("Content-Type");
-        if (type == null || !type.toLowerCase().startsWith("application/json")) {
+        if (type == null || !type.toLowerCase(Locale.ROOT).startsWith("application/json")) {
             sendJson(exchange, 415, object("error", "Expected JSON"));
             return;
         }
@@ -194,6 +196,7 @@ final class WebUiServer {
         sendJson(exchange, 200, onClient(() -> request.route.handler.apply(request)));
     }
 
+    @SuppressWarnings("PMD.PreserveStackTrace")
     private void serveEvents(HttpExchange exchange)
             throws IOException, ExecutionException, InterruptedException {
         WebUiEvents.Stream stream = onClient(events::subscribe);

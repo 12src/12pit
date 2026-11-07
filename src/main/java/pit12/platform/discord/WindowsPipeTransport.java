@@ -18,12 +18,15 @@
  */
 package pit12.platform.discord;
 
+import static edu.umd.cs.findbugs.annotations.SuppressMatchType.EXACT;
+
 import com.sun.jna.Memory;
 import com.sun.jna.Native;
 import com.sun.jna.Pointer;
 import com.sun.jna.WString;
 import com.sun.jna.ptr.IntByReference;
 import com.sun.jna.win32.StdCallLibrary;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
@@ -128,6 +131,8 @@ final class WindowsPipeTransport implements Closeable {
         }
     }
 
+    @SuppressFBWarnings(value = "WA_NOT_IN_LOOP", matchType = EXACT,
+            justification = "The read and write loops retry after each wakeup.")
     private void awaitData() throws IOException {
         try {
             wait(100L);

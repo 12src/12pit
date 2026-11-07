@@ -18,9 +18,12 @@
  */
 package pit12.runtime.languages;
 
+import static edu.umd.cs.findbugs.annotations.SuppressMatchType.EXACT;
+
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -42,6 +45,8 @@ import pit12.shared.concurrent.ClientThread;
 
 public final class Languages {
     private static final Pattern PARAMETER = Pattern.compile("\\{([0-9]+)}");
+    private static final Pattern LOCALE = Pattern.compile("[a-zA-Z]{2,3}(?:-[a-zA-Z0-9]{2,8})*");
+    private static final Pattern WHITESPACE = Pattern.compile("\\s+");
     private static final Pattern LOCATION = Pattern.compile("src/main/java/.+\\.java:[1-9][0-9]*"
             + "|web-ui/src/.+\\.(?:vue|ts):[1-9][0-9]*(?::[1-9][0-9]*)?"
             + "|src/main/resources/assets/pit12/languages/languages\\.json:"
@@ -64,7 +69,7 @@ public final class Languages {
                 String code = object.get("locale").getAsString();
                 String name = object.get("name").getAsString();
                 String displayName = object.get("displayName").getAsString();
-                if (!code.matches("[a-zA-Z]{2,3}(?:-[a-zA-Z0-9]{2,8})*") || name.trim().isEmpty()
+                if (!LOCALE.matcher(code).matches() || name.trim().isEmpty()
                         || displayName.trim().isEmpty()) {
                     throw new IllegalArgumentException("Invalid language entry");
                 }
@@ -112,6 +117,8 @@ public final class Languages {
     }
 
     // Give each usage its own string so shared literals can have different locations.
+    @SuppressWarnings("PMD.StringInstantiation")
+    @SuppressFBWarnings(value = "DM_STRING_CTOR", matchType = EXACT)
     public static String source(String text) {
         String location = location();
         String key = location + '\0' + text;
@@ -277,7 +284,7 @@ public final class Languages {
                     if (line.startsWith("#:")) {
                         String references = line.substring(2).trim();
                         if (!references.isEmpty()) {
-                            Collections.addAll(message.locations, references.split("\\s+"));
+                            Collections.addAll(message.locations, WHITESPACE.split(references));
                         }
                     } else if (line.startsWith("#,")) {
                         for (String flag : line.substring(2).split(",")) {

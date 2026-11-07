@@ -45,6 +45,8 @@ import pit12.runtime.config.FeatureConfig;
 import pit12.shared.lifecycle.ClientLifecycle;
 
 public final class BootstrapLayoutTest {
+    private static final Pattern WHITESPACE = Pattern.compile("\\s+");
+
     @Test
     public void sectionsAndRegistrationOrderMatchCategoriesAndDependencies() throws Exception {
         String source = new String(
@@ -77,11 +79,12 @@ public final class BootstrapLayoutTest {
         Set<String> configTypes = new HashSet<>();
         Matcher declarations = Pattern
                 .compile("\\bprivate\\s+(\\w+)\\s+(register\\w+)\\([^{}]*\\)\\s*\\{").matcher(code);
+        Pattern configConstructor = Pattern.compile("\\bnew\\s+(\\w+Config)\\s*\\(");
         while (declarations.find()) {
             String name = declarations.group(2);
             String body = code.substring(declarations.end(), bodyEnd(code, declarations.end() - 1));
             ConfigCategory category = null;
-            Matcher config = Pattern.compile("\\bnew\\s+(\\w+Config)\\s*\\(").matcher(body);
+            Matcher config = configConstructor.matcher(body);
             boolean hasConfig = config.find();
             if (hasConfig) {
                 String type = imports.get(config.group(1));
@@ -148,11 +151,11 @@ public final class BootstrapLayoutTest {
         }
         List<String> callOrder = new ArrayList<>();
         List<String> componentOrder = new ArrayList<>();
+        Pattern inlineConstructor = Pattern.compile("new\\s+(\\w+)\\s*\\((.*)\\)", Pattern.DOTALL);
         for (Call call : calls(constructorBody, "register\\w+|components\\.add")) {
             if ("components.add".equals(call.name)) {
                 String component;
-                Matcher inline = Pattern.compile("new\\s+(\\w+)\\s*\\((.*)\\)", Pattern.DOTALL)
-                        .matcher(call.arguments.trim());
+                Matcher inline = inlineConstructor.matcher(call.arguments.trim());
                 if (inline.matches()) {
                     String type = imports.get(inline.group(1));
                     assertNotNull("Missing component import: " + inline.group(1), type);
@@ -202,9 +205,10 @@ public final class BootstrapLayoutTest {
                 calls(constructorBody, "start|stop|[\\w.]+\\.(?:start|stop)").isEmpty());
         Map<String, Set<String>> dependencies = new HashMap<>();
         Set<String> providers = new HashSet<>();
+        Pattern identifier = Pattern.compile("\\b\\w+\\b");
         for (Map.Entry<String, String> entry : arguments.entrySet()) {
             Set<String> required = new HashSet<>();
-            Matcher identifiers = Pattern.compile("\\b\\w+\\b").matcher(entry.getValue());
+            Matcher identifiers = identifier.matcher(entry.getValue());
             while (identifiers.find()) {
                 String producer = producers.get(identifiers.group());
                 if (producer != null) {
@@ -260,8 +264,8 @@ public final class BootstrapLayoutTest {
                 .compile("\\b(" + names.replace("\\.", "\\s*\\.\\s*") + ")\\s*\\(([^;]*)\\);")
                 .matcher(code);
         while (matcher.find()) {
-            calls.add(new Call(matcher.group(1).replaceAll("\\s+", ""), matcher.group(2),
-                    matcher.start()));
+            calls.add(new Call(WHITESPACE.matcher(matcher.group(1)).replaceAll(""),
+                    matcher.group(2), matcher.start()));
         }
         return calls;
     }

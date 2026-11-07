@@ -144,16 +144,14 @@ public final class MixinConfigPlugin implements IMixinConfigPlugin, IMixinErrorH
             return !mixinClassName.endsWith(".LunarFontRendererMixin") && Launch.classLoader
                     .getResource("club/sk1er/patcher/hooks/FontRendererHook.class") != null;
         }
-        if (mixinClassName.startsWith("pit12.feature.patch.resourceleakfix.mixin.")) {
-            return optifine;
-        }
-        return true;
+        return !mixinClassName.startsWith("pit12.feature.patch.resourceleakfix.mixin.") || optifine;
     }
 
     @Override
     public void acceptTargets(Set<String> myTargets, Set<String> otherTargets) {}
 
     @Override
+    @SuppressWarnings("PMD.ReturnEmptyCollectionRatherThanNull")
     public List<String> getMixins() {
         return null;
     }

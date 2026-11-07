@@ -1,5 +1,6 @@
 pluginManagement {
     val spotlessPluginVersion = providers.gradleProperty("spotlessPluginVersion").get()
+    val spotbugsPluginVersion = providers.gradleProperty("spotbugsPluginVersion").get()
     val architecturyLoomPluginVersion = providers.gradleProperty("architecturyLoomPluginVersion").get()
     val architecturyPack200PluginVersion = providers.gradleProperty("architecturyPack200PluginVersion").get()
     val shadowPluginVersion = providers.gradleProperty("shadowPluginVersion").get()
@@ -7,6 +8,7 @@ pluginManagement {
 
     plugins {
         id("com.diffplug.spotless") version spotlessPluginVersion
+        id("com.github.spotbugs") version spotbugsPluginVersion
         id("gg.essential.loom") version architecturyLoomPluginVersion
         id("dev.architectury.architectury-pack200") version architecturyPack200PluginVersion
         id("com.gradleup.shadow") version shadowPluginVersion

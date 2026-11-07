@@ -28,8 +28,8 @@ public final class ConfigSnapshot {
     public ConfigSnapshot(Map<String, ? extends Map<String, ?>> features) {
         LinkedHashMap<String, Map<String, Object>> featureCopy = new LinkedHashMap<>();
         for (Map.Entry<String, ? extends Map<String, ?>> featureEntry : features.entrySet()) {
-            featureCopy.put(featureEntry.getKey(), Collections
-                    .unmodifiableMap(new LinkedHashMap<String, Object>(featureEntry.getValue())));
+            featureCopy.put(featureEntry.getKey(),
+                    Collections.unmodifiableMap(new LinkedHashMap<>(featureEntry.getValue())));
         }
         this.features = Collections.unmodifiableMap(featureCopy);
     }

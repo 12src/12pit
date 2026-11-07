@@ -18,6 +18,9 @@
  */
 package pit12.feature.render.nametag;
 
+import static edu.umd.cs.findbugs.annotations.SuppressMatchType.EXACT;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -57,6 +60,7 @@ final class NametagOverlayRenderer {
     }
 
     @HotPath
+    @SuppressFBWarnings(value = "ICAST_IDIV_CAST_TO_DOUBLE", matchType = EXACT)
     void render(Minecraft minecraft, WorldClient world, Map<UUID, NametagText> texts,
             Function<EntityPlayer, String> suffix, int upwardOffset, float scale,
             float partialTicks) {

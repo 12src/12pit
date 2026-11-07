@@ -201,7 +201,7 @@ public final class ClientBootstrap {
         Relations relations = registerRelations(presence,
                 new File(minecraft.mcDataDir, "12pit/relations.json").toPath(), client, commands);
         // Category: Combat
-        SwapBindings swapBindings = registerSwap(minecraft, client, configs, session, pitContext,
+        SwapBindings swapBindings = registerSwap(minecraft, client, configs, session,
                 playerEquipment, relations, commands,
                 new File(minecraft.mcDataDir, "12pit/swap-bindings.json").toPath(),
                 (SwapHooksBinding) minecraft, input, inputTicks);
@@ -292,10 +292,9 @@ public final class ClientBootstrap {
 
     // Category: Combat
     private SwapBindings registerSwap(Minecraft minecraft, ClientThread client,
-            ConfigCatalog configs, ClientSession session, PitContext pitContext,
-            PlayerEquipmentAccess playerEquipment, RelationLookup relations,
-            CommandRegistry commands, Path path, SwapHooksBinding binding, InputBlocker input,
-            InputTicks inputTicks) {
+            ConfigCatalog configs, ClientSession session, PlayerEquipmentAccess playerEquipment,
+            RelationLookup relations, CommandRegistry commands, Path path, SwapHooksBinding binding,
+            InputBlocker input, InputTicks inputTicks) {
         SwapConfig config = new SwapConfig();
         configs.register(config);
         SwapFeature swap = new SwapFeature(minecraft, client, configs, config, session,

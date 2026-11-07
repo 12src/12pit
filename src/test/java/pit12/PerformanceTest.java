@@ -18,6 +18,7 @@
  */
 package pit12;
 
+import static edu.umd.cs.findbugs.annotations.SuppressMatchType.EXACT;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -34,6 +35,8 @@ import com.tngtech.archunit.core.domain.JavaMethodReference;
 import com.tngtech.archunit.core.domain.JavaModifier;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.core.importer.ImportOption.DoNotIncludeTests;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.nio.charset.StandardCharsets;
 import java.text.Format;
 import java.util.AbstractSequentialList;
 import java.util.ArrayDeque;
@@ -426,11 +429,14 @@ public final class PerformanceTest {
         }
 
         @HotPath
+        @SuppressWarnings("PMD.UnusedPrivateMethod")
+        @SuppressFBWarnings(value = "UPM_UNCALLED_PRIVATE_METHOD", matchType = EXACT)
         private String value() {
             return "base";
         }
     }
     private static final class HiddenChild extends HiddenBase {
+        @SuppressFBWarnings(value = "HSM_HIDING_METHOD", matchType = EXACT)
         static String text() {
             return String.format("%s", "hidden");
         }
@@ -461,6 +467,8 @@ public final class PerformanceTest {
     }
     private static final class FormattingTask implements FrameTask {
         @Override
+        @SuppressWarnings("PMD.UselessPureMethodCall")
+        @SuppressFBWarnings(value = "RV_RETURN_VALUE_IGNORED", matchType = EXACT)
         public void run() {
             String.format("%s", "callback");
         }
@@ -497,6 +505,8 @@ public final class PerformanceTest {
     }
     private static final class ColdWorker extends Thread {
         @Override
+        @SuppressWarnings("PMD.UselessPureMethodCall")
+        @SuppressFBWarnings(value = "RV_RETURN_VALUE_IGNORED", matchType = EXACT)
         public void run() {
             String.format("%s", "worker");
         }
@@ -598,6 +608,7 @@ public final class PerformanceTest {
         }
 
         @HotPath
+        @SuppressWarnings("PMD.RelianceOnDefaultCharset")
         static Formatter formatter(String value) {
             return new Formatter().format("%s", value);
         }
@@ -654,7 +665,7 @@ public final class PerformanceTest {
 
         @HotPath
         static byte[] bytes(String value) {
-            return value.getBytes();
+            return value.getBytes(StandardCharsets.UTF_8);
         }
     }
 }
