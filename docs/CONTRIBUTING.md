@@ -50,4 +50,4 @@ Imagine yourself reading the code for the first time. If the code makes its purp
 
 Use a short title in English, suitable for changelog entry, like `Remove gaps between timer groups`. If your pull request contains several related changes, describe their common goal in the title and the details in the description.
 
-Before marking your pull request as ready for review, format the code with `./gradlew spotlessApply` (which also adds license headers) and `npm run format --prefix web-ui`, and run `./gradlew check` and build the mod once. Make sure to add focused tests when changing the behavior. In the pull request description, describe your changes and their purpose and the checks you run.
+Before marking your pull request as ready for review, format the code with `./gradlew spotlessApply` and `npm run format --prefix web-ui`, and run `./gradlew check` and build the mod once. Make sure to add focused tests when changing the behavior. In the pull request description, describe your changes and their purpose and the checks you run.
