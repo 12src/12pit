@@ -50,6 +50,6 @@ Run the tests, PMD, SpotBugs, and formatting checks in the repository root (usin
 
 ```powershell
 .\gradlew.bat check
-npm ci --prefix web-ui
+npm install --prefix web-ui
 npm run format:check --prefix web-ui
 ```
