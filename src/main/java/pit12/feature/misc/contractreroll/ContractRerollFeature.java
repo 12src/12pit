@@ -70,6 +70,7 @@ public final class ContractRerollFeature
         implements ClientLifecycle, InputHandler, SidebarListener, ConfigChangeListener {
     private static final Logger LOGGER = LogManager.getLogger(ContractRerollFeature.class);
     private static final int[] CHOICE_SLOTS = {11, 13, 15};
+    private static final Pattern WHITESPACE = Pattern.compile("\\s+");
     private static final Pattern KILLS = Pattern.compile("Kill ([0-9]+) players\\.");
     private static final Pattern NO_ARMOR =
             Pattern.compile("Kill ([0-9]+) players without wearing any armor\\.");
@@ -405,9 +406,10 @@ public final class ContractRerollFeature
             return;
         String[] tooltips = new String[CHOICE_SLOTS.length];
         for (int index = 0; index < tooltips.length; index++) {
-            tooltips[index] = TextCodes
-                    .strip(String.join(" ", pendingStacks[index].getTooltip(player, false)))
-                    .replaceAll("\\s+", " ");
+            tooltips[index] = WHITESPACE
+                    .matcher(TextCodes.strip(
+                            String.join(" ", pendingStacks[index].getTooltip(player, false))))
+                    .replaceAll(" ");
         }
         for (int index = 0; index < tooltips.length; index++) {
             if (config.requireViles.get() && !tooltips[index].contains("Bonus: 1 Chunk of Vile")

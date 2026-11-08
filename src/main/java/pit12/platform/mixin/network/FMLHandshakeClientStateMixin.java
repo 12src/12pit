@@ -44,7 +44,7 @@ public abstract class FMLHandshakeClientStateMixin {
         if (Minecraft.getMinecraft().isSingleplayer()) {
             return mods;
         }
-        List<ModContainer> filtered = new ArrayList<ModContainer>();
+        List<ModContainer> filtered = new ArrayList<>();
         for (ModContainer mod : mods) {
             if (!pit12$isClientSideOnly(mod)) {
                 filtered.add(mod);

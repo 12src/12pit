@@ -18,9 +18,11 @@
  */
 package pit12.shared.lifecycle;
 
+import static edu.umd.cs.findbugs.annotations.SuppressMatchType.EXACT;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.junit.Test;
 
 public final class DemandLifecycleTest {
@@ -55,6 +57,8 @@ public final class DemandLifecycleTest {
     }
 
     @Test
+    @SuppressWarnings("PMD.StringInstantiation")
+    @SuppressFBWarnings(value = "DM_STRING_CTOR", matchType = EXACT)
     public void sharedOwnersKeepTheServiceAlive() {
         Service service = new Service();
         Object first = new String("owner");

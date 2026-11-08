@@ -47,6 +47,7 @@ final class WebUiRoutes {
             this.lookup = lookup;
         }
 
+        @SuppressWarnings("PMD.ReturnEmptyCollectionRatherThanNull")
         Map<String, String> match(String[] path) {
             if (segments.length != path.length)
                 return null;

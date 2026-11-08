@@ -124,6 +124,8 @@ final class UnixSocketTransport implements Closeable {
         }
     };
 
+    @SuppressWarnings({"PMD.AvoidCatchingGenericException",
+            "PMD.AvoidInstanceofChecksInCatchClause"})
     UnixSocketTransport(File endpoint) throws IOException {
         // TODO: BSD socket layouts. Only Linux and macOS work here for now.
         if (!MAC && !Platform.isLinux()) {
@@ -171,7 +173,7 @@ final class UnixSocketTransport implements Closeable {
                         new IntByReference(4));
                 if (error.getValue() != 0) {
                     throw new IOException("Failed to connect Discord IPC socket: " + endpoint
-                            + " (errno " + error.getValue() + ")");
+                            + " (errno " + error.getValue() + ")", failure);
                 }
             }
         } catch (IOException | RuntimeException | Error failure) {
@@ -233,6 +235,8 @@ final class UnixSocketTransport implements Closeable {
         }
     }
 
+    // LastErrorException tells JNA to capture native errors.
+    @SuppressWarnings("PMD.AvoidUncheckedExceptionsInSignatures")
     public interface LibC extends Library {
         int socket(int domain, int type, int protocol) throws LastErrorException;
 

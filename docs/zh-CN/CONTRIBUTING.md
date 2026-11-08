@@ -1,4 +1,4 @@
-<!-- Source: docs/CONTRIBUTING.md; Based on: fd3499ea65660abdafb7116049c5fd734e73efe8 -->
+<!-- Source: docs/CONTRIBUTING.md; Based on: 8c74388c990b568d0f14d9e10c9ad16b0dc2cc9a -->
 
 # 参与贡献
 
@@ -24,7 +24,7 @@
 
 改代码前先看看相关模块现有的实现，能复用现有工具的尽量复用。新增逻辑放在所属功能的包内，确实有多处复用需求时再提取到共享层，不要在拉取请求里顺手做无关的代码清理。
 
-[BootstrapLayoutTest](../../src/test/java/pit12/architecture/BootstrapLayoutTest.java) 会实例化各功能的配置类来检查分类和注册顺序。不需要注入依赖的配置类使用 `public` 无参构造器；如果新增的配置类需要传入构造参数，记得同步更新该测试。
+[BootstrapLayoutTest](../../src/test/java/pit12/BootstrapLayoutTest.java) 会实例化各功能的配置类来检查分类和注册顺序。不需要注入依赖的配置类使用 `public` 无参构造器；如果新增的配置类需要传入构造参数，记得同步更新该测试。
 
 项目里的界面文案、日志和文档请保持自然、简练。
 
@@ -52,4 +52,4 @@
 
 拉取请求标题请用简短的英文，方便直接作为更新日志条目，例如 `Remove gaps between timer groups`。如果包含几处相关联的改动，在标题里概括共同目标，并在描述中列出具体内容。
 
-将拉取请求标记为可审查前，请先运行 `./gradlew spotlessApply`（会自动处理代码格式和许可证头）与 `npm run format --prefix web-ui`，再跑一遍 `./gradlew check` 并完整构建一次。如果修改了行为，请补充对应的测试。在描述中写明改了什么、为什么改，以及实际运行了哪些检查。
+将拉取请求标记为可审查前，请先运行 `./gradlew spotlessApply` 与 `npm run format --prefix web-ui`，再跑一遍 `./gradlew check` 并完整构建一次。如果修改了行为，请补充对应的测试。在描述中写明改了什么、为什么改，以及实际运行了哪些检查。

@@ -18,11 +18,14 @@
  */
 package pit12.feature.client.profile.storage;
 
+import static edu.umd.cs.findbugs.annotations.SuppressMatchType.EXACT;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -53,6 +56,9 @@ public final class JsonProfileStore implements ProfileStore {
         this.codec = codec;
     }
 
+    @Override
+    @SuppressFBWarnings(value = "NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", matchType = EXACT,
+            justification = "Directory entries are never filesystem roots.")
     public LoadedProfiles load() {
         ArrayList<ProfileLoadProblem> problems = new ArrayList<>();
         try {
@@ -102,10 +108,12 @@ public final class JsonProfileStore implements ProfileStore {
         return new LoadedProfiles(profiles, activeProfileId, problems, true);
     }
 
+    @Override
     public void writeProfile(StoredProfile profile) throws IOException {
         AtomicFile.write(directory.resolve(profile.id() + ".json"), codec.encode(profile));
     }
 
+    @Override
     public void writeState(UUID activeProfileId) throws IOException {
         JsonObject root = new JsonObject();
         root.addProperty("schemaVersion", ProfileCodec.SCHEMA_VERSION);
@@ -113,6 +121,7 @@ public final class JsonProfileStore implements ProfileStore {
         AtomicFile.write(directory.resolve(STATE_FILE), gson.toJson(root));
     }
 
+    @Override
     public void moveToTrash(UUID profileId) throws IOException {
         Path source = directory.resolve(profileId + ".json");
         if (!Files.exists(source)) {

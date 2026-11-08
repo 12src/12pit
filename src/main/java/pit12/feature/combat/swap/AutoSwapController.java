@@ -217,7 +217,7 @@ final class AutoSwapController {
                 : config.phoenix.get()) && player.getHealth() <= threshold(type);
     }
 
-    private double threshold(PitEnchantment type) {
+    private int threshold(PitEnchantment type) {
         return type == PitEnchantment.Escape_Pod ? config.podThreshold.get()
                 : config.phoenixThreshold.get();
     }

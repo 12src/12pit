@@ -169,7 +169,7 @@ public final class DiscordRpcFeature implements ClientLifecycle, ConfigChangeLis
                     }
                 }
             } catch (InterruptedException interrupted) {
-                Thread.currentThread().interrupt();
+                currentThread().interrupt();
             } catch (RuntimeException | LinkageError failure) {
                 LOGGER.warn("Discord RPC stopped after an error", failure);
             }

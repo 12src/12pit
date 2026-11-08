@@ -1,3 +1,6 @@
+import com.github.spotbugs.snom.Confidence
+import com.github.spotbugs.snom.Effort
+import com.github.spotbugs.snom.SpotBugsTask
 import dev.architectury.pack200.java.Pack200Adapter
 import net.fabricmc.loom.task.RemapJarTask
 import org.apache.commons.lang3.SystemUtils
@@ -5,7 +8,9 @@ import org.apache.commons.lang3.SystemUtils
 plugins {
     java
     jacoco
+    pmd
     id("com.diffplug.spotless")
+    id("com.github.spotbugs")
     id("gg.essential.loom")
     id("dev.architectury.architectury-pack200")
     id("com.gradleup.shadow")
@@ -160,6 +165,34 @@ tasks.test {
 
 tasks.jacocoTestReport { reports { xml.required = true } }
 
+pmd { ruleSetFiles = files("config/pmd.xml") }
+
+spotbugs {
+    effort.set(Effort.MAX)
+    reportLevel.set(Confidence.LOW)
+    excludeFilter.set(file("config/spotbugs.xml"))
+    chooseVisitors.set(
+        listOf(
+            "+EmptyZipFileEntry",
+            "+CallToUnsupportedMethod",
+            "+CovariantArrayAssignment",
+            "+InefficientInitializationInsideLoop",
+            "+InefficientIndexOf",
+            "+BadAppletConstructor",
+            "+PublicSemaphores",
+            "+UselessSubclassMethod",
+        )
+    )
+    useJavaToolchains.set(false)
+}
+
+tasks.withType<SpotBugsTask>().configureEach {
+    reports {
+        create("html")
+        create("xml")
+    }
+}
+
 repositories {
     mavenCentral()
     maven("https://repo.polyfrost.org/releases") {
@@ -181,6 +214,7 @@ dependencies {
     forge("net.minecraftforge:forge:$minecraftVersion-$forgeVersion")
 
     compileOnly("com.google.code.gson:gson:$minecraftGsonVersion")
+    compileOnly("com.github.spotbugs:spotbugs-annotations:${spotbugs.toolVersion.get()}")
     // full-dev gives us the registry we need to remove the view on shutdown.
     compileOnly("cc.polyfrost:oneconfig-1.8.9-forge:$oneConfigVersion:full-dev") { isTransitive = false }
     shaded("org.spongepowered:mixin:$mixinRuntimeVersion") { isTransitive = false }
@@ -190,6 +224,7 @@ dependencies {
 
     testImplementation("com.google.code.gson:gson:$minecraftGsonVersion")
     testImplementation("com.tngtech.archunit:archunit-junit4:$archUnitVersion")
+    testCompileOnly("com.github.spotbugs:spotbugs-annotations:${spotbugs.toolVersion.get()}")
 }
 
 tasks.withType<JavaCompile> {

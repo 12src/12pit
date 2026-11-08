@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ruleset name="12pit"
+  xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.github.io/schema/ruleset_2_0_0.xsd">
+  <description>Exclude noisy rules.</description>
+
+  <rule ref="category/java/bestpractices.xml">
+    <exclude name="AbstractClassWithoutAbstractMethod"/>
+    <exclude name="ArrayIsStoredDirectly"/>
+    <exclude name="ExhaustiveSwitchHasDefault"/>
+    <exclude name="AvoidReassigningLoopVariables"/>
+    <exclude name="AvoidReassigningParameters"/>
+    <exclude name="ForLoopCanBeForeach"/>
+    <exclude name="ForLoopVariableCount"/>
+    <exclude name="GuardLogStatement"/>
+    <exclude name="ImplicitFunctionalInterface"/>
+    <exclude name="LiteralsFirstInComparisons"/>
+    <exclude name="LooseCoupling"/>
+    <exclude name="OneDeclarationPerLine"/>
+    <exclude name="UnitTestAssertionsShouldIncludeMessage"/>
+    <exclude name="UnitTestContainsTooManyAsserts"/>
+    <exclude name="UnusedAssignment"/>
+    <exclude name="UnusedFormalParameter"/>
+    <exclude name="UnusedPrivateMethod"/>
+    <exclude name="UseVarargs"/>
+  </rule>
+
+  <rule ref="category/java/codestyle.xml">
+    <exclude name="AtLeastOneConstructor"/>
+    <exclude name="AvoidDollarSigns"/>
+    <exclude name="BooleanGetMethodName"/>
+    <exclude name="CallSuperInConstructor"/>
+    <exclude name="CommentDefaultAccessModifier"/>
+    <exclude name="ConfusingTernary"/>
+    <exclude name="ControlStatementBraces"/>
+    <exclude name="EmptyMethodInAbstractClassShouldBeAbstract"/>
+    <exclude name="FieldDeclarationsShouldBeAtStartOfClass"/>
+    <exclude name="FieldNamingConventions"/>
+    <exclude name="LinguisticNaming"/>
+    <exclude name="LocalVariableCouldBeFinal"/>
+    <exclude name="LongVariable"/>
+    <exclude name="MethodArgumentCouldBeFinal"/>
+    <exclude name="MethodNamingConventions"/>
+    <exclude name="OnlyOneReturn"/>
+    <exclude name="PrematureDeclaration"/>
+    <exclude name="ShortClassName"/>
+    <exclude name="ShortMethodName"/>
+    <exclude name="ShortVariable"/>
+    <exclude name="TooManyStaticImports"/>
+    <exclude name="UnnecessaryCast"/>
+    <exclude name="UseDiamondOperator"/>
+    <exclude name="UseUnderscoresInNumericLiterals"/>
+  </rule>
+
+  <rule ref="category/java/design.xml">
+    <exclude name="AvoidDeeplyNestedIfStmts"/>
+    <exclude name="CognitiveComplexity"/>
+    <exclude name="CouplingBetweenObjects"/>
+    <exclude name="CyclomaticComplexity"/>
+    <exclude name="DataClass"/>
+    <exclude name="ExceptionAsFlowControl"/>
+    <exclude name="ExcessiveImports"/>
+    <exclude name="ExcessiveParameterList"/>
+    <exclude name="ExcessivePublicCount"/>
+    <exclude name="GodClass"/>
+    <exclude name="LawOfDemeter"/>
+    <exclude name="LoosePackageCoupling"/>
+    <exclude name="MutableStaticState"/>
+    <exclude name="NPathComplexity"/>
+    <exclude name="NcssCount"/>
+    <exclude name="PublicMemberInNonPublicType"/>
+    <exclude name="SingularField"/>
+    <exclude name="TooManyFields"/>
+    <exclude name="TooManyMethods"/>
+  </rule>
+
+  <rule ref="category/java/documentation.xml">
+    <exclude name="CommentRequired"/>
+    <exclude name="CommentSize"/>
+    <exclude name="UncommentedEmptyConstructor"/>
+    <exclude name="UncommentedEmptyMethodBody"/>
+  </rule>
+
+  <rule ref="category/java/errorprone.xml">
+    <exclude name="AssignmentInOperand"/>
+    <exclude name="AvoidBranchingStatementAsLastInLoop"/>
+    <exclude name="AvoidCatchingGenericException"/>
+    <exclude name="AvoidDuplicateLiterals"/>
+    <exclude name="AvoidFieldNameMatchingMethodName"/>
+    <exclude name="AvoidFieldNameMatchingTypeName"/>
+    <exclude name="AvoidLiteralsInIfCondition"/>
+    <exclude name="CompareObjectsWithEquals"/>
+    <exclude name="NullAssignment"/>
+    <exclude name="UseProperClassLoader"/>
+  </rule>
+
+  <rule ref="category/java/multithreading.xml">
+    <exclude name="AvoidSynchronizedAtMethodLevel"/>
+    <exclude name="AvoidSynchronizedStatement"/>
+    <exclude name="AvoidUsingVolatile"/>
+    <exclude name="DoNotUseThreads"/>
+    <exclude name="UseConcurrentHashMap"/>
+  </rule>
+
+  <rule ref="category/java/performance.xml">
+    <exclude name="AvoidInstantiatingObjectsInLoops"/>
+    <exclude name="ConsecutiveAppendsShouldReuse"/>
+    <exclude name="InefficientEmptyStringCheck"/>
+    <exclude name="TooFewBranchesForSwitch"/>
+  </rule>
+
+  <rule ref="category/java/security.xml"/>
+
+  <rule ref="category/java/errorprone.xml/AvoidCatchingGenericException">
+    <properties>
+      <property name="typesThatShouldNotBeCaught"
+        value="java.lang.NullPointerException,java.lang.Exception,java.lang.Throwable,java.lang.Error"/>
+    </properties>
+  </rule>
+
+  <rule ref="category/java/bestpractices.xml/UnusedPrivateMethod">
+    <properties>
+      <property name="ignoredAnnotations"
+        value="java.lang.Deprecated,jakarta.annotation.PostConstruct,jakarta.annotation.PreDestroy,lombok.EqualsAndHashCode.Include,org.spongepowered.asm.mixin.Shadow,org.spongepowered.asm.mixin.injection.Inject,org.spongepowered.asm.mixin.injection.Redirect,org.spongepowered.asm.mixin.injection.ModifyArg,org.spongepowered.asm.mixin.injection.ModifyVariable"/>
+    </properties>
+  </rule>
+
+  <rule ref="category/java/bestpractices.xml/UnusedFormalParameter">
+    <properties>
+      <property name="violationSuppressXPath"
+        value="ancestor-or-self::MethodDeclaration[pmd-java:hasAnnotation('org.spongepowered.asm.mixin.Shadow') or pmd-java:hasAnnotation('org.spongepowered.asm.mixin.injection.Inject') or pmd-java:hasAnnotation('org.spongepowered.asm.mixin.injection.Redirect') or pmd-java:hasAnnotation('org.spongepowered.asm.mixin.injection.ModifyArg') or pmd-java:hasAnnotation('org.spongepowered.asm.mixin.injection.ModifyVariable')]"/>
+    </properties>
+  </rule>
+
+  <rule ref="category/java/bestpractices.xml/UnusedAssignment">
+    <properties>
+      <property name="violationSuppressRegex"
+        value="The value assigned to field .*"/>
+    </properties>
+  </rule>
+
+  <rule ref="category/java/codestyle.xml/UnnecessaryCast">
+    <properties>
+      <property name="violationSuppressXPath"
+        value="ancestor-or-self::CastExpression[ClassType[pmd-java:typeIs('java.lang.Object')]][ancestor::ClassDeclaration[pmd-java:hasAnnotation('org.spongepowered.asm.mixin.Mixin')]]"/>
+    </properties>
+  </rule>
+
+  <rule ref="category/java/codestyle.xml/UseDiamondOperator">
+    <properties>
+      <property name="violationSuppressXPath"
+        value="ancestor-or-self::ConstructorCall[AnonymousClassDeclaration]"/>
+    </properties>
+  </rule>
+
+  <rule ref="category/java/codestyle.xml/EmptyMethodInAbstractClassShouldBeAbstract">
+    <properties>
+      <property name="violationSuppressXPath"
+        value=".[pmd-java:hasAnnotation('org.spongepowered.asm.mixin.Shadow')]"/>
+    </properties>
+  </rule>
+</ruleset>

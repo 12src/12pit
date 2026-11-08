@@ -49,6 +49,8 @@ public final class LunarNametagText {
 
     private LunarNametagText() {}
 
+    // MethodHandle.invokeExact declares Throwable.
+    @SuppressWarnings("PMD.AvoidCatchingGenericException")
     public static Object append(Object original, String suffix) {
         try {
             // Give the name and suffix their own styles.

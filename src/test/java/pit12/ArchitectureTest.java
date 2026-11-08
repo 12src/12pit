@@ -18,8 +18,11 @@
  */
 package pit12;
 
+import static com.tngtech.archunit.base.DescribedPredicate.not;
 import static com.tngtech.archunit.core.domain.JavaClass.Predicates.resideInAPackage;
 import static com.tngtech.archunit.core.domain.JavaClass.Predicates.resideOutsideOfPackage;
+import static com.tngtech.archunit.core.domain.JavaClass.Predicates.resideOutsideOfPackages;
+import static com.tngtech.archunit.core.domain.properties.HasName.Predicates.name;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.library.Architectures.layeredArchitecture;
@@ -42,6 +45,7 @@ import org.junit.runner.RunWith;
 
 @RunWith(ArchUnitRunner.class)
 @AnalyzeClasses(packages = "pit12", importOptions = DoNotIncludeTests.class)
+@SuppressWarnings("PMD.TestClassWithoutTestCases")
 public final class ArchitectureTest {
     @ArchTest
     public static final ArchRule CLASSES_MUST_USE_DEFINED_TOP_LEVEL_PACKAGES =
@@ -97,10 +101,12 @@ public final class ArchitectureTest {
             .resideInAnyPackage("pit12.bootstrap..", "pit12.runtime..", "pit12.feature..",
                     "pit12.shared..")
             .and().resideOutsideOfPackage("pit12.feature.*.*.mixin..").should()
-            .dependOnClassesThat()
-            .resideOutsideOfPackages("pit12..", "java..", "javax..", "com.sun.net.httpserver..",
-                    "net.minecraft..", "net.minecraftforge..", "com.mojang..", "com.google..",
-                    "org.lwjgl..", "org.apache.http..", "org.apache.logging.log4j..")
+            .dependOnClassesThat(resideOutsideOfPackages("pit12..", "java..", "javax..",
+                    "com.sun.net.httpserver..", "net.minecraft..", "net.minecraftforge..",
+                    "com.mojang..", "com.google..", "org.lwjgl..", "org.apache.http..",
+                    "org.apache.logging.log4j..")
+                    .and(not(name("edu.umd.cs.findbugs.annotations.SuppressFBWarnings")
+                            .or(name("edu.umd.cs.findbugs.annotations.SuppressMatchType")))))
             .because("optional client and native API access belongs to platform adapters");
 
     @ArchTest
@@ -132,7 +138,7 @@ public final class ArchitectureTest {
 
     @ArchTest
     public static void FEATURE_MIXINS_MUST_RESPECT_FEATURE_BOUNDARIES(JavaClasses classes) {
-        Set<String> featureNames = new TreeSet<String>();
+        Set<String> featureNames = new TreeSet<>();
         for (JavaClass javaClass : classes) {
             String featureName = featureNameOf(javaClass);
             if (featureName != null
@@ -140,7 +146,7 @@ public final class ArchitectureTest {
                 featureNames.add(featureName);
             }
         }
-        Set<String> violations = new TreeSet<String>();
+        Set<String> violations = new TreeSet<>();
         for (JavaClass javaClass : classes) {
             if (!javaClass.isAnnotatedWith("org.spongepowered.asm.mixin.Mixin")) {
                 continue;

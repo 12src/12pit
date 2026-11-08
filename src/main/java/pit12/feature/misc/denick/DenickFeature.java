@@ -18,9 +18,11 @@
  */
 package pit12.feature.misc.denick;
 
+import static edu.umd.cs.findbugs.annotations.SuppressMatchType.EXACT;
 import static net.minecraft.util.EnumChatFormatting.WHITE;
 import static pit12.runtime.languages.Languages.source;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -105,6 +107,8 @@ public final class DenickFeature implements ClientLifecycle, DenickNames, TabPre
     private boolean inPit;
     private boolean active;
     private boolean monitoring;
+    @SuppressFBWarnings(value = "VO_VOLATILE_INCREMENT", matchType = EXACT,
+            justification = "Only the client thread writes the generation.")
     private volatile long generation;
     private volatile boolean started;
 
@@ -679,6 +683,8 @@ public final class DenickFeature implements ClientLifecycle, DenickNames, TabPre
         boolean attempted;
         boolean automatic;
         boolean confirmed;
+        @SuppressFBWarnings(value = "VO_VOLATILE_INCREMENT", matchType = EXACT,
+                justification = "Only the client thread writes the request number.")
         volatile long request;
         String owner;
         String realDisplayName;

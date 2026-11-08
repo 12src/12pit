@@ -18,6 +18,9 @@
  */
 package pit12.feature.client.profile.storage;
 
+import static edu.umd.cs.findbugs.annotations.SuppressMatchType.EXACT;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -166,6 +169,8 @@ public final class ProfileIoWorker {
     }
 
     // noinspection BooleanMethodIsAlwaysInverted
+    @SuppressFBWarnings(value = "WA_NOT_IN_LOOP", matchType = EXACT,
+            justification = "awaitWork rechecks the condition after each wakeup.")
     private boolean waitForSignal(long timeoutMillis) {
         try {
             if (timeoutMillis > 0L) {

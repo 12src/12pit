@@ -18,6 +18,9 @@
  */
 package pit12.runtime.timers;
 
+import static edu.umd.cs.findbugs.annotations.SuppressMatchType.EXACT;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -368,6 +371,7 @@ public final class PlayerTimers extends DemandLifecycle implements TelebowCooldo
     }
 
     /** Returns colored countdowns with a leading space. */
+    @SuppressFBWarnings(value = "NP_LOAD_OF_KNOWN_NULL_VALUE", matchType = EXACT)
     public String countdowns(UUID playerId, int types) {
         session.checkThread();
         if (!isActive())

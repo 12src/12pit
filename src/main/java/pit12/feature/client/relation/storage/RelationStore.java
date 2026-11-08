@@ -47,6 +47,7 @@ public final class RelationStore implements RelationStorage {
         this.path = path;
     }
 
+    @Override
     public List<RelationEntry> load() throws IOException {
         if (Files.notExists(path)) {
             return new ArrayList<>();
@@ -89,6 +90,7 @@ public final class RelationStore implements RelationStorage {
         }
     }
 
+    @Override
     public void write(List<RelationEntry> entries) throws IOException {
         JsonObject root = new JsonObject();
         root.addProperty("schemaVersion", SCHEMA_VERSION);

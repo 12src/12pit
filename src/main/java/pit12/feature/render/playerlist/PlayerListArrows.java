@@ -18,6 +18,9 @@
  */
 package pit12.feature.render.playerlist;
 
+import static edu.umd.cs.findbugs.annotations.SuppressMatchType.EXACT;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
@@ -45,13 +48,14 @@ final class PlayerListArrows {
         this.minecraft = minecraft;
     }
 
+    @SuppressFBWarnings(value = "ICAST_IDIV_CAST_TO_DOUBLE", matchType = EXACT)
     void begin(float pixelScale, int x, int size) {
         this.pixelScale = pixelScale;
         pixelSize = Math.max(1, Math.round(size * pixelScale));
         inverseScale = 1.0D / pixelScale;
         centerX = (Math.round(x * pixelScale) + pixelSize / 2.0D) * inverseScale;
         // Keep the half-pixel offset for odd arrow sizes.
-        minimum = (-pixelSize / 2) * inverseScale;
+        minimum = -pixelSize / 2 * inverseScale;
         maximum = minimum + pixelSize * inverseScale;
     }
 

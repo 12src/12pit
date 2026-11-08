@@ -46,10 +46,10 @@ After you are done, rebuild and relaunch the game to refresh the bundled page.
 
 ## Run checks
 
-Run the tests and formatting checks in the repository root (using `./gradlew` on Linux and macOS):
+Run the tests, PMD, SpotBugs, and formatting checks in the repository root (using `./gradlew` on Linux and macOS):
 
 ```powershell
 .\gradlew.bat check
-npm ci --prefix web-ui
+npm install --prefix web-ui
 npm run format:check --prefix web-ui
 ```

@@ -77,7 +77,7 @@ final class ChatMacroCommand {
                 Tone.SUCCESS.argument(AQUA, Keyboard.getKeyName(key))));
     }
 
-    private void list(ICommandSender sender, String[] args) {
+    private void list(ICommandSender sender, String[] unusedArgs) {
         bindings.requireReady();
         Map<Integer, String> entries = bindings.entries();
         reply(sender, Tone.INFO,
@@ -104,7 +104,7 @@ final class ChatMacroCommand {
         return key;
     }
 
-    private List<String> bindSuggestions(ICommandSender sender, String[] args) {
+    private List<String> bindSuggestions(ICommandSender unusedSender, String[] args) {
         if (args.length != 1)
             return Collections.emptyList();
         List<String> keys = new ArrayList<>();
@@ -116,7 +116,7 @@ final class ChatMacroCommand {
         return keys;
     }
 
-    private List<String> removeSuggestions(ICommandSender sender, String[] args) {
+    private List<String> removeSuggestions(ICommandSender unusedSender, String[] unusedArgs) {
         List<String> keys = new ArrayList<>();
         for (int key : bindings.entries().keySet())
             keys.add(Keyboard.getKeyName(key));

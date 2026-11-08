@@ -33,12 +33,10 @@ import pit12.shared.concurrent.ClientThread;
 
 public final class ConfigCatalog {
     private static final Logger LOGGER = LogManager.getLogger(ConfigCatalog.class);
-    private final List<FeatureConfig> features = new ArrayList<FeatureConfig>();
-    private final Map<String, FeatureConfig> featuresById =
-            new LinkedHashMap<String, FeatureConfig>();
-    private final Map<Setting<?>, FeatureConfig> settingOwners =
-            new IdentityHashMap<Setting<?>, FeatureConfig>();
-    private final List<ConfigChangeListener> listeners = new ArrayList<ConfigChangeListener>();
+    private final List<FeatureConfig> features = new ArrayList<>();
+    private final Map<String, FeatureConfig> featuresById = new LinkedHashMap<>();
+    private final Map<Setting<?>, FeatureConfig> settingOwners = new IdentityHashMap<>();
+    private final List<ConfigChangeListener> listeners = new ArrayList<>();
     private boolean frozen;
     private long revision;
     private final ClientThread client;
@@ -108,10 +106,9 @@ public final class ConfigCatalog {
     /** Once features are running, stick to the client thread for catalog values. */
     public ConfigSnapshot snapshot() {
         client.check();
-        LinkedHashMap<String, Map<String, Object>> values =
-                new LinkedHashMap<String, Map<String, Object>>();
+        LinkedHashMap<String, Map<String, Object>> values = new LinkedHashMap<>();
         for (FeatureConfig feature : features) {
-            LinkedHashMap<String, Object> featureValues = new LinkedHashMap<String, Object>();
+            LinkedHashMap<String, Object> featureValues = new LinkedHashMap<>();
             for (Setting<?> setting : feature.settings()) {
                 featureValues.put(setting.id(), setting.get());
             }
@@ -122,10 +119,9 @@ public final class ConfigCatalog {
 
     public ConfigSnapshot defaults() {
         client.check();
-        LinkedHashMap<String, Map<String, Object>> values =
-                new LinkedHashMap<String, Map<String, Object>>();
+        LinkedHashMap<String, Map<String, Object>> values = new LinkedHashMap<>();
         for (FeatureConfig feature : features) {
-            LinkedHashMap<String, Object> featureValues = new LinkedHashMap<String, Object>();
+            LinkedHashMap<String, Object> featureValues = new LinkedHashMap<>();
             for (Setting<?> setting : feature.settings()) {
                 featureValues.put(setting.id(), setting.defaultValue());
             }
@@ -145,11 +141,10 @@ public final class ConfigCatalog {
     }
 
     private ConfigSnapshot normalize(ConfigSnapshot snapshot, Consumer<String> problems) {
-        LinkedHashMap<String, Map<String, Object>> values =
-                new LinkedHashMap<String, Map<String, Object>>();
+        LinkedHashMap<String, Map<String, Object>> values = new LinkedHashMap<>();
         for (FeatureConfig feature : features) {
             Map<String, Object> suppliedValues = snapshot.feature(feature.id());
-            LinkedHashMap<String, Object> featureValues = new LinkedHashMap<String, Object>();
+            LinkedHashMap<String, Object> featureValues = new LinkedHashMap<>();
             for (Setting<?> setting : feature.settings()) {
                 Object candidate =
                         suppliedValues != null && suppliedValues.containsKey(setting.id())
@@ -175,14 +170,14 @@ public final class ConfigCatalog {
     public void apply(ConfigSnapshot snapshot) {
         client.check();
         ConfigSnapshot normalized = normalize(snapshot);
-        LinkedHashMap<Setting<?>, Object> candidates = new LinkedHashMap<Setting<?>, Object>();
+        LinkedHashMap<Setting<?>, Object> candidates = new LinkedHashMap<>();
         for (FeatureConfig feature : features) {
             Map<String, Object> featureValues = normalized.feature(feature.id());
             for (Setting<?> setting : feature.settings()) {
                 candidates.put(setting, featureValues.get(setting.id()));
             }
         }
-        ArrayList<ConfigChangeSet.Change> changes = new ArrayList<ConfigChangeSet.Change>();
+        ArrayList<ConfigChangeSet.Change> changes = new ArrayList<>();
         for (Map.Entry<Setting<?>, Object> candidateEntry : candidates.entrySet()) {
             Setting<?> setting = candidateEntry.getKey();
             Object candidate = candidateEntry.getValue();
@@ -206,8 +201,7 @@ public final class ConfigCatalog {
     }
 
     private void notifyListeners(ConfigChangeSet changeSet) {
-        ConfigChangeListener[] listenerSnapshot =
-                listeners.toArray(new ConfigChangeListener[listeners.size()]);
+        ConfigChangeListener[] listenerSnapshot = listeners.toArray(new ConfigChangeListener[0]);
         for (ConfigChangeListener listener : listenerSnapshot) {
             try {
                 listener.onConfigChanged(changeSet);

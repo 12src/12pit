@@ -110,6 +110,7 @@ final class DarkTargets {
                 || config.darkIgnoreFriends.get() && relation == Relation.FRIEND;
     }
 
+    @SuppressWarnings("PMD.LogicInversion")
     private boolean matches(EntityPlayer target, boolean retained) {
         if (target == minecraft.thePlayer || target.isDead || target.isSpectator()
                 || minecraft.theWorld.getEntityByID(target.getEntityId()) != target
@@ -117,6 +118,7 @@ final class DarkTargets {
             return false;
         float health = PlayerHealth.of(target).value();
         int range = config.darkRange.get();
+        // Negation rejects NaN health too.
         if (!(health > 0) || target.getDistanceSqToEntity(minecraft.thePlayer) > range * range
                 || health > config.darkThreshold.get()
                         && (!retained || health >= config.darkRestoreThreshold.get()))

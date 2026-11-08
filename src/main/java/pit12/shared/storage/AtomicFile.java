@@ -18,6 +18,9 @@
  */
 package pit12.shared.storage;
 
+import static edu.umd.cs.findbugs.annotations.SuppressMatchType.EXACT;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.BufferedWriter;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -31,6 +34,9 @@ import java.nio.file.StandardCopyOption;
 public final class AtomicFile {
     private AtomicFile() {}
 
+    @SuppressWarnings("PMD.AvoidFileStream")
+    @SuppressFBWarnings(value = "NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", matchType = EXACT,
+            justification = "Targets are files, so their absolute paths have parents.")
     public static void write(Path target, String content) throws IOException {
         Path absolute = target.toAbsolutePath();
         Files.createDirectories(absolute.getParent());
