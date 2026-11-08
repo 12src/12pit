@@ -20,6 +20,7 @@ package pit12.platform.mixin.input;
 
 import net.minecraft.client.Minecraft;
 import org.lwjgl.input.Keyboard;
+import org.lwjgl.input.Mouse;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -118,6 +119,17 @@ public abstract class MinecraftMixin implements InputBlockBinding, InputTickBind
         while (Keyboard.next()) {
             if (pit12$inputBlocker == null || !pit12$inputBlocker.key(Keyboard.getEventKey(),
                     Keyboard.getEventKeyState(), Keyboard.isRepeatEvent()))
+                return true;
+        }
+        return false;
+    }
+
+    @Redirect(method = "runTick",
+            at = @At(value = "INVOKE", target = "Lorg/lwjgl/input/Mouse;next()Z", remap = false))
+    private boolean pit12$nextMouseEvent() {
+        while (Mouse.next()) {
+            if (pit12$inputBlocker == null || !pit12$inputBlocker.mouse(Mouse.getEventButton(),
+                    Mouse.getEventButtonState()))
                 return true;
         }
         return false;

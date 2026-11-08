@@ -30,7 +30,6 @@ import net.minecraftforge.event.entity.player.AttackEntityEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
-import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import pit12.feature.client.relation.api.RelationLookup;
 import pit12.feature.combat.swap.api.SwapBindings;
@@ -197,8 +196,7 @@ public final class SwapFeature implements ClientLifecycle, ConfigChangeListener,
 
     @Override
     public boolean key(int key, boolean pressed, boolean repeat) {
-        if (!pressed || key <= 0 || key >= Keyboard.KEYBOARD_SIZE || !config.enabled()
-                || controller.inputBlocked())
+        if (!pressed || !config.enabled() || controller.inputBlocked())
             return false;
         boolean unequip = Keybind.matches(controller.unequipKey(), key);
         if (!unequip && !bindings.hasKey(key))

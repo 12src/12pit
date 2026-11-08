@@ -184,6 +184,14 @@ public final class InputBlocker implements ClientLifecycle {
         return false;
     }
 
+    public boolean mouse(int button, boolean pressed) {
+        if (locked()) {
+            blockedMouse(button, pressed);
+            return true;
+        }
+        return button >= 0 && minecraft.inGameHasFocus && key(button - 100, pressed, false);
+    }
+
     public void drainEvents() {
         if (Keyboard.isCreated()) {
             while (Keyboard.next())
@@ -191,15 +199,8 @@ public final class InputBlocker implements ClientLifecycle {
                         Keyboard.isRepeatEvent());
         }
         if (Mouse.isCreated()) {
-            while (Mouse.next()) {
-                int button = Mouse.getEventButton();
-                boolean pressed = Mouse.getEventButtonState();
-                if (!pressed && sprintForwardKey == button - 100)
-                    sprintPlayer = null;
-                if (locked() && button >= 0 && pressed && !Mouse.isGrabbed()
-                        && Mouse.isInsideWindow())
-                    focusOnClick();
-            }
+            while (Mouse.next())
+                blockedMouse(Mouse.getEventButton(), Mouse.getEventButtonState());
         }
         if (!Display.isActive() || !held(sprintForwardKey))
             sprintPlayer = null;
@@ -229,6 +230,13 @@ public final class InputBlocker implements ClientLifecycle {
             if (owner instanceof InputHandler && ((InputHandler) owner).blockedKey(key, modifiers))
                 return;
         }
+    }
+
+    private void blockedMouse(int button, boolean pressed) {
+        if (!pressed && sprintForwardKey == button - 100)
+            sprintPlayer = null;
+        if (locked() && button >= 0 && pressed && !Mouse.isGrabbed() && Mouse.isInsideWindow())
+            focusOnClick();
     }
 
     private void release(boolean resume) {

@@ -26,8 +26,9 @@ import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.inventory.Slot;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import org.lwjgl.input.Keyboard;
+import net.minecraft.nbt.NBTBase.NBTPrimitive;
 import pit12.shared.rendering.FontWidths;
 
 final class SwapOverlay {
@@ -82,8 +83,7 @@ final class SwapOverlay {
             CachedIdentity cached = cache.get(entry.getKey());
             FontRenderer font = minecraft.fontRendererObj;
             Label label = cached.label;
-            if (label == null || label.binding != binding || label.font != font
-                    || label.unicode != font.getUnicodeFlag()) {
+            if (label == null || label.binding != binding || label.font != font) {
                 label = new Label(binding, font);
                 cached.label = label;
             }
@@ -95,13 +95,8 @@ final class SwapOverlay {
         if (stack == null || identities.containsKey(stack))
             return;
         CachedIdentity cached = cache.get(stack);
-        // NBT can change on the same stack. Compare with our copy before reusing its identity.
-        if (cached == null || stack.getItem() != cached.snapshot.getItem()
-                || stack.getItem().getHasSubtypes()
-                        && stack.getMetadata() != cached.snapshot.getMetadata()
-                || !ItemStack.areItemStackTagsEqual(stack, cached.snapshot)
-                || (stack.stackSize > 0) != (cached.snapshot.stackSize > 0)) {
-            cached = new CachedIdentity(stack.copy(), ItemIdentity.read(stack));
+        if (cached == null || !cached.matches(stack)) {
+            cached = new CachedIdentity(stack);
             cache.put(stack, cached);
         }
         identities.put(stack, cached.identity);
@@ -111,39 +106,70 @@ final class SwapOverlay {
         Label label = labels.get(stack);
         if (label == null)
             return;
-        int textX = label.binding.equipment ? x + 14 - label.width : x + 2;
-        // The rest of the overlay needs lighting and depth back on when we're done.
-        GlStateManager.disableLighting();
-        GlStateManager.disableDepth();
-        GlStateManager.disableBlend();
-        minecraft.fontRendererObj.drawStringWithShadow(label.text, textX, y + 7, 0xFFFFFF);
-        GlStateManager.enableLighting();
-        GlStateManager.enableDepth();
+        boolean unicode = label.font.getUnicodeFlag();
+        label.font.setUnicodeFlag(true);
+        try {
+            GlStateManager.disableLighting();
+            GlStateManager.disableDepth();
+            GlStateManager.disableBlend();
+            label.font.drawStringWithShadow(label.text,
+                    label.binding.equipment ? x + 16 - label.width : x + 2,
+                    y + 17 - label.font.FONT_HEIGHT, 0xFFFFFF);
+        } finally {
+            label.font.setUnicodeFlag(unicode);
+            // The rest of the overlay needs lighting and depth back on when we're done.
+            GlStateManager.enableLighting();
+            GlStateManager.enableDepth();
+        }
     }
 
     private static final class Label {
         final SwapBinding binding;
         final FontRenderer font;
-        final boolean unicode;
         final String text;
         final int width;
 
         Label(SwapBinding binding, FontRenderer font) {
             this.binding = binding;
             this.font = font;
-            unicode = font.getUnicodeFlag();
-            text = "§c§l" + Keyboard.getKeyName(binding.key);
-            width = FontWidths.measure(font, text);
+            text = "§c§l" + SwapKeys.overlayName(binding.key);
+            boolean unicode = font.getUnicodeFlag();
+            font.setUnicodeFlag(true);
+            try {
+                width = FontWidths.measure(font, text);
+            } finally {
+                font.setUnicodeFlag(unicode);
+            }
         }
     }
     private static final class CachedIdentity {
+        private final Item item;
+        private final int metadata;
+        private final boolean present;
+        private final long nonce;
         final ItemStack snapshot;
         final ItemIdentity identity;
         Label label;
 
-        CachedIdentity(ItemStack snapshot, ItemIdentity identity) {
-            this.snapshot = snapshot;
-            this.identity = identity;
+        CachedIdentity(ItemStack stack) {
+            item = stack.getItem();
+            metadata = stack.getMetadata();
+            present = stack.stackSize > 0;
+            identity = ItemIdentity.read(stack);
+            boolean byNonce = identity != null && identity.kind == ItemIdentity.Kind.NONCE;
+            nonce = byNonce ? ItemIdentity.nonce(stack).getLong() : 0;
+            // Only nonce-based identities can ignore other NBT changes.
+            snapshot = byNonce ? null : stack.copy();
+        }
+
+        boolean matches(ItemStack stack) {
+            if (stack.getItem() != item || item.getHasSubtypes() && stack.getMetadata() != metadata
+                    || (stack.stackSize > 0) != present)
+                return false;
+            if (snapshot != null)
+                return ItemStack.areItemStackTagsEqual(stack, snapshot);
+            NBTPrimitive currentNonce = ItemIdentity.nonce(stack);
+            return currentNonce != null && currentNonce.getLong() == nonce;
         }
     }
 }
