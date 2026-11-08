@@ -77,6 +77,8 @@ import pit12.feature.patch.resourceleakfix.ResourceLeakFixFeature;
 import pit12.feature.patch.scoreboardfix.ScoreboardFixBinding;
 import pit12.feature.patch.scoreboardfix.ScoreboardFixConfig;
 import pit12.feature.patch.scoreboardfix.ScoreboardFixFeature;
+import pit12.feature.render.chams.ChamsConfig;
+import pit12.feature.render.chams.ChamsFeature;
 import pit12.feature.render.eventlist.EventListConfig;
 import pit12.feature.render.eventlist.EventListFeature;
 import pit12.feature.render.focus.FocusBinding;
@@ -223,6 +225,7 @@ public final class ClientBootstrap {
         registerNoJumpDelay(configs, (NoJumpDelayBinding) minecraft);
         registerSmartBlock(minecraft, configs, session, (SmartBlockBinding) minecraft);
         // Category: Render
+        registerChams(minecraft, configs);
         registerEventList(configs, hudRegistry, commands);
         registerFocus(minecraft, configs, input, relations, playerNames);
         registerFreeCamera(minecraft, configs, input, (FreeCameraBinding) minecraft);
@@ -362,6 +365,12 @@ public final class ClientBootstrap {
     }
 
     // Category: Render
+    private void registerChams(Minecraft minecraft, ConfigCatalog configs) {
+        ChamsConfig config = new ChamsConfig();
+        configs.register(config);
+        components.add(new ChamsFeature(minecraft.getRenderManager(), config));
+    }
+
     private void registerEventList(ConfigCatalog configs, HudRegistry hudRegistry,
             CommandRegistry commands) {
         EventListConfig config = new EventListConfig();
