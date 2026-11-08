@@ -17,6 +17,7 @@
     <exclude name="ImplicitFunctionalInterface"/>
     <exclude name="LiteralsFirstInComparisons"/>
     <exclude name="LooseCoupling"/>
+    <exclude name="NonExhaustiveSwitch"/>
     <exclude name="OneDeclarationPerLine"/>
     <exclude name="UnitTestAssertionsShouldIncludeMessage"/>
     <exclude name="UnitTestContainsTooManyAsserts"/>
@@ -91,6 +92,7 @@
     <exclude name="AvoidFieldNameMatchingTypeName"/>
     <exclude name="AvoidLiteralsInIfCondition"/>
     <exclude name="CompareObjectsWithEquals"/>
+    <exclude name="NonSerializableClass"/>
     <exclude name="NullAssignment"/>
     <exclude name="UseProperClassLoader"/>
   </rule>
@@ -116,6 +118,19 @@
     <properties>
       <property name="typesThatShouldNotBeCaught"
         value="java.lang.NullPointerException,java.lang.Exception,java.lang.Throwable,java.lang.Error"/>
+    </properties>
+  </rule>
+
+  <rule ref="category/java/errorprone.xml/NonSerializableClass">
+    <properties>
+      <property name="violationSuppressXPath"
+        value="ancestor::FieldDeclaration[1][parent::EnumBody]"/>
+    </properties>
+  </rule>
+
+  <rule ref="category/java/bestpractices.xml/NonExhaustiveSwitch">
+    <properties>
+      <property name="violationSuppressXPath" value=".[@EnumSwitch = false()]"/>
     </properties>
   </rule>
 
