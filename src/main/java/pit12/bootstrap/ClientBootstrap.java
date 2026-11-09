@@ -38,6 +38,8 @@ import pit12.feature.client.relation.api.RelationLookup;
 import pit12.feature.client.relation.api.Relations;
 import pit12.feature.client.webui.WebUiConfig;
 import pit12.feature.client.webui.WebUiFeature;
+import pit12.feature.combat.autoclicker.AutoClickerConfig;
+import pit12.feature.combat.autoclicker.AutoClickerFeature;
 import pit12.feature.combat.nojumpdelay.NoJumpDelayBinding;
 import pit12.feature.combat.nojumpdelay.NoJumpDelayConfig;
 import pit12.feature.combat.nojumpdelay.NoJumpDelayFeature;
@@ -221,6 +223,7 @@ public final class ClientBootstrap {
         registerPredictionMargins(webUiConfigs, webUiConfig.autoPredictionMargins(), configs,
                 session);
         // Category: Combat
+        registerAutoClicker(minecraft, configs, input);
         registerAutoSprint(configs, (AutoSprintBinding) minecraft);
         registerNoJumpDelay(configs, (NoJumpDelayBinding) minecraft);
         registerSmartBlock(minecraft, configs, session, (SmartBlockBinding) minecraft);
@@ -345,6 +348,13 @@ public final class ClientBootstrap {
     }
 
     // Category: Combat
+    private void registerAutoClicker(Minecraft minecraft, ConfigCatalog configs,
+            InputBlocker input) {
+        AutoClickerConfig config = new AutoClickerConfig();
+        configs.register(config);
+        components.add(new AutoClickerFeature(minecraft, config, input));
+    }
+
     private void registerAutoSprint(ConfigCatalog configs, AutoSprintBinding binding) {
         AutoSprintConfig config = new AutoSprintConfig();
         configs.register(config);
