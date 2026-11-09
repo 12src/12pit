@@ -20,13 +20,11 @@ package pit12.feature.combat.sprint.mixin;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
-import net.minecraft.client.settings.KeyBinding;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import pit12.feature.combat.sprint.AutoSprintBinding;
 import pit12.runtime.input.SprintInputBinding;
@@ -55,6 +53,11 @@ public abstract class EntityPlayerSPMixin implements SprintInputBinding {
         pit12$resumeDoubleTapSprint = true;
     }
 
+    @Override
+    public boolean pit12$resumingDoubleTapSprint() {
+        return pit12$resumeDoubleTapSprint;
+    }
+
     // The double-tap branch also handles held sprint and Auto Sprint.
     @Inject(method = "onLivingUpdate", at = @At(value = "INVOKE",
             target = "Lnet/minecraft/client/entity/EntityPlayerSP;setSprinting(Z)V", ordinal = 1))
@@ -75,14 +78,5 @@ public abstract class EntityPlayerSPMixin implements SprintInputBinding {
     @Inject(method = "onLivingUpdate", at = @At("TAIL"))
     private void pit12$finishSprintResume(CallbackInfo callback) {
         pit12$resumeDoubleTapSprint = false;
-    }
-
-    // Override both key checks while leaving the normal sprint rules in place.
-    @Redirect(method = "onLivingUpdate", at = @At(value = "INVOKE",
-            target = "Lnet/minecraft/client/settings/KeyBinding;isKeyDown()Z"))
-    private boolean pit12$sprintAutomatically(KeyBinding key) {
-        return key.isKeyDown()
-                || ((AutoSprintBinding) Minecraft.getMinecraft()).pit12$autoSprintEnabled()
-                || pit12$resumeDoubleTapSprint;
     }
 }

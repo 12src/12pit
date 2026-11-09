@@ -16,30 +16,27 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.combat.nojumpdelay.mixin;
+package pit12.feature.render.freecam.mixin;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.EntityLivingBase;
-import org.objectweb.asm.Opcodes;
+import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.renderer.EntityRenderer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
-import pit12.feature.combat.nojumpdelay.NoJumpDelayBinding;
+import pit12.feature.render.freecam.FreeCameraBinding;
+import pit12.feature.render.freecam.FreeCameraFeature;
 
-@Mixin(EntityLivingBase.class)
-public abstract class EntityLivingBaseMixin {
+@Mixin(value = EntityRenderer.class, priority = -1)
+public abstract class EntityRendererRedirect {
     @Shadow
-    private int jumpTicks;
+    private Minecraft mc;
 
-    // The third read checks the cooldown before a ground jump.
-    @Redirect(method = "onLivingUpdate",
-            at = @At(value = "FIELD", target = "Lnet/minecraft/entity/EntityLivingBase;jumpTicks:I",
-                    opcode = Opcodes.GETFIELD, ordinal = 2),
-            require = 1)
-    private int pit12$jumpCooldown(EntityLivingBase entity) {
-        Minecraft minecraft = Minecraft.getMinecraft();
-        return entity == minecraft.thePlayer
-                && ((NoJumpDelayBinding) minecraft).pit12$noJumpDelayEnabled() ? 0 : jumpTicks;
+    @Redirect(method = "renderWorldPass", at = @At(value = "INVOKE",
+            target = "Lnet/minecraft/client/entity/EntityPlayerSP;isSpectator()Z"))
+    private boolean pit12$renderInsideBlocks(EntityPlayerSP player) {
+        FreeCameraFeature feature = ((FreeCameraBinding) mc).pit12$freeCamera();
+        return feature != null && feature.isActive() || player.isSpectator();
     }
 }

@@ -20,4 +20,6 @@ package pit12.runtime.arrow;
 
 public interface ArrowPacketBinding {
     void bindArrowPacketObserver(ArrowPacketObserver observer);
+
+    ArrowPacketObserver pit12$arrowObserver();
 }

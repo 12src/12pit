@@ -19,25 +19,21 @@
 package pit12.feature.render.freecam.mixin;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.AbstractClientPlayer;
-import net.minecraft.client.renderer.entity.RenderPlayer;
+import net.minecraft.client.gui.GuiIngame;
+import net.minecraft.entity.Entity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import pit12.feature.render.freecam.FreeCameraBinding;
 import pit12.feature.render.freecam.FreeCameraFeature;
 
-@Mixin(RenderPlayer.class)
-public abstract class RenderPlayerMixin {
-    // RenderPlayer skips the local body when another entity owns the view.
-    @Redirect(method = "doRender", at = @At(value = "INVOKE",
-            target = "Lnet/minecraft/client/entity/AbstractClientPlayer;isUser()Z"))
-    private boolean pit12$renderOwnBodyInFreeCamera(AbstractClientPlayer player) {
-        FreeCameraFeature feature =
-                ((FreeCameraBinding) Minecraft.getMinecraft()).pit12$freeCamera();
-        if (feature != null && feature.isActive() && player == Minecraft.getMinecraft().thePlayer) {
-            return false;
-        }
-        return player.isUser();
+@Mixin(value = GuiIngame.class, priority = -1)
+public abstract class GuiIngameRedirect {
+    @Redirect(method = {"renderTooltip", "renderPlayerStats"}, at = @At(value = "INVOKE",
+            target = "Lnet/minecraft/client/Minecraft;getRenderViewEntity()Lnet/minecraft/entity/Entity;"))
+    private Entity pit12$showPlayerHud(Minecraft minecraft) {
+        FreeCameraFeature feature = ((FreeCameraBinding) minecraft).pit12$freeCamera();
+        return feature != null && feature.isActive() ? minecraft.thePlayer
+                : minecraft.getRenderViewEntity();
     }
 }

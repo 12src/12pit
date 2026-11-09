@@ -22,4 +22,6 @@ public interface SprintInputBinding {
     boolean pit12$pauseDoubleTapSprint();
 
     void pit12$resumeDoubleTapSprint();
+
+    boolean pit12$resumingDoubleTapSprint();
 }

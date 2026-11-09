@@ -34,13 +34,13 @@ import pit12.feature.render.chams.ChamsBinding;
 import pit12.feature.render.chams.ChamsConfig;
 import pit12.shared.performance.HotPath;
 
-@Mixin(RenderPlayer.class)
-public abstract class RenderPlayerMixin extends RendererLivingEntity<AbstractClientPlayer>
+@Mixin(value = RenderPlayer.class, priority = -1)
+public abstract class RenderPlayerRedirect extends RendererLivingEntity<AbstractClientPlayer>
         implements ChamsBinding {
     @Unique
     private ChamsConfig pit12$chamsConfig;
 
-    protected RenderPlayerMixin(RenderManager renderManager, ModelBase model, float shadowSize) {
+    protected RenderPlayerRedirect(RenderManager renderManager, ModelBase model, float shadowSize) {
         super(renderManager, model, shadowSize);
     }
 

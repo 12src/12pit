@@ -18,15 +18,9 @@
  */
 package pit12.feature.patch.resourceleakfix.mixin;
 
-import java.io.InputStream;
 import net.minecraft.client.renderer.texture.TextureMap;
-import net.minecraft.client.resources.IResource;
-import org.apache.commons.io.IOUtils;
-import org.spongepowered.asm.mixin.Dynamic;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import pit12.feature.patch.resourceleakfix.ResourceLeakFixBinding;
 import pit12.feature.patch.resourceleakfix.ResourceLeakFixConfig;
 
@@ -40,16 +34,8 @@ public abstract class TextureMapMixin implements ResourceLeakFixBinding {
         pit12$resourceLeakFixConfig = config;
     }
 
-    @Dynamic("Added by OptiFine")
-    @Redirect(method = "detectMinimumSpriteSize", remap = false, at = @At(value = "INVOKE",
-            target = "Lnet/minecraft/client/resources/IResource;getInputStream()Ljava/io/InputStream;",
-            remap = true))
-    private InputStream pit12$closeUnusedMetadata(IResource resource) {
-        // The first texture reload runs before the config is bound.
-        if ((pit12$resourceLeakFixConfig == null || pit12$resourceLeakFixConfig.enabled())
-                && resource instanceof SimpleResourceAccessor) {
-            IOUtils.closeQuietly(((SimpleResourceAccessor) resource).pit12$metadataInputStream());
-        }
-        return resource.getInputStream();
+    @Override
+    public ResourceLeakFixConfig pit12$resourceLeakFixConfig() {
+        return pit12$resourceLeakFixConfig;
     }
 }

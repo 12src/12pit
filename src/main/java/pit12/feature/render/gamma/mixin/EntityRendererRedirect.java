@@ -16,24 +16,23 @@
  * You should have received a copy of the GNU General Public License
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
-package pit12.feature.render.freecam.mixin;
+package pit12.feature.render.gamma.mixin;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiIngame;
-import net.minecraft.entity.Entity;
+import net.minecraft.client.renderer.EntityRenderer;
+import net.minecraft.client.settings.GameSettings;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
-import pit12.feature.render.freecam.FreeCameraBinding;
-import pit12.feature.render.freecam.FreeCameraFeature;
+import pit12.feature.render.gamma.GammaBinding;
+import pit12.feature.render.gamma.GammaConfig;
 
-@Mixin(GuiIngame.class)
-public abstract class GuiIngameMixin {
-    @Redirect(method = {"renderTooltip", "renderPlayerStats"}, at = @At(value = "INVOKE",
-            target = "Lnet/minecraft/client/Minecraft;getRenderViewEntity()Lnet/minecraft/entity/Entity;"))
-    private Entity pit12$showPlayerHud(Minecraft minecraft) {
-        FreeCameraFeature feature = ((FreeCameraBinding) minecraft).pit12$freeCamera();
-        return feature != null && feature.isActive() ? minecraft.thePlayer
-                : minecraft.getRenderViewEntity();
+@Mixin(value = EntityRenderer.class, priority = -1)
+public abstract class EntityRendererRedirect {
+    // Leave the saved brightness alone. We only need a different value while rendering.
+    @Redirect(method = "updateLightmap", at = @At(value = "FIELD",
+            target = "Lnet/minecraft/client/settings/GameSettings;gammaSetting:F"))
+    private float pit12$useConfiguredGamma(GameSettings settings) {
+        GammaConfig config = ((GammaBinding) this).pit12$gammaConfig();
+        return config != null && config.enabled() ? config.gamma() : settings.gammaSetting;
     }
 }

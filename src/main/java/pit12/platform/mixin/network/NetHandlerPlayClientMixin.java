@@ -23,7 +23,6 @@ import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.network.NetHandlerPlayClient;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.projectile.EntityArrow;
 import net.minecraft.network.Packet;
 import net.minecraft.network.play.client.C07PacketPlayerDigging;
 import net.minecraft.network.play.client.C0BPacketEntityAction;
@@ -45,7 +44,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import pit12.runtime.arrow.ArrowPacketBinding;
 import pit12.runtime.arrow.ArrowPacketObserver;
@@ -88,6 +86,11 @@ public abstract class NetHandlerPlayClientMixin implements PlayerEquipmentPacket
     @Override
     public void bindSidebarObserver(SidebarPacketObserver observer) {
         pit12$sidebarObserver = observer;
+    }
+
+    @Override
+    public ArrowPacketObserver pit12$arrowObserver() {
+        return pit12$arrowObserver;
     }
 
     @Inject(method = "handleSpawnObject", at = @At("TAIL"))
@@ -158,50 +161,6 @@ public abstract class NetHandlerPlayClientMixin implements PlayerEquipmentPacket
         if (pit12$arrowObserver != null) {
             pit12$arrowObserver.onShooterTeleport(packet.getEntityId(), packet.getX() / 32.0,
                     packet.getY() / 32.0, packet.getZ() / 32.0);
-        }
-    }
-
-    @Redirect(method = "handlePlayerPosLook", at = @At(value = "INVOKE",
-            target = "Lnet/minecraft/entity/player/EntityPlayer;setPositionAndRotation(DDDFF)V"))
-    private void pit12$observeLocalTeleport(EntityPlayer player, double x, double y, double z,
-            float yaw, float pitch) {
-        if (pit12$arrowObserver != null) {
-            pit12$arrowObserver.onShooterTeleport(player.getEntityId(), x, y, z);
-        }
-        player.setPositionAndRotation(x, y, z, yaw, pitch);
-    }
-
-    @Redirect(method = "handleEntityVelocity",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;setVelocity(DDD)V"))
-    private void pit12$observeArrowVelocity(Entity entity, double x, double y, double z) {
-        if (pit12$arrowObserver == null || !(entity instanceof EntityArrow)) {
-            entity.setVelocity(x, y, z);
-            return;
-        }
-        double previousX = entity.motionX;
-        double previousY = entity.motionY;
-        double previousZ = entity.motionZ;
-        entity.setVelocity(x, y, z);
-        if (entity.motionX != previousX || entity.motionY != previousY
-                || entity.motionZ != previousZ) {
-            pit12$arrowObserver.onArrowCorrected(entity.getEntityId(), true);
-        }
-    }
-
-    @Redirect(method = {"handleEntityTeleport", "handleEntityMovement"}, at = @At(value = "INVOKE",
-            target = "Lnet/minecraft/entity/Entity;setPositionAndRotation2(DDDFFIZ)V"))
-    private void pit12$observeArrowPosition(Entity entity, double x, double y, double z, float yaw,
-            float pitch, int increments, boolean teleport) {
-        if (pit12$arrowObserver == null || !(entity instanceof EntityArrow)) {
-            entity.setPositionAndRotation2(x, y, z, yaw, pitch, increments, teleport);
-            return;
-        }
-        double previousX = entity.posX;
-        double previousY = entity.posY;
-        double previousZ = entity.posZ;
-        entity.setPositionAndRotation2(x, y, z, yaw, pitch, increments, teleport);
-        if (entity.posX != previousX || entity.posY != previousY || entity.posZ != previousZ) {
-            pit12$arrowObserver.onArrowCorrected(entity.getEntityId(), false);
         }
     }
 

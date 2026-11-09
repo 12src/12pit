@@ -33,8 +33,8 @@ import pit12.feature.render.focus.FocusRenderState;
 import pit12.feature.render.focus.api.FocusOpacity;
 import pit12.shared.performance.HotPath;
 
-@Mixin(RenderManager.class)
-public abstract class RenderManagerMixin {
+@Mixin(value = RenderManager.class, priority = -1)
+public abstract class RenderManagerRedirect {
     @Shadow
     private boolean renderOutlines;
     @Unique

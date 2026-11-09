@@ -27,8 +27,8 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import pit12.feature.render.freecam.FreeCameraBinding;
 import pit12.feature.render.freecam.FreeCameraFeature;
 
-@Mixin(value = GuiIngameForge.class, remap = false)
-public abstract class GuiIngameForgeMixin {
+@Mixin(value = GuiIngameForge.class, priority = -1, remap = false)
+public abstract class GuiIngameForgeRedirect {
     @Redirect(method = {"renderAir", "renderHealth", "renderFood", "renderHealthMount"},
             remap = false,
             at = @At(value = "INVOKE",
