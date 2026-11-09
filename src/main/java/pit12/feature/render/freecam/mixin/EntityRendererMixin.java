@@ -19,7 +19,6 @@
 package pit12.feature.render.freecam.mixin;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.renderer.EntityRenderer;
 import net.minecraft.entity.player.EntityPlayer;
 import org.spongepowered.asm.mixin.Mixin;
@@ -27,7 +26,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import pit12.feature.render.freecam.FreeCameraBinding;
 import pit12.feature.render.freecam.FreeCameraFeature;
@@ -43,13 +41,6 @@ public abstract class EntityRendererMixin {
         if (feature != null && feature.isActive()) {
             callback.cancel();
         }
-    }
-
-    @Redirect(method = "renderWorldPass", at = @At(value = "INVOKE",
-            target = "Lnet/minecraft/client/entity/EntityPlayerSP;isSpectator()Z"))
-    private boolean pit12$renderInsideBlocks(EntityPlayerSP player) {
-        FreeCameraFeature feature = ((FreeCameraBinding) mc).pit12$freeCamera();
-        return feature != null && feature.isActive() || player.isSpectator();
     }
 
     @ModifyArg(method = "renderWorldPass", at = @At(value = "INVOKE",

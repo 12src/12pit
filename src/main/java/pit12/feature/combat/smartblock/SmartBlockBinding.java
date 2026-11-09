@@ -20,4 +20,6 @@ package pit12.feature.combat.smartblock;
 
 public interface SmartBlockBinding {
     void pit12$bindSmartBlock(SmartBlockFeature feature);
+
+    SmartBlockFeature pit12$smartBlock();
 }

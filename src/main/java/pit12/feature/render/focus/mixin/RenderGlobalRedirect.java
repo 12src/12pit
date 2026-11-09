@@ -28,8 +28,8 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import pit12.feature.render.focus.FocusRenderPass;
 import pit12.shared.performance.HotPath;
 
-@Mixin(RenderGlobal.class)
-public abstract class RenderGlobalMixin {
+@Mixin(value = RenderGlobal.class, priority = -1)
+public abstract class RenderGlobalRedirect {
     @Unique
     private FocusRenderPass pit12$focusPass;
 

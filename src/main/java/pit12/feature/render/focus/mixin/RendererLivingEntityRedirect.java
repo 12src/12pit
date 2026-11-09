@@ -31,8 +31,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import pit12.feature.render.focus.FocusRenderState;
 
-@Mixin(RendererLivingEntity.class)
-public abstract class RendererLivingEntityMixin {
+@Mixin(value = RendererLivingEntity.class, priority = -1)
+public abstract class RendererLivingEntityRedirect {
     @Redirect(method = "renderLayers", at = @At(value = "INVOKE",
             target = "Lnet/minecraft/client/renderer/entity/layers/LayerRenderer;doRenderLayer(Lnet/minecraft/entity/EntityLivingBase;FFFFFFF)V"))
     private void pit12$renderArmorDepth(LayerRenderer<EntityLivingBase> layer,

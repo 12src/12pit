@@ -28,8 +28,8 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import pit12.feature.render.focus.FocusRenderPass;
 import pit12.shared.performance.HotPath;
 
-@Mixin(EntityRenderer.class)
-public abstract class EntityRendererMixin {
+@Mixin(value = EntityRenderer.class, priority = -1)
+public abstract class EntityRendererRedirect {
     @Redirect(method = "renderWorldPass", at = @At(value = "INVOKE",
             target = "Lnet/minecraft/client/renderer/RenderGlobal;renderEntities(Lnet/minecraft/entity/Entity;Lnet/minecraft/client/renderer/culling/ICamera;F)V"))
     @HotPath

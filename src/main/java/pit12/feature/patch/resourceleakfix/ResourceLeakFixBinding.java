@@ -20,4 +20,6 @@ package pit12.feature.patch.resourceleakfix;
 
 public interface ResourceLeakFixBinding {
     void pit12$bindResourceLeakFixConfig(ResourceLeakFixConfig config);
+
+    ResourceLeakFixConfig pit12$resourceLeakFixConfig();
 }

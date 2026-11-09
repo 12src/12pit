@@ -27,8 +27,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import pit12.feature.render.focus.FocusRenderState;
 
-@Mixin(RenderItem.class)
-public abstract class RenderItemMixin {
+@Mixin(value = RenderItem.class, priority = -1)
+public abstract class RenderItemRedirect {
     @Redirect(method = "renderItemModelTransform", at = @At(value = "INVOKE",
             target = "Lnet/minecraft/client/renderer/entity/RenderItem;renderItem(Lnet/minecraft/item/ItemStack;Lnet/minecraft/client/resources/model/IBakedModel;)V"))
     private void pit12$renderItemDepth(RenderItem renderer, ItemStack stack, IBakedModel model) {

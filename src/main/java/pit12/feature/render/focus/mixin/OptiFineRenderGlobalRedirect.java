@@ -28,8 +28,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import pit12.feature.render.focus.FocusRenderPass;
 
-@Mixin(RenderGlobal.class)
-public abstract class OptiFineRenderGlobalMixin {
+@Mixin(value = RenderGlobal.class, priority = -1)
+public abstract class OptiFineRenderGlobalRedirect {
     @Unique
     private static final Consumer<Entity> pit12$focusShaderEntity =
             OptiFineShadersMixin::pit12$nextEntity;
