@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GLAllocation;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.culling.ClippingHelper;
@@ -57,7 +56,6 @@ final class TelebowRenderer {
     private final WorldRenderState state;
     private final Map<TelebowPath, Mesh> meshes = new IdentityHashMap<>();
     private final List<Mesh> visible = new ArrayList<>();
-    private final List<TelebowAim.Target> visibleAims = new ArrayList<>();
     private ClippingHelper clipping;
     private Frustum frustum;
     private int fadeTexture;
@@ -70,7 +68,7 @@ final class TelebowRenderer {
     }
 
     @HotPath
-    void render(Collection<TelebowPath> paths, Collection<TelebowAim.Target> aims, long now) {
+    void render(Collection<TelebowPath> paths, long now) {
         if (minecraft.getRenderViewEntity() == null)
             return;
         long hold = config.holdTime.get() * 1_000_000L;
@@ -140,29 +138,7 @@ final class TelebowRenderer {
                 drawBeams |= mesh.geometryVisible && trajectory.hasImpact;
             }
         }
-        boolean aimNames = config.aimNames.get();
-        if (!aims.isEmpty() && minecraft.getRenderViewEntity() == minecraft.thePlayer) {
-            double pixelScale =
-                    2.0 / (Math.abs(clipping.projectionMatrix[5]) * minecraft.displayHeight)
-                            * new ScaledResolution(minecraft).getScaleFactor();
-            for (TelebowAim.Target target : aims) {
-                float alpha = (target.color >>> 24) / 255F * target.path.opacity(now, hold, fade);
-                if (!target.renderable || alpha <= 0)
-                    continue;
-                if (aimNames && (target.nameWidth < 0 || target.unicode != unicode)) {
-                    target.nameWidth = FontWidths.measure(font, target.path.displayName);
-                    target.unicode = unicode;
-                }
-                target.alpha = alpha;
-                target.scale = (float) (target.distance * pixelScale);
-                double radius =
-                        target.scale * (aimNames ? Math.max(20, target.nameWidth / 2 + 3) : 6);
-                if (frustum.isBoxInFrustum(target.x - radius, target.y - radius, target.z - radius,
-                        target.x + radius, target.y + radius, target.z + radius))
-                    visibleAims.add(target);
-            }
-        }
-        if (visible.isEmpty() && visibleAims.isEmpty())
+        if (visible.isEmpty())
             return;
         state.begin(GL11.GL_LINE_BIT | GL11.GL_CURRENT_BIT);
         GlStateManager.pushMatrix();
@@ -207,55 +183,13 @@ final class TelebowRenderer {
                     drawName(mesh.path, mesh.nameWidth, mesh.nameScale, font, camera, mesh.alpha);
                 }
             }
-            for (int index = 0, size = visibleAims.size(); index < size; index++) {
-                TelebowAim.Target target = visibleAims.get(index);
-                drawAim(target, aimNames, font, camera);
-            }
         } finally {
             visible.clear();
-            visibleAims.clear();
             try {
                 GlStateManager.popMatrix();
             } finally {
                 state.end();
             }
-        }
-    }
-
-    private void drawAim(TelebowAim.Target target, boolean names, FontRenderer font,
-            RenderManager camera) {
-        GlStateManager.pushMatrix();
-        try {
-            GlStateManager.translate(target.x, target.y, target.z);
-            GlStateManager.rotate(-camera.playerViewY, 0, 1, 0);
-            GlStateManager.rotate(minecraft.gameSettings.thirdPersonView == 2 ? -camera.playerViewX
-                    : camera.playerViewX, 1, 0, 0);
-            GlStateManager.scale(-target.scale, -target.scale, target.scale);
-            textures.setEnabled(false);
-            GlStateManager.disableAlpha();
-            int color = target.color;
-            float alpha = target.alpha;
-            GlStateManager.color((color >>> 16 & 255) / 255F, (color >>> 8 & 255) / 255F,
-                    (color & 255) / 255F, alpha);
-            GL11.glBegin(GL11.GL_LINES);
-            try {
-                GL11.glVertex2f(-5, 0);
-                GL11.glVertex2f(-1, 0);
-                GL11.glVertex2f(1, 0);
-                GL11.glVertex2f(5, 0);
-                GL11.glVertex2f(0, -5);
-                GL11.glVertex2f(0, -1);
-                GL11.glVertex2f(0, 1);
-                GL11.glVertex2f(0, 5);
-            } finally {
-                GL11.glEnd();
-            }
-            if (names) {
-                GlStateManager.translate(0, 9, 0);
-                drawLabel(target.path.displayName, target.nameWidth, font, alpha);
-            }
-        } finally {
-            GlStateManager.popMatrix();
         }
     }
 
@@ -426,7 +360,6 @@ final class TelebowRenderer {
         }
         meshes.clear();
         visible.clear();
-        visibleAims.clear();
     }
 
     private static void delete(Mesh mesh) {
