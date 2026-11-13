@@ -22,6 +22,7 @@ import net.minecraft.client.renderer.GlStateManager;
 import org.lwjgl.opengl.GL11;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import pit12.feature.render.focus.FocusRenderState;
 
@@ -33,10 +34,10 @@ public abstract class GlStateManagerRedirect {
         FocusRenderState.color(red, green, blue, alpha);
     }
 
-    @Redirect(method = "alphaFunc", at = @At(value = "INVOKE",
-            target = "Lorg/lwjgl/opengl/GL11;glAlphaFunc(IF)V", remap = false))
-    private static void pit12$fadeAlphaThreshold(int function, float reference) {
-        GL11.glAlphaFunc(function, reference * FocusRenderState.opacity);
+    @ModifyArg(method = "alphaFunc", at = @At(value = "INVOKE",
+            target = "Lorg/lwjgl/opengl/GL11;glAlphaFunc(IF)V", remap = false), index = 1)
+    private static float pit12$fadeAlphaThreshold(float reference) {
+        return reference * FocusRenderState.opacity;
     }
 
     @Redirect(method = "disableBlend", at = @At(value = "INVOKE",

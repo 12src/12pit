@@ -24,8 +24,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyVariable;
-import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import pit12.feature.combat.smartblock.SmartBlockBinding;
 import pit12.feature.combat.smartblock.SmartBlockFeature;
@@ -43,19 +41,6 @@ public abstract class MinecraftMixin implements SmartBlockBinding {
     @Override
     public SmartBlockFeature pit12$smartBlock() {
         return pit12$smartBlock;
-    }
-
-    // Slot 4 holds the wheel delta before the spectator and hotbar paths.
-    @ModifyVariable(method = "runTick", at = @At(value = "STORE", ordinal = 0),
-            slice = @Slice(from = @At(value = "INVOKE",
-                    target = "Lorg/lwjgl/input/Mouse;getEventDWheel()I", remap = false)),
-            index = 4, require = 1)
-    private int pit12$smartBlockScroll(int wheel) {
-        if (wheel == 0 || pit12$smartBlock == null || !pit12$smartBlock.slotLocked()
-                || ((Minecraft) (Object) this).thePlayer.isSpectator()) {
-            return wheel;
-        }
-        return 0;
     }
 
     // Run after key and hotbar input, before attacks and item use.
