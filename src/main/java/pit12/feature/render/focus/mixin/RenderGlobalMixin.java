@@ -18,27 +18,32 @@
  */
 package pit12.feature.render.focus.mixin;
 
-import net.minecraft.client.renderer.EntityRenderer;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderGlobal;
-import net.minecraft.client.renderer.entity.RenderManager;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import pit12.feature.render.focus.FocusRenderPass;
 import pit12.shared.performance.HotPath;
 
 @Mixin(value = RenderGlobal.class, priority = -1)
-public abstract class RenderGlobalRedirect {
+public abstract class RenderGlobalMixin {
+    @Shadow
+    @Final
+    private Minecraft mc;
     @Unique
     private FocusRenderPass pit12$focusPass;
 
     // Shader shadow passes call RenderGlobal directly, without EntityRenderer.renderWorldPass.
-    @Redirect(method = "renderEntities", at = @At(value = "INVOKE",
-            target = "Lnet/minecraft/client/renderer/entity/RenderManager;setRenderPosition(DDD)V"))
+    @Inject(method = "renderEntities", at = @At(value = "INVOKE",
+            target = "Lnet/minecraft/client/renderer/entity/RenderManager;setRenderPosition(DDD)V",
+            shift = At.Shift.AFTER))
     @HotPath
-    private void pit12$beginPlayerPass(RenderManager manager, double x, double y, double z) {
-        manager.setRenderPosition(x, y, z);
+    private void pit12$beginPlayerPass(CallbackInfo ci) {
         if (!FocusRenderPass.enabled)
             return;
         if (pit12$focusPass == null)
@@ -46,14 +51,13 @@ public abstract class RenderGlobalRedirect {
         pit12$focusPass.begin();
     }
 
-    @Redirect(method = "renderEntities", at = @At(value = "INVOKE",
+    @Inject(method = "renderEntities", at = @At(value = "INVOKE",
             target = "Lnet/minecraft/client/renderer/EntityRenderer;disableLightmap()V"))
-    private void pit12$finishPlayerPass(EntityRenderer renderer) {
+    private void pit12$finishPlayerPass(CallbackInfo ci) {
         // Tile batches and their damage overlays must reach the background first.
         if (FocusRenderPass.current != null) {
-            renderer.enableLightmap();
+            mc.entityRenderer.enableLightmap();
             FocusRenderPass.current.draw(null, false);
         }
-        renderer.disableLightmap();
     }
 }
