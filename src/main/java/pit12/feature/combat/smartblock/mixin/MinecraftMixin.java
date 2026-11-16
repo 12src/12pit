@@ -19,7 +19,6 @@
 package pit12.feature.combat.smartblock.mixin;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiScreen;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -41,22 +40,6 @@ public abstract class MinecraftMixin implements SmartBlockBinding {
     @Override
     public SmartBlockFeature pit12$smartBlock() {
         return pit12$smartBlock;
-    }
-
-    // Run after key and hotbar input, before attacks and item use.
-    @Inject(method = "runTick", at = @At(value = "INVOKE",
-            target = "Lnet/minecraft/client/entity/EntityPlayerSP;isUsingItem()Z", ordinal = 0))
-    private void pit12$smartBlockInput(CallbackInfo callback) {
-        if (pit12$smartBlock != null) {
-            pit12$smartBlock.inputTick();
-        }
-    }
-
-    @Inject(method = "displayGuiScreen", at = @At("HEAD"))
-    private void pit12$cancelSmartBlock(GuiScreen screen, CallbackInfo callback) {
-        if (screen != null && pit12$smartBlock != null) {
-            pit12$smartBlock.cancel();
-        }
     }
 
     @Inject(method = "middleClickMouse", at = @At("HEAD"), cancellable = true)

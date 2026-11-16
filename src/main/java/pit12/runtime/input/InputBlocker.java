@@ -26,6 +26,10 @@ import java.util.function.Supplier;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.settings.KeyBinding;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.player.AttackEntityEvent;
+import net.minecraftforge.fml.common.eventhandler.EventPriority;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.Display;
@@ -63,6 +67,7 @@ public final class InputBlocker implements ClientLifecycle {
             return;
         started = true;
         binding.pit12$bindInputBlocker(this);
+        MinecraftForge.EVENT_BUS.register(this);
     }
 
     @Override
@@ -74,6 +79,7 @@ public final class InputBlocker implements ClientLifecycle {
             release(false);
         }
         handlers.clear();
+        MinecraftForge.EVENT_BUS.unregister(this);
         binding.pit12$bindInputBlocker(null);
         started = false;
     }
@@ -139,6 +145,12 @@ public final class InputBlocker implements ClientLifecycle {
     public boolean blocksActions() {
         return locked() && (!minecraft.isCallingFromMinecraftThread() || actionOwner == null
                 || blockedFor(actionOwner));
+    }
+
+    @SubscribeEvent(priority = EventPriority.HIGHEST, receiveCanceled = true)
+    public void onAttack(AttackEntityEvent event) {
+        if (event.entityPlayer == minecraft.thePlayer && blocksActions())
+            event.setCanceled(true);
     }
 
     public void releaseCursor() {
