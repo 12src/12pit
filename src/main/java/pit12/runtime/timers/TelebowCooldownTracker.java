@@ -158,7 +158,7 @@ public final class TelebowCooldownTracker implements ArrowListener {
 
     @Override
     public long hitWindowNanos(boolean local) {
-        return settings.predictionMargin() * (local ? 2_000_000L : 1_000_000L);
+        return TelebowTeleportMatch.predictionWindowNanos(settings, local);
     }
 
     @Override
@@ -246,17 +246,14 @@ public final class TelebowCooldownTracker implements ArrowListener {
     }
 
     private long teleportWindowNanos(Shot shot) {
-        return hitWindowNanos(shot.shooter == minecraft.thePlayer)
-                + settings.teleportExtraMargin() * 1_000_000L;
+        return TelebowTeleportMatch.windowNanos(settings, shot.shooter == minecraft.thePlayer);
     }
 
     private boolean matchesTeleport(Shot shot) {
-        long margin = teleportWindowNanos(shot);
-        // Teleport and arrow removal packets may arrive in either order.
         return shot.landedAt != 0 && shot.teleportedAt != 0
-                && (margin == 0 ? shot.landedTick == shot.teleportedTick
-                        : Math.abs(shot.landedAt - shot.teleportedAt) <= margin)
-                && shot.landedPosition.squareDistanceTo(shot.teleportPosition) <= 9;
+                && TelebowTeleportMatch.matches(shot.landedPosition, shot.teleportPosition,
+                        shot.landedAt - shot.teleportedAt, shot.landedTick == shot.teleportedTick,
+                        teleportWindowNanos(shot));
     }
 
     private void confirm(Shot shot) {
