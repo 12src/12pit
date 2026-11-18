@@ -311,6 +311,10 @@ public abstract class FeatureConfig {
         return description;
     }
 
+    public final String originalDescription() {
+        return originalDescription;
+    }
+
     public final boolean toggleable() {
         return enabled != null;
     }
