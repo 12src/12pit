@@ -40,6 +40,12 @@ import pit12.feature.client.webui.WebUiConfig;
 import pit12.feature.client.webui.WebUiFeature;
 import pit12.feature.combat.autoclicker.AutoClickerConfig;
 import pit12.feature.combat.autoclicker.AutoClickerFeature;
+import pit12.feature.combat.enhancedmlb.EnhancedMlbBinding;
+import pit12.feature.combat.enhancedmlb.EnhancedMlbConfig;
+import pit12.feature.combat.enhancedmlb.EnhancedMlbFeature;
+import pit12.feature.combat.enhancedtelebow.EnhancedTelebowBinding;
+import pit12.feature.combat.enhancedtelebow.EnhancedTelebowConfig;
+import pit12.feature.combat.enhancedtelebow.EnhancedTelebowFeature;
 import pit12.feature.combat.nojumpdelay.NoJumpDelayBinding;
 import pit12.feature.combat.nojumpdelay.NoJumpDelayConfig;
 import pit12.feature.combat.nojumpdelay.NoJumpDelayFeature;
@@ -225,6 +231,8 @@ public final class ClientBootstrap {
         // Category: Combat
         registerAutoClicker(minecraft, configs, input);
         registerAutoSprint(configs, (AutoSprintBinding) minecraft);
+        registerEnhancedMlb(configs, (EnhancedMlbBinding) minecraft);
+        registerEnhancedTelebow(minecraft, configs, (EnhancedTelebowBinding) minecraft, arrows);
         registerNoJumpDelay(configs, (NoJumpDelayBinding) minecraft);
         registerSmartBlock(minecraft, configs, session, (SmartBlockBinding) minecraft, inputTicks);
         // Category: Render
@@ -359,6 +367,19 @@ public final class ClientBootstrap {
         AutoSprintConfig config = new AutoSprintConfig();
         configs.register(config);
         components.add(new AutoSprintFeature(config, binding));
+    }
+
+    private void registerEnhancedMlb(ConfigCatalog configs, EnhancedMlbBinding binding) {
+        EnhancedMlbConfig config = new EnhancedMlbConfig();
+        configs.register(config);
+        components.add(new EnhancedMlbFeature(config, binding));
+    }
+
+    private void registerEnhancedTelebow(Minecraft minecraft, ConfigCatalog configs,
+            EnhancedTelebowBinding binding, ArrowTracker arrows) {
+        EnhancedTelebowConfig config = new EnhancedTelebowConfig();
+        configs.register(config);
+        components.add(new EnhancedTelebowFeature(minecraft, configs, config, binding, arrows));
     }
 
     private void registerNoJumpDelay(ConfigCatalog configs, NoJumpDelayBinding binding) {
