@@ -24,20 +24,28 @@ import net.minecraft.client.resources.IResource;
 import org.apache.commons.io.IOUtils;
 import org.spongepowered.asm.mixin.Dynamic;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import pit12.feature.patch.resourceleakfix.ResourceLeakFixBinding;
 import pit12.feature.patch.resourceleakfix.ResourceLeakFixConfig;
 
 @Mixin(value = TextureMap.class, priority = -1)
-public abstract class TextureMapRedirect {
+public abstract class TextureMapRedirect implements ResourceLeakFixBinding {
+    @Unique
+    private ResourceLeakFixConfig pit12$resourceLeakFixConfig;
+
+    @Override
+    public void pit12$bindResourceLeakFixConfig(ResourceLeakFixConfig config) {
+        pit12$resourceLeakFixConfig = config;
+    }
+
     @Dynamic("Added by OptiFine")
     @Redirect(method = "detectMinimumSpriteSize", remap = false, at = @At(value = "INVOKE",
             target = "Lnet/minecraft/client/resources/IResource;getInputStream()Ljava/io/InputStream;",
             remap = true))
     private InputStream pit12$closeUnusedMetadata(IResource resource) {
-        ResourceLeakFixConfig config =
-                ((ResourceLeakFixBinding) this).pit12$resourceLeakFixConfig();
+        ResourceLeakFixConfig config = pit12$resourceLeakFixConfig;
         // The first texture reload runs before the config is bound.
         if ((config == null || config.enabled()) && resource instanceof SimpleResourceAccessor) {
             IOUtils.closeQuietly(((SimpleResourceAccessor) resource).pit12$metadataInputStream());

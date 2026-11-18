@@ -31,10 +31,8 @@ import pit12.feature.combat.smartblock.SmartBlockFeature;
 @Mixin(value = Minecraft.class, priority = -1)
 public abstract class MinecraftRedirect {
     // Leave other mods' hotbar redirects alone.
-    @Redirect(
-            method = "runTick", at = @At(value = "INVOKE",
-                    target = "Lorg/lwjgl/input/Mouse;getEventDWheel()I", remap = false),
-            require = 1)
+    @Redirect(method = "runTick", at = @At(value = "INVOKE",
+            target = "Lorg/lwjgl/input/Mouse;getEventDWheel()I", remap = false))
     private int pit12$smartBlockScroll() {
         int wheel = Mouse.getEventDWheel();
         if (wheel == 0) {

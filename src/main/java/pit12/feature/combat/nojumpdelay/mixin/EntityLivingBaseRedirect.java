@@ -35,8 +35,7 @@ public abstract class EntityLivingBaseRedirect {
     // The third read checks the cooldown before a ground jump.
     @Redirect(method = "onLivingUpdate",
             at = @At(value = "FIELD", target = "Lnet/minecraft/entity/EntityLivingBase;jumpTicks:I",
-                    opcode = Opcodes.GETFIELD, ordinal = 2),
-            require = 1)
+                    opcode = Opcodes.GETFIELD, ordinal = 2))
     private int pit12$jumpCooldown(EntityLivingBase entity) {
         Minecraft minecraft = Minecraft.getMinecraft();
         return entity == minecraft.thePlayer
