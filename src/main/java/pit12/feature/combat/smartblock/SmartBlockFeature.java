@@ -23,23 +23,31 @@ import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.entity.projectile.EntityArrow;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemSword;
+import net.minecraftforge.client.event.GuiOpenEvent;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.common.eventhandler.EventPriority;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import org.lwjgl.opengl.Display;
 import pit12.runtime.arrow.ArrowAccess;
 import pit12.runtime.config.ConfigCatalog;
 import pit12.runtime.config.ConfigChangeListener;
 import pit12.runtime.config.ConfigChangeSet;
 import pit12.runtime.config.Setting;
+import pit12.runtime.input.InputTicks;
+import pit12.runtime.input.InputTicks.Phase;
 import pit12.runtime.item.PitEnchantment;
 import pit12.runtime.item.PitEnchantmentReader;
 import pit12.runtime.session.ClientSession;
 import pit12.shared.lifecycle.ClientLifecycle;
 
-public final class SmartBlockFeature implements ClientLifecycle, ConfigChangeListener {
+public final class SmartBlockFeature
+        implements ClientLifecycle, ConfigChangeListener, InputTicks.Listener {
     private final Minecraft minecraft;
     private final ConfigCatalog configs;
     private final SmartBlockConfig config;
     private final ClientSession session;
     private final SmartBlockBinding binding;
+    private final InputTicks inputTicks;
     private final Runnable sessionChanged = this::reset;
     private boolean started;
     private boolean active;
@@ -54,12 +62,13 @@ public final class SmartBlockFeature implements ClientLifecycle, ConfigChangeLis
     private boolean interrupted;
 
     public SmartBlockFeature(Minecraft minecraft, ConfigCatalog configs, SmartBlockConfig config,
-            ClientSession session, SmartBlockBinding binding) {
+            ClientSession session, SmartBlockBinding binding, InputTicks inputTicks) {
         this.minecraft = minecraft;
         this.configs = configs;
         this.config = config;
         this.session = session;
         this.binding = binding;
+        this.inputTicks = inputTicks;
     }
 
     @Override
@@ -102,14 +111,22 @@ public final class SmartBlockFeature implements ClientLifecycle, ConfigChangeLis
         if (enabled) {
             session.addListener(sessionChanged);
             binding.pit12$bindSmartBlock(this);
+            inputTicks.addListener(this);
+            MinecraftForge.EVENT_BUS.register(this);
         } else {
+            MinecraftForge.EVENT_BUS.unregister(this);
+            inputTicks.removeListener(this);
             binding.pit12$bindSmartBlock(null);
             session.removeListener(sessionChanged);
             cancel();
         }
     }
 
-    public void inputTick() {
+    @Override
+    public void onInputTick(Phase phase) {
+        if (!active || phase != Phase.BEFORE_ACTIONS) {
+            return;
+        }
         if (player != minecraft.thePlayer) {
             reset();
             player = minecraft.thePlayer;
@@ -188,7 +205,14 @@ public final class SmartBlockFeature implements ClientLifecycle, ConfigChangeLis
         return config.lockSlot.get() && originalSlot >= 0 && player == minecraft.thePlayer;
     }
 
-    public void cancel() {
+    @SubscribeEvent(priority = EventPriority.HIGHEST, receiveCanceled = true)
+    public void onGuiOpen(GuiOpenEvent event) {
+        if (active && event.gui != null) {
+            cancel();
+        }
+    }
+
+    private void cancel() {
         if (player != null && player == minecraft.thePlayer && originalSlot >= 0
                 && player.inventory.currentItem == selectedSlot
                 && (player.inventory.getStackInSlot(originalSlot) == null

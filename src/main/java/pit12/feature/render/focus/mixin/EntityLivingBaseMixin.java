@@ -43,13 +43,13 @@ public abstract class EntityLivingBaseMixin implements HurtTimeAccess {
 
     @Override
     public void pit12$overrideHurtTime(int time, int resistantTime) {
-        EntityHurtTimeAccessor entity = (EntityHurtTimeAccessor) this;
+        EntityLivingBase entity = (EntityLivingBase) (Object) this;
         if (pit12$realHurtTime < 0) {
             pit12$realHurtTime = hurtTime;
-            pit12$realResistantTime = entity.pit12$getHurtResistantTime();
+            pit12$realResistantTime = entity.hurtResistantTime;
         }
         hurtTime = time;
-        entity.pit12$setHurtResistantTime(resistantTime);
+        entity.hurtResistantTime = resistantTime;
     }
 
     // Vanilla must tick and replace the real timers, not the targeting values.
@@ -58,7 +58,7 @@ public abstract class EntityLivingBaseMixin implements HurtTimeAccess {
     private void pit12$restoreHurtTime(CallbackInfo ci) {
         if (pit12$realHurtTime >= 0) {
             hurtTime = pit12$realHurtTime;
-            ((EntityHurtTimeAccessor) this).pit12$setHurtResistantTime(pit12$realResistantTime);
+            ((EntityLivingBase) (Object) this).hurtResistantTime = pit12$realResistantTime;
             pit12$realHurtTime = -1;
         }
     }

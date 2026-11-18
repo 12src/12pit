@@ -226,7 +226,7 @@ public final class ClientBootstrap {
         registerAutoClicker(minecraft, configs, input);
         registerAutoSprint(configs, (AutoSprintBinding) minecraft);
         registerNoJumpDelay(configs, (NoJumpDelayBinding) minecraft);
-        registerSmartBlock(minecraft, configs, session, (SmartBlockBinding) minecraft);
+        registerSmartBlock(minecraft, configs, session, (SmartBlockBinding) minecraft, inputTicks);
         // Category: Render
         registerChams(minecraft, configs);
         registerEventList(configs, hudRegistry, commands);
@@ -368,10 +368,11 @@ public final class ClientBootstrap {
     }
 
     private void registerSmartBlock(Minecraft minecraft, ConfigCatalog configs,
-            ClientSession session, SmartBlockBinding binding) {
+            ClientSession session, SmartBlockBinding binding, InputTicks inputTicks) {
         SmartBlockConfig config = new SmartBlockConfig();
         configs.register(config);
-        components.add(new SmartBlockFeature(minecraft, configs, config, session, binding));
+        components.add(
+                new SmartBlockFeature(minecraft, configs, config, session, binding, inputTicks));
     }
 
     // Category: Render

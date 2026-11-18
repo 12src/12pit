@@ -31,7 +31,6 @@ import pit12.runtime.input.InputTickBinding;
 import pit12.runtime.input.InputTicks;
 import pit12.runtime.input.InputTicks.Phase;
 
-// Run the input phases after Smart block.
 @Mixin(value = Minecraft.class, priority = 900)
 public abstract class MinecraftMixin implements InputBlockBinding, InputTickBinding {
     @Unique
