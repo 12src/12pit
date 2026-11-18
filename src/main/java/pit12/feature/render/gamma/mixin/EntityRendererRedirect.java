@@ -21,18 +21,31 @@ package pit12.feature.render.gamma.mixin;
 import net.minecraft.client.renderer.EntityRenderer;
 import net.minecraft.client.settings.GameSettings;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import pit12.feature.render.gamma.GammaBinding;
 import pit12.feature.render.gamma.GammaConfig;
 
 @Mixin(value = EntityRenderer.class, priority = -1)
-public abstract class EntityRendererRedirect {
+public abstract class EntityRendererRedirect implements GammaBinding {
+    @Shadow
+    private boolean lightmapUpdateNeeded;
+    @Unique
+    private GammaConfig pit12$gammaConfig;
+
+    @Override
+    public void pit12$bindGammaConfig(GammaConfig config) {
+        pit12$gammaConfig = config;
+        lightmapUpdateNeeded = true;
+    }
+
     // Leave the saved brightness alone. We only need a different value while rendering.
     @Redirect(method = "updateLightmap", at = @At(value = "FIELD",
             target = "Lnet/minecraft/client/settings/GameSettings;gammaSetting:F"))
     private float pit12$useConfiguredGamma(GameSettings settings) {
-        GammaConfig config = ((GammaBinding) this).pit12$gammaConfig();
+        GammaConfig config = pit12$gammaConfig;
         return config != null && config.enabled() ? config.gamma() : settings.gammaSetting;
     }
 }

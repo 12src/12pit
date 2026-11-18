@@ -33,6 +33,7 @@ import pit12.platform.mixin.accessor.FMLModContainerAccessor;
 @Mixin(targets = "net.minecraftforge.fml.common.network.handshake.FMLHandshakeClientState$2",
         remap = false)
 public abstract class FMLHandshakeClientStateMixin {
+    // The in-game warning comes too late to stop Forge from sending the unfiltered list.
     @ModifyArg(
             method = "accept(Lio/netty/channel/ChannelHandlerContext;Lnet/minecraftforge/fml/common/network/handshake/FMLHandshakeMessage;)Lnet/minecraftforge/fml/common/network/handshake/FMLHandshakeClientState;",
             remap = false,

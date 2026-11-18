@@ -43,7 +43,7 @@ public abstract class LunarEntityLivingBaseMixin {
 
     @Dynamic("Lunar's display name component getter")
     @Inject(method = "bridge$getDisplayNameComponent", at = @At("RETURN"), cancellable = true,
-            remap = false, require = 1)
+            remap = false)
     private void pit12$displayName(CallbackInfoReturnable<Object> callback) {
         Function<EntityPlayer, String> names =
                 ((NametagNamesBinding) Minecraft.getMinecraft()).pit12$nametagNames();

@@ -41,7 +41,7 @@ public abstract class LunarFontRendererMixin {
     // Lunar obfuscates the cache class and method names, so match the lookup by its position.
     @Dynamic("Lunar's font cache lookup")
     @ModifyArg(method = "lunar$renderStringAtPos(Ljava/lang/String;ZI)V",
-            at = @At(value = "INVOKE", ordinal = 0), index = 0, remap = false, require = 1)
+            at = @At(value = "INVOKE", ordinal = 0), index = 0, remap = false)
     @HotPath
     private String pit12$fontCacheLookup(String text) {
         if (!((FontCacheFixBinding) Minecraft.getMinecraft()).pit12$fontCacheFixEnabled()) {
@@ -53,7 +53,7 @@ public abstract class LunarFontRendererMixin {
     @Dynamic("Lunar's font cache key constructor")
     @ModifyArg(method = "lunar$renderStringAtPos(Ljava/lang/String;ZI)V",
             at = @At(value = "INVOKE", target = "<init>(Ljava/lang/String;IZ)V"), index = 0,
-            remap = false, require = 1)
+            remap = false)
     @HotPath
     private String pit12$fontCacheEntry(String text) {
         return pit12$fontCacheLookup(text);

@@ -30,7 +30,7 @@ import pit12.feature.patch.scoreboardfix.ScoreboardFixBinding;
 
 @Mixin(Scoreboard.class)
 public abstract class ScoreboardMixin {
-    @Inject(method = "removeTeam", at = @At("HEAD"), cancellable = true, require = 1)
+    @Inject(method = "removeTeam", at = @At("HEAD"), cancellable = true)
     private void pit12$skipMissingTeam(ScorePlayerTeam team, CallbackInfo ci) {
         Minecraft minecraft = Minecraft.getMinecraft();
         if (team == null && ((ScoreboardFixBinding) minecraft).pit12$scoreboardFixEnabled()) {
@@ -38,7 +38,7 @@ public abstract class ScoreboardMixin {
         }
     }
 
-    @Inject(method = "removeObjective", at = @At("HEAD"), cancellable = true, require = 1)
+    @Inject(method = "removeObjective", at = @At("HEAD"), cancellable = true)
     private void pit12$skipMissingObjective(ScoreObjective objective, CallbackInfo ci) {
         Minecraft minecraft = Minecraft.getMinecraft();
         if (objective == null && ((ScoreboardFixBinding) minecraft).pit12$scoreboardFixEnabled()) {

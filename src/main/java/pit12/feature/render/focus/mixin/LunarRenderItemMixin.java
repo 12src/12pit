@@ -32,7 +32,7 @@ public abstract class LunarRenderItemMixin {
     // Match the generated writer by signature. HEAD permits this lower-priority hook.
     @Dynamic("Lunar's ARGB item color writer")
     @ModifyVariable(method = "(Lnet/minecraft/client/renderer/WorldRenderer;I)V", at = @At("HEAD"),
-            argsOnly = true, remap = false, require = 1)
+            argsOnly = true, remap = false)
     private int pit12$fadeItemColor(int color) {
         if (FocusRenderState.opacity == 1.0F)
             return color;

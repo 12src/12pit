@@ -20,6 +20,4 @@ package pit12.feature.render.gamma;
 
 public interface GammaBinding {
     void pit12$bindGammaConfig(GammaConfig config);
-
-    GammaConfig pit12$gammaConfig();
 }

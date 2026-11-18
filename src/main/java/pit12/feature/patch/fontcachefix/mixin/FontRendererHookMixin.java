@@ -47,7 +47,7 @@ public abstract class FontRendererHookMixin {
 
     @ModifyArg(method = "renderStringAtPos", at = @At(value = "INVOKE",
             target = "Lclub/sk1er/patcher/util/enhancement/hash/StringHash;<init>(Ljava/lang/String;FFFFZ)V"),
-            index = 0, remap = false, require = 1)
+            index = 0, remap = false)
     @HotPath
     private String pit12$fontCacheKey(String text) {
         if (!((FontCacheFixBinding) Minecraft.getMinecraft()).pit12$fontCacheFixEnabled()) {
@@ -59,7 +59,7 @@ public abstract class FontRendererHookMixin {
     // The width calculator captures the original text separately from the cache key.
     @ModifyArg(method = "getStringWidth", at = @At(value = "INVOKE",
             target = "Ljava/util/Map;computeIfAbsent(Ljava/lang/Object;Ljava/util/function/Function;)Ljava/lang/Object;"),
-            index = 0, remap = false, require = 1)
+            index = 0, remap = false)
     @HotPath
     private Object pit12$widthCacheKey(Object text) {
         return pit12$fontCacheKey((String) text);
