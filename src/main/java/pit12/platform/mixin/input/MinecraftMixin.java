@@ -103,12 +103,6 @@ public abstract class MinecraftMixin implements InputBlockBinding, InputTickBind
             callback.cancel();
     }
 
-    @Inject(method = "setIngameFocus", at = @At("HEAD"), cancellable = true)
-    private void pit12$keepCursorFree(CallbackInfo callback) {
-        if (pit12$inputBlocker != null && pit12$inputBlocker.blocksFocus())
-            callback.cancel();
-    }
-
     // Lunar wraps this call too.
     @Inject(method = "runTick", at = @At(value = "INVOKE",
             target = "Lnet/minecraft/client/gui/GuiScreen;handleInput()V"))
