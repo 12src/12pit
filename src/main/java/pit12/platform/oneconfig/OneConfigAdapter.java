@@ -128,9 +128,9 @@ public final class OneConfigAdapter implements ClientLifecycle, ConfigChangeList
         for (ConfigOption<?> option : options) {
             Setting<?> setting = option.setting();
             String category =
-                    option.subcategory() == null ? "" : option.subcategory().originalDisplayName();
-            String subcategory = option.subsubcategory() == null ? ""
-                    : option.subsubcategory().originalDisplayName();
+                    option.category() == null ? "" : option.category().originalDisplayName();
+            String subcategory =
+                    option.section() == null ? "" : option.section().originalDisplayName();
             OptionSubcategory section =
                     ConfigUtils.getSubCategory(target.mod.defaultPage, category, subcategory);
             BasicOption control = createOption(setting, option, category, subcategory);

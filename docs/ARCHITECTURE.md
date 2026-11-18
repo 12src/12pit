@@ -4,9 +4,13 @@
 
 `Pit12` is the Forge entry point. It relays Forge lifecycle events to `ClientBootstrap`, which instantiates the top-level components, wires up their dependencies, and handles start-up/shut-down.
 
-Features are grouped under `feature.client`, `feature.combat`, `feature.render`, `feature.misc`, and `feature.patch`. Each feature package owns one user-facing capability, including its settings, logic, commands, rendering, storage, and Forge listeners.
+Ordinary features live under `feature.combat`, `feature.render`, `feature.misc`, and `feature.patch`. Each owns one user-facing capability, including its settings, logic, commands, rendering, storage, and Forge listeners.
 
-`runtime` is for shared services and live state with its own lifecycle, like the client session, game state trackers, command registry, config catalog, and hud registry.
+`feature.client` provides client services, such as player relations and name lookups. `feature.provider` supplies configurable rules and results that other features use, such as timer tracking and Telebow prediction.
+
+Client services and providers have no master switch.
+
+`runtime` owns shared services and basic live state, such as the client session, the arrow tracker, the config catalog, and the HUD registry. It does not own configurable feature rules.
 
 `shared` contains utilities and interfaces for threading, listeners, rendering, file writing. The live game state should be kept in `runtime` or `feature`, but not in `shared`.
 
@@ -18,11 +22,19 @@ Features define their commands and actions. `runtime.command` handles routing, h
 
 ## Dependencies
 
-`Pit12` depends only on `bootstrap` and the compile-time constants in `shared.build.BuildConfig`. `bootstrap` depends on `platform`, `runtime`, `feature` and `shared`, passing dependencies straight to the components.
+`shared` does not depend on other layers. `runtime` can use other runtime modules and `shared`, but cannot depend on features.
 
-`feature` may depend on `runtime` and `shared`. If some feature needs access to another feature, it goes through the `api` package of that feature. `runtime` depends only on `shared`, and `shared` depends on nothing.
+All feature modules may use `runtime` and `shared`. When they depend on another feature, they must use its `api` package.
+
+Client modules may depend on other client modules and ordinary features, but not providers.
+
+Providers may depend on client modules and other providers, but not ordinary features.
+
+Ordinary features may depend on client modules and providers, but not on other ordinary features.
 
 `platform` may depend on `runtime`, `feature` and `shared`. Feature Mixin packages follow the same dependency rules as `platform`. Platform services and binding hooks are provided to the rest of the system through the interfaces that belong to the corresponding layer. Native APIs and optional framework types are kept in `platform` and feature Mixin packages. `runtime.command` handles commands independently of Forge.
+
+`bootstrap` depends on `platform`, `runtime`, `feature`, and `shared` and wires the components together. `Pit12` depends only on `bootstrap` and the compile-time constants in `shared.build.BuildConfig`.
 
 The packages directly under `runtime`, `shared`, and `platform` are modules. Each package at `feature.<category>.<feature>` is a feature module. Modules within each layer have no circular dependencies. Shared Mixins are in `platform.mixin`. Feature-specific Mixins are in `feature.<category>.<feature>.mixin`, respecting the feature boundary.
 
@@ -30,7 +42,7 @@ The packages directly under `runtime`, `shared`, and `platform` are modules. Eac
 
 Each piece of mutable state belongs to a single owner. Each component properly cleans up the workers, subscriptions and rendering resources created by itself.
 
-Each feature has its own settings. `ConfigCatalog` keeps track of all the live configs, `profile` feature handles config snapshots in the file system, and individual features manage any additional saved data they use.
+Each feature owns its settings and any extra saved data. `ConfigCatalog` tracks live settings. The profile service in `runtime.config.profile` saves and restores snapshots of those settings.
 
 ## Architecture checks
 

@@ -33,14 +33,14 @@ import pit12.runtime.config.ConfigCatalog;
 import pit12.runtime.config.ConfigChangeListener;
 import pit12.runtime.config.ConfigChangeSet;
 import pit12.runtime.config.IntegerSetting;
-import pit12.runtime.config.Setting;
 import pit12.runtime.session.ClientSession;
 import pit12.shared.lifecycle.ClientLifecycle;
 
 public final class PredictionMarginsFeature implements ClientLifecycle, ConfigChangeListener {
     private final ConfigCatalog settings;
     private final BooleanSetting enabled;
-    private final ConfigCatalog configs;
+    private final IntegerSetting[] timerMargins;
+    private final IntegerSetting telebowMargin;
     private final ClientSession session;
     private final Runnable sessionChanged = this::schedule;
     private NetworkManager network;
@@ -52,10 +52,11 @@ public final class PredictionMarginsFeature implements ClientLifecycle, ConfigCh
     private boolean started;
 
     public PredictionMarginsFeature(ConfigCatalog settings, BooleanSetting enabled,
-            ConfigCatalog configs, ClientSession session) {
+            ClientSession session, IntegerSetting[] timerMargins, IntegerSetting telebowMargin) {
         this.settings = settings;
         this.enabled = enabled;
-        this.configs = configs;
+        this.timerMargins = timerMargins;
+        this.telebowMargin = telebowMargin;
         this.session = session;
     }
 
@@ -121,10 +122,9 @@ public final class PredictionMarginsFeature implements ClientLifecycle, ConfigCh
                     (int) ((probe.receivedAt - probe.sentAt + 49_999_999L) / 50_000_000L) * 50;
             cancel();
             int margin = roundTripMillis / 2;
-            setMargin("debufftimers", "venom_hit_window_ms", margin);
-            setMargin("debufftimers", "jump_boost_grace_ms", margin);
-            setMargin("debufftimers", "pin_hit_window_ms", margin);
-            setMargin("telebow", "prediction_margin_ms", margin);
+            for (IntegerSetting target : timerMargins)
+                setMargin(target, margin);
+            setMargin(telebowMargin, margin);
             return;
         }
         if (now >= expiresAt) {
@@ -153,14 +153,8 @@ public final class PredictionMarginsFeature implements ClientLifecycle, ConfigCh
         session.connection().addToSendQueue(probe.request);
     }
 
-    private void setMargin(String featureId, String settingId, int millis) {
-        for (Setting<?> setting : configs.feature(featureId).settings()) {
-            if (setting.id().equals(settingId)) {
-                IntegerSetting margin = (IntegerSetting) setting;
-                margin.set(Math.max(margin.minimum(), Math.min(margin.maximum(), millis)));
-                return;
-            }
-        }
+    private static void setMargin(IntegerSetting target, int millis) {
+        target.set(Math.max(target.minimum(), Math.min(target.maximum(), millis)));
     }
 
     /** Timing state shared by the client and network threads. */

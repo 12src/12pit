@@ -74,7 +74,7 @@ public final class SwapConfig extends FeatureConfig {
     public SwapConfig() {
         super("swap", source("Swap"), ConfigCategory.COMBAT,
                 source("Swaps armor and hotbar items manually or automatically."));
-        subcategory("general", source("General"));
+        category("general", source("General"));
         rightClick = booleanSetting("right_click", source("Right click swap"),
                 source("Right-click held armor to replace the armor in its slot."), true);
         randomClickTiming = booleanSetting("random_click_timing", source("Random click timing"),
@@ -108,7 +108,7 @@ public final class SwapConfig extends FeatureConfig {
         preferEmpty = booleanSetting("prefer_empty_hotbar", source("Prefer empty hotbar slot"),
                 source("Uses the first empty hotbar slot for transfers, or the selected transfer slot if the hotbar is full."),
                 true);
-        subcategory("bindings", source("Bindings"));
+        category("bindings", source("Bindings"));
         unequipKey = keybindSetting("unequip_all_key", source("Unequip all"),
                 source("Moves worn armor into free inventory slots."), 0);
         bindingDelay = integerSliderSetting("binding_delay", source("Binding delay (ticks)"),
@@ -117,13 +117,13 @@ public final class SwapConfig extends FeatureConfig {
                 source("Shows messages when bindings are added, removed or cleared."), true);
         highlight = booleanSetting("highlight_bindings", source("Show binding keys"),
                 source("Shows keys on bound items outside their target slots."), true);
-        subcategory("automatic_swap", source("Automatic swap"));
+        category("automatic_swap", source("Automatic swap"));
         autoSwap = booleanSetting("auto_swap", source("Automatic swap"), source(
                 "Swaps items when you become poisoned, your health is low, or a player wearing Escape Pod or Phoenix has low health."),
                 false);
         autoSwapMessages = booleanSetting("auto_swap_messages", source("Automatic swap messages"),
                 source("Shows why automatic swaps happened."), true);
-        subsubcategory("venom", "Venom");
+        section("venom", "Venom");
         venomArmor = booleanSetting("venom_armor", source("Swap diamond armor"),
                 source("Equips diamond leggings and boots when you become poisoned."), true);
         venomSpade = booleanSetting("venom_spade", source("Swap Combat Spade"), source(
@@ -133,7 +133,7 @@ public final class SwapConfig extends FeatureConfig {
                 source("Skips poison swaps while wearing Combo Venom leggings."), false);
         spadeSlot = integerSliderSetting("spade_slot", source("Combat Spade slot"),
                 source("Hotbar slot used for the Combat Spade during poison swaps."), 1, 1, 9, 1);
-        subsubcategory("health", "Pod & Phoenix");
+        section("health", "Pod & Phoenix");
         escapePod = booleanSetting("escape_pod", source("Use Escape Pod"),
                 source("Equips Escape Pod leggings at or below their health threshold."), true);
         podThreshold = integerSliderSetting("pod_threshold", source("Escape Pod threshold"),
@@ -159,7 +159,7 @@ public final class SwapConfig extends FeatureConfig {
                 source("Restore threshold"),
                 source("Health needed to restore leggings in Health mode. It must also exceed the equip threshold."),
                 6, 0, 20, 1);
-        subsubcategory("dark", "Dark");
+        section("dark", "Dark");
         dark = booleanSetting("use_dark", source("Use dark"), source(
                 "Equips Somber leggings against players with low health wearing Escape Pod or Phoenix."),
                 false);

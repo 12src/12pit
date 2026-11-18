@@ -24,9 +24,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import pit12.feature.client.profile.api.ProfileSummary;
-import pit12.feature.client.profile.api.Profiles;
-import pit12.feature.client.profile.api.ProfilesSnapshot;
 import pit12.feature.client.relation.api.Relation;
 import pit12.feature.client.relation.api.RelationEntry;
 import pit12.feature.client.relation.api.Relations;
@@ -38,6 +35,9 @@ import pit12.runtime.config.ConfigOption;
 import pit12.runtime.config.FeatureConfig;
 import pit12.runtime.config.NumberSetting;
 import pit12.runtime.config.Setting;
+import pit12.runtime.config.profile.api.ProfileSummary;
+import pit12.runtime.config.profile.api.Profiles;
+import pit12.runtime.config.profile.api.ProfilesSnapshot;
 import pit12.runtime.languages.Languages;
 import pit12.shared.build.BuildConfig;
 import pit12.shared.input.Keybind;
@@ -139,19 +139,17 @@ final class WebUiState {
         List<Object> sections = new ArrayList<>();
         Map<String, Map<String, Object>> byId = new LinkedHashMap<>();
         for (ConfigOption<?> option : feature.options()) {
-            String sectionId =
-                    option.subsubcategory() == null ? null : option.subsubcategory().id();
-            String groupId = (option.subcategory() == null ? "" : option.subcategory().id()) + "/"
+            String sectionId = option.section() == null ? null : option.section().id();
+            String groupId = (option.category() == null ? "" : option.category().id()) + "/"
                     + (sectionId == null ? "" : sectionId);
             Map<String, Object> section = byId.get(groupId);
             if (section == null) {
                 section = object("id", sectionId, "name",
-                        option.subsubcategory() == null ? null
-                                : option.subsubcategory().displayName(),
+                        option.section() == null ? null : option.section().displayName(),
                         "subcategory",
-                        option.subcategory() == null ? null
-                                : object("id", option.subcategory().id(), "name",
-                                        option.subcategory().displayName()),
+                        option.category() == null ? null
+                                : object("id", option.category().id(), "name",
+                                        option.category().displayName()),
                         "options", new ArrayList<>());
                 byId.put(groupId, section);
                 sections.add(section);

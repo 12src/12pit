@@ -123,9 +123,8 @@ public final class ArchitectureTest {
                     .resideInAnyPackage("pit12.platform..", "pit12.runtime..", "pit12.feature..",
                             "pit12.shared.lifecycle..");
     @ArchTest
-    public static final ArchRule FEATURES_MUST_ONLY_USE_OTHER_FEATURE_APIS =
-            classes().that().resideInAPackage("pit12.feature..").should(onlyUseOtherFeatureApis())
-                    .because("a feature's internal classes belong to that feature");
+    public static final ArchRule FEATURE_DEPENDENCIES = classes().that()
+            .resideInAPackage("pit12.feature..").should(onlyUseAllowedFeatureApis());
     @ArchTest
     public static final ArchRule MIXINS_MUST_RESIDE_IN_MIXIN_PACKAGES =
             classes().that().areAnnotatedWith("org.spongepowered.asm.mixin.Mixin").should()
@@ -177,8 +176,8 @@ public final class ArchitectureTest {
 
     private ArchitectureTest() {}
 
-    private static ArchCondition<JavaClass> onlyUseOtherFeatureApis() {
-        return new ArchCondition<JavaClass>("only use other features through their api packages") {
+    private static ArchCondition<JavaClass> onlyUseAllowedFeatureApis() {
+        return new ArchCondition<JavaClass>("only use allowed feature APIs") {
             @Override
             public void check(JavaClass source, ConditionEvents events) {
                 String sourceFeature = featureNameOf(source);
@@ -188,14 +187,28 @@ public final class ArchitectureTest {
                 for (Dependency dependency : source.getDirectDependenciesFromSelf()) {
                     JavaClass target = dependency.getTargetClass();
                     String targetFeature = featureNameOf(target);
-                    if (targetFeature == null || sourceFeature.equals(targetFeature)
-                            || isFeatureApi(target, targetFeature)) {
+                    if (targetFeature == null || sourceFeature.equals(targetFeature)) {
                         continue;
                     }
-                    events.add(SimpleConditionEvent.violated(source, dependency.getDescription()));
+                    if (!mayUseFeature(sourceFeature, targetFeature)) {
+                        events.add(SimpleConditionEvent.violated(source,
+                                "Feature dependency is not allowed: "
+                                        + dependency.getDescription()));
+                    } else if (!isFeatureApi(target, targetFeature)) {
+                        events.add(SimpleConditionEvent.violated(source,
+                                "Use the feature API: " + dependency.getDescription()));
+                    }
                 }
             }
         };
+    }
+
+    private static boolean mayUseFeature(String source, String target) {
+        if (target.startsWith("client.")) {
+            return true;
+        }
+        boolean targetIsProvider = target.startsWith("provider.");
+        return source.startsWith("client.") ? !targetIsProvider : targetIsProvider;
     }
 
     private static String featureNameOf(JavaClass javaClass) {

@@ -43,7 +43,7 @@ public final class FocusConfig extends FeatureConfig {
     public FocusConfig() {
         super("focus", source("Focus"), ConfigCategory.RENDER,
                 source("Keeps selected players visible and fades other players."), true, false);
-        subcategory("general", source("General"));
+        category("general", source("General"));
         mode = choiceSetting("mode", source("Mode"),
                 source("Chooses which players keep their normal opacity."), 0,
                 new ChoiceSetting.Choice(0, source("Non-Diamond")),
@@ -59,7 +59,7 @@ public final class FocusConfig extends FeatureConfig {
                 source("Toggles Focus without changing the selected mode."), Keyboard.KEY_NONE);
         cycleKey = keybindSetting("cycle_key", source("Cycle mode key"),
                 source("Cycles modes only while Focus is enabled."), Keyboard.KEY_NONE);
-        subcategory("diamond_equipment", source("Diamond equipment"));
+        category("diamond_equipment", source("Diamond equipment"));
         equipmentMatch = choiceSetting("equipment_match", source("Match rule"),
                 source("AND: all selected pieces. OR: any selected piece."), 1,
                 new ChoiceSetting.Choice(0, "AND"), new ChoiceSetting.Choice(1, "OR"));

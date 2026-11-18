@@ -25,6 +25,7 @@ import pit12.runtime.languages.Languages;
 public enum ConfigCategory {
     COMBAT("combat", source("Combat")),
     RENDER("render", source("Render")),
+    PROVIDER("provider", source("Provider")),
     MISC("misc", source("Misc")),
     PATCH("patch", source("Patch"));
 

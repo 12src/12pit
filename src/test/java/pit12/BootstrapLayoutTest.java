@@ -60,13 +60,13 @@ public final class BootstrapLayoutTest {
                 code.substring(constructorStart, bodyEnd(code, constructorStart - 1));
         List<String> groups = new ArrayList<>();
         Matcher headings = Pattern.compile(
-                "(?m)^[ \\t]*// (Shared runtime|Feature providers|Features|Platform integrations)[ \\t]*$")
+                "(?m)^[ \\t]*// (Shared runtime|Feature dependencies|Features|Platform integrations)[ \\t]*$")
                 .matcher(source.substring(constructorStart,
                         constructorStart + constructorBody.length()));
         while (headings.find()) {
             groups.add(headings.group(1));
         }
-        assertEquals("Constructor sections", Arrays.asList("Shared runtime", "Feature providers",
+        assertEquals("Constructor sections", Arrays.asList("Shared runtime", "Feature dependencies",
                 "Features", "Platform integrations"), groups);
         Map<String, String> imports = new HashMap<>();
         Matcher imported = Pattern.compile("import ([\\w.]+);").matcher(code);
@@ -74,7 +74,6 @@ public final class BootstrapLayoutTest {
             String name = imported.group(1);
             imports.put(name.substring(name.lastIndexOf('.') + 1), name);
         }
-        List<String> categories = Arrays.asList("", "combat", "render", "misc", "patch");
         Map<String, Registration> registrations = new LinkedHashMap<>();
         Set<String> configTypes = new HashSet<>();
         Matcher declarations = Pattern
@@ -90,15 +89,18 @@ public final class BootstrapLayoutTest {
                 String type = imports.get(config.group(1));
                 assertNotNull("Missing config import in " + name, type);
                 assertTrue("Config is constructed twice: " + type, configTypes.add(type));
+                FeatureConfig instance = Class.forName(type).asSubclass(FeatureConfig.class)
+                        .getDeclaredConstructor().newInstance();
+                category = instance.category();
+                if (type.startsWith("pit12.feature.client.")
+                        || type.startsWith("pit12.feature.provider.")) {
+                    assertFalse("Support features have no master switch: " + type,
+                            instance.toggleable());
+                }
                 if (WebUiConfig.class.getName().equals(type)) {
-                    category = new WebUiConfig().category();
                     assertNull("Global settings have no feature category", category);
                 } else {
-                    category = ((FeatureConfig) Class.forName(type).getDeclaredConstructor()
-                            .newInstance()).category();
                     assertNotNull("Missing config category in " + name, category);
-                    assertTrue("Unknown config category in " + name,
-                            categories.contains(category.id()));
                 }
                 assertFalse("Multiple configs in " + name, config.find());
             }
@@ -204,7 +206,7 @@ public final class BootstrapLayoutTest {
         assertTrue("Do not start or stop components during assembly",
                 calls(constructorBody, "start|stop|[\\w.]+\\.(?:start|stop)").isEmpty());
         Map<String, Set<String>> dependencies = new HashMap<>();
-        Set<String> providers = new HashSet<>();
+        Set<String> featureDependencies = new HashSet<>();
         Pattern identifier = Pattern.compile("\\b\\w+\\b");
         for (Map.Entry<String, String> entry : arguments.entrySet()) {
             Set<String> required = new HashSet<>();
@@ -215,15 +217,16 @@ public final class BootstrapLayoutTest {
                     required.add(producer);
                     if (registrations.containsKey(entry.getKey())
                             && registrations.containsKey(producer)) {
-                        providers.add(producer);
+                        featureDependencies.add(producer);
                     }
                 }
             }
             dependencies.put(entry.getKey(), required);
         }
         for (Map.Entry<String, Registration> entry : registrations.entrySet()) {
-            assertEquals("Return an API only for feature providers: " + entry.getKey(),
-                    providers.contains(entry.getKey()), entry.getValue().provider);
+            assertEquals("Return a value only when another feature uses it: " + entry.getKey(),
+                    featureDependencies.contains(entry.getKey()),
+                    entry.getValue().providesDependency);
         }
         Map<String, Integer> componentPositions = new HashMap<>();
         for (int index = 0; index < componentOrder.size(); index++) {
@@ -239,11 +242,11 @@ public final class BootstrapLayoutTest {
             }
         }
         Comparator<String> order = Comparator
-                .comparingInt((String name) -> registrations.get(name).provider ? 0 : 1)
-                .thenComparingInt(
-                        name -> categories.indexOf(registrations.get(name).category == null ? ""
-                                : registrations.get(name).category.id()))
-                .thenComparing(Comparator.naturalOrder());
+                .comparingInt((String name) -> registrations.get(name).providesDependency ? 0 : 1)
+                .thenComparingInt(name -> {
+                    ConfigCategory category = registrations.get(name).category;
+                    return category == null ? -1 : category.ordinal();
+                }).thenComparing(Comparator.naturalOrder());
         Set<String> remaining = new HashSet<>(registrations.keySet());
         Set<String> completed = new HashSet<>();
         for (String name : callOrder) {
@@ -274,7 +277,7 @@ public final class BootstrapLayoutTest {
         String group = null;
         String category = null;
         Matcher matcher = Pattern.compile(
-                "(?m)^[ \\t]*// (Shared runtime|Feature providers|Features|Platform integrations|Category: [^\\r\\n]+)$")
+                "(?m)^[ \\t]*// (Shared runtime|Feature dependencies|Features|Platform integrations|Category: [^\\r\\n]+)$")
                 .matcher(source.substring(0, offset));
         while (matcher.find()) {
             String heading = matcher.group(1).trim();
@@ -317,17 +320,17 @@ public final class BootstrapLayoutTest {
     }
 
     private static final class Registration {
-        private final boolean provider;
+        private final boolean providesDependency;
         private final ConfigCategory category;
 
-        private Registration(boolean provider, ConfigCategory category) {
-            this.provider = provider;
+        private Registration(boolean providesDependency, ConfigCategory category) {
+            this.providesDependency = providesDependency;
             this.category = category;
         }
 
         private List<String> section() {
-            return Arrays.asList(provider ? "Feature providers" : "Features",
-                    category == null ? "Client" : category.displayName());
+            return Arrays.asList(providesDependency ? "Feature dependencies" : "Features",
+                    category == null ? "Client" : category.originalDisplayName());
         }
     }
     private static final class Call {

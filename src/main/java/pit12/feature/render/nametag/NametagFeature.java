@@ -33,7 +33,11 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
-import pit12.feature.misc.denick.api.DenickNames;
+import pit12.feature.client.denick.api.DenickNames;
+import pit12.feature.client.relation.api.PlayerAudience;
+import pit12.feature.provider.telebow.api.TelebowPrediction;
+import pit12.feature.provider.timertracking.api.TimerKind;
+import pit12.feature.provider.timertracking.api.TimerTracking;
 import pit12.runtime.config.ConfigCatalog;
 import pit12.runtime.config.ConfigChangeListener;
 import pit12.runtime.config.ConfigChangeSet;
@@ -45,7 +49,6 @@ import pit12.runtime.player.PlayerEquipmentListener;
 import pit12.runtime.player.PlayerEquipmentSnapshot;
 import pit12.runtime.player.PlayerHealth;
 import pit12.runtime.session.ClientSession;
-import pit12.runtime.timers.PlayerTimers;
 import pit12.shared.lifecycle.ClientLifecycle;
 import pit12.shared.performance.HotPath;
 import pit12.shared.rendering.TextureState;
@@ -59,7 +62,8 @@ public final class NametagFeature
     private final PlayerEquipmentAccess equipment;
     private final DenickNames denickNames;
     private final NickTracker nicks;
-    private final PlayerTimers timers;
+    private final TimerTracking timers;
+    private final TelebowPrediction prediction;
     private final NametagNamesBinding binding;
     private final NametagRenderer renderer = new NametagRenderer();
     private final NametagOverlayRenderer overlay;
@@ -73,11 +77,13 @@ public final class NametagFeature
     private boolean namesEnabled;
     private boolean trackingNicks;
     private int timerTypes;
+    private boolean showTelebowCooldown;
+    private long cooldownNow;
 
     public NametagFeature(Minecraft minecraft, ConfigCatalog configs, NametagConfig config,
             ClientSession session, PlayerEquipmentAccess equipment, DenickNames denickNames,
-            NickTracker nicks, PlayerTimers timers, NametagNamesBinding binding,
-            TextureState textures) {
+            NickTracker nicks, TimerTracking timers, TelebowPrediction prediction,
+            NametagNamesBinding binding, TextureState textures) {
         this.minecraft = minecraft;
         this.configs = configs;
         this.config = config;
@@ -86,6 +92,7 @@ public final class NametagFeature
         this.denickNames = denickNames;
         this.nicks = nicks;
         this.timers = timers;
+        this.prediction = prediction;
         this.binding = binding;
         overlay = new NametagOverlayRenderer(textures);
     }
@@ -126,10 +133,26 @@ public final class NametagFeature
         int nextTypes = enabled ? config.timerTypes() : 0;
         if (timerTypes != nextTypes) {
             timerTypes = nextTypes;
-            timers.setDemand(this, PlayerTimers.nametagDemand(timerTypes));
+            int remote = PlayerAudience.REMOTE;
+            timers.setDemand(this,
+                    ((timerTypes & TimerTracking.PIN) != 0 ? TimerKind.PIN.select(remote) : 0)
+                            | ((timerTypes & TimerTracking.VENOM) != 0
+                                    ? TimerKind.VENOM_WEARER.select(remote)
+                                            | TimerKind.VENOM_TARGET.select(remote)
+                                    : 0)
+                            | ((timerTypes & TimerTracking.JUMP_BOOST) != 0
+                                    ? TimerKind.JUMP_BOOST.select(remote)
+                                    : 0));
+        }
+        boolean showCooldown = enabled && config.showTelebowCooldown();
+        if (showTelebowCooldown != showCooldown) {
+            showTelebowCooldown = showCooldown;
+            prediction.setCooldownDemand(this, showCooldown ? PlayerAudience.REMOTE : 0);
+            if (showCooldown)
+                cooldownNow = System.nanoTime();
         }
         namesEnabled = enabled && (config.nickMarker() || config.realNames() || config.showHealth()
-                || timerTypes != 0);
+                || timerTypes != 0 || showTelebowCooldown);
         if (enabled && (enhancedVisibility || namesEnabled || config.showHeldItem()
                 || config.showLeggings())) {
             if (!active) {
@@ -265,6 +288,8 @@ public final class NametagFeature
             return;
         }
         session.checkThread();
+        if (showTelebowCooldown)
+            cooldownNow = System.nanoTime();
         if (fontDirty || unicodeFont != minecraft.fontRendererObj.getUnicodeFlag()) {
             rebuildTexts();
         }
@@ -279,10 +304,14 @@ public final class NametagFeature
             text = new NametagText(null, null, minecraft.fontRendererObj);
             texts.put(playerId, text);
         }
+        long until = showTelebowCooldown ? prediction.cooldownUntil(playerId) : 0;
+        long cooldownTenths = until != 0 && until > cooldownNow
+                ? (until - cooldownNow + 99_999_999L) / 100_000_000L
+                : 0;
         return text.updateSuffix(config.nickMarker() && nicks.isNicked(playerId),
                 config.realNames() ? denickNames.realDisplayName(playerId) : null,
                 config.showHealth() ? PlayerHealth.of(player).text() : null,
-                timerTypes == 0 ? "" : timers.countdowns(playerId, timerTypes));
+                timerTypes == 0 ? "" : timers.countdowns(playerId, timerTypes), cooldownTenths);
     }
 
     // Lunar replaces name rendering and skips Forge's Specials events.

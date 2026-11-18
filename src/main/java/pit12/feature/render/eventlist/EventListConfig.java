@@ -48,7 +48,7 @@ public final class EventListConfig extends FeatureConfig {
     public EventListConfig() {
         super("eventlist", source("Event List HUD"), ConfigCategory.RENDER,
                 source("Shows upcoming and active Pit events."));
-        subcategory("display", source("Display"));
+        category("display", source("Display"));
         hud = hudConfig("event_list", HudAnchor.TOP_RIGHT, -6, 6, true);
         eventCount = integerSliderSetting("event_count", source("Event count"),
                 source("Number of event rows shown."), 6, 1, 20, 1);
@@ -64,8 +64,8 @@ public final class EventListConfig extends FeatureConfig {
                 source("Displays countdowns, local times, or both."), 0,
                 new Choice(0, source("Countdown")), new Choice(1, source("Local time (24-hour)")),
                 new Choice(2, source("Countdown and local time")));
-        subcategory("filter", source("Filter"));
-        subsubcategory("major_events", source("Major events"));
+        category("filter", source("Filter"));
+        section("major_events", source("Major events"));
         showMajorEvents = booleanSetting("show_major_events", source("Show major events"),
                 source("Shows major events in the list."), true);
         for (EventType type : EventType.values()) {
@@ -74,7 +74,7 @@ public final class EventListConfig extends FeatureConfig {
                         source("Shows this event in the list."), true));
             }
         }
-        subsubcategory("minor_events", source("Minor events"));
+        section("minor_events", source("Minor events"));
         showMinorEvents = booleanSetting("show_minor_events", source("Show minor events"),
                 source("Shows minor events in the list."), true);
         for (EventType type : EventType.values()) {
@@ -83,7 +83,7 @@ public final class EventListConfig extends FeatureConfig {
                         source("Shows this event in the list."), true));
             }
         }
-        subcategory("source", source("Source"));
+        category("source", source("Source"));
         endpoint = stringSetting("endpoint", source("Endpoint"),
                 source("Event feed URL. Leave blank to use 12pit's service."), "");
     }

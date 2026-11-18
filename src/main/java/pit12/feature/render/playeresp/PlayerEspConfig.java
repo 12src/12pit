@@ -49,13 +49,13 @@ public final class PlayerEspConfig extends FeatureConfig {
     public PlayerEspConfig() {
         super("playeresp", source("Player ESP"), ConfigCategory.RENDER,
                 source("Shows colored boxes around loaded players through blocks."));
-        subcategory("general", source("General"));
+        category("general", source("General"));
         priority = choiceSetting("priority", source("Color priority"), source(
                 "Chooses which color to use when conflicting. Mixed averages their colors and opacity."),
                 0, new ChoiceSetting.Choice(0, source("Relations")),
                 new ChoiceSetting.Choice(1, source("Equipment")),
                 new ChoiceSetting.Choice(2, source("Mixed")));
-        subsubcategory("distance_fade", source("Distance fade"));
+        section("distance_fade", source("Distance fade"));
         distanceFade = booleanSetting("distance_fade", source("Fade nearby players"),
                 source("Makes boxes fade out as players get closer."), true);
         fadeNearDistance =
@@ -64,30 +64,30 @@ public final class PlayerEspConfig extends FeatureConfig {
         fadeFarDistance =
                 integerSliderSetting("fade_far_distance", source("Full color distance (blocks)"),
                         source("Uses full color at or above the larger distance."), 10, 0, 20, 1);
-        subcategory("relations", source("Relations"));
-        subsubcategory("friends", source("Friends"));
+        category("relations", source("Relations"));
+        section("friends", source("Friends"));
         showFriend = booleanSetting("show_friend", source("Show friends"), source("Marks friends."),
                 true);
         friendColor = colorPickerSetting("friend_color", source("Friend color"),
                 source("Color and opacity of boxes around friends."), 0xC000FF00);
-        subsubcategory("enemies", source("Enemies"));
+        section("enemies", source("Enemies"));
         showEnemy = booleanSetting("show_enemy", source("Show enemies"), source("Marks enemies."),
                 true);
         enemyColor = colorPickerSetting("enemy_color", source("Enemy color"),
                 source("Color and opacity of boxes around enemies."), 0xC0FF0000);
-        subsubcategory("other_players", source("Other players"));
+        section("other_players", source("Other players"));
         showOther = booleanSetting("show_other", source("Show other players"),
                 source("Marks players outside the friend and enemy lists."), false);
         otherColor = colorPickerSetting("other_color", source("Other player color"),
                 source("Color and opacity of boxes around other players."), 0xC0FFFFFF);
-        subcategory("equipment", source("Equipment"));
-        subsubcategory("venom", "Venom");
+        category("equipment", source("Equipment"));
+        section("venom", "Venom");
         showVenom = booleanSetting("show_venom", source("Show Venom"),
                 source("Marks players wearing Venom leggings."), true);
         venomColor = colorPickerSetting("venom_color", source("Venom color"),
                 source("Color and opacity of boxes around players wearing Venom leggings."),
                 0xC0AA00AA);
-        subsubcategory("bounty_hunter", "Bounty Hunter");
+        section("bounty_hunter", "Bounty Hunter");
         showBountyHunter = booleanSetting("show_bounty_hunter", source("Show Bounty Hunter"),
                 source("Marks players wearing golden leggings."), false);
         bountyHunterColor = colorPickerSetting("bounty_hunter_color", source("Bounty Hunter color"),

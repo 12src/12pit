@@ -29,7 +29,7 @@ import pit12.runtime.languages.Languages;
 
 public abstract class FeatureConfig {
     protected enum HudGroup {
-        AUTO, SUBCATEGORY, SUBSUBCATEGORY
+        AUTO, CATEGORY, SECTION
     }
 
     private final String id;
@@ -44,9 +44,9 @@ public abstract class FeatureConfig {
     private final List<Setting<?>> settingsView = Collections.unmodifiableList(settings);
     private final List<ConfigOption<?>> optionsView = Collections.unmodifiableList(options);
     private final Set<String> settingIds = new HashSet<>();
-    private ConfigGroup currentSubcategory;
-    private ConfigGroup currentSubsubcategory;
-    private boolean hasSubcategories;
+    private ConfigGroup currentCategory;
+    private ConfigGroup currentSection;
+    private boolean hasCategories;
     private final List<Runnable> hudGroups = new ArrayList<>();
 
     protected FeatureConfig(String id, String displayName, ConfigCategory category,
@@ -145,14 +145,14 @@ public abstract class FeatureConfig {
         return setting;
     }
 
-    protected final void subcategory(String id, String displayName) {
-        hasSubcategories = true;
-        currentSubcategory = new ConfigGroup(id, displayName);
-        currentSubsubcategory = null;
+    protected final void category(String id, String displayName) {
+        hasCategories = true;
+        currentCategory = new ConfigGroup(id, displayName);
+        currentSection = null;
     }
 
-    protected final void subsubcategory(String id, String displayName) {
-        currentSubsubcategory = new ConfigGroup(id, displayName);
+    protected final void section(String id, String displayName) {
+        currentSection = new ConfigGroup(id, displayName);
     }
 
     protected final HudConfig hudConfig(String id, HudAnchor defaultAnchor, int defaultOffsetX,
@@ -194,10 +194,10 @@ public abstract class FeatureConfig {
         register(anchor, ConfigOption.Kind.CHOICE);
         int lastOption = options.size();
         ConfigGroup group = new ConfigGroup(id + ".hud", groupName == null ? "HUD" : groupName);
-        ConfigGroup parent = currentSubcategory;
+        ConfigGroup parent = currentCategory;
         hudGroups.add(() -> {
-            boolean topLevel = grouping == HudGroup.SUBCATEGORY
-                    || grouping == HudGroup.AUTO && hasSubcategories;
+            boolean topLevel =
+                    grouping == HudGroup.CATEGORY || grouping == HudGroup.AUTO && hasCategories;
             for (int index = firstOption; index < lastOption; index++) {
                 options.get(index).group(topLevel ? group : parent, topLevel ? null : group);
             }
@@ -255,7 +255,7 @@ public abstract class FeatureConfig {
     }
 
     void completeHudGroups() {
-        // More subcategories may come after the HUD, so decide where it goes later.
+        // A settings category may come after the HUD, so decide where it goes later.
         for (Runnable group : hudGroups) {
             group.run();
         }
@@ -269,8 +269,7 @@ public abstract class FeatureConfig {
         }
         settings.add(setting);
         if (optionKind != null) {
-            options.add(new ConfigOption<>(setting, optionKind, currentSubcategory,
-                    currentSubsubcategory));
+            options.add(new ConfigOption<>(setting, optionKind, currentCategory, currentSection));
         }
     }
 
@@ -281,11 +280,11 @@ public abstract class FeatureConfig {
             setting.localize(language);
         }
         for (ConfigOption<?> option : options) {
-            if (option.subcategory() != null) {
-                option.subcategory().localize(language);
+            if (option.category() != null) {
+                option.category().localize(language);
             }
-            if (option.subsubcategory() != null) {
-                option.subsubcategory().localize(language);
+            if (option.section() != null) {
+                option.section().localize(language);
             }
         }
     }

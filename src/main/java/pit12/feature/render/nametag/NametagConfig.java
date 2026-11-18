@@ -20,13 +20,13 @@ package pit12.feature.render.nametag;
 
 import static pit12.runtime.languages.Languages.source;
 
+import pit12.feature.provider.timertracking.api.TimerTracking;
 import pit12.runtime.config.BooleanSetting;
 import pit12.runtime.config.ChoiceSetting;
 import pit12.runtime.config.ConfigCategory;
 import pit12.runtime.config.FeatureConfig;
 import pit12.runtime.config.IntegerSetting;
 import pit12.runtime.item.PitEnchantmentFormat;
-import pit12.runtime.timers.PlayerTimers;
 
 public final class NametagConfig extends FeatureConfig {
     private final BooleanSetting nickMarker;
@@ -47,12 +47,12 @@ public final class NametagConfig extends FeatureConfig {
     public NametagConfig() {
         super("nametag", source("Nametags"), ConfigCategory.RENDER, source(
                 "Adds real names, health, Pit enchantments, and timers to player nametags."));
-        subsubcategory("names", "Denick");
+        section("names", "Denick");
         nickMarker = booleanSetting("nick_marker", source("Show nick marker"),
                 source("Adds N to nicked players' names."), true);
         realNames = booleanSetting("real_names", source("Show real names on nametags"),
                 source("Adds the real name found by Denick after the nicked name."), true);
-        subsubcategory("enchantments", source("Enchantments"));
+        section("enchantments", source("Enchantments"));
         enchantmentFormat = choiceSetting("enchantment_format", source("Enchantment format"),
                 source("Controls how enchantment names and levels are shown."),
                 PitEnchantmentFormat.BOLD_LEVELS, PitEnchantmentFormat.choices());
@@ -65,20 +65,18 @@ public final class NametagConfig extends FeatureConfig {
         upwardOffset = integerSliderSetting("enchantment_offset", source("Upward offset"),
                 source("Moves enchantments above the player name and scales with the nametag."), 30,
                 20, 40, 1);
-        subsubcategory("display", source("Display"));
+        section("display", source("Display"));
         showHealth = booleanSetting("show_health", source("Show health"),
                 source("Shows HP in red before timers."), true);
         pinTimer = booleanSetting("pin_timer", source("Show Pin timer"),
-                source("Shows Pin timers after player names when enabled in Timers HUD."), true);
+                source("Shows Pin timers after player names."), true);
         venomTimer = booleanSetting("venom_timer", source("Show Venom timer"),
-                source("Shows Venom timers after player names when enabled in Timers HUD."), true);
+                source("Shows Venom timers after player names."), true);
         jumpBoostTimer = booleanSetting("jump_boost_timer", source("Show Jump Boost timer"),
-                source("Shows Jump Boost timers after player names when enabled in Timers HUD."),
-                true);
+                source("Shows Jump Boost timers after player names."), true);
         telebowTimer = booleanSetting("telebow_timer", source("Show Telebow cooldown"),
-                source("Shows Telebow cooldowns after player names when enabled in Timers HUD."),
-                true);
-        subsubcategory("visibility", source("Visibility"));
+                source("Shows Telebow cooldowns after player names."), true);
+        section("visibility", source("Visibility"));
         enhancedVisibility = booleanSetting("enhanced_visibility", source("Enhanced visibility"),
                 source("Keeps nametags readable at a distance and visible through blocks."), true);
         scale = integerSliderSetting("scale", source("Scale (%)"),
@@ -98,10 +96,14 @@ public final class NametagConfig extends FeatureConfig {
         return showHealth.get();
     }
 
-    public int timerTypes() {
-        return (pinTimer.get() ? PlayerTimers.PIN : 0) | (venomTimer.get() ? PlayerTimers.VENOM : 0)
-                | (jumpBoostTimer.get() ? PlayerTimers.JUMP_BOOST : 0)
-                | (telebowTimer.get() ? PlayerTimers.TELEBOW : 0);
+    int timerTypes() {
+        return (pinTimer.get() ? TimerTracking.PIN : 0)
+                | (venomTimer.get() ? TimerTracking.VENOM : 0)
+                | (jumpBoostTimer.get() ? TimerTracking.JUMP_BOOST : 0);
+    }
+
+    boolean showTelebowCooldown() {
+        return telebowTimer.get();
     }
 
     public int enchantmentFormat() {

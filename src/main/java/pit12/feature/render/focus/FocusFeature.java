@@ -48,6 +48,7 @@ import pit12.shared.entity.HurtTimeAccess;
 import pit12.shared.input.Keybind;
 import pit12.shared.lifecycle.ClientLifecycle;
 import pit12.shared.performance.HotPath;
+import pit12.shared.rendering.PlayerOpacity;
 
 public final class FocusFeature implements ClientLifecycle, ConfigChangeListener, InputHandler {
     private final Minecraft minecraft;
@@ -57,7 +58,7 @@ public final class FocusFeature implements ClientLifecycle, ConfigChangeListener
     private final RelationLookup relations;
     private final PlayerNameCache playerNames;
     private final Languages language;
-    private final FocusBinding binding;
+    private final PlayerOpacity.Binding binding;
     private boolean started;
     private boolean enabled;
     private boolean active;
@@ -72,7 +73,7 @@ public final class FocusFeature implements ClientLifecycle, ConfigChangeListener
 
     public FocusFeature(Minecraft minecraft, ConfigCatalog configs, FocusConfig config,
             InputBlocker input, RelationLookup relations, PlayerNameCache playerNames,
-            Languages language, FocusBinding binding) {
+            Languages language, PlayerOpacity.Binding binding) {
         this.minecraft = minecraft;
         this.configs = configs;
         this.config = config;
@@ -91,7 +92,7 @@ public final class FocusFeature implements ClientLifecycle, ConfigChangeListener
         configs.addListener(this);
         input.addHandler(this);
         updateSettings();
-        binding.pit12$bindFocus(this);
+        binding.pit12$bindPlayerOpacity(this::opacity);
     }
 
     @Override
@@ -109,7 +110,7 @@ public final class FocusFeature implements ClientLifecycle, ConfigChangeListener
             trackingTeams = false;
             playerNames.release(this);
         }
-        binding.pit12$bindFocus(null);
+        binding.pit12$bindPlayerOpacity(null);
         input.removeHandler(this);
         configs.removeListener(this);
     }
@@ -202,7 +203,7 @@ public final class FocusFeature implements ClientLifecycle, ConfigChangeListener
     }
 
     @HotPath
-    public float opacity(EntityPlayer player) {
+    private float opacity(EntityPlayer player) {
         if (!active || player == minecraft.thePlayer || minecraft.thePlayer == null
                 || player.worldObj != minecraft.theWorld)
             return 1.0F;
