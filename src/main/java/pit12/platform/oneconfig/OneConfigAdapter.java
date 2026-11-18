@@ -22,6 +22,7 @@ import cc.polyfrost.oneconfig.config.Config;
 import cc.polyfrost.oneconfig.config.core.ConfigUtils;
 import cc.polyfrost.oneconfig.config.core.OneColor;
 import cc.polyfrost.oneconfig.config.core.OneKeyBind;
+import cc.polyfrost.oneconfig.config.data.InfoType;
 import cc.polyfrost.oneconfig.config.data.Mod;
 import cc.polyfrost.oneconfig.config.data.ModType;
 import cc.polyfrost.oneconfig.config.elements.BasicOption;
@@ -30,6 +31,7 @@ import cc.polyfrost.oneconfig.config.elements.SubConfig;
 import cc.polyfrost.oneconfig.events.EventManager;
 import cc.polyfrost.oneconfig.gui.elements.config.ConfigColorElement;
 import cc.polyfrost.oneconfig.gui.elements.config.ConfigDropdown;
+import cc.polyfrost.oneconfig.gui.elements.config.ConfigInfo;
 import cc.polyfrost.oneconfig.gui.elements.config.ConfigKeyBind;
 import cc.polyfrost.oneconfig.gui.elements.config.ConfigSlider;
 import cc.polyfrost.oneconfig.gui.elements.config.ConfigSwitch;
@@ -117,7 +119,13 @@ public final class OneConfigAdapter implements ClientLifecycle, ConfigChangeList
     }
 
     private void buildPage(View target, FeatureConfig feature) {
-        for (ConfigOption<?> option : feature.options()) {
+        List<ConfigOption<?>> options = feature.options();
+        if (options.isEmpty() && feature.toggleable()) {
+            ConfigUtils.getSubCategory(target.mod.defaultPage, "", "").options.add(new ConfigInfo(
+                    null, null, feature.originalDescription(), "", "", 2, InfoType.INFO));
+            return;
+        }
+        for (ConfigOption<?> option : options) {
             Setting<?> setting = option.setting();
             String category =
                     option.subcategory() == null ? "" : option.subcategory().originalDisplayName();
