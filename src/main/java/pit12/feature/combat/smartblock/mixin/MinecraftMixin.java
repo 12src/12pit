@@ -23,6 +23,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import pit12.feature.combat.smartblock.SmartBlockBinding;
 import pit12.feature.combat.smartblock.SmartBlockFeature;
@@ -40,6 +41,12 @@ public abstract class MinecraftMixin implements SmartBlockBinding {
     @Override
     public SmartBlockFeature pit12$smartBlock() {
         return pit12$smartBlock;
+    }
+
+    @ModifyArg(method = "runTick", at = @At(value = "INVOKE",
+            target = "Lnet/minecraft/entity/player/InventoryPlayer;changeCurrentItem(I)V"))
+    private int pit12$smartBlockScroll(int wheel) {
+        return pit12$smartBlock != null && pit12$smartBlock.slotLocked() ? 0 : wheel;
     }
 
     @Inject(method = "middleClickMouse", at = @At("HEAD"), cancellable = true)

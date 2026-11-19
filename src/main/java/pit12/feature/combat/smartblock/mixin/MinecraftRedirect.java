@@ -20,7 +20,6 @@ package pit12.feature.combat.smartblock.mixin;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.InventoryPlayer;
-import org.lwjgl.input.Mouse;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -30,22 +29,6 @@ import pit12.feature.combat.smartblock.SmartBlockFeature;
 
 @Mixin(value = Minecraft.class, priority = -1)
 public abstract class MinecraftRedirect {
-    // Leave other mods' hotbar redirects alone.
-    @Redirect(method = "runTick", at = @At(value = "INVOKE",
-            target = "Lorg/lwjgl/input/Mouse;getEventDWheel()I", remap = false))
-    private int pit12$smartBlockScroll() {
-        int wheel = Mouse.getEventDWheel();
-        if (wheel == 0) {
-            return 0;
-        }
-        SmartBlockFeature smartBlock = ((SmartBlockBinding) this).pit12$smartBlock();
-        if (smartBlock == null || !smartBlock.slotLocked()
-                || ((Minecraft) (Object) this).thePlayer.isSpectator()) {
-            return wheel;
-        }
-        return 0;
-    }
-
     @Redirect(method = "runTick",
             at = @At(value = "FIELD",
                     target = "Lnet/minecraft/entity/player/InventoryPlayer;currentItem:I",
