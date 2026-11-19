@@ -65,8 +65,6 @@ import pit12.feature.misc.banalert.BanAlertConfig;
 import pit12.feature.misc.banalert.BanAlertFeature;
 import pit12.feature.misc.chatmacro.ChatMacroConfig;
 import pit12.feature.misc.chatmacro.ChatMacroFeature;
-import pit12.feature.misc.contractreroll.ContractRerollConfig;
-import pit12.feature.misc.contractreroll.ContractRerollFeature;
 import pit12.feature.misc.denick.DenickConfig;
 import pit12.feature.misc.denick.DenickFeature;
 import pit12.feature.misc.denick.DenickNamesBinding;
@@ -259,8 +257,6 @@ public final class ClientBootstrap {
         registerBanAlert(minecraft, configs, session, presence);
         registerChatMacro(minecraft, configs, session, sidebar, input, commands,
                 new File(minecraft.mcDataDir, "12pit/chat-macros.json").toPath());
-        registerContractReroll(minecraft, configs, session, pitContext, sidebar, input,
-                (MinecraftActions) minecraft);
         // Category: Patch
         registerCommandFix(configs, (CommandFixBinding) ClientCommandHandler.instance);
         if (minecraft instanceof FontCacheFixBinding) {
@@ -527,15 +523,6 @@ public final class ClientBootstrap {
         configs.register(config);
         components.add(new ChatMacroFeature(minecraft, client, configs, config, session, sidebar,
                 input, commands, language, path));
-    }
-
-    private void registerContractReroll(Minecraft minecraft, ConfigCatalog configs,
-            ClientSession session, PitContext pitContext, SidebarCache sidebar, InputBlocker input,
-            MinecraftActions actions) {
-        ContractRerollConfig config = new ContractRerollConfig();
-        configs.register(config);
-        components.add(new ContractRerollFeature(minecraft, configs, config, session, pitContext,
-                sidebar, input, actions, language));
     }
 
     // Category: Patch
