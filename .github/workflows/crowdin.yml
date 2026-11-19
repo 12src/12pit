@@ -10,7 +10,7 @@ permissions:
 
 concurrency:
   group: crowdin-sources
-  cancel-in-progress: true
+  queue: max
 
 jobs:
   upload:
@@ -30,7 +30,22 @@ jobs:
       - name: Extract source text
         run: python3 scripts/languages.py extract
 
+      - name: Check main
+        id: revision
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          branch_sha="$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/heads/main" --jq '.object.sha')"
+          if [[ "${GITHUB_SHA}" == "${branch_sha}" ]]; then
+            echo 'current=true' >> "${GITHUB_OUTPUT}"
+          else
+            echo 'Skipping upload because main has moved.'
+          fi
+
       - name: Upload source text
+        if: steps.revision.outputs.current == 'true'
         uses: crowdin/github-action@d651c77756acbe11a31d77a6fb79d8a239e1e05a # v3.6.0
         with:
           source: build/generated/languages/12pit.pot
