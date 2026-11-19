@@ -1,0 +1,273 @@
+/*
+ * This file is part of 12pit.
+ *
+ * Copyright (C) 2026 The 12pit Authors and contributors <https://github.com/12src/12pit>
+ *
+ * 12pit is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * 12pit is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
+ */
+package pit12.feature.render.telebowlanding;
+
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.UUID;
+import net.minecraft.client.Minecraft;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.projectile.EntityArrow;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.BlockPos;
+import net.minecraftforge.client.event.RenderWorldLastEvent;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
+import pit12.feature.client.relation.api.PlayerAudience;
+import pit12.feature.client.relation.api.Relation;
+import pit12.feature.client.relation.api.RelationListener;
+import pit12.feature.client.relation.api.RelationLookup;
+import pit12.feature.client.relation.api.RelationReadiness;
+import pit12.feature.provider.telebow.api.TelebowPrediction;
+import pit12.runtime.arrow.ArrowListener;
+import pit12.runtime.arrow.ArrowTracker;
+import pit12.runtime.config.ConfigCatalog;
+import pit12.runtime.config.ConfigChangeListener;
+import pit12.runtime.config.ConfigChangeSet;
+import pit12.runtime.item.PitEnchantment;
+import pit12.runtime.item.PitEnchantmentReader;
+import pit12.runtime.session.ClientSession;
+import pit12.shared.lifecycle.ClientLifecycle;
+import pit12.shared.performance.HotPath;
+import pit12.shared.rendering.TextureState;
+
+public final class TelebowLandingFeature
+        implements ClientLifecycle, ConfigChangeListener, ArrowListener, RelationListener {
+    private final Minecraft minecraft;
+    private final ConfigCatalog configs;
+    private final TelebowLandingConfig config;
+    private final ClientSession session;
+    private final ArrowTracker arrows;
+    private final RelationLookup relations;
+    private final TelebowPrediction prediction;
+    private final Map<Integer, TelebowPath> paths = new LinkedHashMap<>();
+    private final TelebowRenderer renderer;
+    private boolean started;
+    private boolean active;
+
+    public TelebowLandingFeature(Minecraft minecraft, ConfigCatalog configs,
+            TelebowLandingConfig config, ClientSession session, ArrowTracker arrows,
+            RelationLookup relations, TextureState textures, TelebowPrediction prediction) {
+        this.minecraft = minecraft;
+        this.configs = configs;
+        this.config = config;
+        this.session = session;
+        this.arrows = arrows;
+        this.relations = relations;
+        this.prediction = prediction;
+        renderer = new TelebowRenderer(minecraft, config, textures);
+    }
+
+    @Override
+    public void start() {
+        session.checkThread();
+        if (started)
+            return;
+        started = true;
+        configs.addListener(this);
+        updateActivation();
+    }
+
+    @Override
+    public void stop() {
+        session.checkThread();
+        started = false;
+        configs.removeListener(this);
+        updateActivation();
+    }
+
+    private void updateActivation() {
+        boolean enabled = started && config.enabled()
+                && (config.own.get() && (config.ownColor.get() >>> 24) != 0
+                        || config.friends.get() && (config.friendColor.get() >>> 24) != 0
+                        || config.enemies.get() && (config.enemyColor.get() >>> 24) != 0
+                        || config.others.get() && (config.otherColor.get() >>> 24) != 0);
+        if (enabled == active) {
+            updateCooldownDemand();
+            return;
+        }
+        active = enabled;
+        if (active) {
+            arrows.addListener(this);
+            relations.addListener(this);
+            MinecraftForge.EVENT_BUS.register(this);
+        } else {
+            MinecraftForge.EVENT_BUS.unregister(this);
+            relations.removeListener(this);
+            arrows.removeListener(this);
+            onArrowsReset();
+        }
+        updateCooldownDemand();
+    }
+
+    private void updateCooldownDemand() {
+        int groups = 0;
+        if (active && config.ignoreCooldown.get()) {
+            groups = PlayerAudience.groups(config.own.get() && (config.ownColor.get() >>> 24) != 0,
+                    config.friends.get() && (config.friendColor.get() >>> 24) != 0,
+                    config.enemies.get() && (config.enemyColor.get() >>> 24) != 0,
+                    config.others.get() && (config.otherColor.get() >>> 24) != 0);
+        }
+        prediction.setCooldownDemand(this, groups);
+    }
+
+    @Override
+    public void onConfigChanged(ConfigChangeSet changes) {
+        if (!started || !(changes.affects("telebow", "enabled") || changes.affects("telebow", "own")
+                || changes.affects("telebow", "friends") || changes.affects("telebow", "enemies")
+                || changes.affects("telebow", "others") || changes.affects("telebow", "own_color")
+                || changes.affects("telebow", "friend_color")
+                || changes.affects("telebow", "enemy_color")
+                || changes.affects("telebow", "other_color")
+                || changes.affects("telebow", "ignore_cooldown")))
+            return;
+        updateActivation();
+        refreshPaths();
+    }
+
+    private void refreshPaths() {
+        Iterator<TelebowPath> iterator = paths.values().iterator();
+        while (iterator.hasNext()) {
+            TelebowPath path = iterator.next();
+            int color = colorOf(path.shooter);
+            if ((color >>> 24) == 0) {
+                renderer.remove(path);
+                iterator.remove();
+            } else {
+                path.color = color;
+            }
+        }
+    }
+
+    @Override
+    public void onRelationsLoaded() {
+        refreshPaths();
+    }
+
+    @Override
+    public void onRelationChanged(UUID playerId, Relation previous, Relation current) {
+        refreshPaths();
+    }
+
+    private int colorOf(EntityPlayer shooter) {
+        if (minecraft.thePlayer == null)
+            return 0;
+        if (shooter.getUniqueID().equals(minecraft.thePlayer.getUniqueID()))
+            return config.own.get() ? config.ownColor.get() : 0;
+        if (relations.readiness() != RelationReadiness.READY)
+            return 0;
+        switch (relations.relationOf(shooter.getUniqueID())) {
+            case FRIEND:
+                return config.friends.get() ? config.friendColor.get() : 0;
+            case ENEMY:
+                return config.enemies.get() ? config.enemyColor.get() : 0;
+            default:
+                return config.others.get() ? config.otherColor.get() : 0;
+        }
+    }
+
+    @Override
+    public boolean onArrowSpawn(EntityArrow arrow, EntityPlayer shooter, ItemStack bow,
+            boolean sneaking, long lastSneakingNanos) {
+        if (!active)
+            return false;
+        if (config.ignoreCooldown.get()
+                && prediction.blocksArrow(shooter.getUniqueID(), arrow.getEntityId()))
+            return false;
+        if (!sneaking && (lastSneakingNanos == 0 || System.nanoTime()
+                - lastSneakingNanos > prediction.hitWindowNanos(shooter == minecraft.thePlayer)))
+            return false;
+        int color = colorOf(shooter);
+        if ((color >>> 24) == 0)
+            return false;
+        if (PitEnchantmentReader.levelOf(bow, PitEnchantment.Telebow) == 0)
+            return false;
+        TelebowPath path = new TelebowPath(arrow, shooter, color);
+        TelebowPath previous = paths.put(arrow.getEntityId(), path);
+        if (previous != null)
+            renderer.remove(previous);
+        return true;
+    }
+
+    @Override
+    public void onArrowRemoved(EntityArrow arrow, boolean serverRemoved) {
+        TelebowPath path = paths.get(arrow.getEntityId());
+        if (path != null)
+            path.finish(System.nanoTime());
+    }
+
+    @Override
+    public void onArrowCorrected(EntityArrow arrow, boolean velocityChanged) {
+        TelebowPath path = paths.get(arrow.getEntityId());
+        if (path != null && path.endedAt == 0) {
+            path.correct(velocityChanged);
+        }
+    }
+
+    @Override
+    public void onBlockChanged(BlockPos position) {
+        for (TelebowPath path : paths.values()) {
+            if (path.endedAt != 0 || path.dirty)
+                continue;
+            if (path.affectedBy(position)) {
+                path.dirty = true;
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public void onTick(ClientTickEvent event) {
+        if (event.phase != Phase.END)
+            return;
+        long now = System.nanoTime();
+        long lifetime = (config.holdTime.get() + config.fadeTime.get()) * 1_000_000L;
+        Iterator<TelebowPath> iterator = paths.values().iterator();
+        while (iterator.hasNext()) {
+            TelebowPath path = iterator.next();
+            if (path.endedAt != 0) {
+                if (now - path.endedAt >= lifetime) {
+                    renderer.remove(path);
+                    iterator.remove();
+                }
+                continue;
+            }
+            path.updateProgress();
+            if (path.dirty)
+                path.predict();
+        }
+    }
+
+    @Override
+    public void onArrowsReset() {
+        paths.clear();
+        renderer.clear();
+    }
+
+    @SubscribeEvent
+    @HotPath
+    public void onRenderWorld(RenderWorldLastEvent event) {
+        if (paths.isEmpty() || minecraft.gameSettings.hideGUI
+                || minecraft.theWorld != session.world())
+            return;
+        renderer.render(paths.values(), System.nanoTime());
+    }
+}

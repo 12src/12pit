@@ -41,7 +41,7 @@ public final class SmartBlockConfig extends FeatureConfig {
         super("smart_block", source("Smart Block"), ConfigCategory.COMBAT,
                 source("Selects a Bullet Time or Bruiser sword from the hotbar while blocking."),
                 true, false);
-        subsubcategory("enchantments", source("Enchantments"));
+        section("enchantments", source("Enchantments"));
         bulletTime = booleanSetting("bullet_time", source("Use Bullet Time"),
                 source("Selects swords with Bullet Time."), true);
         bruiser = booleanSetting("bruiser", source("Use Bruiser"),
@@ -56,7 +56,7 @@ public final class SmartBlockConfig extends FeatureConfig {
                 false);
         arrowRange = integerSliderSetting("arrow_range", source("Arrow detection range (blocks)"),
                 source("Detects flying arrows within this distance."), 12, 1, 32, 1);
-        subsubcategory("switching", source("Switching"));
+        section("switching", source("Switching"));
         emptyHand = booleanSetting("empty_hand", source("Trigger with fist"),
                 source("Also starts when the right-click key is held with an empty hand."), false);
         lockSlot = booleanSetting("lock_slot", source("Prevent manual slot changes"),

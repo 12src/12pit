@@ -20,6 +20,7 @@ package pit12.platform.mixin.client;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.WorldClient;
+import net.minecraft.entity.player.EntityPlayer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -27,13 +28,27 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import pit12.runtime.session.ClientSessionBinding;
 import pit12.shared.lifecycle.ClientShutdownBinding;
+import pit12.shared.rendering.PlayerOpacity;
 
 @Mixin(Minecraft.class)
-public abstract class MinecraftMixin implements ClientShutdownBinding, ClientSessionBinding {
+public abstract class MinecraftMixin
+        implements ClientShutdownBinding, ClientSessionBinding, PlayerOpacity.Binding {
     @Unique
     private Runnable pit12$shutdown;
     @Unique
     private Runnable pit12$worldChangeListener;
+    @Unique
+    private PlayerOpacity pit12$playerOpacity;
+
+    @Override
+    public void pit12$bindPlayerOpacity(PlayerOpacity opacity) {
+        pit12$playerOpacity = opacity;
+    }
+
+    @Override
+    public float pit12$playerOpacity(EntityPlayer player) {
+        return pit12$playerOpacity == null ? 1.0F : pit12$playerOpacity.pit12$playerOpacity(player);
+    }
 
     @Override
     public void bindClientShutdown(Runnable shutdown) {

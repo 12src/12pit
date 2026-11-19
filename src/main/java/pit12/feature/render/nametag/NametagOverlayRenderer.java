@@ -43,8 +43,8 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.scoreboard.ScoreObjective;
 import net.minecraft.scoreboard.Scoreboard;
 import org.lwjgl.opengl.GL11;
-import pit12.feature.render.focus.api.FocusOpacity;
 import pit12.shared.performance.HotPath;
+import pit12.shared.rendering.PlayerOpacity;
 import pit12.shared.rendering.TextureState;
 import pit12.shared.rendering.WorldRenderState;
 
@@ -86,14 +86,14 @@ final class NametagOverlayRenderer {
         float offset = upwardOffset * NametagRenderer.OFFSET_SCALE;
         Scoreboard scoreboard = world.getScoreboard();
         ScoreObjective objective = scoreboard.getObjectiveInDisplaySlot(2);
-        FocusOpacity focus = (FocusOpacity) minecraft;
+        PlayerOpacity playerOpacity = (PlayerOpacity) minecraft;
         for (int index = 0; index < world.playerEntities.size(); index++) {
             EntityPlayer player = world.playerEntities.get(index);
             if (player.isDead || player == minecraft.thePlayer || player == camera
                     || player.isInvisibleToPlayer(minecraft.thePlayer)) {
                 continue;
             }
-            float opacity = focus.pit12$focusOpacity(player);
+            float opacity = playerOpacity.pit12$playerOpacity(player);
             if (opacity == 0.0F)
                 continue;
             boolean sneaking = player.isSneaking();

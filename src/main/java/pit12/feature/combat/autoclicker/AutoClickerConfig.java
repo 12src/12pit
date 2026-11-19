@@ -50,7 +50,7 @@ public final class AutoClickerConfig extends FeatureConfig {
     public AutoClickerConfig() {
         super("autoclicker", source("Auto Clicker"), ConfigCategory.COMBAT,
                 source("Clicks the left and right mouse buttons automatically."), true, false);
-        subcategory("left", source("Left click"));
+        category("left", source("Left click"));
         leftClick = booleanSetting("left_click", source("Enabled"),
                 source("Clicks the left mouse button automatically."), true);
         leftWeaponsOnly = booleanSetting("left_weapons_only", source("Weapons only"),
@@ -63,7 +63,7 @@ public final class AutoClickerConfig extends FeatureConfig {
                 source("The highest target click rate."), 12, 1, 20, 1);
         leftToggleKey = keybindSetting("left_toggle_key", source("Toggle key"),
                 source("Toggles left click automation."), Keyboard.KEY_NONE);
-        subcategory("right", source("Right click"));
+        category("right", source("Right click"));
         rightClick = booleanSetting("right_click", source("Enabled"),
                 source("Clicks the right mouse button automatically."), false);
         rightBlocksOnly = booleanSetting("right_blocks_only", source("Blocks only"),
@@ -76,7 +76,7 @@ public final class AutoClickerConfig extends FeatureConfig {
                 source("The highest target click rate."), 12, 1, 20, 1);
         rightToggleKey = keybindSetting("right_toggle_key", source("Toggle key"),
                 source("Toggles right click automation."), Keyboard.KEY_NONE);
-        subcategory("cake", source("Cake"));
+        category("cake", source("Cake"));
         cakeClick = booleanSetting("cake_click", source("Enabled"),
                 source("Clicks cakes while looking at them."), false);
         cakeMode = choiceSetting("cake_click_mode", source("Click button"),

@@ -1,0 +1,387 @@
+/*
+ * This file is part of 12pit.
+ *
+ * Copyright (C) 2026 The 12pit Authors and contributors <https://github.com/12src/12pit>
+ *
+ * 12pit is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * 12pit is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
+ */
+package pit12.feature.render.telebowlanding;
+
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.IdentityHashMap;
+import java.util.List;
+import java.util.Map;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.renderer.GLAllocation;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.culling.ClippingHelper;
+import net.minecraft.client.renderer.culling.ClippingHelperImpl;
+import net.minecraft.client.renderer.culling.Frustum;
+import net.minecraft.client.renderer.entity.RenderManager;
+import net.minecraft.util.AxisAlignedBB;
+import org.lwjgl.BufferUtils;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL12;
+import pit12.shared.performance.HotPath;
+import pit12.shared.rendering.FontWidths;
+import pit12.shared.rendering.TextureState;
+import pit12.shared.rendering.WorldRenderState;
+
+final class TelebowRenderer {
+    private static final double[] CIRCLE = new double[48];
+    static {
+        for (int index = 0; index < CIRCLE.length; index += 2) {
+            double angle = index * Math.PI * 2 / CIRCLE.length;
+            CIRCLE[index] = Math.cos(angle);
+            CIRCLE[index + 1] = Math.sin(angle);
+        }
+    }
+    private final Minecraft minecraft;
+    private final TelebowLandingConfig config;
+    private final TextureState textures;
+    private final WorldRenderState state;
+    private final Map<TelebowPath, Mesh> meshes = new IdentityHashMap<>();
+    private final List<Mesh> visible = new ArrayList<>();
+    private ClippingHelper clipping;
+    private Frustum frustum;
+    private int fadeTexture;
+
+    TelebowRenderer(Minecraft minecraft, TelebowLandingConfig config, TextureState textures) {
+        this.minecraft = minecraft;
+        this.config = config;
+        this.textures = textures;
+        state = new WorldRenderState(textures);
+    }
+
+    @HotPath
+    void render(Collection<TelebowPath> paths, long now) {
+        if (minecraft.getRenderViewEntity() == null)
+            return;
+        long hold = config.holdTime.get() * 1_000_000L;
+        long fade = config.fadeTime.get() * 1_000_000L;
+        boolean names = config.showNames.get();
+        FontRenderer font = minecraft.fontRendererObj;
+        RenderManager camera = minecraft.getRenderManager();
+        if (frustum == null) {
+            // Vanilla refreshes this shared helper before every world pass.
+            clipping = ClippingHelperImpl.getInstance();
+            frustum = new Frustum(clipping);
+        }
+        frustum.setPosition(camera.viewerPosX, camera.viewerPosY, camera.viewerPosZ);
+        double pixelMargin =
+                4.0 / Math.min(Math.abs(clipping.projectionMatrix[0]) * minecraft.displayWidth,
+                        Math.abs(clipping.projectionMatrix[5]) * minecraft.displayHeight);
+        boolean unicode = font.getUnicodeFlag();
+        boolean drawBeams = false;
+        for (TelebowPath path : paths) {
+            TelebowTrajectory trajectory = path.trajectory;
+            float alpha = (path.color >>> 24) / 255F * path.opacity(now, hold, fade);
+            if (alpha <= 0 || trajectory.count < 2 && !trajectory.hasImpact)
+                continue;
+            Mesh mesh = meshes.computeIfAbsent(path, Mesh::new);
+            if (mesh.boundsRevision != path.revision) {
+                updateBounds(mesh);
+                mesh.boundsRevision = path.revision;
+            }
+            AxisAlignedBB bounds = mesh.bounds;
+            // Leave room for the two-pixel lines at the edge of the screen.
+            double margin = Math.max(1,
+                    (Math.max(Math.abs(bounds.minX - camera.viewerPosX),
+                            Math.abs(bounds.maxX - camera.viewerPosX))
+                            + Math.max(Math.abs(bounds.minY - camera.viewerPosY),
+                                    Math.abs(bounds.maxY - camera.viewerPosY))
+                            + Math.max(Math.abs(bounds.minZ - camera.viewerPosZ),
+                                    Math.abs(bounds.maxZ - camera.viewerPosZ)))
+                            * pixelMargin);
+            mesh.geometryVisible = frustum.isBoxInFrustum(bounds.minX - margin,
+                    bounds.minY - margin, bounds.minZ - margin, bounds.maxX + margin,
+                    bounds.maxY + margin, bounds.maxZ + margin);
+            mesh.nameVisible = false;
+            if (names && trajectory.hasImpact && Math.round(alpha * 255) >= 4) {
+                if (mesh.nameWidth < 0 || mesh.unicode != unicode) {
+                    mesh.nameWidth = FontWidths.measure(font, path.displayName);
+                    mesh.unicode = unicode;
+                }
+                int offset = (trajectory.count - 1) * 3;
+                double x = trajectory.points[offset];
+                double y = trajectory.points[offset + 1];
+                double z = trajectory.points[offset + 2];
+                double dx = x - camera.viewerPosX;
+                double dy = y - camera.viewerPosY;
+                double dz = z - camera.viewerPosZ;
+                mesh.nameScale = 0.02666667F * (float) Math.max(1,
+                        Math.min(4, Math.sqrt(dx * dx + dy * dy + dz * dz) / 32));
+                double halfWidth = mesh.nameWidth / 2.0 + 3;
+                double height = font.FONT_HEIGHT + 2;
+                double radius = mesh.nameScale * Math.sqrt(halfWidth * halfWidth + height * height)
+                        + margin;
+                mesh.nameVisible = frustum.isBoxInFrustum(x - radius, y + 1.5 - radius, z - radius,
+                        x + radius, y + 1.5 + radius, z + radius);
+            }
+            if (mesh.geometryVisible || mesh.nameVisible) {
+                mesh.alpha = alpha;
+                visible.add(mesh);
+                drawBeams |= mesh.geometryVisible && trajectory.hasImpact;
+            }
+        }
+        if (visible.isEmpty())
+            return;
+        state.begin(GL11.GL_LINE_BIT | GL11.GL_CURRENT_BIT);
+        GlStateManager.pushMatrix();
+        try {
+            GlStateManager.disableCull();
+            GL11.glLineWidth(2F);
+            GlStateManager.translate(-camera.viewerPosX, -camera.viewerPosY, -camera.viewerPosZ);
+            if (drawBeams) {
+                textures.setEnabled(true);
+                bindFadeTexture();
+                GL11.glBegin(GL11.GL_QUADS);
+                try {
+                    for (int index = 0, size = visible.size(); index < size; index++) {
+                        Mesh mesh = visible.get(index);
+                        if (mesh.geometryVisible && mesh.path.trajectory.hasImpact)
+                            drawBeam(mesh.path, mesh.alpha);
+                    }
+                } finally {
+                    GL11.glEnd();
+                }
+            }
+            textures.setEnabled(false);
+            for (int index = 0, size = visible.size(); index < size; index++) {
+                Mesh mesh = visible.get(index);
+                TelebowPath path = mesh.path;
+                if (mesh.geometryVisible) {
+                    if (mesh.revision != path.revision) {
+                        if (mesh.lines == 0)
+                            mesh.lines = GLAllocation.generateDisplayLists(1);
+                        compile(mesh, path);
+                        mesh.revision = path.revision;
+                    }
+                    int color = path.color;
+                    GlStateManager.color((color >>> 16 & 255) / 255F, (color >>> 8 & 255) / 255F,
+                            (color & 255) / 255F, mesh.alpha);
+                    GlStateManager.callList(mesh.lines);
+                }
+            }
+            for (int index = 0, size = visible.size(); index < size; index++) {
+                Mesh mesh = visible.get(index);
+                if (mesh.nameVisible) {
+                    drawName(mesh.path, mesh.nameWidth, mesh.nameScale, font, camera, mesh.alpha);
+                }
+            }
+        } finally {
+            visible.clear();
+            try {
+                GlStateManager.popMatrix();
+            } finally {
+                state.end();
+            }
+        }
+    }
+
+    private static void updateBounds(Mesh mesh) {
+        TelebowPath path = mesh.path;
+        TelebowTrajectory trajectory = path.trajectory;
+        double minX = trajectory.points[0], minY = trajectory.points[1],
+                minZ = trajectory.points[2];
+        double maxX = minX, maxY = minY, maxZ = minZ;
+        for (int index = 1; index < trajectory.count; index++) {
+            int offset = index * 3;
+            minX = Math.min(minX, trajectory.points[offset]);
+            minY = Math.min(minY, trajectory.points[offset + 1]);
+            minZ = Math.min(minZ, trajectory.points[offset + 2]);
+            maxX = Math.max(maxX, trajectory.points[offset]);
+            maxY = Math.max(maxY, trajectory.points[offset + 1]);
+            maxZ = Math.max(maxZ, trajectory.points[offset + 2]);
+        }
+        if (trajectory.hasImpact)
+            maxY = Math.max(maxY, trajectory.points[(trajectory.count - 1) * 3 + 1] + 32);
+        mesh.bounds = new AxisAlignedBB(minX - 0.25, minY, minZ - 0.25, maxX + 0.25, maxY + 0.02,
+                maxZ + 0.25);
+    }
+
+    private static void compile(Mesh mesh, TelebowPath path) {
+        GL11.glNewList(mesh.lines, GL11.GL_COMPILE);
+        try {
+            drawLines(path);
+        } finally {
+            GL11.glEndList();
+        }
+    }
+
+    private static void drawLines(TelebowPath path) {
+        TelebowTrajectory trajectory = path.trajectory;
+        GL11.glBegin(GL11.GL_LINES);
+        try {
+            for (int index = 1; index < trajectory.count; index++) {
+                int offset = index * 3;
+                GL11.glVertex3d(trajectory.points[offset - 3], trajectory.points[offset - 2],
+                        trajectory.points[offset - 1]);
+                GL11.glVertex3d(trajectory.points[offset], trajectory.points[offset + 1],
+                        trajectory.points[offset + 2]);
+            }
+        } finally {
+            GL11.glEnd();
+        }
+    }
+
+    private static void drawBeam(TelebowPath path, float alpha) {
+        TelebowTrajectory trajectory = path.trajectory;
+        int offset = (trajectory.count - 1) * 3;
+        double x = trajectory.points[offset];
+        double y = trajectory.points[offset + 1];
+        double z = trajectory.points[offset + 2];
+        int color = path.color;
+        float red = (color >>> 16 & 255) / 255F;
+        float green = (color >>> 8 & 255) / 255F;
+        float blue = (color & 255) / 255F;
+        double top = y + 32;
+        GlStateManager.color(red, green, blue, alpha * 0.18F);
+        drawBeamLayer(x, y, z, top, 0.24);
+        GlStateManager.color(red, green, blue, alpha * 0.45F);
+        drawBeamLayer(x, y, z, top, 0.12);
+    }
+
+    private static void drawBeamLayer(double x, double y, double z, double top, double radius) {
+        for (int index = 0; index < CIRCLE.length; index += 2) {
+            int next = (index + 2) % CIRCLE.length;
+            GL11.glTexCoord2f(0.5F, 0);
+            GL11.glVertex3d(x + CIRCLE[index] * radius, y, z + CIRCLE[index + 1] * radius);
+            GL11.glTexCoord2f(0.5F, 1);
+            GL11.glVertex3d(x + CIRCLE[index] * radius, top, z + CIRCLE[index + 1] * radius);
+            GL11.glTexCoord2f(0.5F, 1);
+            GL11.glVertex3d(x + CIRCLE[next] * radius, top, z + CIRCLE[next + 1] * radius);
+            GL11.glTexCoord2f(0.5F, 0);
+            GL11.glVertex3d(x + CIRCLE[next] * radius, y, z + CIRCLE[next + 1] * radius);
+        }
+    }
+
+    private void bindFadeTexture() {
+        if (fadeTexture == 0) {
+            int height = 256;
+            ByteBuffer pixels = BufferUtils.createByteBuffer(height * 4);
+            for (int index = 0; index < height; index++) {
+                double t = index / (double) (height - 1);
+                double fade = 1 - t * t * (3 - 2 * t);
+                pixels.put((byte) 255).put((byte) 255).put((byte) 255)
+                        .put((byte) Math.round(fade * 255));
+            }
+            pixels.flip();
+            fadeTexture = GL11.glGenTextures();
+            GlStateManager.bindTexture(fadeTexture);
+            GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA, 1, height, 0, GL11.GL_RGBA,
+                    GL11.GL_UNSIGNED_BYTE, pixels);
+            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
+            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
+            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
+            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL12.GL_CLAMP_TO_EDGE);
+        } else {
+            GlStateManager.bindTexture(fadeTexture);
+        }
+    }
+
+    private void drawName(TelebowPath path, int width, float scale, FontRenderer font,
+            RenderManager camera, float alpha) {
+        TelebowTrajectory trajectory = path.trajectory;
+        int offset = (trajectory.count - 1) * 3;
+        double x = trajectory.points[offset];
+        double y = trajectory.points[offset + 1];
+        double z = trajectory.points[offset + 2];
+        GlStateManager.pushMatrix();
+        try {
+            GlStateManager.translate(x, y + 1.5, z);
+            GlStateManager.rotate(-camera.playerViewY, 0, 1, 0);
+            GlStateManager.rotate(minecraft.gameSettings.thirdPersonView == 2 ? -camera.playerViewX
+                    : camera.playerViewX, 1, 0, 0);
+            GlStateManager.scale(-scale, -scale, scale);
+            drawLabel(path.displayName, width, font, alpha);
+        } finally {
+            GlStateManager.popMatrix();
+        }
+    }
+
+    private void drawLabel(String name, int width, FontRenderer font, float alpha) {
+        // FontRenderer makes alpha values below four fully opaque.
+        int textAlpha = Math.round(alpha * 255);
+        if (textAlpha < 4)
+            return;
+        GlStateManager.disableDepth();
+        GlStateManager.depthMask(false);
+        GlStateManager.disableAlpha();
+        textures.setEnabled(false);
+        GlStateManager.color(0, 0, 0, alpha * 0.25F);
+        int left = -width / 2 - 1;
+        int right = width / 2 + 1;
+        GL11.glBegin(GL11.GL_QUADS);
+        try {
+            GL11.glVertex3d(left, -1, 0);
+            GL11.glVertex3d(left, 8, 0);
+            GL11.glVertex3d(right, 8, 0);
+            GL11.glVertex3d(right, -1, 0);
+        } finally {
+            GL11.glEnd();
+        }
+        textures.setEnabled(true);
+        GlStateManager.enableAlpha();
+        GlStateManager.alphaFunc(GL11.GL_GREATER, 0.001F);
+        int faintAlpha = Math.round(alpha * 32);
+        if (faintAlpha >= 4)
+            font.drawString(name, -width / 2, 0, faintAlpha << 24 | 0xFFFFFF);
+        GlStateManager.enableDepth();
+        GlStateManager.depthMask(true);
+        font.drawString(name, -width / 2, 0, textAlpha << 24 | 0xFFFFFF);
+        GlStateManager.disableDepth();
+        GlStateManager.depthMask(false);
+    }
+
+    void remove(TelebowPath path) {
+        Mesh mesh = meshes.remove(path);
+        if (mesh != null)
+            delete(mesh);
+    }
+
+    void clear() {
+        for (Mesh mesh : meshes.values()) {
+            delete(mesh);
+        }
+        meshes.clear();
+        visible.clear();
+    }
+
+    private static void delete(Mesh mesh) {
+        if (mesh.lines != 0)
+            GLAllocation.deleteDisplayLists(mesh.lines);
+    }
+
+    private static final class Mesh {
+        final TelebowPath path;
+        int lines;
+        long revision = -1;
+        long boundsRevision = -1;
+        AxisAlignedBB bounds;
+        boolean geometryVisible;
+        boolean nameVisible;
+        float nameScale;
+        float alpha;
+        int nameWidth = -1;
+        boolean unicode;
+
+        Mesh(TelebowPath path) {
+            this.path = path;
+        }
+    }
+}

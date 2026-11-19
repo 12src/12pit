@@ -30,8 +30,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import pit12.feature.render.focus.FocusRenderPass;
 import pit12.feature.render.focus.FocusRenderState;
-import pit12.feature.render.focus.api.FocusOpacity;
 import pit12.shared.performance.HotPath;
+import pit12.shared.rendering.PlayerOpacity;
 
 @Mixin(value = RenderManager.class, priority = -1)
 public abstract class RenderManagerRedirect {
@@ -59,8 +59,8 @@ public abstract class RenderManagerRedirect {
     private void pit12$render(Render<Entity> renderer, Entity entity, double x, double y, double z,
             float yaw, float partialTicks, boolean shadow) {
         float opacity = FocusRenderState.opacity == 1.0F && entity instanceof EntityPlayer
-                ? ((FocusOpacity) Minecraft.getMinecraft())
-                        .pit12$focusOpacity((EntityPlayer) entity)
+                ? ((PlayerOpacity) Minecraft.getMinecraft())
+                        .pit12$playerOpacity((EntityPlayer) entity)
                 : 1.0F;
         if (opacity == 0.0F)
             return;

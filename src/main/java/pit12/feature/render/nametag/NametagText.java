@@ -50,6 +50,7 @@ final class NametagText {
     private String realName;
     private String health;
     private String countdowns;
+    private long cooldownTenths;
     private String suffix = "";
     private int scorePoints;
     private String scoreTitle;
@@ -69,23 +70,30 @@ final class NametagText {
         }
     }
 
-    String updateSuffix(boolean nicked, String realName, String health, String countdowns) {
+    String updateSuffix(boolean nicked, String realName, String health, String countdowns,
+            long cooldownTenths) {
         if (this.nicked == nicked && Objects.equals(this.realName, realName)
                 && Objects.equals(this.health, health)
-                && Objects.equals(this.countdowns, countdowns))
+                && Objects.equals(this.countdowns, countdowns)
+                && this.cooldownTenths == cooldownTenths)
             return suffix;
         this.nicked = nicked;
         this.realName = realName;
         this.health = health;
         this.countdowns = countdowns;
-        StringBuilder text = new StringBuilder();
+        this.cooldownTenths = cooldownTenths;
+        StringBuilder text = new StringBuilder(32);
         if (realName != null)
             text.append(" §c(§7").append(realName).append("§c)");
         else if (nicked)
             text.append(" §e§lN");
         if (health != null)
             text.append(" §c").append(health);
-        suffix = text.append(countdowns).toString();
+        text.append(countdowns);
+        if (cooldownTenths != 0)
+            text.append(" §b").append(cooldownTenths / 10).append('.').append(cooldownTenths % 10)
+                    .append('s');
+        suffix = text.toString();
         return suffix;
     }
 

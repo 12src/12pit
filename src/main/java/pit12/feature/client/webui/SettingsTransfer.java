@@ -39,14 +39,14 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
-import pit12.feature.client.profile.api.ProfileMutationResult;
-import pit12.feature.client.profile.api.ProfileSummary;
-import pit12.feature.client.profile.api.Profiles;
 import pit12.feature.client.relation.api.Relation;
 import pit12.feature.client.relation.api.RelationEntry;
 import pit12.feature.client.relation.api.RelationReadiness;
 import pit12.feature.client.relation.api.Relations;
 import pit12.feature.combat.swap.api.SwapBindings;
+import pit12.runtime.config.profile.api.ProfileMutationResult;
+import pit12.runtime.config.profile.api.ProfileSummary;
+import pit12.runtime.config.profile.api.Profiles;
 import pit12.shared.result.OperationResult;
 
 final class SettingsTransfer {

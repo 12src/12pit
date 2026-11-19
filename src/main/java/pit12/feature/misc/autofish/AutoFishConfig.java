@@ -37,7 +37,7 @@ public final class AutoFishConfig extends FeatureConfig {
     public AutoFishConfig() {
         super("autofish", source("Auto Fish"), ConfigCategory.MISC,
                 source("Automatically reels in fish and can cast again."));
-        subsubcategory("general", source("General"));
+        section("general", source("General"));
         autoRecast = booleanSetting("auto_recast", source("Auto recast"),
                 source("Casts again after reeling in."), true);
         reelDelayMin = integerSliderSetting("reel_delay_min", source("Reel delay min (ticks)"),
@@ -48,7 +48,7 @@ public final class AutoFishConfig extends FeatureConfig {
                 source("Minimum time before casting again."), 15, 0, 20, 1);
         castDelayMax = integerSliderSetting("cast_delay_max", source("Recast delay max (ticks)"),
                 source("Maximum time before casting again."), 20, 0, 20, 1);
-        subsubcategory("hook_chances", source("Hook chances"));
+        section("hook_chances", source("Hook chances"));
         emptyHookChance = integerSliderSetting("empty_hook_chance", source("Empty hook chance (%)"),
                 source("Chance of waiting for the bobber to rise and settle before reeling in."), 0,
                 0, 100, 1);

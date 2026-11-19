@@ -1,0 +1,41 @@
+/*
+ * This file is part of 12pit.
+ *
+ * Copyright (C) 2026 The 12pit Authors and contributors <https://github.com/12src/12pit>
+ *
+ * 12pit is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * 12pit is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
+ */
+package pit12.feature.provider.timertracking.api;
+
+import pit12.feature.client.relation.api.PlayerAudience;
+
+public enum TimerKind {
+    PIN("§e"), VENOM_WEARER("§d"), VENOM_TARGET("§d"), JUMP_BOOST("§a");
+
+    public final String color;
+    private final int shift;
+
+    TimerKind(String color) {
+        this.color = color;
+        shift = ordinal() * 4;
+    }
+
+    public int select(int groups) {
+        return groups << shift;
+    }
+
+    public int groups(int selection) {
+        return selection >>> shift & PlayerAudience.ALL;
+    }
+}

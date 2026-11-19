@@ -59,13 +59,13 @@ public final class PlayerListConfig extends FeatureConfig {
     public PlayerListConfig() {
         super("playerlist", source("Player List HUD"), ConfigCategory.RENDER,
                 source("Shows player names, equipment, distance, and direction in a HUD."));
-        subcategory("display", source("Display"));
+        category("display", source("Display"));
         hud = hudConfig("player_list", HudAnchor.TOP_LEFT, 6, 6, true);
         for (PlayerListGroup group : PlayerListGroup.values()) {
             hudGroups.put(group, hudGroupConfig("player_list", group.id(),
                     TextCodes.strip(group.displayName()), hud, group.ordinal() * 40));
         }
-        subsubcategory("enchantments", source("Enchantments"));
+        section("enchantments", source("Enchantments"));
         enchantmentFormat = choiceSetting("enchantment_format", source("Enchantment format"),
                 source("Controls how enchantment names and levels are shown."),
                 PitEnchantmentFormat.BOLD_LEVELS, PitEnchantmentFormat.choices());
@@ -75,7 +75,7 @@ public final class PlayerListConfig extends FeatureConfig {
                 source("Shows the leggings' Pit enchantments."), true);
         showGem = booleanSetting("show_gem", source("Show gem"),
                 source("Shows a green diamond on gemmed items."), true);
-        subsubcategory("player_information", source("Player information"));
+        section("player_information", source("Player information"));
         shortPlayerNames = booleanSetting("short_player_names", source("Remove bounty suffix"),
                 source("Removes bounty suffixes from player names."), false);
         nickMarker = booleanSetting("nick_marker", source("Show nick marker"),
@@ -92,7 +92,7 @@ public final class PlayerListConfig extends FeatureConfig {
         realNamesKey = keybindSetting("real_names_key", source("Real names key"),
                 source("Hold to show nicked players' real names found by Denick."),
                 Keyboard.KEY_TAB);
-        subcategory("groups", source("Groups"));
+        category("groups", source("Groups"));
         showGroupName = booleanSetting("show_group_name", source("Show group names"),
                 source("Shows the name above each group."), true);
         showFriend = booleanSetting("show_friend", source("Show Friend group"),

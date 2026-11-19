@@ -28,6 +28,7 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
+import pit12.feature.provider.telebow.api.TelebowPrediction;
 import pit12.runtime.arrow.ArrowAccess;
 import pit12.runtime.arrow.ArrowListener;
 import pit12.runtime.arrow.ArrowTracker;
@@ -36,8 +37,6 @@ import pit12.runtime.config.ConfigChangeListener;
 import pit12.runtime.config.ConfigChangeSet;
 import pit12.runtime.item.PitEnchantment;
 import pit12.runtime.item.PitEnchantmentReader;
-import pit12.runtime.timers.TelebowSettings;
-import pit12.runtime.timers.TelebowTeleportMatch;
 import pit12.shared.lifecycle.ClientLifecycle;
 
 public final class EnhancedTelebowFeature
@@ -48,7 +47,7 @@ public final class EnhancedTelebowFeature
     private final EnhancedTelebowBinding binding;
     private final ArrowTracker arrows;
     private final TelebowRelease release;
-    private TelebowSettings settings;
+    private final TelebowPrediction prediction;
     private boolean active;
     private boolean keepAim;
     private long tick;
@@ -56,18 +55,19 @@ public final class EnhancedTelebowFeature
     private Teleport teleport;
 
     public EnhancedTelebowFeature(Minecraft minecraft, ConfigCatalog configs,
-            EnhancedTelebowConfig config, EnhancedTelebowBinding binding, ArrowTracker arrows) {
+            EnhancedTelebowConfig config, EnhancedTelebowBinding binding, ArrowTracker arrows,
+            TelebowPrediction prediction) {
         this.minecraft = minecraft;
         this.configs = configs;
         this.config = config;
         this.binding = binding;
         this.arrows = arrows;
+        this.prediction = prediction;
         release = new TelebowRelease(minecraft);
     }
 
     @Override
     public void start() {
-        settings = (TelebowSettings) configs.feature("telebow");
         configs.addListener(this);
         updateOptions(config.enabled());
     }
@@ -121,8 +121,7 @@ public final class EnhancedTelebowFeature
             boolean sneaking, long lastSneakingNanos) {
         return shooter == minecraft.thePlayer
                 && (sneaking || lastSneakingNanos != 0
-                        && System.nanoTime() - lastSneakingNanos <= TelebowTeleportMatch
-                                .predictionWindowNanos(settings, true))
+                        && System.nanoTime() - lastSneakingNanos <= prediction.hitWindowNanos(true))
                 && PitEnchantmentReader.contains(bow, PitEnchantment.Telebow);
     }
 
@@ -161,9 +160,8 @@ public final class EnhancedTelebowFeature
         Teleport current = teleport;
         if (landing == null || current == null || current.destination == null
                 || landing.player != current.player || current.player != minecraft.thePlayer
-                || !TelebowTeleportMatch.matches(landing.position, current.destination,
-                        landing.at - current.at, landing.tick == current.tick,
-                        TelebowTeleportMatch.windowNanos(settings, true)))
+                || !prediction.matchesTeleport(landing.position, current.destination,
+                        landing.at - current.at, landing.tick == current.tick, true))
             return;
         onArrowsReset();
         EntityPlayerSP player = current.player;

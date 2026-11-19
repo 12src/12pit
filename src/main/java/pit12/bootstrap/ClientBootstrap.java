@@ -28,11 +28,14 @@ import net.minecraftforge.client.ClientCommandHandler;
 import net.minecraftforge.fml.client.FMLClientHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import pit12.feature.client.denick.DenickConfig;
+import pit12.feature.client.denick.DenickFeature;
+import pit12.feature.client.denick.DenickNamesBinding;
+import pit12.feature.client.denick.api.DenickAutomation;
+import pit12.feature.client.denick.api.DenickNames;
 import pit12.feature.client.discordrpc.DiscordRpcFeature;
 import pit12.feature.client.hudeditor.HudEditorFeature;
 import pit12.feature.client.prediction.PredictionMarginsFeature;
-import pit12.feature.client.profile.ProfilesFeature;
-import pit12.feature.client.profile.api.Profiles;
 import pit12.feature.client.relation.RelationFeature;
 import pit12.feature.client.relation.api.RelationLookup;
 import pit12.feature.client.relation.api.Relations;
@@ -59,16 +62,14 @@ import pit12.feature.combat.swap.SwapConfig;
 import pit12.feature.combat.swap.SwapFeature;
 import pit12.feature.combat.swap.SwapHooksBinding;
 import pit12.feature.combat.swap.api.SwapBindings;
+import pit12.feature.misc.autodenick.AutoDenickConfig;
+import pit12.feature.misc.autodenick.AutoDenickFeature;
 import pit12.feature.misc.autofish.AutoFishConfig;
 import pit12.feature.misc.autofish.AutoFishFeature;
 import pit12.feature.misc.banalert.BanAlertConfig;
 import pit12.feature.misc.banalert.BanAlertFeature;
 import pit12.feature.misc.chatmacro.ChatMacroConfig;
 import pit12.feature.misc.chatmacro.ChatMacroFeature;
-import pit12.feature.misc.denick.DenickConfig;
-import pit12.feature.misc.denick.DenickFeature;
-import pit12.feature.misc.denick.DenickNamesBinding;
-import pit12.feature.misc.denick.api.DenickNames;
 import pit12.feature.misc.quickmath.AutoQuickMathConfig;
 import pit12.feature.misc.quickmath.AutoQuickMathFeature;
 import pit12.feature.patch.commandfix.CommandFixBinding;
@@ -83,11 +84,16 @@ import pit12.feature.patch.resourceleakfix.ResourceLeakFixFeature;
 import pit12.feature.patch.scoreboardfix.ScoreboardFixBinding;
 import pit12.feature.patch.scoreboardfix.ScoreboardFixConfig;
 import pit12.feature.patch.scoreboardfix.ScoreboardFixFeature;
+import pit12.feature.provider.telebow.TelebowPredictionConfig;
+import pit12.feature.provider.telebow.TelebowPredictionFeature;
+import pit12.feature.provider.telebow.api.TelebowPrediction;
+import pit12.feature.provider.timertracking.TimerTrackingConfig;
+import pit12.feature.provider.timertracking.TimerTrackingFeature;
+import pit12.feature.provider.timertracking.api.TimerTracking;
 import pit12.feature.render.chams.ChamsConfig;
 import pit12.feature.render.chams.ChamsFeature;
 import pit12.feature.render.eventlist.EventListConfig;
 import pit12.feature.render.eventlist.EventListFeature;
-import pit12.feature.render.focus.FocusBinding;
 import pit12.feature.render.focus.FocusConfig;
 import pit12.feature.render.focus.FocusFeature;
 import pit12.feature.render.freecam.FreeCameraBinding;
@@ -107,8 +113,8 @@ import pit12.feature.render.playerlist.PlayerListConfig;
 import pit12.feature.render.playerlist.PlayerListFeature;
 import pit12.feature.render.ringhelper.RingHelperConfig;
 import pit12.feature.render.ringhelper.RingHelperFeature;
-import pit12.feature.render.telebow.TelebowConfig;
-import pit12.feature.render.telebow.TelebowFeature;
+import pit12.feature.render.telebowlanding.TelebowLandingConfig;
+import pit12.feature.render.telebowlanding.TelebowLandingFeature;
 import pit12.feature.render.timers.TimersConfig;
 import pit12.feature.render.timers.TimersFeature;
 import pit12.feature.render.tooltip.TooltipConfig;
@@ -123,6 +129,8 @@ import pit12.runtime.arrow.ArrowTracker;
 import pit12.runtime.command.CommandRegistry;
 import pit12.runtime.config.BooleanSetting;
 import pit12.runtime.config.ConfigCatalog;
+import pit12.runtime.config.profile.ProfileService;
+import pit12.runtime.config.profile.api.Profiles;
 import pit12.runtime.hud.HudRegistry;
 import pit12.runtime.input.InputBlockBinding;
 import pit12.runtime.input.InputBlocker;
@@ -141,12 +149,12 @@ import pit12.runtime.player.TabPresenceTracker;
 import pit12.runtime.scoreboard.SidebarCache;
 import pit12.runtime.session.ClientSession;
 import pit12.runtime.session.ClientSessionBinding;
-import pit12.runtime.timers.PlayerTimers;
 import pit12.shared.concurrent.ClientThread;
 import pit12.shared.input.MinecraftActions;
 import pit12.shared.lifecycle.ClientLifecycle;
 import pit12.shared.lifecycle.ClientShutdownBinding;
 import pit12.shared.rendering.OpenGlTextureState;
+import pit12.shared.rendering.PlayerOpacity;
 import pit12.shared.rendering.TextureState;
 
 public final class ClientBootstrap {
@@ -196,15 +204,13 @@ public final class ClientBootstrap {
         components.add(nicks);
         SidebarCache sidebar = new SidebarCache(minecraft, session);
         components.add(sidebar);
-        PlayerTimers timers =
-                new PlayerTimers(minecraft, session, arrows, players, playerEquipment, pitContext);
-        components.add(timers);
         HudRegistry hudRegistry = new HudRegistry(client);
         Supplier<TextureState> textureStates = OpenGlTextureState::new;
-        // Feature providers
+        ProfileService profiles =
+                new ProfileService(configs, new File(minecraft.mcDataDir, "12pit/config").toPath());
+        components.add(profiles);
+        // Feature dependencies
         // Category: Client
-        Profiles profiles =
-                registerProfiles(configs, new File(minecraft.mcDataDir, "12pit/config").toPath());
         HudEditorFeature hudEditor = registerHudEditor(hudRegistry, commands, configs, profiles);
         Relations relations = registerRelations(presence,
                 new File(minecraft.mcDataDir, "12pit/relations.json").toPath(), client, commands);
@@ -217,20 +223,25 @@ public final class ClientBootstrap {
         WebUiConfig webUiConfig =
                 registerWebUi(webUiConfigs, configs, profiles, relations, hudEditor, swapBindings,
                         commands, new File(minecraft.mcDataDir, "12pit/webui.json").toPath());
-        // Category: Misc
-        DenickNames denickNames = registerDenick(minecraft, configs, session, pitContext, presence,
+        // Category: Provider
+        DenickFeature denick = registerDenick(minecraft, configs, session, pitContext, presence,
                 playerNames, nicks, players, playerEquipment, commands,
                 new File(minecraft.mcDataDir, "12pit/denick-cache.json").toPath());
+        TelebowPredictionFeature prediction = registerTelebowPrediction(minecraft, session, configs,
+                relations, arrows, players, pitContext);
+        TimerTrackingFeature timers = registerTimerTracking(minecraft, session, configs, relations,
+                arrows, players, playerEquipment, pitContext);
         // Features
         // Category: Client
         registerDiscordRpc(webUiConfigs, webUiConfig.discordRpc());
-        registerPredictionMargins(webUiConfigs, webUiConfig.autoPredictionMargins(), configs,
-                session);
+        registerPredictionMargins(webUiConfigs, webUiConfig.autoPredictionMargins(), session,
+                timers, prediction);
         // Category: Combat
         registerAutoClicker(minecraft, configs, input);
         registerAutoSprint(configs, (AutoSprintBinding) minecraft);
         registerEnhancedMlb(configs, (EnhancedMlbBinding) minecraft);
-        registerEnhancedTelebow(minecraft, configs, (EnhancedTelebowBinding) minecraft, arrows);
+        registerEnhancedTelebow(minecraft, configs, (EnhancedTelebowBinding) minecraft, arrows,
+                prediction);
         registerNoJumpDelay(configs, (NoJumpDelayBinding) minecraft);
         registerSmartBlock(minecraft, configs, session, (SmartBlockBinding) minecraft, inputTicks);
         // Category: Render
@@ -240,18 +251,19 @@ public final class ClientBootstrap {
         registerFreeCamera(minecraft, configs, input, (FreeCameraBinding) minecraft);
         registerGamma(configs, (GammaBinding) minecraft.entityRenderer);
         registerItemEsp(configs, session, sidebar, textureStates.get());
-        registerNametag(minecraft, configs, session, playerEquipment, denickNames, nicks, timers,
-                textureStates.get());
+        registerNametag(minecraft, configs, session, playerEquipment, denick, nicks, timers,
+                prediction, textureStates.get());
         registerPlayerEsp(configs, session, presence, relations, players, playerEquipment,
                 textureStates.get());
         registerPlayerList(configs, playerNames, players, playerEquipment, pitContext, hudRegistry,
-                relations, presence, denickNames, nicks);
+                relations, presence, denick, nicks);
         registerRingHelper(minecraft, configs, session, pitContext, textureStates.get());
-        registerTelebow(minecraft, configs, session, arrows, relations, textureStates.get(),
-                timers);
-        registerTimers(minecraft, configs, session, relations, playerNames, hudRegistry, timers);
+        registerTelebowLanding(minecraft, configs, session, arrows, relations, textureStates.get(),
+                prediction);
+        registerTimers(minecraft, configs, session, playerNames, hudRegistry, timers, prediction);
         registerTooltip(configs);
         // Category: Misc
+        registerAutoDenick(configs, denick);
         registerAutoFish(configs, session, (MinecraftActions) minecraft);
         registerAutoQuickMath(configs);
         registerBanAlert(minecraft, configs, session, presence);
@@ -277,14 +289,8 @@ public final class ClientBootstrap {
         configs.freeze();
     }
 
-    // Feature providers
+    // Feature dependencies
     // Category: Client
-    private Profiles registerProfiles(ConfigCatalog configs, Path directory) {
-        ProfilesFeature profiles = new ProfilesFeature(configs, directory);
-        components.add(profiles);
-        return profiles;
-    }
-
     private HudEditorFeature registerHudEditor(HudRegistry hudRegistry, CommandRegistry commands,
             ConfigCatalog configs, Profiles profiles) {
         HudEditorFeature hudEditor =
@@ -326,8 +332,8 @@ public final class ClientBootstrap {
         return config;
     }
 
-    // Category: Misc
-    private DenickNames registerDenick(Minecraft minecraft, ConfigCatalog configs,
+    // Category: Provider
+    private DenickFeature registerDenick(Minecraft minecraft, ConfigCatalog configs,
             ClientSession session, PitContext pitContext, TabPresence presence,
             PlayerNameCache playerNames, NickTracker nicks, PlayerEntityTracker players,
             PlayerEquipmentAccess equipment, CommandRegistry commands, Path path) {
@@ -340,6 +346,28 @@ public final class ClientBootstrap {
         return denick;
     }
 
+    private TelebowPredictionFeature registerTelebowPrediction(Minecraft minecraft,
+            ClientSession session, ConfigCatalog configs, RelationLookup relations,
+            ArrowTracker arrows, PlayerEntityTracker players, PitContext pit) {
+        TelebowPredictionConfig config = new TelebowPredictionConfig();
+        configs.register(config);
+        TelebowPredictionFeature prediction = new TelebowPredictionFeature(minecraft, session,
+                configs, config, relations, arrows, players, pit);
+        components.add(prediction);
+        return prediction;
+    }
+
+    private TimerTrackingFeature registerTimerTracking(Minecraft minecraft, ClientSession session,
+            ConfigCatalog configs, RelationLookup relations, ArrowTracker arrows,
+            PlayerEntityTracker players, PlayerEquipmentAccess equipment, PitContext pit) {
+        TimerTrackingConfig config = new TimerTrackingConfig();
+        configs.register(config);
+        TimerTrackingFeature timers = new TimerTrackingFeature(minecraft, session, configs, config,
+                relations, arrows, players, equipment, pit);
+        components.add(timers);
+        return timers;
+    }
+
     // Features
     // Category: Client
     private void registerDiscordRpc(ConfigCatalog configs, BooleanSetting enabled) {
@@ -347,8 +375,10 @@ public final class ClientBootstrap {
     }
 
     private void registerPredictionMargins(ConfigCatalog settings, BooleanSetting enabled,
-            ConfigCatalog configs, ClientSession session) {
-        components.add(new PredictionMarginsFeature(settings, enabled, configs, session));
+            ClientSession session, TimerTrackingFeature timers,
+            TelebowPredictionFeature prediction) {
+        components.add(new PredictionMarginsFeature(settings, enabled, session,
+                timers.automaticMargins(), prediction.automaticMargin()));
     }
 
     // Category: Combat
@@ -372,10 +402,11 @@ public final class ClientBootstrap {
     }
 
     private void registerEnhancedTelebow(Minecraft minecraft, ConfigCatalog configs,
-            EnhancedTelebowBinding binding, ArrowTracker arrows) {
+            EnhancedTelebowBinding binding, ArrowTracker arrows, TelebowPrediction prediction) {
         EnhancedTelebowConfig config = new EnhancedTelebowConfig();
         configs.register(config);
-        components.add(new EnhancedTelebowFeature(minecraft, configs, config, binding, arrows));
+        components.add(new EnhancedTelebowFeature(minecraft, configs, config, binding, arrows,
+                prediction));
     }
 
     private void registerNoJumpDelay(ConfigCatalog configs, NoJumpDelayBinding binding) {
@@ -411,7 +442,7 @@ public final class ClientBootstrap {
         FocusConfig config = new FocusConfig();
         configs.register(config);
         components.add(new FocusFeature(minecraft, configs, config, input, relations, playerNames,
-                language, (FocusBinding) minecraft));
+                language, (PlayerOpacity.Binding) minecraft));
     }
 
     private void registerFreeCamera(Minecraft minecraft, ConfigCatalog configs, InputBlocker input,
@@ -436,11 +467,11 @@ public final class ClientBootstrap {
 
     private void registerNametag(Minecraft minecraft, ConfigCatalog configs, ClientSession session,
             PlayerEquipmentAccess equipment, DenickNames denickNames, NickTracker nicks,
-            PlayerTimers timers, TextureState textures) {
+            TimerTracking timers, TelebowPrediction prediction, TextureState textures) {
         NametagConfig config = new NametagConfig();
         configs.register(config);
         components.add(new NametagFeature(minecraft, configs, config, session, equipment,
-                denickNames, nicks, timers, (NametagNamesBinding) minecraft, textures));
+                denickNames, nicks, timers, prediction, (NametagNamesBinding) minecraft, textures));
     }
 
     private void registerPlayerEsp(ConfigCatalog configs, ClientSession session,
@@ -470,22 +501,22 @@ public final class ClientBootstrap {
                 new RingHelperFeature(minecraft, configs, config, session, pitContext, textures));
     }
 
-    private void registerTelebow(Minecraft minecraft, ConfigCatalog configs, ClientSession session,
-            ArrowTracker arrows, RelationLookup relations, TextureState textures,
-            PlayerTimers timers) {
-        TelebowConfig config = new TelebowConfig();
+    private void registerTelebowLanding(Minecraft minecraft, ConfigCatalog configs,
+            ClientSession session, ArrowTracker arrows, RelationLookup relations,
+            TextureState textures, TelebowPrediction prediction) {
+        TelebowLandingConfig config = new TelebowLandingConfig();
         configs.register(config);
-        components.add(new TelebowFeature(minecraft, configs, config, session, arrows, relations,
-                textures, timers));
+        components.add(new TelebowLandingFeature(minecraft, configs, config, session, arrows,
+                relations, textures, prediction));
     }
 
     private void registerTimers(Minecraft minecraft, ConfigCatalog configs, ClientSession session,
-            RelationLookup relations, PlayerNameCache playerNames, HudRegistry hudRegistry,
-            PlayerTimers timers) {
+            PlayerNameCache playerNames, HudRegistry hudRegistry, TimerTracking timers,
+            TelebowPrediction prediction) {
         TimersConfig config = new TimersConfig();
         configs.register(config);
-        components.add(new TimersFeature(minecraft, configs, config, session, relations,
-                playerNames, hudRegistry, timers));
+        components.add(new TimersFeature(minecraft, configs, config, session, playerNames,
+                hudRegistry, timers, prediction));
     }
 
     private void registerTooltip(ConfigCatalog configs) {
@@ -495,6 +526,12 @@ public final class ClientBootstrap {
     }
 
     // Category: Misc
+    private void registerAutoDenick(ConfigCatalog configs, DenickAutomation denick) {
+        AutoDenickConfig config = new AutoDenickConfig();
+        configs.register(config);
+        components.add(new AutoDenickFeature(configs, config, denick));
+    }
+
     private void registerAutoFish(ConfigCatalog configs, ClientSession session,
             MinecraftActions actions) {
         AutoFishConfig config = new AutoFishConfig();

@@ -22,29 +22,25 @@ import static pit12.runtime.languages.Languages.source;
 
 import java.util.EnumMap;
 import java.util.Map;
+import pit12.feature.client.relation.api.PlayerAudience;
+import pit12.feature.provider.timertracking.api.TimerKind;
 import pit12.feature.render.timers.TimersHud.TimerType;
 import pit12.runtime.config.BooleanSetting;
 import pit12.runtime.config.ColorSetting;
 import pit12.runtime.config.ConfigCategory;
-import pit12.runtime.config.DoubleSetting;
 import pit12.runtime.config.FeatureConfig;
 import pit12.runtime.config.HudAnchor;
 import pit12.runtime.config.HudConfig;
 import pit12.runtime.config.HudGroupConfig;
-import pit12.runtime.config.IntegerSetting;
-import pit12.runtime.timers.TimerDemand;
-import pit12.runtime.timers.TimerKind;
-import pit12.runtime.timers.TimerSettings;
 import pit12.shared.text.TextCodes;
 
-public final class TimersConfig extends FeatureConfig implements TimerSettings {
+public final class TimersConfig extends FeatureConfig {
     final Map<TimerType, HudGroupConfig> hudGroups = new EnumMap<>(TimerType.class);
     public final BooleanSetting pinEnabled;
     public final BooleanSetting pinOwn;
     public final BooleanSetting pinFriends;
     public final BooleanSetting pinEnemies;
     public final BooleanSetting pinOthers;
-    public final IntegerSetting pinHitWindow;
     public final BooleanSetting venomEnabled;
     public final BooleanSetting venomSelf;
     public final BooleanSetting venomTargets;
@@ -52,17 +48,11 @@ public final class TimersConfig extends FeatureConfig implements TimerSettings {
     public final BooleanSetting venomFriends;
     public final BooleanSetting venomEnemies;
     public final BooleanSetting venomOthers;
-    public final IntegerSetting venomHitWindow;
-    public final DoubleSetting venomReach;
-    public final DoubleSetting venomHitboxMargin;
     public final BooleanSetting jumpBoostEnabled;
     public final BooleanSetting jumpBoostOwn;
     public final BooleanSetting jumpBoostFriends;
     public final BooleanSetting jumpBoostEnemies;
     public final BooleanSetting jumpBoostOthers;
-    public final BooleanSetting jumpBoostSoundRequired;
-    public final BooleanSetting jumpBoostResetOnLowJump;
-    public final IntegerSetting jumpBoostGrace;
     public final BooleanSetting telebowEnabled;
     public final BooleanSetting telebowOwn;
     public final BooleanSetting telebowFriends;
@@ -78,13 +68,12 @@ public final class TimersConfig extends FeatureConfig implements TimerSettings {
     public TimersConfig() {
         super("debufftimers", source("Timers HUD"), ConfigCategory.RENDER, source(
                 "Shows estimated Pin, Venom, and Jump Boost durations and Telebow cooldowns."));
-        hud = hudConfig("debuff_timers", HudAnchor.TOP_RIGHT, 6, 6, true, HudGroup.SUBCATEGORY,
-                "HUD");
+        hud = hudConfig("debuff_timers", HudAnchor.TOP_RIGHT, 6, 6, true, HudGroup.CATEGORY, "HUD");
         for (TimerType type : TimerType.values()) {
             hudGroups.put(type, hudGroupConfig("debuff_timers", type.id,
                     TextCodes.strip(type.title), hud, type.ordinal() * 40));
         }
-        subcategory("display", source("Display"));
+        category("display", source("Display"));
         showGroupNames = booleanSetting("show_group_names", source("Show group names"),
                 source("Shows the name above each timer group."), true);
         ownColor = colorPickerSetting("own_color", source("Own color"),
@@ -95,8 +84,8 @@ public final class TimersConfig extends FeatureConfig implements TimerSettings {
                 source("Color and opacity of enemies' countdowns."), 0xFFFF5555);
         otherColor = colorPickerSetting("other_color", source("Other player color"),
                 source("Color and opacity of other players' countdowns."), 0xFFFFFFFF);
-        subcategory("debuffs", source("Debuffs"));
-        subsubcategory("pin", "Pin");
+        category("debuffs", source("Debuffs"));
+        section("pin", "Pin");
         pinEnabled = booleanSetting("pin_enabled", source("Enabled"),
                 source("Shows estimated Pin durations."), true);
         pinOwn = booleanSetting("own", source("Own"), source("Shows your Pin timer."), true);
@@ -106,10 +95,7 @@ public final class TimersConfig extends FeatureConfig implements TimerSettings {
                 source("Shows enemies' Pin timers."), true);
         pinOthers = booleanSetting("others", source("Others"),
                 source("Shows other players' Pin timers."), true);
-        pinHitWindow = integerSliderSetting("pin_hit_window_ms", source("Prediction margin (ms)"),
-                source("Time allowed for delayed damage to count as a Pin hit."), 250, 25, 1000,
-                25);
-        subsubcategory("venom", "Venom");
+        section("venom", "Venom");
         venomEnabled = booleanSetting("venom_enabled", source("Enabled"),
                 source("Shows estimated Venom durations."), true);
         venomSelf = booleanSetting("venom_self", source("Track wearers"),
@@ -124,19 +110,8 @@ public final class TimersConfig extends FeatureConfig implements TimerSettings {
                 source("Shows enemies' Venom timers."), true);
         venomOthers = booleanSetting("venom_others", source("Others"),
                 source("Shows other players' Venom timers."), true);
-        venomHitWindow =
-                integerSliderSetting("venom_hit_window_ms", source("Prediction margin (ms)"),
-                        source("Time allowed for delayed damage to count as a Venom hit."), 250, 25,
-                        1500, 25);
-        venomReach = doubleSliderSetting("venom_reach_blocks", source("Maximum reach (blocks)"),
-                source("Maximum distance at which hits count toward Venom estimates."), 4.5, 2, 6,
-                0.1);
-        venomHitboxMargin = doubleSliderSetting("venom_hitbox_margin_blocks",
-                source("Hitbox margin (blocks)"),
-                source("Counts hits up to this far outside player hitboxes toward Venom timers."),
-                0.4, 0, 1, 0.05);
-        subcategory("buffs", source("Buffs"));
-        subsubcategory("jump_boost", "Jump Boost");
+        category("buffs", source("Buffs"));
+        section("jump_boost", "Jump Boost");
         jumpBoostEnabled = booleanSetting("jump_boost_enabled", source("Enabled"),
                 source("Shows estimated Jump Boost IV durations."), true);
         jumpBoostOwn = booleanSetting("jump_boost_own", source("Own"),
@@ -147,19 +122,8 @@ public final class TimersConfig extends FeatureConfig implements TimerSettings {
                 source("Shows enemies' Jump Boost timers."), true);
         jumpBoostOthers = booleanSetting("jump_boost_others", source("Others"),
                 source("Shows other players' Jump Boost timers."), true);
-        jumpBoostSoundRequired =
-                booleanSetting("jump_boost_sound_required", source("Sound required"),
-                        source("Requires a drinking sound to start a Jump Boost timer."), false);
-        jumpBoostResetOnLowJump = booleanSetting("jump_boost_reset_on_low_jump",
-                source("Reset on low jump"),
-                source("Clears the timer when an unobstructed jump is too low for Jump Boost IV."),
-                true);
-        jumpBoostGrace = integerSliderSetting("jump_boost_grace_ms",
-                source("Prediction margin (ms)"),
-                source("Time after a Jump Boost timer starts before low jumps can clear it."), 250,
-                0, 1000, 25);
-        subcategory("cooldowns", source("Cooldowns"));
-        subsubcategory("telebow", "Telebow");
+        category("cooldowns", source("Cooldowns"));
+        section("telebow", "Telebow");
         telebowEnabled = booleanSetting("telebow_enabled", source("Enabled"),
                 source("Shows estimated Telebow cooldowns."), true);
         telebowOwn = booleanSetting("telebow_own", source("Own"),
@@ -177,58 +141,26 @@ public final class TimersConfig extends FeatureConfig implements TimerSettings {
             return 0;
         int pin =
                 pinEnabled.get()
-                        ? TimerDemand.groups(pinOwn.get(), pinFriends.get(), pinEnemies.get(),
+                        ? PlayerAudience.groups(pinOwn.get(), pinFriends.get(), pinEnemies.get(),
                                 pinOthers.get())
                         : 0;
-        int venom = venomEnabled.get() ? TimerDemand.groups(venomOwn.get(), venomFriends.get(),
-                venomEnemies.get(), venomOthers.get()) : 0;
+        int venom =
+                venomEnabled.get()
+                        ? PlayerAudience.groups(venomOwn.get(), venomFriends.get(),
+                                venomEnemies.get(), venomOthers.get())
+                        : 0;
         int jump = jumpBoostEnabled.get()
-                ? TimerDemand.groups(jumpBoostOwn.get(), jumpBoostFriends.get(),
+                ? PlayerAudience.groups(jumpBoostOwn.get(), jumpBoostFriends.get(),
                         jumpBoostEnemies.get(), jumpBoostOthers.get())
                 : 0;
-        int telebow =
-                telebowEnabled.get()
-                        ? TimerDemand.groups(telebowOwn.get(), telebowFriends.get(),
-                                telebowEnemies.get(), telebowOthers.get())
-                        : 0;
         return TimerKind.PIN.select(pin)
                 | TimerKind.VENOM_WEARER.select(venomSelf.get() ? venom : 0)
                 | TimerKind.VENOM_TARGET.select(venomTargets.get() ? venom : 0)
-                | TimerKind.JUMP_BOOST.select(jump) | TimerKind.TELEBOW.select(telebow);
+                | TimerKind.JUMP_BOOST.select(jump);
     }
 
-    @Override
-    public int pinHitWindow() {
-        return pinHitWindow.get();
-    }
-
-    @Override
-    public int venomHitWindow() {
-        return venomHitWindow.get();
-    }
-
-    @Override
-    public double venomReach() {
-        return venomReach.get();
-    }
-
-    @Override
-    public double venomHitboxMargin() {
-        return venomHitboxMargin.get();
-    }
-
-    @Override
-    public boolean jumpBoostSoundRequired() {
-        return jumpBoostSoundRequired.get();
-    }
-
-    @Override
-    public boolean jumpBoostResetOnLowJump() {
-        return jumpBoostResetOnLowJump.get();
-    }
-
-    @Override
-    public int jumpBoostGrace() {
-        return jumpBoostGrace.get();
+    int cooldownAudience() {
+        return enabled() && telebowEnabled.get() ? PlayerAudience.groups(telebowOwn.get(),
+                telebowFriends.get(), telebowEnemies.get(), telebowOthers.get()) : 0;
     }
 }
