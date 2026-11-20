@@ -23,23 +23,22 @@ import static pit12.runtime.languages.Languages.source;
 import pit12.runtime.config.BooleanSetting;
 import pit12.runtime.config.ConfigCategory;
 import pit12.runtime.config.FeatureConfig;
-import pit12.runtime.config.IntegerSetting;
 
 public final class TooltipConfig extends FeatureConfig {
     private final BooleanSetting showEnchantments;
     private final BooleanSetting showGem;
-    private final IntegerSetting upwardOffset;
+    private final BooleanSetting keepAboveHearts;
 
     public TooltipConfig() {
-        super("tooltip", source("Held Item Tooltip"), ConfigCategory.RENDER,
+        super("tooltip", source("Enhanced Held Item Tooltip"), ConfigCategory.RENDER,
                 source("Changes the text and position of the held item tooltip."));
         showEnchantments = booleanSetting("show_enchantments",
                 source("Show enchantments instead of item name"),
                 source("Shows Pit enchantments in place of the held item name."), true);
         showGem = booleanSetting("show_gem", source("Show gem"),
                 source("Shows a green diamond on gemmed items."), true);
-        upwardOffset = integerSliderSetting("upward_offset", source("Upward offset (pixels)"),
-                source("Moves the held item tooltip upward."), 0, 0, 30, 1);
+        keepAboveHearts = booleanSetting("keep_above_hearts", source("Keep above hearts"),
+                source("Moves the tooltip up when you have more than one row of hearts."), true);
     }
 
     public boolean showEnchantments() {
@@ -50,7 +49,7 @@ public final class TooltipConfig extends FeatureConfig {
         return showGem.get();
     }
 
-    public int upwardOffset() {
-        return upwardOffset.get();
+    public boolean keepAboveHearts() {
+        return keepAboveHearts.get();
     }
 }

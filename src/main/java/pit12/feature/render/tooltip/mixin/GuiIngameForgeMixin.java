@@ -28,7 +28,9 @@ import net.minecraftforge.common.util.Constants;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import pit12.feature.render.tooltip.HeldItemTooltipBinding;
 import pit12.feature.render.tooltip.TooltipConfig;
 import pit12.runtime.item.PitEnchantmentReader;
@@ -45,6 +47,8 @@ public abstract class GuiIngameForgeMixin extends GuiIngame implements HeldItemT
     private boolean pit12$tooltipShowGem;
     @Unique
     private String pit12$tooltipText;
+    @Unique
+    private int pit12$extraHeartHeight;
 
     protected GuiIngameForgeMixin(Minecraft minecraft) {
         super(minecraft);
@@ -89,10 +93,23 @@ public abstract class GuiIngameForgeMixin extends GuiIngame implements HeldItemT
         return pit12$tooltipText == null ? originalName : pit12$tooltipText;
     }
 
+    @Inject(method = "renderGameOverlay", at = @At("HEAD"), remap = true)
+    private void pit12$resetHeartHeight(CallbackInfo ci) {
+        pit12$extraHeartHeight = 0;
+    }
+
+    @Inject(method = "renderHealth", remap = false, at = @At(value = "INVOKE",
+            target = "Lnet/minecraftforge/client/GuiIngameForge;post(Lnet/minecraftforge/client/event/RenderGameOverlayEvent$ElementType;)V"))
+    private void pit12$recordHeartHeight(CallbackInfo ci) {
+        // With one row of hearts, Forge's left height is 49 before armor.
+        pit12$extraHeartHeight = Math.max(0, GuiIngameForge.left_height - 49);
+    }
+
     // Slot 4 holds the tooltip Y coordinate before either font renderer is chosen.
     @ModifyVariable(method = "renderToolHightlight", remap = false, at = @At("STORE"), index = 4)
     private int pit12$moveHeldItemTooltipUp(int originalY) {
         TooltipConfig config = pit12$tooltipConfig;
-        return config == null || !config.enabled() ? originalY : originalY - config.upwardOffset();
+        return config == null || !config.enabled() || !config.keepAboveHearts() ? originalY
+                : originalY - pit12$extraHeartHeight;
     }
 }
