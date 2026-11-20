@@ -21,7 +21,6 @@ package pit12.feature.client.denick;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.BooleanSupplier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -41,33 +40,44 @@ final class DenickQuery {
                 throw new InterruptedException("Denick query was cancelled");
             }
             try {
-                Map<String, String> owners = api.owners(item.query, cancelled);
-                owners.values().removeIf(displayName -> {
-                    String plain = TextCodes.strip(displayName);
-                    return !plain.contains("[MVP++]") && !plain.contains("[YOUTUBE]");
-                });
-                if (owners.size() != 1) {
-                    continue;
+                if (query.selectOwner(api.owners(item.query, cancelled), cachedOwner,
+                        cachedDisplayName)) {
+                    return query;
                 }
-                Map.Entry<String, String> owner = owners.entrySet().iterator().next();
-                query.owner = owner.getKey();
-                String displayName = owner.getValue();
-                int rankStart = displayName.indexOf('[', displayName.indexOf('[') + 1);
-                int rankEnd = displayName.indexOf(']', rankStart);
-                if (rankStart >= 0 && rankEnd >= 0) {
-                    displayName = displayName.substring(0, rankStart)
-                            + displayName.substring(rankEnd + 1).trim();
-                }
-                query.displayName =
-                        Objects.equals(cachedOwner, owner.getKey()) && cachedDisplayName != null
-                                ? cachedDisplayName
-                                : displayName;
-                return query;
             } catch (IOException failure) {
                 LOGGER.debug("Denick item query failed for {}", item.query, failure);
                 query.failure = failure;
             }
         }
         return query;
+    }
+
+    boolean selectOwner(Map<String, String> owners, String cachedOwner, String cachedDisplayName) {
+        Map.Entry<String, String> match = null;
+        for (Map.Entry<String, String> candidate : owners.entrySet()) {
+            String plain = TextCodes.strip(candidate.getValue());
+            if (!plain.contains("[MVP++]") && !plain.contains("[YOUTUBE]")) {
+                continue;
+            }
+            if (match != null) {
+                return false;
+            }
+            match = candidate;
+        }
+        if (match == null) {
+            return false;
+        }
+        owner = match.getKey();
+        if (cachedDisplayName != null && owner.equals(cachedOwner)) {
+            displayName = cachedDisplayName;
+        } else {
+            String name = match.getValue();
+            int rankStart = name.indexOf('[', name.indexOf('[') + 1);
+            int rankEnd = name.indexOf(']', rankStart);
+            displayName = rankStart >= 0 && rankEnd >= 0
+                    ? name.substring(0, rankStart) + name.substring(rankEnd + 1).trim()
+                    : name;
+        }
+        return true;
     }
 }
