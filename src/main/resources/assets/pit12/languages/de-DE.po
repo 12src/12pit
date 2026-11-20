@@ -6,6 +6,76 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "Language: de_DE\n"
 
+#: src/main/java/pit12/feature/client/denick/DenickConfig.java:32
+msgctxt "src/main/java/pit12/feature/client/denick/DenickConfig.java#1"
+msgid "Looks up nicked players' real names."
+msgstr ""
+
+#: src/main/java/pit12/feature/client/denick/DenickConfig.java:33
+msgctxt "src/main/java/pit12/feature/client/denick/DenickConfig.java#1"
+msgid "Show nick marker"
+msgstr "Nick-Markierung anzeigen"
+
+#: src/main/java/pit12/feature/render/nametag/NametagConfig.java:51
+msgctxt "src/main/java/pit12/feature/render/nametag/NametagConfig.java#1"
+msgid "Show nick marker"
+msgstr "Nick-Markierung anzeigen"
+
+#: src/main/java/pit12/feature/render/playerlist/PlayerListConfig.java:81
+msgctxt "src/main/java/pit12/feature/render/playerlist/PlayerListConfig.java#1"
+msgid "Show nick marker"
+msgstr "Nick-Markierung anzeigen"
+
+#: src/main/java/pit12/feature/client/denick/DenickConfig.java:34
+msgctxt "src/main/java/pit12/feature/client/denick/DenickConfig.java#1"
+msgid "Adds N to nicked players' names in Tab."
+msgstr ""
+
+#: src/main/java/pit12/feature/client/denick/DenickFeature.java:136
+msgctxt "src/main/java/pit12/feature/client/denick/DenickFeature.java#1"
+msgid "Find a nicked player's name"
+msgstr ""
+
+#: src/main/java/pit12/feature/client/denick/DenickFeature.java:288
+msgctxt "src/main/java/pit12/feature/client/denick/DenickFeature.java#1"
+msgid "Querying {0}..."
+msgstr ""
+
+#: src/main/java/pit12/feature/client/denick/DenickFeature.java:510
+msgctxt "src/main/java/pit12/feature/client/denick/DenickFeature.java#1"
+msgid "{0} §c-> {1} §c(cached)"
+msgstr ""
+
+#: src/main/java/pit12/feature/client/denick/DenickFeature.java:563
+msgctxt "src/main/java/pit12/feature/client/denick/DenickFeature.java#1"
+msgid "{0} §c-> {1} §c(updated)"
+msgstr ""
+
+#: src/main/java/pit12/feature/client/denick/DenickFeature.java:581
+msgctxt "src/main/java/pit12/feature/client/denick/DenickFeature.java#1"
+msgid "Cached identity for {0} is no longer confirmed"
+msgstr ""
+
+#: src/main/java/pit12/feature/client/denick/DenickFeature.java:596
+msgctxt "src/main/java/pit12/feature/client/denick/DenickFeature.java#1"
+msgid "No searchable equipment for {0}"
+msgstr ""
+
+#: src/main/java/pit12/feature/client/denick/DenickFeature.java:597
+msgctxt "src/main/java/pit12/feature/client/denick/DenickFeature.java#1"
+msgid "Could not query {0}"
+msgstr ""
+
+#: src/main/java/pit12/feature/client/denick/DenickFeature.java:598
+msgctxt "src/main/java/pit12/feature/client/denick/DenickFeature.java#1"
+msgid "No confirmed owner for {0}"
+msgstr ""
+
+#: src/main/java/pit12/feature/client/denick/DenickFeature.java:601
+msgctxt "src/main/java/pit12/feature/client/denick/DenickFeature.java#1"
+msgid "Waiting for new equipment"
+msgstr ""
+
 #: src/main/java/pit12/feature/client/hudeditor/HudEditorFeature.java:54
 msgctxt "src/main/java/pit12/feature/client/hudeditor/HudEditorFeature.java#1"
 msgid "Open the HUD editor"
@@ -176,32 +246,27 @@ msgctxt "src/main/java/pit12/feature/render/playeresp/PlayerEspConfig.java#1"
 msgid "Friends"
 msgstr "Freunde"
 
-#: src/main/java/pit12/feature/render/telebow/TelebowConfig.java:64
-msgctxt "src/main/java/pit12/feature/render/telebow/TelebowConfig.java#1"
+#: src/main/java/pit12/feature/render/telebowlanding/TelebowLandingConfig.java:49
+msgctxt "src/main/java/pit12/feature/render/telebowlanding/TelebowLandingConfig.java#1"
 msgid "Friends"
 msgstr "Freunde"
 
-#: src/main/java/pit12/feature/render/telebow/TelebowConfig.java:92
-msgctxt "src/main/java/pit12/feature/render/telebow/TelebowConfig.java#2"
-msgid "Friends"
-msgstr "Freunde"
-
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:103
+#: src/main/java/pit12/feature/render/timers/TimersConfig.java:92
 msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#1"
 msgid "Friends"
 msgstr "Freunde"
 
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:121
+#: src/main/java/pit12/feature/render/timers/TimersConfig.java:107
 msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#2"
 msgid "Friends"
 msgstr "Freunde"
 
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:144
+#: src/main/java/pit12/feature/render/timers/TimersConfig.java:119
 msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#3"
 msgid "Friends"
 msgstr "Freunde"
 
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:167
+#: src/main/java/pit12/feature/render/timers/TimersConfig.java:131
 msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#4"
 msgid "Friends"
 msgstr "Freunde"
@@ -221,37 +286,37 @@ msgctxt "src/main/java/pit12/feature/client/relation/RelationCommand.java#1"
 msgid "Enemies"
 msgstr "Feinde"
 
+#: src/main/java/pit12/feature/render/focus/FocusConfig.java:50
+msgctxt "src/main/java/pit12/feature/render/focus/FocusConfig.java#1"
+msgid "Enemies"
+msgstr "Feinde"
+
 #: src/main/java/pit12/feature/render/playeresp/PlayerEspConfig.java:73
 msgctxt "src/main/java/pit12/feature/render/playeresp/PlayerEspConfig.java#1"
 msgid "Enemies"
 msgstr "Feinde"
 
-#: src/main/java/pit12/feature/render/telebow/TelebowConfig.java:66
-msgctxt "src/main/java/pit12/feature/render/telebow/TelebowConfig.java#1"
+#: src/main/java/pit12/feature/render/telebowlanding/TelebowLandingConfig.java:51
+msgctxt "src/main/java/pit12/feature/render/telebowlanding/TelebowLandingConfig.java#1"
 msgid "Enemies"
 msgstr "Feinde"
 
-#: src/main/java/pit12/feature/render/telebow/TelebowConfig.java:94
-msgctxt "src/main/java/pit12/feature/render/telebow/TelebowConfig.java#2"
-msgid "Enemies"
-msgstr "Feinde"
-
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:105
+#: src/main/java/pit12/feature/render/timers/TimersConfig.java:94
 msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#1"
 msgid "Enemies"
 msgstr "Feinde"
 
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:123
+#: src/main/java/pit12/feature/render/timers/TimersConfig.java:109
 msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#2"
 msgid "Enemies"
 msgstr "Feinde"
 
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:146
+#: src/main/java/pit12/feature/render/timers/TimersConfig.java:121
 msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#3"
 msgid "Enemies"
 msgstr "Feinde"
 
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:169
+#: src/main/java/pit12/feature/render/timers/TimersConfig.java:133
 msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#4"
 msgid "Enemies"
 msgstr "Feinde"
@@ -276,7 +341,7 @@ msgctxt "src/main/java/pit12/feature/client/relation/RelationCommand.java#1"
 msgid "waiting"
 msgstr "Warten"
 
-#: src/main/java/pit12/feature/combat/swap/SwapCommand.java:170
+#: src/main/java/pit12/feature/combat/swap/SwapCommand.java:169
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapCommand.java#1"
 msgid "waiting"
 msgstr "Warten"
@@ -373,50 +438,50 @@ msgstr "Einstellungen"
 
 #: src/main/java/pit12/feature/client/webui/WebUiConfig.java:38
 msgctxt "src/main/java/pit12/feature/client/webui/WebUiConfig.java#1"
-msgid "Configures language, interface appearance, key bindings, and Discord RPC."
-msgstr "Konfiguriert Sprache, Erscheinungsbild der Benutzeroberfläche, Tastenkombinationen und Discord RPC."
+msgid "These preferences apply to every profile."
+msgstr ""
 
-#: src/main/java/pit12/feature/client/webui/WebUiConfig.java:40
+#: src/main/java/pit12/feature/client/webui/WebUiConfig.java:39
 msgctxt "src/main/java/pit12/feature/client/webui/WebUiConfig.java#1"
 msgid "Language"
 msgstr "Sprache"
 
-#: src/main/java/pit12/feature/client/webui/WebUiConfig.java:41
+#: src/main/java/pit12/feature/client/webui/WebUiConfig.java:40
 msgctxt "src/main/java/pit12/feature/client/webui/WebUiConfig.java#1"
-msgid "Sets the language for the interface, commands, and HUD."
-msgstr "Legt die Sprache für die Schnittstelle, Befehle und HUD fest."
+msgid "Sets the language for texts."
+msgstr ""
 
-#: src/main/java/pit12/feature/client/webui/WebUiConfig.java:42
+#: src/main/java/pit12/feature/client/webui/WebUiConfig.java:41
 msgctxt "src/main/java/pit12/feature/client/webui/WebUiConfig.java#1"
 msgid "Accent color"
 msgstr "Akzentfarbe"
 
-#: src/main/java/pit12/feature/client/webui/WebUiConfig.java:43
+#: src/main/java/pit12/feature/client/webui/WebUiConfig.java:42
 msgctxt "src/main/java/pit12/feature/client/webui/WebUiConfig.java#1"
 msgid "Sets the interface accent color."
 msgstr "Legt die Akzentfarbe der Benutzeroberfläche fest."
 
-#: src/main/java/pit12/feature/client/webui/WebUiConfig.java:45
+#: src/main/java/pit12/feature/client/webui/WebUiConfig.java:44
 msgctxt "src/main/java/pit12/feature/client/webui/WebUiConfig.java#1"
 msgid "Shows 12pit activity and elapsed time on your Discord profile."
 msgstr "Zeigt die 12pit-Aktivität und die verstrichene Zeit in Ihrem Discord-Profil an."
 
-#: src/main/java/pit12/feature/client/webui/WebUiConfig.java:47
+#: src/main/java/pit12/feature/client/webui/WebUiConfig.java:46
 msgctxt "src/main/java/pit12/feature/client/webui/WebUiConfig.java#1"
 msgid "Set prediction margins automatically"
 msgstr ""
 
-#: src/main/java/pit12/feature/client/webui/WebUiConfig.java:48
+#: src/main/java/pit12/feature/client/webui/WebUiConfig.java:47
 msgctxt "src/main/java/pit12/feature/client/webui/WebUiConfig.java#1"
-msgid "Adjusts prediction margins once after joining or switching servers."
+msgid "Sets prediction margins from your ping."
 msgstr ""
 
-#: src/main/java/pit12/feature/client/webui/WebUiConfig.java:50
+#: src/main/java/pit12/feature/client/webui/WebUiConfig.java:48
 msgctxt "src/main/java/pit12/feature/client/webui/WebUiConfig.java#1"
 msgid "Interface key"
 msgstr "Taste für die Oberfläche"
 
-#: src/main/java/pit12/feature/client/webui/WebUiConfig.java:51
+#: src/main/java/pit12/feature/client/webui/WebUiConfig.java:49
 msgctxt "src/main/java/pit12/feature/client/webui/WebUiConfig.java#1"
 msgid "Opens the HUD editor. Press again with no HUD selected to open settings."
 msgstr "Öffnet den HUD-Editor. Drücken Sie erneut, ohne dass HUD ausgewählt ist, um die Einstellungen zu öffnen."
@@ -435,6 +500,391 @@ msgstr "Die Einstellungen der Konfigurationsschnittstelle konnten nicht gespeich
 msgctxt "src/main/java/pit12/feature/client/webui/WebUiPreferences.java#1"
 msgid "Could not load configuration interface settings"
 msgstr "Die Einstellungen der Konfigurationsschnittstelle konnten nicht geladen werden"
+
+#: src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java:51
+msgctxt "src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java#1"
+msgid "Auto Clicker"
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java:52
+msgctxt "src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java#1"
+msgid "Clicks the left and right mouse buttons automatically."
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java:53
+msgctxt "src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java#1"
+msgid "Left click"
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java:84
+msgctxt "src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java#2"
+msgid "Left click"
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java:54
+msgctxt "src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java#1"
+msgid "Enabled"
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java:67
+msgctxt "src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java#2"
+msgid "Enabled"
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java:80
+msgctxt "src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java#3"
+msgid "Enabled"
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/autouse/AutoUseConfig.java:55
+msgctxt "src/main/java/pit12/feature/combat/autouse/AutoUseConfig.java#1"
+msgid "Enabled"
+msgstr ""
+
+#: src/main/java/pit12/feature/render/timers/TimersConfig.java:89
+msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#1"
+msgid "Enabled"
+msgstr ""
+
+#: src/main/java/pit12/feature/render/timers/TimersConfig.java:99
+msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#2"
+msgid "Enabled"
+msgstr ""
+
+#: src/main/java/pit12/feature/render/timers/TimersConfig.java:115
+msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#3"
+msgid "Enabled"
+msgstr ""
+
+#: src/main/java/pit12/feature/render/timers/TimersConfig.java:127
+msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#4"
+msgid "Enabled"
+msgstr ""
+
+#: src/main/java/pit12/runtime/config/FeatureConfig.java:72
+msgctxt "src/main/java/pit12/runtime/config/FeatureConfig.java#1"
+msgid "Enabled"
+msgstr "Aktiviert"
+
+#: src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java:55
+msgctxt "src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java#1"
+msgid "Clicks the left mouse button automatically."
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java:56
+msgctxt "src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java#1"
+msgid "Weapons only"
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java:57
+msgctxt "src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java#1"
+msgid "Only clicks while holding a sword, axe, or shovel."
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java:58
+msgctxt "src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java#1"
+msgid "Hold to click"
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java:71
+msgctxt "src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java#2"
+msgid "Hold to click"
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java:86
+msgctxt "src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java#3"
+msgid "Hold to click"
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java:59
+msgctxt "src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java#1"
+msgid "Clicks only while the left mouse button is held."
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java:60
+msgctxt "src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java#1"
+msgid "Click rate min (CPS)"
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java:73
+msgctxt "src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java#2"
+msgid "Click rate min (CPS)"
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java:88
+msgctxt "src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java#3"
+msgid "Click rate min (CPS)"
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java:61
+msgctxt "src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java#1"
+msgid "The lowest target click rate."
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java:74
+msgctxt "src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java#2"
+msgid "The lowest target click rate."
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java:89
+msgctxt "src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java#3"
+msgid "The lowest target click rate."
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java:62
+msgctxt "src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java#1"
+msgid "Click rate max (CPS)"
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java:75
+msgctxt "src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java#2"
+msgid "Click rate max (CPS)"
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java:90
+msgctxt "src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java#3"
+msgid "Click rate max (CPS)"
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java:63
+msgctxt "src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java#1"
+msgid "The highest target click rate."
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java:76
+msgctxt "src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java#2"
+msgid "The highest target click rate."
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java:91
+msgctxt "src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java#3"
+msgid "The highest target click rate."
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java:64
+msgctxt "src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java#1"
+msgid "Toggle key"
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java:77
+msgctxt "src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java#2"
+msgid "Toggle key"
+msgstr ""
+
+#: src/main/java/pit12/feature/render/focus/FocusConfig.java:58
+msgctxt "src/main/java/pit12/feature/render/focus/FocusConfig.java#1"
+msgid "Toggle key"
+msgstr ""
+
+#: src/main/java/pit12/feature/render/freecam/FreeCameraConfig.java:38
+msgctxt "src/main/java/pit12/feature/render/freecam/FreeCameraConfig.java#1"
+msgid "Toggle key"
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java:65
+msgctxt "src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java#1"
+msgid "Toggles left click automation."
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java:66
+msgctxt "src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java#1"
+msgid "Right click"
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java:85
+msgctxt "src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java#2"
+msgid "Right click"
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java:68
+msgctxt "src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java#1"
+msgid "Clicks the right mouse button automatically."
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java:69
+msgctxt "src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java#1"
+msgid "Blocks only"
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java:70
+msgctxt "src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java#1"
+msgid "Only clicks while holding a placeable block."
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java:72
+msgctxt "src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java#1"
+msgid "Clicks only while the right mouse button is held."
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java:78
+msgctxt "src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java#1"
+msgid "Toggles right click automation."
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java:79
+msgctxt "src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java#1"
+msgid "Cake"
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java:81
+msgctxt "src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java#1"
+msgid "Clicks cakes while looking at them."
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java:82
+msgctxt "src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java#1"
+msgid "Click button"
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java:83
+msgctxt "src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java#1"
+msgid "Which button is used for cake."
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java:87
+msgctxt "src/main/java/pit12/feature/combat/autoclicker/AutoClickerConfig.java#1"
+msgid "Clicks only while the matching button is held."
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/autouse/AutoUseConfig.java:38
+msgctxt "src/main/java/pit12/feature/combat/autouse/AutoUseConfig.java#1"
+msgid "Auto Use"
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/autouse/AutoUseConfig.java:39
+msgctxt "src/main/java/pit12/feature/combat/autouse/AutoUseConfig.java#1"
+msgid "Automatically uses items when you are at low health."
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/autouse/AutoUseConfig.java:40
+msgctxt "src/main/java/pit12/feature/combat/autouse/AutoUseConfig.java#1"
+msgid "General"
+msgstr "Allgemein"
+
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:77
+msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
+msgid "General"
+msgstr "Allgemein"
+
+#: src/main/java/pit12/feature/misc/autofish/AutoFishConfig.java:40
+msgctxt "src/main/java/pit12/feature/misc/autofish/AutoFishConfig.java#1"
+msgid "General"
+msgstr "Allgemein"
+
+#: src/main/java/pit12/feature/render/focus/FocusConfig.java:46
+msgctxt "src/main/java/pit12/feature/render/focus/FocusConfig.java#1"
+msgid "General"
+msgstr "Allgemein"
+
+#: src/main/java/pit12/feature/render/playeresp/PlayerEspConfig.java:52
+msgctxt "src/main/java/pit12/feature/render/playeresp/PlayerEspConfig.java#1"
+msgid "General"
+msgstr "Allgemein"
+
+#: src/main/java/pit12/feature/combat/autouse/AutoUseConfig.java:41
+msgctxt "src/main/java/pit12/feature/combat/autouse/AutoUseConfig.java#1"
+msgid "Use interval (ticks)"
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/autouse/AutoUseConfig.java:42
+msgctxt "src/main/java/pit12/feature/combat/autouse/AutoUseConfig.java#1"
+msgid "Minimum time between use attempts."
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/autouse/AutoUseConfig.java:43
+msgctxt "src/main/java/pit12/feature/combat/autouse/AutoUseConfig.java#1"
+msgid "Use delay (ticks)"
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/autouse/AutoUseConfig.java:44
+msgctxt "src/main/java/pit12/feature/combat/autouse/AutoUseConfig.java#1"
+msgid "Waits this long to right click after switching to an item."
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/autouse/AutoUseConfig.java:45
+msgctxt "src/main/java/pit12/feature/combat/autouse/AutoUseConfig.java#1"
+msgid "Switch back delay (ticks)"
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/autouse/AutoUseConfig.java:46
+msgctxt "src/main/java/pit12/feature/combat/autouse/AutoUseConfig.java#1"
+msgid "Waits this long to switch back after use."
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/autouse/AutoUseConfig.java:47
+msgctxt "src/main/java/pit12/feature/combat/autouse/AutoUseConfig.java#1"
+msgid "Golden Head"
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/autouse/AutoUseConfig.java:48
+msgctxt "src/main/java/pit12/feature/combat/autouse/AutoUseConfig.java#1"
+msgid "Soup"
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/autouse/AutoUseConfig.java:49
+msgctxt "src/main/java/pit12/feature/combat/autouse/AutoUseConfig.java#1"
+msgid "Rage Potato"
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/autouse/AutoUseConfig.java:50
+msgctxt "src/main/java/pit12/feature/combat/autouse/AutoUseConfig.java#1"
+msgid "Fractured Soul"
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/autouse/AutoUseConfig.java:56
+msgctxt "src/main/java/pit12/feature/combat/autouse/AutoUseConfig.java#1"
+msgid "Uses this item automatically."
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/autouse/AutoUseConfig.java:57
+msgctxt "src/main/java/pit12/feature/combat/autouse/AutoUseConfig.java#1"
+msgid "Health (HP)"
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/autouse/AutoUseConfig.java:58
+msgctxt "src/main/java/pit12/feature/combat/autouse/AutoUseConfig.java#1"
+msgid "Uses this item at or below this health."
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/enhancedmlb/EnhancedMlbConfig.java:28
+msgctxt "src/main/java/pit12/feature/combat/enhancedmlb/EnhancedMlbConfig.java#1"
+msgid "Enhanced MLB"
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/enhancedmlb/EnhancedMlbConfig.java:29
+msgctxt "src/main/java/pit12/feature/combat/enhancedmlb/EnhancedMlbConfig.java#1"
+msgid "Delays an early Mega Longbow release until the bow can fire."
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/enhancedtelebow/EnhancedTelebowConfig.java:32
+msgctxt "src/main/java/pit12/feature/combat/enhancedtelebow/EnhancedTelebowConfig.java#1"
+msgid "Enhanced Telebow"
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/enhancedtelebow/EnhancedTelebowConfig.java:33
+msgctxt "src/main/java/pit12/feature/combat/enhancedtelebow/EnhancedTelebowConfig.java#1"
+msgid "Some enhancements to the Telebow."
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/enhancedtelebow/EnhancedTelebowConfig.java:34
+msgctxt "src/main/java/pit12/feature/combat/enhancedtelebow/EnhancedTelebowConfig.java#1"
+msgid "Keep aim on teleport"
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/enhancedtelebow/EnhancedTelebowConfig.java:35
+msgctxt "src/main/java/pit12/feature/combat/enhancedtelebow/EnhancedTelebowConfig.java#1"
+msgid "Keeps your aim when you teleport."
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/enhancedtelebow/EnhancedTelebowConfig.java:36
+msgctxt "src/main/java/pit12/feature/combat/enhancedtelebow/EnhancedTelebowConfig.java#1"
+msgid "Sneak on release"
+msgstr ""
+
+#: src/main/java/pit12/feature/combat/enhancedtelebow/EnhancedTelebowConfig.java:37
+msgctxt "src/main/java/pit12/feature/combat/enhancedtelebow/EnhancedTelebowConfig.java#1"
+msgid "Left click to skip the automatic sneak."
+msgstr ""
 
 #: src/main/java/pit12/feature/combat/nojumpdelay/NoJumpDelayConfig.java:28
 msgctxt "src/main/java/pit12/feature/combat/nojumpdelay/NoJumpDelayConfig.java#1"
@@ -586,32 +1036,32 @@ msgctxt "src/main/java/pit12/feature/combat/sprint/AutoSprintConfig.java#1"
 msgid "Sprints automatically while moving forward."
 msgstr "Sprintet automatisch, während er sich vorwärts bewegt."
 
-#: src/main/java/pit12/feature/combat/swap/AutoSwapController.java:192
+#: src/main/java/pit12/feature/combat/swap/AutoSwapController.java:194
 msgctxt "src/main/java/pit12/feature/combat/swap/AutoSwapController.java#1"
 msgid "venom"
 msgstr "Gift"
 
-#: src/main/java/pit12/feature/combat/swap/AutoSwapController.java:264
+#: src/main/java/pit12/feature/combat/swap/AutoSwapController.java:266
 msgctxt "src/main/java/pit12/feature/combat/swap/AutoSwapController.java#1"
 msgid "low target health"
 msgstr "niedrige Zielgesundheit"
 
-#: src/main/java/pit12/feature/combat/swap/AutoSwapController.java:265
+#: src/main/java/pit12/feature/combat/swap/AutoSwapController.java:267
 msgctxt "src/main/java/pit12/feature/combat/swap/AutoSwapController.java#1"
 msgid "low health"
 msgstr "niedrige Gesundheit"
 
-#: src/main/java/pit12/feature/combat/swap/AutoSwapController.java:316
+#: src/main/java/pit12/feature/combat/swap/AutoSwapController.java:317
 msgctxt "src/main/java/pit12/feature/combat/swap/AutoSwapController.java#1"
 msgid "no dark targets"
 msgstr "keine Ziele für Dark"
 
-#: src/main/java/pit12/feature/combat/swap/AutoSwapController.java:318
+#: src/main/java/pit12/feature/combat/swap/AutoSwapController.java:319
 msgctxt "src/main/java/pit12/feature/combat/swap/AutoSwapController.java#1"
 msgid "{0} activation"
 msgstr "{0} Aktivierung"
 
-#: src/main/java/pit12/feature/combat/swap/AutoSwapController.java:321
+#: src/main/java/pit12/feature/combat/swap/AutoSwapController.java:320
 msgctxt "src/main/java/pit12/feature/combat/swap/AutoSwapController.java#1"
 msgid "health recovery"
 msgstr "Gesundheitswiederherstellung"
@@ -641,127 +1091,137 @@ msgctxt "src/main/java/pit12/feature/combat/swap/BindingBook.java#1"
 msgid "Swap bindings could not be saved"
 msgstr "Swap-Bindungen konnten nicht gespeichert werden"
 
-#: src/main/java/pit12/feature/combat/swap/SwapCommand.java:60
+#: src/main/java/pit12/feature/combat/swap/SwapCommand.java:59
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapCommand.java#1"
 msgid "Manage swaps and key bindings"
 msgstr ""
 
-#: src/main/java/pit12/feature/combat/swap/SwapCommand.java:61
+#: src/main/java/pit12/feature/combat/swap/SwapCommand.java:60
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapCommand.java#1"
 msgid "Bind held armor or a hotbar item"
 msgstr "Binden Sie eine gehaltene Rüstung oder einen Hotbar-Gegenstand"
 
-#: src/main/java/pit12/feature/combat/swap/SwapCommand.java:63
+#: src/main/java/pit12/feature/combat/swap/SwapCommand.java:62
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapCommand.java#1"
 msgid "Remove key or held item bindings"
 msgstr "Bindungen einer Taste oder des gehaltenen Gegenstands entfernen"
 
-#: src/main/java/pit12/feature/combat/swap/SwapCommand.java:65
+#: src/main/java/pit12/feature/combat/swap/SwapCommand.java:64
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapCommand.java#1"
 msgid "Show swap bindings"
 msgstr "Swap-Bindungen anzeigen"
 
-#: src/main/java/pit12/feature/combat/swap/SwapCommand.java:66
+#: src/main/java/pit12/feature/combat/swap/SwapCommand.java:65
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapCommand.java#1"
 msgid "Clear swap bindings"
 msgstr "Swap-Bindungen löschen"
 
-#: src/main/java/pit12/feature/combat/swap/SwapCommand.java:69
+#: src/main/java/pit12/feature/combat/swap/SwapCommand.java:68
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapCommand.java#1"
 msgid "Cleared swap bindings"
 msgstr "Swap-Bindungen gelöscht"
 
-#: src/main/java/pit12/feature/combat/swap/SwapCommand.java:70
+#: src/main/java/pit12/feature/combat/swap/SwapCommand.java:69
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapCommand.java#1"
 msgid "Show automatic swap status"
 msgstr ""
 
-#: src/main/java/pit12/feature/combat/swap/SwapCommand.java:71
+#: src/main/java/pit12/feature/combat/swap/SwapCommand.java:70
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapCommand.java#1"
 msgid "Reset automatic swaps"
 msgstr ""
 
-#: src/main/java/pit12/feature/combat/swap/SwapCommand.java:74
+#: src/main/java/pit12/feature/combat/swap/SwapCommand.java:73
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapCommand.java#1"
 msgid "Automatic swap state has been reset"
 msgstr "Der automatische Swap-Status wurde zurückgesetzt"
 
-#: src/main/java/pit12/feature/combat/swap/SwapCommand.java:108
+#: src/main/java/pit12/feature/combat/swap/SwapCommand.java:107
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapCommand.java#1"
 msgid "Bound {0} to {1} ({2})"
 msgstr "Gebunden {0} an {1} ({2})"
 
-#: src/main/java/pit12/feature/combat/swap/SwapCommand.java:125
+#: src/main/java/pit12/feature/combat/swap/SwapCommand.java:124
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapCommand.java#1"
 msgid "No matching bindings"
 msgstr "Keine passenden Bindungen"
 
-#: src/main/java/pit12/feature/combat/swap/SwapCommand.java:126
+#: src/main/java/pit12/feature/combat/swap/SwapCommand.java:125
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapCommand.java#1"
 msgid "Removed {0} binding(s)"
 msgstr "{0} Bindung(en) entfernt"
 
-#: src/main/java/pit12/feature/combat/swap/SwapCommand.java:133
+#: src/main/java/pit12/feature/combat/swap/SwapCommand.java:132
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapCommand.java#1"
 msgid "Swap bindings: {0}"
 msgstr "Swap-Bindungen: {0}"
 
-#: src/main/java/pit12/feature/combat/swap/SwapCommand.java:143
+#: src/main/java/pit12/feature/combat/swap/SwapCommand.java:142
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapCommand.java#1"
 msgid "Automatic swap: {0}"
 msgstr "Automatischer Austausch: {0}"
 
-#: src/main/java/pit12/feature/combat/swap/SwapController.java:466
+#: src/main/java/pit12/feature/combat/swap/SwapController.java:464
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapController.java#1"
 msgid "Automatic swap: {0}"
 msgstr "Automatischer Austausch: {0}"
 
-#: src/main/java/pit12/feature/combat/swap/SwapCommand.java:145
+#: src/main/java/pit12/feature/combat/swap/SwapCommand.java:144
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapCommand.java#1"
 msgid "enabled"
 msgstr "aktiviert"
 
-#: src/main/java/pit12/feature/combat/swap/SwapCommand.java:146
+#: src/main/java/pit12/feature/render/focus/FocusFeature.java:198
+msgctxt "src/main/java/pit12/feature/render/focus/FocusFeature.java#1"
+msgid "enabled"
+msgstr "aktiviert"
+
+#: src/main/java/pit12/feature/combat/swap/SwapCommand.java:145
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapCommand.java#1"
 msgid "disabled"
 msgstr "deaktiviert"
 
-#: src/main/java/pit12/feature/combat/swap/SwapCommand.java:162
+#: src/main/java/pit12/feature/combat/swap/SwapCommand.java:161
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapCommand.java#2"
 msgid "disabled"
 msgstr "deaktiviert"
 
-#: src/main/java/pit12/feature/combat/swap/SwapCommand.java:147
+#: src/main/java/pit12/feature/render/focus/FocusFeature.java:198
+msgctxt "src/main/java/pit12/feature/render/focus/FocusFeature.java#1"
+msgid "disabled"
+msgstr "deaktiviert"
+
+#: src/main/java/pit12/feature/combat/swap/SwapCommand.java:146
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapCommand.java#1"
 msgid "Escape Pod: {0}"
 msgstr ""
 
-#: src/main/java/pit12/feature/combat/swap/SwapCommand.java:149
+#: src/main/java/pit12/feature/combat/swap/SwapCommand.java:148
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapCommand.java#1"
 msgid "Phoenix: {0}"
 msgstr ""
 
-#: src/main/java/pit12/feature/combat/swap/SwapCommand.java:152
+#: src/main/java/pit12/feature/combat/swap/SwapCommand.java:151
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapCommand.java#1"
 msgid "Dark: {0}"
 msgstr ""
 
-#: src/main/java/pit12/feature/combat/swap/SwapCommand.java:164
+#: src/main/java/pit12/feature/combat/swap/SwapCommand.java:163
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapCommand.java#1"
 msgid "used"
 msgstr "gebraucht"
 
-#: src/main/java/pit12/feature/combat/swap/SwapCommand.java:166
+#: src/main/java/pit12/feature/combat/swap/SwapCommand.java:165
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapCommand.java#1"
 msgid "unavailable"
 msgstr ""
 
-#: src/main/java/pit12/feature/combat/swap/SwapCommand.java:168
+#: src/main/java/pit12/feature/combat/swap/SwapCommand.java:167
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapCommand.java#1"
 msgid "equipped"
 msgstr "ausgestattet"
 
-#: src/main/java/pit12/feature/combat/swap/SwapCommand.java:171
+#: src/main/java/pit12/feature/combat/swap/SwapCommand.java:170
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapCommand.java#1"
 msgid "unused"
 msgstr "unbenutzt"
@@ -775,21 +1235,6 @@ msgstr "Tauschen"
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Swaps armor and hotbar items manually or automatically."
 msgstr ""
-
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:77
-msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
-msgid "General"
-msgstr "Allgemein"
-
-#: src/main/java/pit12/feature/misc/autofish/AutoFishConfig.java:40
-msgctxt "src/main/java/pit12/feature/misc/autofish/AutoFishConfig.java#1"
-msgid "General"
-msgstr "Allgemein"
-
-#: src/main/java/pit12/feature/render/playeresp/PlayerEspConfig.java:52
-msgctxt "src/main/java/pit12/feature/render/playeresp/PlayerEspConfig.java#1"
-msgid "General"
-msgstr "Allgemein"
 
 #: src/main/java/pit12/feature/combat/swap/SwapConfig.java:78
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
@@ -878,20 +1323,20 @@ msgstr "Eingaben im nächsten Tick fortsetzen"
 
 #: src/main/java/pit12/feature/combat/swap/SwapConfig.java:97
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
-msgid "Keeps movement, clicks, and key presses locked until the next tick after closing the inventory."
+msgid "Keeps input locked until the next tick after the inventory closes."
 msgstr ""
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:99
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:98
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Swap messages"
 msgstr "Meldungen beim Ausrüstungswechsel"
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:100
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:99
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Shows a message after items are swapped or unequipped."
 msgstr "Zeigt eine Meldung an, nachdem Gegenstände ausgetauscht oder nicht ausgerüstet wurden."
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:101
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:100
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Show gem"
 msgstr "Juwel anzeigen"
@@ -906,12 +1351,12 @@ msgctxt "src/main/java/pit12/feature/render/playerlist/PlayerListConfig.java#1"
 msgid "Show gem"
 msgstr "Juwel anzeigen"
 
-#: src/main/java/pit12/feature/render/tooltip/TooltipConfig.java:39
+#: src/main/java/pit12/feature/render/tooltip/TooltipConfig.java:38
 msgctxt "src/main/java/pit12/feature/render/tooltip/TooltipConfig.java#1"
 msgid "Show gem"
 msgstr "Juwel anzeigen"
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:102
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:101
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Shows a green diamond on gemmed items."
 msgstr "Zeigt eine grüne Raute auf mit Edelsteinen verbesserten Gegenständen."
@@ -926,367 +1371,367 @@ msgctxt "src/main/java/pit12/feature/render/playerlist/PlayerListConfig.java#1"
 msgid "Shows a green diamond on gemmed items."
 msgstr "Zeigt eine grüne Raute auf mit Edelsteinen verbesserten Gegenständen."
 
-#: src/main/java/pit12/feature/render/tooltip/TooltipConfig.java:40
+#: src/main/java/pit12/feature/render/tooltip/TooltipConfig.java:39
 msgctxt "src/main/java/pit12/feature/render/tooltip/TooltipConfig.java#1"
 msgid "Shows a green diamond on gemmed items."
 msgstr "Zeigt eine grüne Raute auf mit Edelsteinen verbesserten Gegenständen."
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:103
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:102
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Transfer slot"
 msgstr "Transferplatz"
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:104
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:103
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Hotbar slot used to move armor from the inventory."
 msgstr "Hotbar-Slot, der zum Verschieben von Rüstungen aus dem Inventar verwendet wird."
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:105
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:104
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Restore transfer slot"
 msgstr "Übertragungsslot wiederherstellen"
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:106
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:105
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Restores the transfer slot's previous item after moving armor. Slot bindings take priority."
 msgstr "Stellt nach dem Verschieben der Rüstung den vorherigen Gegenstand des Transferplatzes wieder her. Slot-Bindungen haben Vorrang."
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:108
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:107
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Prefer empty hotbar slot"
 msgstr "Bevorzugen Sie einen leeren Hotbar-Slot"
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:109
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:108
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Uses the first empty hotbar slot for transfers, or the selected transfer slot if the hotbar is full."
 msgstr "Verwendet den ersten leeren Hotbar-Slot für Transfers oder den ausgewählten Transferslot, wenn die Hotbar voll ist."
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:111
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:110
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Bindings"
 msgstr "Bindungen"
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:112
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:111
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Unequip all"
 msgstr "Gesamte Rüstung ablegen"
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:113
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:112
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Moves worn armor into free inventory slots."
 msgstr "Verschiebt getragene Rüstung in freie Inventarplätze."
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:114
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:113
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Binding delay (ticks)"
 msgstr ""
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:115
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:114
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Time between clicks for bindings and unequipping."
 msgstr ""
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:116
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:115
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Binding messages"
 msgstr "Meldungen zu Bindungen"
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:117
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:116
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
-msgid "Shows messages when bindings are added, removed or cleared."
-msgstr "Zeigt Meldungen an, wenn Bindungen hinzugefügt, entfernt oder gelöscht werden."
+msgid "Confirms changes to your swap bindings in chat."
+msgstr ""
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:118
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:117
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Show binding keys"
 msgstr "Gebundene Tasten anzeigen"
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:119
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:118
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Shows keys on bound items outside their target slots."
 msgstr "Zeigt die gebundenen Tasten auf Gegenständen außerhalb ihrer Zielslots an."
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:120
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:119
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Automatic swap"
 msgstr "Automatischer Wechsel"
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:121
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:120
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#2"
 msgid "Automatic swap"
 msgstr "Automatischer Wechsel"
 
 #: src/main/java/pit12/feature/combat/swap/SwapConfig.java:121
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
-msgid "Swaps items when you become poisoned, your health is low, or a player wearing Escape Pod or Phoenix has low health."
+msgid "Swaps gear in response to poison or low health."
 msgstr ""
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:124
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:122
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Automatic swap messages"
 msgstr "Meldungen zum automatischen Ausrüstungswechsel"
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:125
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:123
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Shows why automatic swaps happened."
 msgstr "Zeigt, warum automatische Swaps stattgefunden haben."
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:127
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:125
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Swap diamond armor"
 msgstr "Diamantrüstung tauschen"
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:128
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:126
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Equips diamond leggings and boots when you become poisoned."
 msgstr "Rüstet Diamant-Leggings und -Stiefel aus, wenn Sie vergiftet werden."
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:129
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:127
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Swap Combat Spade"
 msgstr "Zu Combat Spade wechseln"
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:129
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:127
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Moves a Combat Spade to the selected hotbar slot when you become poisoned."
 msgstr ""
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:132
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:130
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Skip while wearing Venom"
 msgstr "Überspringen Sie, während Sie Venom tragen"
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:133
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:131
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Skips poison swaps while wearing Combo Venom leggings."
 msgstr "Überspringt den Ausrüstungswechsel bei Vergiftung, solange du Combo Venom-Leggings trägst."
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:134
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:132
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Combat Spade slot"
 msgstr "Combat Spade-Slot"
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:135
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:133
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Hotbar slot used for the Combat Spade during poison swaps."
 msgstr ""
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:137
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:135
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Use Escape Pod"
 msgstr "Verwenden Sie Escape Pod"
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:138
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:136
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Equips Escape Pod leggings at or below their health threshold."
 msgstr "Rüstet Escape Pod-Leggings mit oder unter ihrem Gesundheitsschwellenwert aus."
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:139
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:137
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Escape Pod threshold"
 msgstr "Escape Pod-Schwelle"
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:140
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:138
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Health points for Escape Pod swaps. Two points equal one heart."
 msgstr "Gesundheitspunkte für Escape Pod-Swaps. Zwei Punkte entsprechen einem Herzen."
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:142
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:140
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Use Phoenix"
 msgstr "Verwenden Sie Phoenix"
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:143
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:141
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Equips Phoenix leggings at or below their health threshold."
 msgstr "Rüstet Phoenix-Leggings bei oder unter ihrer Gesundheitsschwelle aus."
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:144
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:142
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Phoenix threshold"
 msgstr "Phoenix-Schwelle"
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:145
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:143
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Health points for Phoenix swaps. Two points equal one heart."
 msgstr "Gesundheitspunkte für Phoenix-Swaps. Zwei Punkte entsprechen einem Herzen."
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:147
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:145
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Prefer first"
 msgstr "Bevorzugte Ausrüstung"
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:147
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:145
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Chooses between Escape Pod and Phoenix when both are available and eligible."
 msgstr "Wählt zwischen Escape Pod und Phoenix, wenn beide verfügbar und berechtigt sind."
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:150
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:148
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Prefer high Lives"
 msgstr "Mehr verbleibende Lives bevorzugen"
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:151
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:149
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Chooses Phoenix leggings with the most remaining Lives."
 msgstr "Wählt die Leggings Phoenix mit den meisten verbleibenden Leben."
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:152
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:150
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Restore leggings"
 msgstr "Leggings wiederherstellen"
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:176
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:174
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#2"
 msgid "Restore leggings"
 msgstr "Leggings wiederherstellen"
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:153
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:151
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Restores the leggings worn before an automatic health swap."
 msgstr "Legt wieder die Leggings an, die vor dem automatischen Wechsel wegen niedriger Gesundheit getragen wurden."
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:154
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:152
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Restore mode"
 msgstr "Wiederherstellungsmodus"
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:154
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:152
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Chooses whether to restore leggings after health recovery or enchantment activation."
 msgstr "Legt fest, ob die Leggings nach der Wiederherstellung der Gesundheit oder der Aktivierung der Verzauberung wiederhergestellt werden sollen."
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:156
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:154
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Health"
 msgstr "Gesundheit"
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:157
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:155
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Used"
 msgstr "Ausgelöst"
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:159
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:157
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Restore threshold"
 msgstr "Schwelle zum Zurückwechseln"
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:179
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:177
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#2"
 msgid "Restore threshold"
 msgstr "Schwelle zum Zurückwechseln"
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:160
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:158
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Health needed to restore leggings in Health mode. It must also exceed the equip threshold."
 msgstr "Gesundheit wird benötigt, um Leggings im Gesundheitsmodus wiederherzustellen. Es muss außerdem den Ausrüstungsschwellenwert überschreiten."
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:163
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:161
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Use dark"
 msgstr "Dark verwenden"
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:163
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:161
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Equips Somber leggings against players with low health wearing Escape Pod or Phoenix."
 msgstr "Rüstet Somber-Leggings gegen Spieler mit geringer Gesundheit aus, die Escape Pod oder Phoenix tragen."
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:166
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:164
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Trigger mode"
 msgstr "Triggermodus"
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:166
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:165
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
-msgid "Checks the last player you attacked or all nearby players within range. Friend and enemy filters apply to both modes."
-msgstr "Überprüft den letzten Spieler, den Sie angegriffen haben, oder alle in der Nähe befindlichen Spieler in Reichweite. Freund- und Feindfilter gelten für beide Modi."
+msgid "Range and relation filters apply in both modes."
+msgstr ""
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:168
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:166
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Last attacked target"
 msgstr "Zuletzt angegriffenes Ziel"
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:169
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:167
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Nearby players"
 msgstr "Spieler in der Nähe"
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:170
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:168
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Target health threshold"
 msgstr "Zielgesundheitsschwelle"
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:171
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:169
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Equips Somber leggings when a target's health is at or below this value. Uses health without absorption."
 msgstr "Rüstet Somber-Leggings aus, wenn die Gesundheit eines Ziels diesen Wert erreicht oder unterschreitet. Nutzt Gesundheit ohne Absorption."
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:173
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:171
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Target range (blocks)"
 msgstr ""
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:174
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:172
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Maximum straight-line distance to targets in both trigger modes."
 msgstr "Maximale geradlinige Entfernung zu Zielen in beiden Triggermodi."
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:177
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:175
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Restores the leggings worn before an automatic Somber swap."
 msgstr ""
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:180
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:178
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Health targets must recover to before your previous leggings can be restored. It must also exceed the equip threshold."
 msgstr ""
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:183
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:181
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Skip Escape Pod players below 2 hearts"
 msgstr "Überspringen Sie Escape Pod-Spieler mit weniger als 2 Herzen"
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:184
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:182
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
-msgid "Skips Escape Pod targets below 2 hearts in both trigger modes. Phoenix still qualifies."
-msgstr "Überspringt Escape Pod-Ziele unter 2 Herzen in beiden Auslösemodi. Phoenix ist weiterhin qualifiziert."
+msgid "Phoenix still qualifies below 2 hearts."
+msgstr ""
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:186
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:183
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Enemies only"
 msgstr "Nur Feinde"
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:187
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:184
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Only checks players in your enemy list."
 msgstr "Überprüft nur Spieler in Ihrer Feindliste."
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:188
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:185
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Ignore friends"
 msgstr "Freunde ignorieren"
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:188
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:185
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
-msgid "Skips friends in both trigger modes. Attacking a friend keeps the previous target."
-msgstr "Überspringt Freunde in beiden Auslösemodi. Wenn Sie einen Freund angreifen, bleibt das vorherige Ziel erhalten."
+msgid "In Last attacked target mode, attacking a friend leaves the target unchanged."
+msgstr ""
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:191
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:188
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Swap priority"
 msgstr "Priorität beim Ausrüstungswechsel"
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:191
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:188
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Chooses between dark and your own Escape Pod or Phoenix when both are needed. Poison swaps take priority."
 msgstr "Wählt zwischen Dark und deinem Escape Pod oder Phoenix, wenn beides benötigt wird. Ausrüstungswechsel bei Vergiftung haben Vorrang."
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:193
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:190
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Pod/Phoenix first"
 msgstr "Pod/Phoenix zuerst"
 
-#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:194
+#: src/main/java/pit12/feature/combat/swap/SwapConfig.java:191
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapConfig.java#1"
 msgid "Dark first"
 msgstr "Dark zuerst"
@@ -1296,85 +1741,115 @@ msgctxt "src/main/java/pit12/feature/combat/swap/SwapController.java#1"
 msgid "Unexpected error"
 msgstr "Unerwarteter Fehler"
 
-#: src/main/java/pit12/feature/combat/swap/SwapController.java:344
+#: src/main/java/pit12/feature/combat/swap/SwapController.java:342
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapController.java#1"
 msgid "Missing item: {0}"
 msgstr "Gegenstand fehlt: {0}"
 
-#: src/main/java/pit12/feature/combat/swap/SwapController.java:670
+#: src/main/java/pit12/feature/combat/swap/SwapController.java:668
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapController.java#2"
 msgid "Missing item: {0}"
 msgstr "Gegenstand fehlt: {0}"
 
-#: src/main/java/pit12/feature/combat/swap/SwapController.java:426
+#: src/main/java/pit12/feature/combat/swap/SwapController.java:424
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapController.java#1"
 msgid "Swapped {0} with {1} due to {2}"
 msgstr "{0} mit {1} wegen {2} getauscht"
 
-#: src/main/java/pit12/feature/combat/swap/SwapController.java:431
+#: src/main/java/pit12/feature/combat/swap/SwapController.java:429
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapController.java#1"
 msgid "Swapped {0} with {1}"
 msgstr "{0} mit {1} getauscht"
 
-#: src/main/java/pit12/feature/combat/swap/SwapController.java:445
+#: src/main/java/pit12/feature/combat/swap/SwapController.java:443
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapController.java#1"
 msgid "Helmet slot"
 msgstr "Helm-Slot"
 
-#: src/main/java/pit12/feature/combat/swap/SwapController.java:447
+#: src/main/java/pit12/feature/combat/swap/SwapController.java:445
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapController.java#1"
 msgid "Chestplate slot"
 msgstr "Brustpanzer-Slot"
 
-#: src/main/java/pit12/feature/combat/swap/SwapController.java:449
+#: src/main/java/pit12/feature/combat/swap/SwapController.java:447
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapController.java#1"
 msgid "Leggings slot"
 msgstr "Leggings-Slot"
 
-#: src/main/java/pit12/feature/combat/swap/SwapController.java:451
+#: src/main/java/pit12/feature/combat/swap/SwapController.java:449
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapController.java#1"
 msgid "Boots slot"
 msgstr "Stiefel-Slot"
 
-#: src/main/java/pit12/feature/combat/swap/SwapController.java:454
+#: src/main/java/pit12/feature/combat/swap/SwapController.java:452
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapController.java#1"
 msgid "Hotbar slot {0}"
 msgstr "Hotbar-Slot {0}"
 
-#: src/main/java/pit12/feature/combat/swap/SwapController.java:455
+#: src/main/java/pit12/feature/combat/swap/SwapController.java:453
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapController.java#1"
 msgid "Inventory slot {0}"
 msgstr "Inventarplatz {0}"
 
-#: src/main/java/pit12/feature/combat/swap/SwapController.java:492
+#: src/main/java/pit12/feature/combat/swap/SwapController.java:490
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapController.java#1"
 msgid "Swap failed: {0}"
 msgstr "Tausch fehlgeschlagen: {0}"
 
-#: src/main/java/pit12/feature/combat/swap/SwapController.java:549
+#: src/main/java/pit12/feature/combat/swap/SwapController.java:547
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapController.java#1"
 msgid "Inventory could not be closed"
 msgstr "Das Inventar konnte nicht geschlossen werden"
 
-#: src/main/java/pit12/feature/combat/swap/SwapController.java:630
+#: src/main/java/pit12/feature/combat/swap/SwapController.java:628
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapController.java#1"
 msgid "Armor could not be moved to the inventory"
 msgstr "Rüstung konnte nicht in das Inventar verschoben werden"
 
-#: src/main/java/pit12/feature/combat/swap/SwapController.java:632
+#: src/main/java/pit12/feature/combat/swap/SwapController.java:630
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapController.java#1"
 msgid "Not enough inventory space to unequip armor"
 msgstr "Nicht genügend Inventarplatz zum Ablegen der Rüstung"
 
-#: src/main/java/pit12/feature/combat/swap/SwapController.java:679
+#: src/main/java/pit12/feature/combat/swap/SwapController.java:677
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapController.java#1"
 msgid "Item does not fit: {0}"
 msgstr "Gegenstand passt nicht: {0}"
 
-#: src/main/java/pit12/feature/combat/swap/SwapController.java:721
+#: src/main/java/pit12/feature/combat/swap/SwapController.java:719
 msgctxt "src/main/java/pit12/feature/combat/swap/SwapController.java#1"
 msgid "Not enough inventory space for {0}"
 msgstr "Nicht genügend Inventarplatz für {0}"
+
+#: src/main/java/pit12/feature/misc/autodenick/AutoDenickConfig.java:32
+msgctxt "src/main/java/pit12/feature/misc/autodenick/AutoDenickConfig.java#1"
+msgid "Auto Denick"
+msgstr ""
+
+#: src/main/java/pit12/feature/misc/autodenick/AutoDenickConfig.java:33
+msgctxt "src/main/java/pit12/feature/misc/autodenick/AutoDenickConfig.java#1"
+msgid "Looks up nicked players when you enter the Pit or they join."
+msgstr ""
+
+#: src/main/java/pit12/feature/misc/autodenick/AutoDenickConfig.java:34
+msgctxt "src/main/java/pit12/feature/misc/autodenick/AutoDenickConfig.java#1"
+msgid "Only show successful queries"
+msgstr ""
+
+#: src/main/java/pit12/feature/misc/autodenick/AutoDenickConfig.java:35
+msgctxt "src/main/java/pit12/feature/misc/autodenick/AutoDenickConfig.java#1"
+msgid "Hides failed automatic queries and monitoring messages."
+msgstr ""
+
+#: src/main/java/pit12/feature/misc/autodenick/AutoDenickConfig.java:36
+msgctxt "src/main/java/pit12/feature/misc/autodenick/AutoDenickConfig.java#1"
+msgid "Keep monitoring"
+msgstr ""
+
+#: src/main/java/pit12/feature/misc/autodenick/AutoDenickConfig.java:37
+msgctxt "src/main/java/pit12/feature/misc/autodenick/AutoDenickConfig.java#1"
+msgid "Continues automatic lookups until a real name is found."
+msgstr ""
 
 #: src/main/java/pit12/feature/misc/autofish/AutoFishConfig.java:38
 msgctxt "src/main/java/pit12/feature/misc/autofish/AutoFishConfig.java#1"
@@ -1541,17 +2016,17 @@ msgctxt "src/main/java/pit12/feature/misc/chatmacro/ChatMacroConfig.java#1"
 msgid "Block inputs"
 msgstr "Eingaben blockieren"
 
-#: src/main/java/pit12/feature/misc/chatmacro/ChatMacroConfig.java:36
+#: src/main/java/pit12/feature/misc/chatmacro/ChatMacroConfig.java:37
 msgctxt "src/main/java/pit12/feature/misc/chatmacro/ChatMacroConfig.java#1"
-msgid "Blocks movement, clicks, and key presses for one tick before sending a macro."
+msgid "Blocks input for one tick before sending a macro."
 msgstr ""
 
-#: src/main/java/pit12/feature/misc/chatmacro/ChatMacroConfig.java:39
+#: src/main/java/pit12/feature/misc/chatmacro/ChatMacroConfig.java:38
 msgctxt "src/main/java/pit12/feature/misc/chatmacro/ChatMacroConfig.java#1"
 msgid "Spawn macro key"
 msgstr "Taste für das Spawn-Makro"
 
-#: src/main/java/pit12/feature/misc/chatmacro/ChatMacroConfig.java:39
+#: src/main/java/pit12/feature/misc/chatmacro/ChatMacroConfig.java:38
 msgctxt "src/main/java/pit12/feature/misc/chatmacro/ChatMacroConfig.java#1"
 msgid "Sends /spawn once you are out of combat. Press again to cancel while waiting."
 msgstr ""
@@ -1570,476 +2045,6 @@ msgstr "Chat-Makros konnten nicht geladen werden. Verwenden Sie /macro clear, um
 msgctxt "src/main/java/pit12/feature/misc/chatmacro/MacroBindings.java#1"
 msgid "Chat macros could not be saved"
 msgstr "Chat-Makros konnten nicht gespeichert werden"
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java:44
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java#1"
-msgid "Contract Reroll"
-msgstr ""
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java:45
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java#1"
-msgid "Rerolls contracts until a task matches your filters."
-msgstr ""
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java:46
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java#1"
-msgid "Contract reroll key"
-msgstr "Taste zum Neuwürfeln von Verträgen"
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java:47
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java#1"
-msgid "Starts contract rerolling. Press again to stop."
-msgstr "Startet das Neuwürfeln von Verträgen. Zum Stoppen erneut drücken."
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java:48
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java#1"
-msgid "Require bonus viles"
-msgstr "Chunk of Vile als Bonus verlangen"
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java:49
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java#1"
-msgid "Requires a Chunk of Vile bonus as well as a matching task."
-msgstr "Erfordert zusätzlich zu einer passenden Aufgabe einen Bonus in Form von Chunk of Vile."
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java:50
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java#1"
-msgid "Contract filters"
-msgstr "Vertragsfilter"
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java:51
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java#1"
-msgid "Kills"
-msgstr ""
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java:52
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java#1"
-msgid "Accepts tasks requiring at most the selected number of kills."
-msgstr "Akzeptiert Aufgaben, die höchstens die ausgewählte Anzahl an Kills erfordern."
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java:53
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java#1"
-msgid "Off"
-msgstr "Aus"
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java:57
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java#2"
-msgid "Off"
-msgstr "Aus"
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java:61
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java#3"
-msgid "Off"
-msgstr "Aus"
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java:65
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java#4"
-msgid "Off"
-msgstr "Aus"
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java:69
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java#5"
-msgid "Off"
-msgstr "Aus"
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java:73
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java#6"
-msgid "Off"
-msgstr "Aus"
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java:77
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java#7"
-msgid "Off"
-msgstr "Aus"
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java:81
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java#8"
-msgid "Off"
-msgstr "Aus"
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java:53
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java#1"
-msgid "At most 15"
-msgstr "Höchstens 15"
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java:54
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java#1"
-msgid "At most 20"
-msgstr "Höchstens 20"
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java:69
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java#2"
-msgid "At most 20"
-msgstr "Höchstens 20"
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java:55
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java#1"
-msgid "Kills without armor"
-msgstr "Kills ohne Rüstung"
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java:55
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java#1"
-msgid "Accepts tasks requiring at most the selected number of kills without armor."
-msgstr "Akzeptiert Aufgaben, die höchstens die ausgewählte Anzahl an Kills ohne Rüstung erfordern."
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java:57
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java#1"
-msgid "At most 3"
-msgstr "Höchstens 3"
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java:58
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java#1"
-msgid "At most 4"
-msgstr "Höchstens 4"
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java:59
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java#1"
-msgid "Fist kills"
-msgstr "Kills mit bloßer Hand"
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java:59
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java#1"
-msgid "Accepts tasks requiring at most the selected number of fist kills in the small sea lantern circle."
-msgstr "Akzeptiert Aufgaben, die höchstens die ausgewählte Anzahl an Fausttötungen im kleinen Seelaternenkreis erfordern."
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java:61
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java#1"
-msgid "At most 1"
-msgstr "Höchstens 1"
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java:62
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java#1"
-msgid "At most 2"
-msgstr "Höchstens 2"
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java:63
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java#1"
-msgid "Multikills"
-msgstr ""
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java:64
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java#1"
-msgid "Accepts Double, Triple, and Quadra kill tasks up to the selected limit."
-msgstr "Akzeptiert Double-, Triple- und Quadra-Kill-Aufgaben bis zum ausgewählten Limit."
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java:65
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java#1"
-msgid "Up to Triple"
-msgstr "Bis zu Dreifachkills"
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java:66
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java#1"
-msgid "Up to Quadra"
-msgstr "Bis Quadra"
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java:67
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java#1"
-msgid "Ingots"
-msgstr "Barren"
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java:68
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java#1"
-msgid "Accepts tasks requiring at most the selected number of ingots."
-msgstr "Akzeptiert Aufgaben, die höchstens die ausgewählte Anzahl an Barren erfordern."
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java:70
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java#1"
-msgid "At most 25"
-msgstr "Höchstens 25"
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java:70
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java#1"
-msgid "At most 30"
-msgstr "Höchstens 30"
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java:71
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java#1"
-msgid "Arrow hits"
-msgstr "Pfeiltreffer"
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java:72
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java#1"
-msgid "Accepts tasks requiring at most the selected number of arrow hits."
-msgstr "Akzeptiert Aufgaben, die höchstens die ausgewählte Anzahl an Pfeiltreffern erfordern."
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java:73
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java#1"
-msgid "At most 100"
-msgstr "Höchstens 100"
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java:74
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java#1"
-msgid "At most 125"
-msgstr "Höchstens 125"
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java:74
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java#1"
-msgid "At most 150"
-msgstr "Höchstens 150"
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java:75
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java#1"
-msgid "Kills without perks"
-msgstr "Kills ohne Perks"
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java:75
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java#1"
-msgid "Accepts tasks requiring at most the selected number of kills without perks."
-msgstr "Akzeptiert Aufgaben, die höchstens die ausgewählte Anzahl an Kills ohne Vorteile erfordern."
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java:77
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java#1"
-msgid "At most 8"
-msgstr "Höchstens 8"
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java:78
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java#1"
-msgid "At most 10"
-msgstr "Höchstens 10"
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java:79
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java#1"
-msgid "Golden apples"
-msgstr "Goldene Äpfel"
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java:79
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java#1"
-msgid "Accepts tasks requiring at most the selected number of golden apples eaten."
-msgstr "Akzeptiert Aufgaben, die höchstens die ausgewählte Anzahl gegessener goldener Äpfel erfordern."
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java:81
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java#1"
-msgid "At most 12"
-msgstr "Höchstens 12"
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java:82
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java#1"
-msgid "At most 16"
-msgstr "Höchstens 16"
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java:82
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollConfig.java#1"
-msgid "At most 18"
-msgstr "Höchstens 18"
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollFeature.java:175
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollFeature.java#1"
-msgid "Start rerolling contracts in the Pit."
-msgstr "Beginnen Sie mit dem Neurollen von Verträgen im Pit."
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollFeature.java:205
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollFeature.java#1"
-msgid "You left the Pit."
-msgstr "Sie haben den Pit verlassen."
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollFeature.java:209
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollFeature.java#1"
-msgid "Another action took control."
-msgstr "Eine andere Aktion übernahm die Kontrolle."
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollFeature.java:215
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollFeature.java#1"
-msgid "Move next to the Quest Master and aim at them before starting."
-msgstr "Gehen Sie neben den Quest Master und zielen Sie auf ihn, bevor Sie beginnen."
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollFeature.java:299
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollFeature.java#2"
-msgid "Move next to the Quest Master and aim at them before starting."
-msgstr "Gehen Sie neben den Quest Master und zielen Sie auf ihn, bevor Sie beginnen."
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollFeature.java:319
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollFeature.java#3"
-msgid "Move next to the Quest Master and aim at them before starting."
-msgstr "Gehen Sie neben den Quest Master und zielen Sie auf ihn, bevor Sie beginnen."
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollFeature.java:217
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollFeature.java#1"
-msgid "Timed out waiting for the server."
-msgstr "Zeitüberschreitung beim Warten auf den Server."
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollFeature.java:277
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollFeature.java#1"
-msgid "A contract started unexpectedly."
-msgstr "Ein Vertrag begann unerwartet."
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollFeature.java:303
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollFeature.java#1"
-msgid "The inventory changed."
-msgstr "Das Inventar hat sich geändert."
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollFeature.java:334
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollFeature.java#2"
-msgid "The inventory changed."
-msgstr "Das Inventar hat sich geändert."
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollFeature.java:454
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollFeature.java#3"
-msgid "The inventory changed."
-msgstr "Das Inventar hat sich geändert."
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollFeature.java:316
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollFeature.java#1"
-msgid "The menu closed unexpectedly."
-msgstr "Das Menü wurde unerwartet geschlossen."
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollFeature.java:321
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollFeature.java#1"
-msgid "An unexpected menu opened."
-msgstr "Ein unerwartetes Menü wurde geöffnet."
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollFeature.java:329
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollFeature.java#1"
-msgid "The menu changed unexpectedly."
-msgstr "Das Menü hat sich unerwartet geändert."
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollFeature.java:474
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollFeature.java#1"
-msgid "Waiting for the contract to end…"
-msgstr "Warten auf das Ende des Vertrags …"
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollFeature.java:475
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollFeature.java#1"
-msgid "Rerolling contracts…"
-msgstr "Verträge werden neu gewürfelt…"
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollFeature.java:493
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollFeature.java#1"
-msgid "An unexpected error occurred."
-msgstr "Es ist ein unerwarteter Fehler aufgetreten."
-
-#: src/main/java/pit12/feature/misc/contractreroll/ContractRerollFeature.java:498
-msgctxt "src/main/java/pit12/feature/misc/contractreroll/ContractRerollFeature.java#1"
-msgid "Contract reroll stopped: {0}"
-msgstr "Neuwürfeln von Verträgen gestoppt: {0}"
-
-#: src/main/java/pit12/feature/misc/denick/DenickConfig.java:35
-msgctxt "src/main/java/pit12/feature/misc/denick/DenickConfig.java#1"
-msgid "Looks up nicked players' real names."
-msgstr ""
-
-#: src/main/java/pit12/feature/misc/denick/DenickConfig.java:36
-msgctxt "src/main/java/pit12/feature/misc/denick/DenickConfig.java#1"
-msgid "Queries"
-msgstr "Abfragen"
-
-#: src/main/java/pit12/feature/misc/denick/DenickConfig.java:37
-msgctxt "src/main/java/pit12/feature/misc/denick/DenickConfig.java#1"
-msgid "Auto Denick"
-msgstr ""
-
-#: src/main/java/pit12/feature/misc/denick/DenickConfig.java:38
-msgctxt "src/main/java/pit12/feature/misc/denick/DenickConfig.java#1"
-msgid "Looks up nicked players when you enter the Pit or they join."
-msgstr "Sucht nach Spielern mit verschleiertem Namen, wenn du den Pit betrittst oder sie beitreten."
-
-#: src/main/java/pit12/feature/misc/denick/DenickConfig.java:39
-msgctxt "src/main/java/pit12/feature/misc/denick/DenickConfig.java#1"
-msgid "Only show successful queries"
-msgstr "Nur erfolgreiche Abfragen anzeigen"
-
-#: src/main/java/pit12/feature/misc/denick/DenickConfig.java:40
-msgctxt "src/main/java/pit12/feature/misc/denick/DenickConfig.java#1"
-msgid "Hides failed automatic queries and monitoring messages."
-msgstr "Versteckt fehlgeschlagene automatische Abfragen und Überwachungsmeldungen."
-
-#: src/main/java/pit12/feature/misc/denick/DenickConfig.java:41
-msgctxt "src/main/java/pit12/feature/misc/denick/DenickConfig.java#1"
-msgid "Keep monitoring"
-msgstr "Beobachten Sie weiter"
-
-#: src/main/java/pit12/feature/misc/denick/DenickConfig.java:42
-msgctxt "src/main/java/pit12/feature/misc/denick/DenickConfig.java#1"
-msgid "Continues automatic lookups until a real name is found."
-msgstr ""
-
-#: src/main/java/pit12/feature/misc/denick/DenickConfig.java:43
-msgctxt "src/main/java/pit12/feature/misc/denick/DenickConfig.java#1"
-msgid "Display"
-msgstr "Anzeige"
-
-#: src/main/java/pit12/feature/render/eventlist/EventListConfig.java:51
-msgctxt "src/main/java/pit12/feature/render/eventlist/EventListConfig.java#1"
-msgid "Display"
-msgstr "Anzeige"
-
-#: src/main/java/pit12/feature/render/nametag/NametagConfig.java:68
-msgctxt "src/main/java/pit12/feature/render/nametag/NametagConfig.java#1"
-msgid "Display"
-msgstr "Anzeige"
-
-#: src/main/java/pit12/feature/render/playerlist/PlayerListConfig.java:62
-msgctxt "src/main/java/pit12/feature/render/playerlist/PlayerListConfig.java#1"
-msgid "Display"
-msgstr "Anzeige"
-
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:87
-msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#1"
-msgid "Display"
-msgstr "Anzeige"
-
-#: src/main/java/pit12/feature/misc/denick/DenickConfig.java:44
-msgctxt "src/main/java/pit12/feature/misc/denick/DenickConfig.java#1"
-msgid "Show nick marker"
-msgstr "Nick-Markierung anzeigen"
-
-#: src/main/java/pit12/feature/render/nametag/NametagConfig.java:51
-msgctxt "src/main/java/pit12/feature/render/nametag/NametagConfig.java#1"
-msgid "Show nick marker"
-msgstr "Nick-Markierung anzeigen"
-
-#: src/main/java/pit12/feature/render/playerlist/PlayerListConfig.java:81
-msgctxt "src/main/java/pit12/feature/render/playerlist/PlayerListConfig.java#1"
-msgid "Show nick marker"
-msgstr "Nick-Markierung anzeigen"
-
-#: src/main/java/pit12/feature/misc/denick/DenickConfig.java:45
-msgctxt "src/main/java/pit12/feature/misc/denick/DenickConfig.java#1"
-msgid "Adds N to nicked players' names in Tab."
-msgstr "Fügt den Namen von Spielern mit verschleiertem Namen in der Tab-Liste ein N hinzu."
-
-#: src/main/java/pit12/feature/misc/denick/DenickFeature.java:131
-msgctxt "src/main/java/pit12/feature/misc/denick/DenickFeature.java#1"
-msgid "Find a nicked player's name"
-msgstr "Den echten Benutzernamen eines Spielers mit verschleiertem Namen finden"
-
-#: src/main/java/pit12/feature/misc/denick/DenickFeature.java:286
-msgctxt "src/main/java/pit12/feature/misc/denick/DenickFeature.java#1"
-msgid "Querying {0}..."
-msgstr "{0} wird abgefragt..."
-
-#: src/main/java/pit12/feature/misc/denick/DenickFeature.java:503
-msgctxt "src/main/java/pit12/feature/misc/denick/DenickFeature.java#1"
-msgid "{0} §c-> {1} §c(cached)"
-msgstr "{0} §c-> {1} §c(im Cache)"
-
-#: src/main/java/pit12/feature/misc/denick/DenickFeature.java:556
-msgctxt "src/main/java/pit12/feature/misc/denick/DenickFeature.java#1"
-msgid "{0} §c-> {1} §c(updated)"
-msgstr "{0} §c-> {1} §c(aktualisiert)"
-
-#: src/main/java/pit12/feature/misc/denick/DenickFeature.java:574
-msgctxt "src/main/java/pit12/feature/misc/denick/DenickFeature.java#1"
-msgid "Cached identity for {0} is no longer confirmed"
-msgstr "Die zwischengespeicherte Identität für {0} wird nicht mehr bestätigt"
-
-#: src/main/java/pit12/feature/misc/denick/DenickFeature.java:589
-msgctxt "src/main/java/pit12/feature/misc/denick/DenickFeature.java#1"
-msgid "No searchable equipment for {0}"
-msgstr "Keine durchsuchbare Ausrüstung für {0}"
-
-#: src/main/java/pit12/feature/misc/denick/DenickFeature.java:590
-msgctxt "src/main/java/pit12/feature/misc/denick/DenickFeature.java#1"
-msgid "Could not query {0}"
-msgstr "{0} konnte nicht abgefragt werden"
-
-#: src/main/java/pit12/feature/misc/denick/DenickFeature.java:591
-msgctxt "src/main/java/pit12/feature/misc/denick/DenickFeature.java#1"
-msgid "No confirmed owner for {0}"
-msgstr "Kein bestätigter Besitzer für {0}"
-
-#: src/main/java/pit12/feature/misc/denick/DenickFeature.java:594
-msgctxt "src/main/java/pit12/feature/misc/denick/DenickFeature.java#1"
-msgid "Waiting for new equipment"
-msgstr "Warten auf neue Ausrüstung"
 
 #: src/main/java/pit12/feature/misc/quickmath/AutoQuickMathConfig.java:31
 msgctxt "src/main/java/pit12/feature/misc/quickmath/AutoQuickMathConfig.java#1"
@@ -2101,6 +2106,151 @@ msgctxt "src/main/java/pit12/feature/patch/scoreboardfix/ScoreboardFixConfig.jav
 msgid "Fixes crashes that can occur during scoreboard updates."
 msgstr ""
 
+#: src/main/java/pit12/feature/provider/telebow/TelebowPredictionConfig.java:37
+msgctxt "src/main/java/pit12/feature/provider/telebow/TelebowPredictionConfig.java#1"
+msgid "Telebow Prediction"
+msgstr ""
+
+#: src/main/java/pit12/feature/provider/telebow/TelebowPredictionConfig.java:38
+msgctxt "src/main/java/pit12/feature/provider/telebow/TelebowPredictionConfig.java#1"
+msgid "Tracks Telebow shots and cooldowns."
+msgstr ""
+
+#: src/main/java/pit12/feature/provider/telebow/TelebowPredictionConfig.java:39
+msgctxt "src/main/java/pit12/feature/provider/telebow/TelebowPredictionConfig.java#1"
+msgid "Correct cooldown estimates"
+msgstr ""
+
+#: src/main/java/pit12/feature/provider/telebow/TelebowPredictionConfig.java:40
+msgctxt "src/main/java/pit12/feature/provider/telebow/TelebowPredictionConfig.java#1"
+msgid "Updates cooldown estimates after successful Telebow teleports."
+msgstr ""
+
+#: src/main/java/pit12/feature/provider/telebow/TelebowPredictionConfig.java:41
+msgctxt "src/main/java/pit12/feature/provider/telebow/TelebowPredictionConfig.java#1"
+msgid "Cooldown detection"
+msgstr ""
+
+#: src/main/java/pit12/feature/provider/telebow/TelebowPredictionConfig.java:42
+msgctxt "src/main/java/pit12/feature/provider/telebow/TelebowPredictionConfig.java#1"
+msgid "Shows cooldowns immediately after shooting or after a successful teleport."
+msgstr ""
+
+#: src/main/java/pit12/feature/provider/telebow/TelebowPredictionConfig.java:43
+msgctxt "src/main/java/pit12/feature/provider/telebow/TelebowPredictionConfig.java#1"
+msgid "On shot"
+msgstr ""
+
+#: src/main/java/pit12/feature/provider/telebow/TelebowPredictionConfig.java:43
+msgctxt "src/main/java/pit12/feature/provider/telebow/TelebowPredictionConfig.java#1"
+msgid "On teleport"
+msgstr ""
+
+#: src/main/java/pit12/feature/provider/telebow/TelebowPredictionConfig.java:45
+msgctxt "src/main/java/pit12/feature/provider/telebow/TelebowPredictionConfig.java#1"
+msgid "Prediction margin (ms)"
+msgstr ""
+
+#: src/main/java/pit12/feature/provider/timertracking/TimerTrackingConfig.java:42
+msgctxt "src/main/java/pit12/feature/provider/timertracking/TimerTrackingConfig.java#1"
+msgid "Prediction margin (ms)"
+msgstr ""
+
+#: src/main/java/pit12/feature/provider/timertracking/TimerTrackingConfig.java:47
+msgctxt "src/main/java/pit12/feature/provider/timertracking/TimerTrackingConfig.java#2"
+msgid "Prediction margin (ms)"
+msgstr ""
+
+#: src/main/java/pit12/feature/provider/timertracking/TimerTrackingConfig.java:66
+msgctxt "src/main/java/pit12/feature/provider/timertracking/TimerTrackingConfig.java#3"
+msgid "Prediction margin (ms)"
+msgstr ""
+
+#: src/main/java/pit12/feature/provider/telebow/TelebowPredictionConfig.java:46
+msgctxt "src/main/java/pit12/feature/provider/telebow/TelebowPredictionConfig.java#1"
+msgid "Allows for delays when predicting shots and tracking cooldowns."
+msgstr ""
+
+#: src/main/java/pit12/feature/provider/telebow/TelebowPredictionConfig.java:49
+msgctxt "src/main/java/pit12/feature/provider/telebow/TelebowPredictionConfig.java#1"
+msgid "Extra teleport margin (ms)"
+msgstr ""
+
+#: src/main/java/pit12/feature/provider/telebow/TelebowPredictionConfig.java:50
+msgctxt "src/main/java/pit12/feature/provider/telebow/TelebowPredictionConfig.java#1"
+msgid "Adds to the prediction margin for Telebow teleports."
+msgstr ""
+
+#: src/main/java/pit12/feature/provider/timertracking/TimerTrackingConfig.java:39
+msgctxt "src/main/java/pit12/feature/provider/timertracking/TimerTrackingConfig.java#1"
+msgid "Timer Tracking"
+msgstr ""
+
+#: src/main/java/pit12/feature/provider/timertracking/TimerTrackingConfig.java:40
+msgctxt "src/main/java/pit12/feature/provider/timertracking/TimerTrackingConfig.java#1"
+msgid "Estimates how much time is left on Pit effects."
+msgstr ""
+
+#: src/main/java/pit12/feature/provider/timertracking/TimerTrackingConfig.java:43
+msgctxt "src/main/java/pit12/feature/provider/timertracking/TimerTrackingConfig.java#1"
+msgid "Time allowed for delayed damage to count as a Pin hit."
+msgstr ""
+
+#: src/main/java/pit12/feature/provider/timertracking/TimerTrackingConfig.java:48
+msgctxt "src/main/java/pit12/feature/provider/timertracking/TimerTrackingConfig.java#1"
+msgid "Time allowed for delayed damage to count as a Venom hit."
+msgstr ""
+
+#: src/main/java/pit12/feature/provider/timertracking/TimerTrackingConfig.java:50
+msgctxt "src/main/java/pit12/feature/provider/timertracking/TimerTrackingConfig.java#1"
+msgid "Maximum reach (blocks)"
+msgstr ""
+
+#: src/main/java/pit12/feature/provider/timertracking/TimerTrackingConfig.java:51
+msgctxt "src/main/java/pit12/feature/provider/timertracking/TimerTrackingConfig.java#1"
+msgid "Maximum distance at which hits count toward Venom estimates."
+msgstr ""
+
+#: src/main/java/pit12/feature/provider/timertracking/TimerTrackingConfig.java:54
+msgctxt "src/main/java/pit12/feature/provider/timertracking/TimerTrackingConfig.java#1"
+msgid "Hitbox margin (blocks)"
+msgstr ""
+
+#: src/main/java/pit12/feature/provider/timertracking/TimerTrackingConfig.java:55
+msgctxt "src/main/java/pit12/feature/provider/timertracking/TimerTrackingConfig.java#1"
+msgid "Counts hits up to this far outside player hitboxes toward Venom timers."
+msgstr ""
+
+#: src/main/java/pit12/feature/provider/timertracking/TimerTrackingConfig.java:59
+msgctxt "src/main/java/pit12/feature/provider/timertracking/TimerTrackingConfig.java#1"
+msgid "Sound required"
+msgstr ""
+
+#: src/main/java/pit12/feature/provider/timertracking/TimerTrackingConfig.java:60
+msgctxt "src/main/java/pit12/feature/provider/timertracking/TimerTrackingConfig.java#1"
+msgid "Requires a drinking sound to start a Jump Boost timer."
+msgstr ""
+
+#: src/main/java/pit12/feature/provider/timertracking/TimerTrackingConfig.java:62
+msgctxt "src/main/java/pit12/feature/provider/timertracking/TimerTrackingConfig.java#1"
+msgid "Reset on low jump"
+msgstr ""
+
+#: src/main/java/pit12/feature/provider/timertracking/TimerTrackingConfig.java:63
+msgctxt "src/main/java/pit12/feature/provider/timertracking/TimerTrackingConfig.java#1"
+msgid "Clears the timer when an unobstructed jump is too low for Jump Boost IV."
+msgstr ""
+
+#: src/main/java/pit12/feature/provider/timertracking/TimerTrackingConfig.java:67
+msgctxt "src/main/java/pit12/feature/provider/timertracking/TimerTrackingConfig.java#1"
+msgid "Time after a Jump Boost timer starts before low jumps can clear it."
+msgstr ""
+
+#: src/main/java/pit12/feature/render/chams/ChamsConfig.java:29
+msgctxt "src/main/java/pit12/feature/render/chams/ChamsConfig.java#1"
+msgid "Shows other players through blocks."
+msgstr ""
+
 #: src/main/java/pit12/feature/render/eventlist/EventListCommand.java:49
 msgctxt "src/main/java/pit12/feature/render/eventlist/EventListCommand.java#1"
 msgid "Show event times and countdowns"
@@ -2130,6 +2280,26 @@ msgstr ""
 msgctxt "src/main/java/pit12/feature/render/eventlist/EventListConfig.java#1"
 msgid "Shows upcoming and active Pit events."
 msgstr "Zeigt bevorstehende und aktive Pit-Events."
+
+#: src/main/java/pit12/feature/render/eventlist/EventListConfig.java:51
+msgctxt "src/main/java/pit12/feature/render/eventlist/EventListConfig.java#1"
+msgid "Display"
+msgstr "Anzeige"
+
+#: src/main/java/pit12/feature/render/nametag/NametagConfig.java:68
+msgctxt "src/main/java/pit12/feature/render/nametag/NametagConfig.java#1"
+msgid "Display"
+msgstr "Anzeige"
+
+#: src/main/java/pit12/feature/render/playerlist/PlayerListConfig.java:62
+msgctxt "src/main/java/pit12/feature/render/playerlist/PlayerListConfig.java#1"
+msgid "Display"
+msgstr "Anzeige"
+
+#: src/main/java/pit12/feature/render/timers/TimersConfig.java:76
+msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#1"
+msgid "Display"
+msgstr "Anzeige"
 
 #: src/main/java/pit12/feature/render/eventlist/EventListConfig.java:53
 msgctxt "src/main/java/pit12/feature/render/eventlist/EventListConfig.java#1"
@@ -2188,8 +2358,8 @@ msgstr "Zeitformat"
 
 #: src/main/java/pit12/feature/render/eventlist/EventListConfig.java:64
 msgctxt "src/main/java/pit12/feature/render/eventlist/EventListConfig.java#1"
-msgid "Displays countdowns, local times, or both."
-msgstr "Zeigt Countdowns, Ortszeiten oder beides an."
+msgid "Countdowns turn into Preparing or Active when they end."
+msgstr ""
 
 #: src/main/java/pit12/feature/render/eventlist/EventListConfig.java:65
 msgctxt "src/main/java/pit12/feature/render/eventlist/EventListConfig.java#1"
@@ -2281,27 +2451,27 @@ msgctxt "src/main/java/pit12/feature/render/eventlist/EventListFeature.java#1"
 msgid "Loading events…"
 msgstr "Ereignisse werden geladen…"
 
-#: src/main/java/pit12/feature/render/eventlist/EventListSnapshot.java:72
+#: src/main/java/pit12/feature/render/eventlist/EventListSnapshot.java:73
 msgctxt "src/main/java/pit12/feature/render/eventlist/EventListSnapshot.java#1"
 msgid "Day"
 msgstr "Tag"
 
-#: src/main/java/pit12/feature/render/eventlist/EventListSnapshot.java:73
+#: src/main/java/pit12/feature/render/eventlist/EventListSnapshot.java:74
 msgctxt "src/main/java/pit12/feature/render/eventlist/EventListSnapshot.java#1"
 msgid "Night"
 msgstr "Nacht"
 
-#: src/main/java/pit12/feature/render/eventlist/EventListSnapshot.java:79
+#: src/main/java/pit12/feature/render/eventlist/EventListSnapshot.java:80
 msgctxt "src/main/java/pit12/feature/render/eventlist/EventListSnapshot.java#1"
 msgid "No events match the filters"
 msgstr "Keine Ereignisse entsprechen den Filtern"
 
-#: src/main/java/pit12/feature/render/eventlist/EventListSnapshot.java:103
+#: src/main/java/pit12/feature/render/eventlist/EventListSnapshot.java:104
 msgctxt "src/main/java/pit12/feature/render/eventlist/EventListSnapshot.java#1"
 msgid "Preparing"
 msgstr "Vorbereitung"
 
-#: src/main/java/pit12/feature/render/eventlist/EventListSnapshot.java:104
+#: src/main/java/pit12/feature/render/eventlist/EventListSnapshot.java:105
 msgctxt "src/main/java/pit12/feature/render/eventlist/EventListSnapshot.java#1"
 msgid "Active"
 msgstr "Aktiv"
@@ -2401,32 +2571,157 @@ msgctxt "src/main/java/pit12/feature/render/eventlist/EventType.java#1"
 msgid "Auction"
 msgstr ""
 
+#: src/main/java/pit12/feature/render/focus/FocusConfig.java:44
+msgctxt "src/main/java/pit12/feature/render/focus/FocusConfig.java#1"
+msgid "Focus"
+msgstr ""
+
+#: src/main/java/pit12/feature/render/focus/FocusConfig.java:45
+msgctxt "src/main/java/pit12/feature/render/focus/FocusConfig.java#1"
+msgid "Keeps selected players visible and fades other players."
+msgstr ""
+
+#: src/main/java/pit12/feature/render/focus/FocusConfig.java:47
+msgctxt "src/main/java/pit12/feature/render/focus/FocusConfig.java#1"
+msgid "Mode"
+msgstr ""
+
+#: src/main/java/pit12/feature/render/focus/FocusConfig.java:48
+msgctxt "src/main/java/pit12/feature/render/focus/FocusConfig.java#1"
+msgid "Chooses which players keep their normal opacity."
+msgstr ""
+
+#: src/main/java/pit12/feature/render/focus/FocusConfig.java:49
+msgctxt "src/main/java/pit12/feature/render/focus/FocusConfig.java#1"
+msgid "Non-Diamond"
+msgstr ""
+
+#: src/main/java/pit12/feature/render/focus/FocusConfig.java:51
+msgctxt "src/main/java/pit12/feature/render/focus/FocusConfig.java#1"
+msgid "TDM + Non-Diamond"
+msgstr ""
+
+#: src/main/java/pit12/feature/render/focus/FocusConfig.java:52
+msgctxt "src/main/java/pit12/feature/render/focus/FocusConfig.java#1"
+msgid "Non-target opacity"
+msgstr ""
+
+#: src/main/java/pit12/feature/render/focus/FocusConfig.java:53
+msgctxt "src/main/java/pit12/feature/render/focus/FocusConfig.java#1"
+msgid "Opacity of other players. Zero hides their models and names."
+msgstr ""
+
+#: src/main/java/pit12/feature/render/focus/FocusConfig.java:55
+msgctxt "src/main/java/pit12/feature/render/focus/FocusConfig.java#1"
+msgid "Hurt time"
+msgstr ""
+
+#: src/main/java/pit12/feature/render/focus/FocusConfig.java:56
+msgctxt "src/main/java/pit12/feature/render/focus/FocusConfig.java#1"
+msgid "Makes clients that target by hurt time less likely to pick non-targets."
+msgstr ""
+
+#: src/main/java/pit12/feature/render/focus/FocusConfig.java:59
+msgctxt "src/main/java/pit12/feature/render/focus/FocusConfig.java#1"
+msgid "Toggles Focus without changing the selected mode."
+msgstr ""
+
+#: src/main/java/pit12/feature/render/focus/FocusConfig.java:60
+msgctxt "src/main/java/pit12/feature/render/focus/FocusConfig.java#1"
+msgid "Cycle mode key"
+msgstr ""
+
+#: src/main/java/pit12/feature/render/focus/FocusConfig.java:61
+msgctxt "src/main/java/pit12/feature/render/focus/FocusConfig.java#1"
+msgid "Cycles modes only while Focus is enabled."
+msgstr ""
+
+#: src/main/java/pit12/feature/render/focus/FocusConfig.java:62
+msgctxt "src/main/java/pit12/feature/render/focus/FocusConfig.java#1"
+msgid "Diamond equipment"
+msgstr ""
+
+#: src/main/java/pit12/feature/render/focus/FocusConfig.java:63
+msgctxt "src/main/java/pit12/feature/render/focus/FocusConfig.java#1"
+msgid "Match rule"
+msgstr ""
+
+#: src/main/java/pit12/feature/render/focus/FocusConfig.java:64
+msgctxt "src/main/java/pit12/feature/render/focus/FocusConfig.java#1"
+msgid "AND: all selected pieces. OR: any selected piece."
+msgstr ""
+
+#: src/main/java/pit12/feature/render/focus/FocusConfig.java:66
+msgctxt "src/main/java/pit12/feature/render/focus/FocusConfig.java#1"
+msgid "Chestplate"
+msgstr ""
+
+#: src/main/java/pit12/feature/render/focus/FocusConfig.java:67
+msgctxt "src/main/java/pit12/feature/render/focus/FocusConfig.java#1"
+msgid "Checks for a diamond chestplate."
+msgstr ""
+
+#: src/main/java/pit12/feature/render/focus/FocusConfig.java:68
+msgctxt "src/main/java/pit12/feature/render/focus/FocusConfig.java#1"
+msgid "Boots"
+msgstr ""
+
+#: src/main/java/pit12/feature/render/focus/FocusConfig.java:68
+msgctxt "src/main/java/pit12/feature/render/focus/FocusConfig.java#1"
+msgid "Checks for diamond boots."
+msgstr ""
+
+#: src/main/java/pit12/feature/render/focus/FocusConfig.java:69
+msgctxt "src/main/java/pit12/feature/render/focus/FocusConfig.java#1"
+msgid "Leggings"
+msgstr ""
+
+#: src/main/java/pit12/feature/render/focus/FocusConfig.java:70
+msgctxt "src/main/java/pit12/feature/render/focus/FocusConfig.java#1"
+msgid "Checks for diamond leggings."
+msgstr ""
+
+#: src/main/java/pit12/feature/render/focus/FocusConfig.java:71
+msgctxt "src/main/java/pit12/feature/render/focus/FocusConfig.java#1"
+msgid "Helmet"
+msgstr ""
+
+#: src/main/java/pit12/feature/render/focus/FocusConfig.java:72
+msgctxt "src/main/java/pit12/feature/render/focus/FocusConfig.java#1"
+msgid "Checks for a diamond or golden helmet."
+msgstr ""
+
+#: src/main/java/pit12/feature/render/focus/FocusFeature.java:195
+msgctxt "src/main/java/pit12/feature/render/focus/FocusFeature.java#1"
+msgid "Focus {0}: {1}"
+msgstr ""
+
+#: src/main/java/pit12/feature/render/focus/FocusFeature.java:200
+msgctxt "src/main/java/pit12/feature/render/focus/FocusFeature.java#1"
+msgid "Focus mode: {0} -> {1}"
+msgstr ""
+
 #: src/main/java/pit12/feature/render/freecam/FreeCameraConfig.java:34
 msgctxt "src/main/java/pit12/feature/render/freecam/FreeCameraConfig.java#1"
 msgid "Free Camera"
 msgstr ""
 
-#: src/main/java/pit12/feature/render/freecam/FreeCameraConfig.java:34
+#: src/main/java/pit12/feature/render/freecam/FreeCameraConfig.java:35
 msgctxt "src/main/java/pit12/feature/render/freecam/FreeCameraConfig.java#1"
-msgid "Move the camera with the movement keys, jump and sneak. Hold sprint to move faster."
+msgid "Lets you move the camera without moving your character."
 msgstr ""
 
-#: src/main/java/pit12/feature/render/freecam/FreeCameraConfig.java:37
+#: src/main/java/pit12/feature/render/freecam/FreeCameraConfig.java:36
 msgctxt "src/main/java/pit12/feature/render/freecam/FreeCameraConfig.java#1"
 msgid "Camera speed"
 msgstr ""
 
-#: src/main/java/pit12/feature/render/freecam/FreeCameraConfig.java:38
+#: src/main/java/pit12/feature/render/freecam/FreeCameraConfig.java:37
 msgctxt "src/main/java/pit12/feature/render/freecam/FreeCameraConfig.java#1"
-msgid "Blocks the camera moves per tick."
+msgid "Blocks per tick. Hold sprint to move twice as fast."
 msgstr ""
 
 #: src/main/java/pit12/feature/render/freecam/FreeCameraConfig.java:39
-msgctxt "src/main/java/pit12/feature/render/freecam/FreeCameraConfig.java#1"
-msgid "Toggle key"
-msgstr ""
-
-#: src/main/java/pit12/feature/render/freecam/FreeCameraConfig.java:40
 msgctxt "src/main/java/pit12/feature/render/freecam/FreeCameraConfig.java#1"
 msgid "Toggles the free camera."
 msgstr ""
@@ -2526,9 +2821,9 @@ msgctxt "src/main/java/pit12/feature/render/nametag/NametagConfig.java#1"
 msgid "Nametags"
 msgstr ""
 
-#: src/main/java/pit12/feature/render/nametag/NametagConfig.java:48
+#: src/main/java/pit12/feature/render/nametag/NametagConfig.java:49
 msgctxt "src/main/java/pit12/feature/render/nametag/NametagConfig.java#1"
-msgid "Adds real names, health, Pit enchantments, and timers to player nametags."
+msgid "Changes the text and visibility of player nametags."
 msgstr ""
 
 #: src/main/java/pit12/feature/render/nametag/NametagConfig.java:52
@@ -2638,7 +2933,7 @@ msgstr "Pin-Timer anzeigen"
 
 #: src/main/java/pit12/feature/render/nametag/NametagConfig.java:72
 msgctxt "src/main/java/pit12/feature/render/nametag/NametagConfig.java#1"
-msgid "Shows Pin timers after player names when enabled in Timers HUD."
+msgid "Shows Pin timers after player names."
 msgstr ""
 
 #: src/main/java/pit12/feature/render/nametag/NametagConfig.java:73
@@ -2648,7 +2943,7 @@ msgstr "Venom-Timer anzeigen"
 
 #: src/main/java/pit12/feature/render/nametag/NametagConfig.java:74
 msgctxt "src/main/java/pit12/feature/render/nametag/NametagConfig.java#1"
-msgid "Shows Venom timers after player names when enabled in Timers HUD."
+msgid "Shows Venom timers after player names."
 msgstr ""
 
 #: src/main/java/pit12/feature/render/nametag/NametagConfig.java:75
@@ -2658,40 +2953,40 @@ msgstr "Jump Boost-Timer anzeigen"
 
 #: src/main/java/pit12/feature/render/nametag/NametagConfig.java:76
 msgctxt "src/main/java/pit12/feature/render/nametag/NametagConfig.java#1"
-msgid "Shows Jump Boost timers after player names when enabled in Timers HUD."
+msgid "Shows Jump Boost timers after player names."
 msgstr ""
 
-#: src/main/java/pit12/feature/render/nametag/NametagConfig.java:78
+#: src/main/java/pit12/feature/render/nametag/NametagConfig.java:77
 msgctxt "src/main/java/pit12/feature/render/nametag/NametagConfig.java#1"
 msgid "Show Telebow cooldown"
 msgstr "Telebow-Abklingzeit anzeigen"
 
-#: src/main/java/pit12/feature/render/nametag/NametagConfig.java:79
+#: src/main/java/pit12/feature/render/nametag/NametagConfig.java:78
 msgctxt "src/main/java/pit12/feature/render/nametag/NametagConfig.java#1"
-msgid "Shows Telebow cooldowns after player names when enabled in Timers HUD."
+msgid "Shows Telebow cooldowns after player names."
 msgstr ""
 
-#: src/main/java/pit12/feature/render/nametag/NametagConfig.java:81
+#: src/main/java/pit12/feature/render/nametag/NametagConfig.java:79
 msgctxt "src/main/java/pit12/feature/render/nametag/NametagConfig.java#1"
 msgid "Visibility"
 msgstr ""
 
-#: src/main/java/pit12/feature/render/nametag/NametagConfig.java:82
+#: src/main/java/pit12/feature/render/nametag/NametagConfig.java:80
 msgctxt "src/main/java/pit12/feature/render/nametag/NametagConfig.java#1"
 msgid "Enhanced visibility"
 msgstr ""
 
-#: src/main/java/pit12/feature/render/nametag/NametagConfig.java:83
+#: src/main/java/pit12/feature/render/nametag/NametagConfig.java:81
 msgctxt "src/main/java/pit12/feature/render/nametag/NametagConfig.java#1"
 msgid "Keeps nametags readable at a distance and visible through blocks."
 msgstr ""
 
-#: src/main/java/pit12/feature/render/nametag/NametagConfig.java:84
+#: src/main/java/pit12/feature/render/nametag/NametagConfig.java:82
 msgctxt "src/main/java/pit12/feature/render/nametag/NametagConfig.java#1"
 msgid "Scale (%)"
 msgstr ""
 
-#: src/main/java/pit12/feature/render/nametag/NametagConfig.java:85
+#: src/main/java/pit12/feature/render/nametag/NametagConfig.java:83
 msgctxt "src/main/java/pit12/feature/render/nametag/NametagConfig.java#1"
 msgid "Minimum nametag size when Enhanced visibility is enabled."
 msgstr ""
@@ -2711,9 +3006,9 @@ msgctxt "src/main/java/pit12/feature/render/playeresp/PlayerEspConfig.java#1"
 msgid "Color priority"
 msgstr ""
 
-#: src/main/java/pit12/feature/render/playeresp/PlayerEspConfig.java:53
+#: src/main/java/pit12/feature/render/playeresp/PlayerEspConfig.java:54
 msgctxt "src/main/java/pit12/feature/render/playeresp/PlayerEspConfig.java#1"
-msgid "Chooses which color to use when conflicting. Mixed averages their colors and opacity."
+msgid "Mixed blends both colors, including their opacity."
 msgstr ""
 
 #: src/main/java/pit12/feature/render/playeresp/PlayerEspConfig.java:55
@@ -2806,12 +3101,12 @@ msgctxt "src/main/java/pit12/feature/render/playeresp/PlayerEspConfig.java#1"
 msgid "Friend color"
 msgstr "Freundfarbe"
 
-#: src/main/java/pit12/feature/render/telebow/TelebowConfig.java:107
-msgctxt "src/main/java/pit12/feature/render/telebow/TelebowConfig.java#1"
+#: src/main/java/pit12/feature/render/telebowlanding/TelebowLandingConfig.java:62
+msgctxt "src/main/java/pit12/feature/render/telebowlanding/TelebowLandingConfig.java#1"
 msgid "Friend color"
 msgstr "Freundfarbe"
 
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:92
+#: src/main/java/pit12/feature/render/timers/TimersConfig.java:81
 msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#1"
 msgid "Friend color"
 msgstr "Freundfarbe"
@@ -2836,12 +3131,12 @@ msgctxt "src/main/java/pit12/feature/render/playeresp/PlayerEspConfig.java#1"
 msgid "Enemy color"
 msgstr "Feindfarbe"
 
-#: src/main/java/pit12/feature/render/telebow/TelebowConfig.java:109
-msgctxt "src/main/java/pit12/feature/render/telebow/TelebowConfig.java#1"
+#: src/main/java/pit12/feature/render/telebowlanding/TelebowLandingConfig.java:64
+msgctxt "src/main/java/pit12/feature/render/telebowlanding/TelebowLandingConfig.java#1"
 msgid "Enemy color"
 msgstr "Feindfarbe"
 
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:94
+#: src/main/java/pit12/feature/render/timers/TimersConfig.java:83
 msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#1"
 msgid "Enemy color"
 msgstr "Feindfarbe"
@@ -2871,12 +3166,12 @@ msgctxt "src/main/java/pit12/feature/render/playeresp/PlayerEspConfig.java#1"
 msgid "Other player color"
 msgstr "Farbe anderer Spieler"
 
-#: src/main/java/pit12/feature/render/telebow/TelebowConfig.java:111
-msgctxt "src/main/java/pit12/feature/render/telebow/TelebowConfig.java#1"
+#: src/main/java/pit12/feature/render/telebowlanding/TelebowLandingConfig.java:66
+msgctxt "src/main/java/pit12/feature/render/telebowlanding/TelebowLandingConfig.java#1"
 msgid "Other player color"
 msgstr "Farbe anderer Spieler"
 
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:96
+#: src/main/java/pit12/feature/render/timers/TimersConfig.java:85
 msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#1"
 msgid "Other player color"
 msgstr "Farbe anderer Spieler"
@@ -2933,8 +3228,8 @@ msgstr ""
 
 #: src/main/java/pit12/feature/render/playerlist/PlayerListConfig.java:61
 msgctxt "src/main/java/pit12/feature/render/playerlist/PlayerListConfig.java#1"
-msgid "Shows player names, equipment, distance, and direction in a HUD."
-msgstr "Zeigt Spielernamen, Ausrüstung, Entfernung und Richtung in einem HUD an."
+msgid "Shows players in groups on your HUD."
+msgstr ""
 
 #: src/main/java/pit12/feature/render/playerlist/PlayerListConfig.java:78
 msgctxt "src/main/java/pit12/feature/render/playerlist/PlayerListConfig.java#1"
@@ -3011,7 +3306,7 @@ msgctxt "src/main/java/pit12/feature/render/playerlist/PlayerListConfig.java#1"
 msgid "Show group names"
 msgstr "Gruppennamen anzeigen"
 
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:88
+#: src/main/java/pit12/feature/render/timers/TimersConfig.java:77
 msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#1"
 msgid "Show group names"
 msgstr "Gruppennamen anzeigen"
@@ -3131,582 +3426,372 @@ msgctxt "src/main/java/pit12/feature/render/ringhelper/RingHelperConfig.java#1"
 msgid "Color and opacity of the ring outlines."
 msgstr "Farbe und Deckkraft der Ringumrisse."
 
-#: src/main/java/pit12/feature/render/telebow/TelebowConfig.java:59
-msgctxt "src/main/java/pit12/feature/render/telebow/TelebowConfig.java#1"
-msgid "Telebow Prediction"
+#: src/main/java/pit12/feature/render/telebowlanding/TelebowLandingConfig.java:44
+msgctxt "src/main/java/pit12/feature/render/telebowlanding/TelebowLandingConfig.java#1"
+msgid "Telebow Landing"
 msgstr ""
 
-#: src/main/java/pit12/feature/render/telebow/TelebowConfig.java:59
-msgctxt "src/main/java/pit12/feature/render/telebow/TelebowConfig.java#1"
-msgid "Shows Telebow trails, predicted landing points, and shooter names through blocks."
-msgstr "Zeigt Telebow-Pfade, vorhergesagte Landepunkte und Schützennamen durch Blöcke an."
+#: src/main/java/pit12/feature/render/telebowlanding/TelebowLandingConfig.java:45
+msgctxt "src/main/java/pit12/feature/render/telebowlanding/TelebowLandingConfig.java#1"
+msgid "Shows where Telebow shots are likely to land."
+msgstr ""
 
-#: src/main/java/pit12/feature/render/telebow/TelebowConfig.java:61
-msgctxt "src/main/java/pit12/feature/render/telebow/TelebowConfig.java#1"
+#: src/main/java/pit12/feature/render/telebowlanding/TelebowLandingConfig.java:46
+msgctxt "src/main/java/pit12/feature/render/telebowlanding/TelebowLandingConfig.java#1"
 msgid "Shooters"
-msgstr "Schützen"
+msgstr ""
 
-#: src/main/java/pit12/feature/render/telebow/TelebowConfig.java:62
-msgctxt "src/main/java/pit12/feature/render/telebow/TelebowConfig.java#1"
+#: src/main/java/pit12/feature/render/telebowlanding/TelebowLandingConfig.java:47
+msgctxt "src/main/java/pit12/feature/render/telebowlanding/TelebowLandingConfig.java#1"
 msgid "Own"
 msgstr "Selbst"
 
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:102
+#: src/main/java/pit12/feature/render/timers/TimersConfig.java:91
 msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#1"
 msgid "Own"
 msgstr "Selbst"
 
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:120
+#: src/main/java/pit12/feature/render/timers/TimersConfig.java:106
 msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#2"
 msgid "Own"
 msgstr "Selbst"
 
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:142
+#: src/main/java/pit12/feature/render/timers/TimersConfig.java:117
 msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#3"
 msgid "Own"
 msgstr "Selbst"
 
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:165
+#: src/main/java/pit12/feature/render/timers/TimersConfig.java:129
 msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#4"
 msgid "Own"
 msgstr "Selbst"
 
-#: src/main/java/pit12/feature/render/telebow/TelebowConfig.java:62
-msgctxt "src/main/java/pit12/feature/render/telebow/TelebowConfig.java#1"
+#: src/main/java/pit12/feature/render/telebowlanding/TelebowLandingConfig.java:47
+msgctxt "src/main/java/pit12/feature/render/telebowlanding/TelebowLandingConfig.java#1"
 msgid "Shows your trails and landing points."
 msgstr ""
 
-#: src/main/java/pit12/feature/render/telebow/TelebowConfig.java:65
-msgctxt "src/main/java/pit12/feature/render/telebow/TelebowConfig.java#1"
+#: src/main/java/pit12/feature/render/telebowlanding/TelebowLandingConfig.java:50
+msgctxt "src/main/java/pit12/feature/render/telebowlanding/TelebowLandingConfig.java#1"
 msgid "Shows friends' trails and landing points."
 msgstr ""
 
-#: src/main/java/pit12/feature/render/telebow/TelebowConfig.java:67
-msgctxt "src/main/java/pit12/feature/render/telebow/TelebowConfig.java#1"
+#: src/main/java/pit12/feature/render/telebowlanding/TelebowLandingConfig.java:52
+msgctxt "src/main/java/pit12/feature/render/telebowlanding/TelebowLandingConfig.java#1"
 msgid "Shows enemies' trails and landing points."
 msgstr ""
 
-#: src/main/java/pit12/feature/render/telebow/TelebowConfig.java:68
-msgctxt "src/main/java/pit12/feature/render/telebow/TelebowConfig.java#1"
+#: src/main/java/pit12/feature/render/telebowlanding/TelebowLandingConfig.java:53
+msgctxt "src/main/java/pit12/feature/render/telebowlanding/TelebowLandingConfig.java#1"
 msgid "Others"
 msgstr "Andere"
 
-#: src/main/java/pit12/feature/render/telebow/TelebowConfig.java:96
-msgctxt "src/main/java/pit12/feature/render/telebow/TelebowConfig.java#2"
-msgid "Others"
-msgstr "Andere"
-
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:107
+#: src/main/java/pit12/feature/render/timers/TimersConfig.java:96
 msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#1"
 msgid "Others"
 msgstr "Andere"
 
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:125
+#: src/main/java/pit12/feature/render/timers/TimersConfig.java:111
 msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#2"
 msgid "Others"
 msgstr "Andere"
 
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:148
+#: src/main/java/pit12/feature/render/timers/TimersConfig.java:123
 msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#3"
 msgid "Others"
 msgstr "Andere"
 
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:171
+#: src/main/java/pit12/feature/render/timers/TimersConfig.java:135
 msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#4"
 msgid "Others"
 msgstr "Andere"
 
-#: src/main/java/pit12/feature/render/telebow/TelebowConfig.java:69
-msgctxt "src/main/java/pit12/feature/render/telebow/TelebowConfig.java#1"
+#: src/main/java/pit12/feature/render/telebowlanding/TelebowLandingConfig.java:54
+msgctxt "src/main/java/pit12/feature/render/telebowlanding/TelebowLandingConfig.java#1"
 msgid "Shows other players' trails and landing points."
 msgstr ""
 
-#: src/main/java/pit12/feature/render/telebow/TelebowConfig.java:70
-msgctxt "src/main/java/pit12/feature/render/telebow/TelebowConfig.java#1"
+#: src/main/java/pit12/feature/render/telebowlanding/TelebowLandingConfig.java:55
+msgctxt "src/main/java/pit12/feature/render/telebowlanding/TelebowLandingConfig.java#1"
 msgid "Prediction"
-msgstr "Vorhersage"
+msgstr ""
 
-#: src/main/java/pit12/feature/render/telebow/TelebowConfig.java:71
-msgctxt "src/main/java/pit12/feature/render/telebow/TelebowConfig.java#1"
+#: src/main/java/pit12/feature/render/telebowlanding/TelebowLandingConfig.java:56
+msgctxt "src/main/java/pit12/feature/render/telebowlanding/TelebowLandingConfig.java#1"
 msgid "Ignore arrows during cooldown"
 msgstr ""
 
-#: src/main/java/pit12/feature/render/telebow/TelebowConfig.java:72
-msgctxt "src/main/java/pit12/feature/render/telebow/TelebowConfig.java#1"
+#: src/main/java/pit12/feature/render/telebowlanding/TelebowLandingConfig.java:57
+msgctxt "src/main/java/pit12/feature/render/telebowlanding/TelebowLandingConfig.java#1"
 msgid "Skips predictions for arrows fired during a tracked Telebow cooldown."
-msgstr "Überspringt Vorhersagen für Pfeile, die während einer verfolgten Telebow-Abklingzeit abgefeuert werden."
-
-#: src/main/java/pit12/feature/render/telebow/TelebowConfig.java:74
-msgctxt "src/main/java/pit12/feature/render/telebow/TelebowConfig.java#1"
-msgid "Correct cooldown estimates"
 msgstr ""
 
-#: src/main/java/pit12/feature/render/telebow/TelebowConfig.java:75
-msgctxt "src/main/java/pit12/feature/render/telebow/TelebowConfig.java#1"
-msgid "Updates cooldown estimates after successful Telebow teleports."
-msgstr ""
-
-#: src/main/java/pit12/feature/render/telebow/TelebowConfig.java:76
-msgctxt "src/main/java/pit12/feature/render/telebow/TelebowConfig.java#1"
-msgid "Cooldown detection"
-msgstr ""
-
-#: src/main/java/pit12/feature/render/telebow/TelebowConfig.java:77
-msgctxt "src/main/java/pit12/feature/render/telebow/TelebowConfig.java#1"
-msgid "Shows cooldowns immediately after shooting or after a successful teleport."
-msgstr ""
-
-#: src/main/java/pit12/feature/render/telebow/TelebowConfig.java:78
-msgctxt "src/main/java/pit12/feature/render/telebow/TelebowConfig.java#1"
-msgid "On shot"
-msgstr ""
-
-#: src/main/java/pit12/feature/render/telebow/TelebowConfig.java:78
-msgctxt "src/main/java/pit12/feature/render/telebow/TelebowConfig.java#1"
-msgid "On teleport"
-msgstr ""
-
-#: src/main/java/pit12/feature/render/telebow/TelebowConfig.java:80
-msgctxt "src/main/java/pit12/feature/render/telebow/TelebowConfig.java#1"
-msgid "Prediction margin (ms)"
-msgstr "Vorhersagespielraum (ms)"
-
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:109
-msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#1"
-msgid "Prediction margin (ms)"
-msgstr "Vorhersagespielraum (ms)"
-
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:128
-msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#2"
-msgid "Prediction margin (ms)"
-msgstr "Vorhersagespielraum (ms)"
-
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:158
-msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#3"
-msgid "Prediction margin (ms)"
-msgstr "Vorhersagespielraum (ms)"
-
-#: src/main/java/pit12/feature/render/telebow/TelebowConfig.java:81
-msgctxt "src/main/java/pit12/feature/render/telebow/TelebowConfig.java#1"
-msgid "Allows for delays when predicting shots and tracking cooldowns."
-msgstr ""
-
-#: src/main/java/pit12/feature/render/telebow/TelebowConfig.java:84
-msgctxt "src/main/java/pit12/feature/render/telebow/TelebowConfig.java#1"
-msgid "Extra teleport margin (ms)"
-msgstr ""
-
-#: src/main/java/pit12/feature/render/telebow/TelebowConfig.java:85
-msgctxt "src/main/java/pit12/feature/render/telebow/TelebowConfig.java#1"
-msgid "Adds to the prediction margin for Telebow teleports."
-msgstr ""
-
-#: src/main/java/pit12/feature/render/telebow/TelebowConfig.java:86
-msgctxt "src/main/java/pit12/feature/render/telebow/TelebowConfig.java#1"
-msgid "Aim points"
-msgstr ""
-
-#: src/main/java/pit12/feature/render/telebow/TelebowConfig.java:87
-msgctxt "src/main/java/pit12/feature/render/telebow/TelebowConfig.java#1"
-msgid "Show aim points"
-msgstr ""
-
-#: src/main/java/pit12/feature/render/telebow/TelebowConfig.java:87
-msgctxt "src/main/java/pit12/feature/render/telebow/TelebowConfig.java#1"
-msgid "Shows where to aim to land near another player's predicted Telebow landing point. Use a fully drawn shot while sneaking."
-msgstr ""
-
-#: src/main/java/pit12/feature/render/telebow/TelebowConfig.java:90
-msgctxt "src/main/java/pit12/feature/render/telebow/TelebowConfig.java#1"
-msgid "Only while holding Telebow"
-msgstr ""
-
-#: src/main/java/pit12/feature/render/telebow/TelebowConfig.java:91
-msgctxt "src/main/java/pit12/feature/render/telebow/TelebowConfig.java#1"
-msgid "Shows aim points only while holding a Telebow."
-msgstr "Zeigt Zielpunkte nur an, wenn ein Telebow gehalten wird."
-
-#: src/main/java/pit12/feature/render/telebow/TelebowConfig.java:93
-msgctxt "src/main/java/pit12/feature/render/telebow/TelebowConfig.java#1"
-msgid "Shows aim points for landing near friends' Telebow landing points."
-msgstr "Zeigt Zielpunkte für die Landung in der Nähe der Telebow-Landepunkte von Freunden an."
-
-#: src/main/java/pit12/feature/render/telebow/TelebowConfig.java:95
-msgctxt "src/main/java/pit12/feature/render/telebow/TelebowConfig.java#1"
-msgid "Shows aim points for landing near enemies' Telebow landing points."
-msgstr "Zeigt Zielpunkte für die Landung in der Nähe der Telebow-Landepunkte von Feinden an."
-
-#: src/main/java/pit12/feature/render/telebow/TelebowConfig.java:97
-msgctxt "src/main/java/pit12/feature/render/telebow/TelebowConfig.java#1"
-msgid "Shows aim points for landing near other players' Telebow landing points."
-msgstr "Zeigt Zielpunkte für die Landung in der Nähe der Telebow-Landepunkte anderer Spieler an."
-
-#: src/main/java/pit12/feature/render/telebow/TelebowConfig.java:99
-msgctxt "src/main/java/pit12/feature/render/telebow/TelebowConfig.java#1"
-msgid "Show names"
-msgstr ""
-
-#: src/main/java/pit12/feature/render/telebow/TelebowConfig.java:118
-msgctxt "src/main/java/pit12/feature/render/telebow/TelebowConfig.java#2"
-msgid "Show names"
-msgstr ""
-
-#: src/main/java/pit12/feature/render/telebow/TelebowConfig.java:100
-msgctxt "src/main/java/pit12/feature/render/telebow/TelebowConfig.java#1"
-msgid "Shows player names next to aim points."
-msgstr "Zeigt Spielernamen neben den Zielpunkten an."
-
-#: src/main/java/pit12/feature/render/telebow/TelebowConfig.java:101
-msgctxt "src/main/java/pit12/feature/render/telebow/TelebowConfig.java#1"
-msgid "Tolerance (blocks)"
-msgstr ""
-
-#: src/main/java/pit12/feature/render/telebow/TelebowConfig.java:102
-msgctxt "src/main/java/pit12/feature/render/telebow/TelebowConfig.java#1"
-msgid "Maximum distance between your predicted landing point and the other player's landing point."
-msgstr ""
-
-#: src/main/java/pit12/feature/render/telebow/TelebowConfig.java:104
-msgctxt "src/main/java/pit12/feature/render/telebow/TelebowConfig.java#1"
+#: src/main/java/pit12/feature/render/telebowlanding/TelebowLandingConfig.java:59
+msgctxt "src/main/java/pit12/feature/render/telebowlanding/TelebowLandingConfig.java#1"
 msgid "Appearance"
 msgstr ""
 
-#: src/main/java/pit12/feature/render/telebow/TelebowConfig.java:105
-msgctxt "src/main/java/pit12/feature/render/telebow/TelebowConfig.java#1"
+#: src/main/java/pit12/feature/render/telebowlanding/TelebowLandingConfig.java:60
+msgctxt "src/main/java/pit12/feature/render/telebowlanding/TelebowLandingConfig.java#1"
 msgid "Own color"
 msgstr ""
 
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:90
+#: src/main/java/pit12/feature/render/timers/TimersConfig.java:79
 msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#1"
 msgid "Own color"
 msgstr ""
 
-#: src/main/java/pit12/feature/render/telebow/TelebowConfig.java:106
-msgctxt "src/main/java/pit12/feature/render/telebow/TelebowConfig.java#1"
+#: src/main/java/pit12/feature/render/telebowlanding/TelebowLandingConfig.java:61
+msgctxt "src/main/java/pit12/feature/render/telebowlanding/TelebowLandingConfig.java#1"
 msgid "Color and opacity of your Telebow predictions."
-msgstr "Farbe und Deckkraft Ihrer Telebow-Vorhersagen."
+msgstr ""
 
-#: src/main/java/pit12/feature/render/telebow/TelebowConfig.java:108
-msgctxt "src/main/java/pit12/feature/render/telebow/TelebowConfig.java#1"
+#: src/main/java/pit12/feature/render/telebowlanding/TelebowLandingConfig.java:63
+msgctxt "src/main/java/pit12/feature/render/telebowlanding/TelebowLandingConfig.java#1"
 msgid "Color and opacity of friends' Telebow predictions."
-msgstr "Farbe und Deckkraft der Telebow-Vorhersagen von Freunden."
+msgstr ""
 
-#: src/main/java/pit12/feature/render/telebow/TelebowConfig.java:110
-msgctxt "src/main/java/pit12/feature/render/telebow/TelebowConfig.java#1"
+#: src/main/java/pit12/feature/render/telebowlanding/TelebowLandingConfig.java:65
+msgctxt "src/main/java/pit12/feature/render/telebowlanding/TelebowLandingConfig.java#1"
 msgid "Color and opacity of enemies' Telebow predictions."
-msgstr "Farbe und Deckkraft der Telebow-Vorhersagen der Feinde."
+msgstr ""
 
-#: src/main/java/pit12/feature/render/telebow/TelebowConfig.java:112
-msgctxt "src/main/java/pit12/feature/render/telebow/TelebowConfig.java#1"
+#: src/main/java/pit12/feature/render/telebowlanding/TelebowLandingConfig.java:67
+msgctxt "src/main/java/pit12/feature/render/telebowlanding/TelebowLandingConfig.java#1"
 msgid "Color and opacity of other players' Telebow predictions."
-msgstr "Farbe und Deckkraft der Telebow-Vorhersagen anderer Spieler."
+msgstr ""
 
-#: src/main/java/pit12/feature/render/telebow/TelebowConfig.java:113
-msgctxt "src/main/java/pit12/feature/render/telebow/TelebowConfig.java#1"
+#: src/main/java/pit12/feature/render/telebowlanding/TelebowLandingConfig.java:68
+msgctxt "src/main/java/pit12/feature/render/telebowlanding/TelebowLandingConfig.java#1"
 msgid "Hold time (ms)"
 msgstr ""
 
-#: src/main/java/pit12/feature/render/telebow/TelebowConfig.java:114
-msgctxt "src/main/java/pit12/feature/render/telebow/TelebowConfig.java#1"
+#: src/main/java/pit12/feature/render/telebowlanding/TelebowLandingConfig.java:69
+msgctxt "src/main/java/pit12/feature/render/telebowlanding/TelebowLandingConfig.java#1"
 msgid "Time to keep predictions visible after the arrow lands or disappears."
 msgstr ""
 
-#: src/main/java/pit12/feature/render/telebow/TelebowConfig.java:116
-msgctxt "src/main/java/pit12/feature/render/telebow/TelebowConfig.java#1"
+#: src/main/java/pit12/feature/render/telebowlanding/TelebowLandingConfig.java:71
+msgctxt "src/main/java/pit12/feature/render/telebowlanding/TelebowLandingConfig.java#1"
 msgid "Fade time (ms)"
 msgstr ""
 
-#: src/main/java/pit12/feature/render/telebow/TelebowConfig.java:117
-msgctxt "src/main/java/pit12/feature/render/telebow/TelebowConfig.java#1"
+#: src/main/java/pit12/feature/render/telebowlanding/TelebowLandingConfig.java:72
+msgctxt "src/main/java/pit12/feature/render/telebowlanding/TelebowLandingConfig.java#1"
 msgid "Time for predictions to fade after the hold time."
 msgstr ""
 
-#: src/main/java/pit12/feature/render/telebow/TelebowConfig.java:119
-msgctxt "src/main/java/pit12/feature/render/telebow/TelebowConfig.java#1"
-msgid "Shows the shooter's display name at the predicted landing point."
-msgstr "Zeigt den Anzeigenamen des Schützen am vorhergesagten Landepunkt an."
+#: src/main/java/pit12/feature/render/telebowlanding/TelebowLandingConfig.java:73
+msgctxt "src/main/java/pit12/feature/render/telebowlanding/TelebowLandingConfig.java#1"
+msgid "Show names"
+msgstr ""
 
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:79
+#: src/main/java/pit12/feature/render/telebowlanding/TelebowLandingConfig.java:74
+msgctxt "src/main/java/pit12/feature/render/telebowlanding/TelebowLandingConfig.java#1"
+msgid "Shows the shooter's display name at the predicted landing point."
+msgstr ""
+
+#: src/main/java/pit12/feature/render/timers/TimersConfig.java:69
 msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#1"
 msgid "Timers HUD"
 msgstr ""
 
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:79
+#: src/main/java/pit12/feature/render/timers/TimersConfig.java:70
 msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#1"
-msgid "Shows estimated Pin, Venom, and Jump Boost durations and Telebow cooldowns."
-msgstr "Zeigt die geschätzte Dauer von Pin, Venom und Jump Boost sowie die Abklingzeiten von Telebow an."
+msgid "Shows the estimated time left on Pit effects and cooldowns."
+msgstr ""
 
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:89
+#: src/main/java/pit12/feature/render/timers/TimersConfig.java:78
 msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#1"
 msgid "Shows the name above each timer group."
 msgstr "Zeigt den Namen über jeder Timer-Gruppe an."
 
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:91
+#: src/main/java/pit12/feature/render/timers/TimersConfig.java:80
 msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#1"
 msgid "Color and opacity of your countdowns."
 msgstr ""
 
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:93
+#: src/main/java/pit12/feature/render/timers/TimersConfig.java:82
 msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#1"
 msgid "Color and opacity of friends' countdowns."
 msgstr ""
 
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:95
+#: src/main/java/pit12/feature/render/timers/TimersConfig.java:84
 msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#1"
 msgid "Color and opacity of enemies' countdowns."
 msgstr ""
 
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:97
+#: src/main/java/pit12/feature/render/timers/TimersConfig.java:86
 msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#1"
 msgid "Color and opacity of other players' countdowns."
 msgstr ""
 
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:98
+#: src/main/java/pit12/feature/render/timers/TimersConfig.java:87
 msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#1"
 msgid "Debuffs"
 msgstr ""
 
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:100
-msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#1"
-msgid "Enabled"
-msgstr ""
-
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:113
-msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#2"
-msgid "Enabled"
-msgstr ""
-
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:140
-msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#3"
-msgid "Enabled"
-msgstr ""
-
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:163
-msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#4"
-msgid "Enabled"
-msgstr ""
-
-#: src/main/java/pit12/runtime/config/FeatureConfig.java:72
-msgctxt "src/main/java/pit12/runtime/config/FeatureConfig.java#1"
-msgid "Enabled"
-msgstr "Aktiviert"
-
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:101
+#: src/main/java/pit12/feature/render/timers/TimersConfig.java:90
 msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#1"
 msgid "Shows estimated Pin durations."
 msgstr ""
 
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:102
+#: src/main/java/pit12/feature/render/timers/TimersConfig.java:91
 msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#1"
 msgid "Shows your Pin timer."
 msgstr "Zeigt Ihren Pin-Timer an."
 
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:104
+#: src/main/java/pit12/feature/render/timers/TimersConfig.java:93
 msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#1"
 msgid "Shows friends' Pin timers."
 msgstr "Zeigt die Pin-Timer von Freunden an."
 
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:106
+#: src/main/java/pit12/feature/render/timers/TimersConfig.java:95
 msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#1"
 msgid "Shows enemies' Pin timers."
 msgstr "Zeigt die Pin-Timer der Feinde an."
 
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:108
+#: src/main/java/pit12/feature/render/timers/TimersConfig.java:97
 msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#1"
 msgid "Shows other players' Pin timers."
 msgstr "Zeigt die Pin-Timer anderer Spieler an."
 
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:110
-msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#1"
-msgid "Time allowed for delayed damage to count as a Pin hit."
-msgstr ""
-
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:114
+#: src/main/java/pit12/feature/render/timers/TimersConfig.java:100
 msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#1"
 msgid "Shows estimated Venom durations."
 msgstr ""
 
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:115
+#: src/main/java/pit12/feature/render/timers/TimersConfig.java:101
 msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#1"
 msgid "Track wearers"
 msgstr ""
 
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:116
+#: src/main/java/pit12/feature/render/timers/TimersConfig.java:102
 msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#1"
 msgid "Shows the wearer's estimated Venom duration."
 msgstr ""
 
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:117
+#: src/main/java/pit12/feature/render/timers/TimersConfig.java:103
 msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#1"
 msgid "Track targets"
 msgstr ""
 
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:118
+#: src/main/java/pit12/feature/render/timers/TimersConfig.java:104
 msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#1"
 msgid "Shows the target's estimated Venom duration."
 msgstr ""
 
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:120
+#: src/main/java/pit12/feature/render/timers/TimersConfig.java:106
 msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#1"
 msgid "Shows your Venom timer."
 msgstr "Zeigt Ihren Venom-Timer an."
 
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:122
+#: src/main/java/pit12/feature/render/timers/TimersConfig.java:108
 msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#1"
 msgid "Shows friends' Venom timers."
 msgstr "Zeigt die Venom-Timer von Freunden an."
 
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:124
+#: src/main/java/pit12/feature/render/timers/TimersConfig.java:110
 msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#1"
 msgid "Shows enemies' Venom timers."
 msgstr "Zeigt die Venom-Timer der Feinde an."
 
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:126
+#: src/main/java/pit12/feature/render/timers/TimersConfig.java:112
 msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#1"
 msgid "Shows other players' Venom timers."
 msgstr "Zeigt die Venom-Timer anderer Spieler an."
 
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:129
-msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#1"
-msgid "Time allowed for delayed damage to count as a Venom hit."
-msgstr ""
-
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:131
-msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#1"
-msgid "Maximum reach (blocks)"
-msgstr ""
-
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:132
-msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#1"
-msgid "Maximum distance at which hits count toward Venom estimates."
-msgstr ""
-
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:135
-msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#1"
-msgid "Hitbox margin (blocks)"
-msgstr ""
-
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:136
-msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#1"
-msgid "Counts hits up to this far outside player hitboxes toward Venom timers."
-msgstr ""
-
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:138
+#: src/main/java/pit12/feature/render/timers/TimersConfig.java:113
 msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#1"
 msgid "Buffs"
 msgstr ""
 
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:141
+#: src/main/java/pit12/feature/render/timers/TimersConfig.java:116
 msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#1"
 msgid "Shows estimated Jump Boost IV durations."
 msgstr ""
 
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:143
+#: src/main/java/pit12/feature/render/timers/TimersConfig.java:118
 msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#1"
 msgid "Shows your Jump Boost timer."
 msgstr "Zeigt Ihren Jump Boost-Timer an."
 
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:145
+#: src/main/java/pit12/feature/render/timers/TimersConfig.java:120
 msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#1"
 msgid "Shows friends' Jump Boost timers."
 msgstr "Zeigt die Jump-Boost-Timer von Freunden an."
 
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:147
+#: src/main/java/pit12/feature/render/timers/TimersConfig.java:122
 msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#1"
 msgid "Shows enemies' Jump Boost timers."
 msgstr "Zeigt die Jump-Boost-Timer der Feinde an."
 
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:149
+#: src/main/java/pit12/feature/render/timers/TimersConfig.java:124
 msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#1"
 msgid "Shows other players' Jump Boost timers."
 msgstr "Zeigt die Jump-Boost-Timer anderer Spieler an."
 
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:151
-msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#1"
-msgid "Sound required"
-msgstr ""
-
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:152
-msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#1"
-msgid "Requires a drinking sound to start a Jump Boost timer."
-msgstr ""
-
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:154
-msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#1"
-msgid "Reset on low jump"
-msgstr ""
-
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:155
-msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#1"
-msgid "Clears the timer when an unobstructed jump is too low for Jump Boost IV."
-msgstr ""
-
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:159
-msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#1"
-msgid "Time after a Jump Boost timer starts before low jumps can clear it."
-msgstr ""
-
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:161
+#: src/main/java/pit12/feature/render/timers/TimersConfig.java:125
 msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#1"
 msgid "Cooldowns"
 msgstr ""
 
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:164
+#: src/main/java/pit12/feature/render/timers/TimersConfig.java:128
 msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#1"
 msgid "Shows estimated Telebow cooldowns."
 msgstr ""
 
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:166
+#: src/main/java/pit12/feature/render/timers/TimersConfig.java:130
 msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#1"
 msgid "Shows your Telebow cooldown."
 msgstr "Zeigt die Abklingzeit Ihres Telebow an."
 
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:168
+#: src/main/java/pit12/feature/render/timers/TimersConfig.java:132
 msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#1"
 msgid "Shows friends' Telebow cooldowns."
 msgstr "Zeigt die Telebow-Abklingzeiten von Freunden an."
 
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:170
+#: src/main/java/pit12/feature/render/timers/TimersConfig.java:134
 msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#1"
 msgid "Shows enemies' Telebow cooldowns."
 msgstr "Zeigt die Telebow-Abklingzeiten der Feinde an."
 
-#: src/main/java/pit12/feature/render/timers/TimersConfig.java:172
+#: src/main/java/pit12/feature/render/timers/TimersConfig.java:136
 msgctxt "src/main/java/pit12/feature/render/timers/TimersConfig.java#1"
 msgid "Shows other players' Telebow cooldowns."
 msgstr "Zeigt die Telebow-Abklingzeiten anderer Spieler an."
 
-#: src/main/java/pit12/feature/render/tooltip/TooltipConfig.java:34
+#: src/main/java/pit12/feature/render/tooltip/TooltipConfig.java:33
 msgctxt "src/main/java/pit12/feature/render/tooltip/TooltipConfig.java#1"
-msgid "Held Item Tooltip"
+msgid "Enhanced Held Item Tooltip"
 msgstr ""
 
-#: src/main/java/pit12/feature/render/tooltip/TooltipConfig.java:35
+#: src/main/java/pit12/feature/render/tooltip/TooltipConfig.java:34
 msgctxt "src/main/java/pit12/feature/render/tooltip/TooltipConfig.java#1"
 msgid "Changes the text and position of the held item tooltip."
 msgstr "Ändert den Text und die Position des Tooltips für den gehaltenen Gegenstand."
 
-#: src/main/java/pit12/feature/render/tooltip/TooltipConfig.java:37
+#: src/main/java/pit12/feature/render/tooltip/TooltipConfig.java:36
 msgctxt "src/main/java/pit12/feature/render/tooltip/TooltipConfig.java#1"
 msgid "Show enchantments instead of item name"
 msgstr "Verzauberungen anstelle des Artikelnamens anzeigen"
 
-#: src/main/java/pit12/feature/render/tooltip/TooltipConfig.java:38
+#: src/main/java/pit12/feature/render/tooltip/TooltipConfig.java:37
 msgctxt "src/main/java/pit12/feature/render/tooltip/TooltipConfig.java#1"
 msgid "Shows Pit enchantments in place of the held item name."
 msgstr "Zeigt Pit-Verzauberungen anstelle des Namens des gehaltenen Gegenstands an."
 
+#: src/main/java/pit12/feature/render/tooltip/TooltipConfig.java:40
+msgctxt "src/main/java/pit12/feature/render/tooltip/TooltipConfig.java#1"
+msgid "Keep above hearts"
+msgstr ""
+
 #: src/main/java/pit12/feature/render/tooltip/TooltipConfig.java:41
 msgctxt "src/main/java/pit12/feature/render/tooltip/TooltipConfig.java#1"
-msgid "Upward offset (pixels)"
+msgid "Moves the tooltip up when you have more than one row of hearts."
 msgstr ""
 
-#: src/main/java/pit12/feature/render/tooltip/TooltipConfig.java:42
-msgctxt "src/main/java/pit12/feature/render/tooltip/TooltipConfig.java#1"
-msgid "Moves the held item tooltip upward."
-msgstr ""
-
-#: src/main/java/pit12/platform/mixinconfig/MixinFailureWarning.java:71
+#: src/main/java/pit12/platform/mixinconfig/MixinFailureWarning.java:97
 msgctxt "src/main/java/pit12/platform/mixinconfig/MixinFailureWarning.java#1"
 msgid "{0} failed to apply: {1}. This may cause unexpected behavior. If you are unsure how this may affect the game, we recommend reporting this issue with your logs."
 msgstr ""
@@ -3748,10 +3833,15 @@ msgstr ""
 
 #: src/main/java/pit12/runtime/config/ConfigCategory.java:28
 msgctxt "src/main/java/pit12/runtime/config/ConfigCategory.java#1"
-msgid "Misc"
+msgid "Provider"
 msgstr ""
 
 #: src/main/java/pit12/runtime/config/ConfigCategory.java:29
+msgctxt "src/main/java/pit12/runtime/config/ConfigCategory.java#1"
+msgid "Misc"
+msgstr ""
+
+#: src/main/java/pit12/runtime/config/ConfigCategory.java:30
 msgctxt "src/main/java/pit12/runtime/config/ConfigCategory.java#1"
 msgid "Patch"
 msgstr ""
@@ -3768,7 +3858,7 @@ msgstr ""
 
 #: src/main/java/pit12/runtime/config/FeatureConfig.java:168
 msgctxt "src/main/java/pit12/runtime/config/FeatureConfig.java#1"
-msgid "Shows the HUD while the player list key is held."
+msgid "Keeps the HUD visible while you hold the player list key."
 msgstr ""
 
 #: src/main/java/pit12/runtime/config/FeatureConfig.java:170
