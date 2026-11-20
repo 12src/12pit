@@ -25,6 +25,7 @@ public final class PitEnchantmentFormat {
     public static final int PLAIN_LEVELS = 1;
     public static final int HIDE_LEVEL_THREE = 2;
     public static final int NAMES_ONLY = 3;
+    public static final int COMPACT_LEVELS = 4;
 
     private PitEnchantmentFormat() {}
 
@@ -33,7 +34,8 @@ public final class PitEnchantmentFormat {
                 new ChoiceSetting.Choice(BOLD_LEVELS, "§4§lREG §f§l3§7 / §6§lABS §f§l2"),
                 new ChoiceSetting.Choice(PLAIN_LEVELS, "§4REG §f3§7 / §6ABS §f2"),
                 new ChoiceSetting.Choice(HIDE_LEVEL_THREE, "§4§lREG§7 / §6§lABS §f§l2"),
-                new ChoiceSetting.Choice(NAMES_ONLY, "§4§lREG§7 / §6§lABS")};
+                new ChoiceSetting.Choice(NAMES_ONLY, "§4§lREG§7 / §6§lABS"),
+                new ChoiceSetting.Choice(COMPACT_LEVELS, "§4REG§f3§7/§6ABS§f2")};
     }
 
     /** Returns null when there are no known enchantments to show. */
@@ -41,6 +43,8 @@ public final class PitEnchantmentFormat {
         switch (format) {
             case PLAIN_LEVELS:
                 return enchantments.formatDisplayNames(showGem);
+            case COMPACT_LEVELS:
+                return enchantments.formatCompactDisplayNames(showGem);
             case HIDE_LEVEL_THREE:
                 return enchantments.formatBoldDisplayNamesWithoutLevelThree(showGem);
             case NAMES_ONLY:

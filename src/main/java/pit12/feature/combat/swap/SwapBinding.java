@@ -51,7 +51,7 @@ final class SwapBinding {
             throw new IllegalArgumentException("Hold armor or specify a hotbar slot from 1 to 9");
         }
         PitEnchantments enchantments = PitEnchantmentReader.read(stack);
-        String details = enchantments.formatDisplayNames(false);
+        String details = enchantments.formatCompactDisplayNames(false);
         ItemIdentity identity = ItemIdentity.read(stack);
         if (identity == null)
             throw new IllegalArgumentException("Held item could not be identified");
@@ -71,9 +71,9 @@ final class SwapBinding {
         return equipment ? 9 - target : 35 + target;
     }
 
-    String display(boolean showGem) {
+    String chatDisplay(boolean showGem) {
         return details.isEmpty() ? name
-                : name + " (" + details + (showGem && gemmed ? " §a♦" : "") + "§r)";
+                : name + "§r (" + details + (showGem && gemmed ? "§a♦" : "") + "§r)";
     }
 
     String targetName() {
