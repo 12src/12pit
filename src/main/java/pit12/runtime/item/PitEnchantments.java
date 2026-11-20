@@ -53,6 +53,11 @@ public final class PitEnchantments implements Iterable<PitEnchantments.Entry> {
     }
 
     /** Returns null when this result contains no known enchantments. */
+    public String formatCompactDisplayNames(boolean showGem) {
+        return formatDisplayNames(PitEnchantmentFormat.COMPACT_LEVELS, showGem);
+    }
+
+    /** Returns null when this result contains no known enchantments. */
     public String formatBoldDisplayNames(boolean showGem) {
         return formatDisplayNames(PitEnchantmentFormat.BOLD_LEVELS, showGem);
     }
@@ -110,14 +115,15 @@ public final class PitEnchantments implements Iterable<PitEnchantments.Entry> {
     // Equipment snapshots can also be formatted by workers.
     private synchronized String cacheDisplayNames(int index) {
         if (displayNames == null) {
-            displayNames = new String[8];
+            displayNames = new String[10];
         }
         String cached = displayNames[index];
         if (cached != null) {
             return cached;
         }
         int format = index / 2;
-        boolean bold = format != PitEnchantmentFormat.PLAIN_LEVELS;
+        boolean compact = format == PitEnchantmentFormat.COMPACT_LEVELS;
+        boolean bold = !compact && format != PitEnchantmentFormat.PLAIN_LEVELS;
         boolean showLevels = format != PitEnchantmentFormat.NAMES_ONLY;
         boolean hideLevelThree = format == PitEnchantmentFormat.HIDE_LEVEL_THREE;
         StringBuilder text = null;
@@ -130,23 +136,40 @@ public final class PitEnchantments implements Iterable<PitEnchantments.Entry> {
                 text = new StringBuilder(48);
                 text.append(EnumChatFormatting.RESET);
             } else {
-                text.append(EnumChatFormatting.GRAY).append(" / ").append(EnumChatFormatting.RESET);
+                text.append(EnumChatFormatting.GRAY).append(compact ? "/" : " / ")
+                        .append(EnumChatFormatting.RESET);
             }
-            appendDisplayName(text, enchantment.getDisplayName(), bold);
+            appendDisplayName(text, enchantment.getDisplayName(), bold, compact);
             if (showLevels && (!hideLevelThree || entry.level != 3)) {
-                text.append(' ').append(EnumChatFormatting.WHITE);
+                if (!compact) {
+                    text.append(' ');
+                }
+                text.append(EnumChatFormatting.WHITE);
                 if (bold) {
                     text.append(EnumChatFormatting.BOLD);
                 }
                 text.append(entry.level);
             }
         }
-        String result = text == null ? "" : (index & 1) != 0 ? text + " §a♦" : text.toString();
+        if (text != null && (index & 1) != 0) {
+            text.append(compact ? "§a♦" : " §a♦");
+        }
+        String result = text == null ? "" : text.toString();
         displayNames[index] = result;
         return result;
     }
 
-    private static void appendDisplayName(StringBuilder text, String displayName, boolean bold) {
+    private static void appendDisplayName(StringBuilder text, String displayName, boolean bold,
+            boolean compact) {
+        if (compact) {
+            for (int index = 0; index < displayName.length(); index++) {
+                char character = displayName.charAt(index);
+                if (character != ' ') {
+                    text.append(character);
+                }
+            }
+            return;
+        }
         if (!bold) {
             text.append(displayName);
             return;

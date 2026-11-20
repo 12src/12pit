@@ -105,7 +105,7 @@ final class SwapCommand {
         if (config.bindingMessages.get())
             reply(sender, Tone.SUCCESS,
                     language.format("Bound {0} to {1} ({2})",
-                            Tone.SUCCESS.argument(WHITE, binding.display(config.showGem.get())),
+                            Tone.SUCCESS.argument(WHITE, binding.chatDisplay(config.showGem.get())),
                             Tone.SUCCESS.argument(AQUA, SwapKeys.name(binding.key)),
                             Tone.SUCCESS.argument(WHITE, binding.targetName())));
     }
@@ -133,7 +133,7 @@ final class SwapCommand {
         for (SwapBinding entry : bindings.entries())
             reply(sender, Tone.INFO,
                     Tone.INFO.argument(AQUA, SwapKeys.name(entry.key)) + ": "
-                            + Tone.INFO.argument(WHITE, entry.display(config.showGem.get()))
+                            + Tone.INFO.argument(WHITE, entry.chatDisplay(config.showGem.get()))
                             + " -> " + Tone.INFO.argument(WHITE, entry.targetName()));
     }
 

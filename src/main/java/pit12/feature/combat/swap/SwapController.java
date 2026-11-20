@@ -434,7 +434,7 @@ final class SwapController {
         ItemStack item = stack(slot);
         if (item != null) {
             String enchantments =
-                    PitEnchantmentReader.read(item).formatBoldDisplayNames(options.showGem);
+                    PitEnchantmentReader.read(item).formatCompactDisplayNames(options.showGem);
             return Tone.SUCCESS.argument(WHITE,
                     enchantments == null ? item.getDisplayName() : enchantments);
         }

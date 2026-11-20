@@ -129,8 +129,10 @@ final class BindingStore {
                     && (!gemmed.isJsonPrimitive() || !gemmed.getAsJsonPrimitive().isBoolean())) {
                 throw new IllegalArgumentException("Invalid gem state");
             }
-            result.add(new SwapBinding(key, identity, equipment, target, name,
-                    string(entry, "details"), gemmed != null && gemmed.getAsBoolean()));
+            // Older bindings saved the spaced display text.
+            String details = string(entry, "details").replace(" ", "");
+            result.add(new SwapBinding(key, identity, equipment, target, name, details,
+                    gemmed != null && gemmed.getAsBoolean()));
         }
         return result;
     }

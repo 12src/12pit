@@ -18,6 +18,8 @@
  */
 package pit12.feature.combat.swap;
 
+import static net.minecraft.util.EnumChatFormatting.WHITE;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -312,13 +314,10 @@ final class AutoSwapController {
     }
 
     private void restore() {
-        String reason =
-                activeType == PitEnchantment.Somber ? language.translate("no dark targets")
-                        : config.pantsRestoreMode.get() == 1
-                                ? language.format("{0} activation",
-                                        activeType == PitEnchantment.Escape_Pod ? "escape pod"
-                                                : "phoenix")
-                                : language.translate("health recovery");
+        String reason = activeType == PitEnchantment.Somber ? language.translate("no dark targets")
+                : config.pantsRestoreMode.get() == 1
+                        ? language.format("{0} activation", activeType.getDisplayName() + WHITE)
+                        : language.translate("health recovery");
         if (originalPants == null) {
             if (player.inventory.getFirstEmptyStack() < 0) {
                 retryAt = tick + 10;
