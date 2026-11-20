@@ -165,7 +165,7 @@ public abstract class FeatureConfig {
             int defaultOffsetY, boolean defaultTextShadow, HudGroup grouping, String groupName) {
         String prefix = id + ".";
         BooleanSetting showInTab = new BooleanSetting(prefix + "show_in_tab", source("Show in Tab"),
-                source("Shows the HUD while the player list key is held."), false);
+                source("Keeps the HUD visible while you hold the player list key."), false);
         BooleanSetting textShadow =
                 new BooleanSetting(prefix + "text_shadow", source("Text shadow"),
                         source("Draws a shadow behind HUD text."), defaultTextShadow);

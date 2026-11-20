@@ -45,8 +45,8 @@ public final class NametagConfig extends FeatureConfig {
     private final IntegerSetting upwardOffset;
 
     public NametagConfig() {
-        super("nametag", source("Nametags"), ConfigCategory.RENDER, source(
-                "Adds real names, health, Pit enchantments, and timers to player nametags."));
+        super("nametag", source("Nametags"), ConfigCategory.RENDER,
+                source("Changes the text and visibility of player nametags."));
         section("names", "Denick");
         nickMarker = booleanSetting("nick_marker", source("Show nick marker"),
                 source("Adds N to nicked players' names."), true);

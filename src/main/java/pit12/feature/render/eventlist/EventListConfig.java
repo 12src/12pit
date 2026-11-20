@@ -61,7 +61,7 @@ public final class EventListConfig extends FeatureConfig {
         zeroPadding = booleanSetting("zero_padding", source("Pad time with zeros"),
                 source("Pads each part of a countdown to at least two digits."), true);
         timeFormat = choiceSetting("time_format", source("Time format"),
-                source("Displays countdowns, local times, or both."), 0,
+                source("Countdowns turn into Preparing or Active when they end."), 0,
                 new Choice(0, source("Countdown")), new Choice(1, source("Local time (24-hour)")),
                 new Choice(2, source("Countdown and local time")));
         category("filter", source("Filter"));

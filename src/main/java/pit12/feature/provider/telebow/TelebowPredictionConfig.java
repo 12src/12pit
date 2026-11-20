@@ -35,7 +35,7 @@ public final class TelebowPredictionConfig extends FeatureConfig {
 
     public TelebowPredictionConfig() {
         super("telebow_prediction", source("Telebow Prediction"), ConfigCategory.PROVIDER,
-                source("Controls Telebow prediction margins and cooldown detection."), false);
+                source("Tracks Telebow shots and cooldowns."), false);
         correctCooldown = booleanSetting("correct_cooldown", source("Correct cooldown estimates"),
                 source("Updates cooldown estimates after successful Telebow teleports."), true);
         cooldownDetection = choiceSetting("cooldown_detection", source("Cooldown detection"),

@@ -34,7 +34,6 @@ public final class EnhancedTelebowConfig extends FeatureConfig {
         keepAim = booleanSetting("keep_aim", source("Keep aim on teleport"),
                 source("Keeps your aim when you teleport."), true);
         sneakOnRelease = booleanSetting("sneak_on_release", source("Sneak on release"),
-                source("Sneaks before releasing the Telebow. Left click to release bypass this."),
-                false);
+                source("Left click to skip the automatic sneak."), false);
     }
 }
