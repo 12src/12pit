@@ -41,8 +41,8 @@ public final class TelebowLandingConfig extends FeatureConfig {
     public final IntegerSetting fadeTime;
 
     public TelebowLandingConfig() {
-        super("telebow", source("Telebow Landing"), ConfigCategory.RENDER, source(
-                "Shows Telebow trails, predicted landing points, and shooter names through blocks."));
+        super("telebow", source("Telebow Landing"), ConfigCategory.RENDER,
+                source("Shows where Telebow shots are likely to land."));
         category("shooters", source("Shooters"));
         own = booleanSetting("own", source("Own"), source("Shows your trails and landing points."),
                 true);

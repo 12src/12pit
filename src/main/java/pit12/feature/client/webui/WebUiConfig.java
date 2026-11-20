@@ -35,18 +35,16 @@ public final class WebUiConfig extends FeatureConfig {
 
     public WebUiConfig() {
         super("webui", source("Settings"), null,
-                source("Configures language, interface appearance, key bindings, and Discord RPC."),
-                false);
+                source("These preferences apply to every profile."), false);
         language = stringSetting("language", source("Language"),
-                source("Sets the language for the interface, commands, and HUD."), "en-us");
+                source("Sets the language for texts."), "en-us");
         colorSetting("gui_color", source("Accent color"),
                 source("Sets the interface accent color."), 0x7BADE2);
         discordRpc = booleanSetting("discord_rpc", "Discord RPC",
                 source("Shows 12pit activity and elapsed time on your Discord profile."), true);
         autoPredictionMargins = booleanSetting("auto_prediction_margins",
                 source("Set prediction margins automatically"),
-                source("Adjusts prediction margins once after joining or switching servers."),
-                true);
+                source("Sets prediction margins from your ping."), true);
         keybind = keybindSetting("keybind", source("Interface key"),
                 source("Opens the HUD editor. Press again with no HUD selected to open settings."),
                 Keyboard.KEY_RSHIFT);

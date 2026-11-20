@@ -52,8 +52,8 @@ public final class FocusConfig extends FeatureConfig {
         opacity = integerSliderSetting("opacity", source("Non-target opacity"),
                 source("Opacity of other players. Zero hides their models and names."), 0, 0, 100,
                 1);
-        targetPriority = booleanSetting("target_priority", source("Hurt time"), source(
-                "Sets a high hurt time for non-targets so other clients using hurt time targeting are less likely to select them."),
+        targetPriority = booleanSetting("target_priority", source("Hurt time"),
+                source("Makes clients that target by hurt time less likely to pick non-targets."),
                 false);
         toggleKey = keybindSetting("toggle_key", source("Toggle key"),
                 source("Toggles Focus without changing the selected mode."), Keyboard.KEY_NONE);

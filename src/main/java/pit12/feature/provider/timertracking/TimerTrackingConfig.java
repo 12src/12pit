@@ -37,7 +37,7 @@ public final class TimerTrackingConfig extends FeatureConfig {
 
     public TimerTrackingConfig() {
         super("timer_tracking", source("Timer Tracking"), ConfigCategory.PROVIDER,
-                source("Controls how Pin, Venom, and Jump Boost timers are estimated."), false);
+                source("Estimates how much time is left on Pit effects."), false);
         category("pin", "Pin");
         pinHitWindow = integerSliderSetting("pin_hit_window_ms", source("Prediction margin (ms)"),
                 source("Time allowed for delayed damage to count as a Pin hit."), 250, 25, 1000,

@@ -94,8 +94,7 @@ public final class SwapConfig extends FeatureConfig {
                 10, 1);
         resumeInputNextTick = booleanSetting("resume_input_next_tick",
                 source("Resume input next tick"),
-                source("Keeps movement, clicks, and key presses locked until the next tick after closing the inventory."),
-                true);
+                source("Keeps input locked until the next tick after the inventory closes."), true);
         swapMessages = booleanSetting("swap_messages", source("Swap messages"),
                 source("Shows a message after items are swapped or unequipped."), true);
         showGem = booleanSetting("show_gem", source("Show gem"),
@@ -114,13 +113,12 @@ public final class SwapConfig extends FeatureConfig {
         bindingDelay = integerSliderSetting("binding_delay", source("Binding delay (ticks)"),
                 source("Time between clicks for bindings and unequipping."), 1, 0, 10, 1);
         bindingMessages = booleanSetting("binding_messages", source("Binding messages"),
-                source("Shows messages when bindings are added, removed or cleared."), true);
+                source("Confirms changes to your swap bindings in chat."), true);
         highlight = booleanSetting("highlight_bindings", source("Show binding keys"),
                 source("Shows keys on bound items outside their target slots."), true);
         category("automatic_swap", source("Automatic swap"));
-        autoSwap = booleanSetting("auto_swap", source("Automatic swap"), source(
-                "Swaps items when you become poisoned, your health is low, or a player wearing Escape Pod or Phoenix has low health."),
-                false);
+        autoSwap = booleanSetting("auto_swap", source("Automatic swap"),
+                source("Swaps gear in response to poison or low health."), false);
         autoSwapMessages = booleanSetting("auto_swap_messages", source("Automatic swap messages"),
                 source("Shows why automatic swaps happened."), true);
         section("venom", "Venom");
@@ -163,9 +161,9 @@ public final class SwapConfig extends FeatureConfig {
         dark = booleanSetting("use_dark", source("Use dark"), source(
                 "Equips Somber leggings against players with low health wearing Escape Pod or Phoenix."),
                 false);
-        darkTriggerMode = choiceSetting("dark_trigger_mode", source("Trigger mode"), source(
-                "Checks the last player you attacked or all nearby players within range. Friend and enemy filters apply to both modes."),
-                0, new ChoiceSetting.Choice(0, source("Last attacked target")),
+        darkTriggerMode = choiceSetting("dark_trigger_mode", source("Trigger mode"),
+                source("Range and relation filters apply in both modes."), 0,
+                new ChoiceSetting.Choice(0, source("Last attacked target")),
                 new ChoiceSetting.Choice(1, source("Nearby players")));
         darkThreshold = integerSliderSetting("dark_threshold", source("Target health threshold"),
                 source("Equips Somber leggings when a target's health is at or below this value. Uses health without absorption."),
@@ -181,12 +179,11 @@ public final class SwapConfig extends FeatureConfig {
                 10, 0, 20, 1);
         skipLowPod = booleanSetting("dark_skip_low_pod",
                 source("Skip Escape Pod players below 2 hearts"),
-                source("Skips Escape Pod targets below 2 hearts in both trigger modes. Phoenix still qualifies."),
-                false);
+                source("Phoenix still qualifies below 2 hearts."), false);
         darkEnemiesOnly = booleanSetting("dark_enemies_only", source("Enemies only"),
                 source("Only checks players in your enemy list."), false);
         darkIgnoreFriends = booleanSetting("dark_ignore_friends", source("Ignore friends"), source(
-                "Skips friends in both trigger modes. Attacking a friend keeps the previous target."),
+                "In Last attacked target mode, attacking a friend leaves the target unchanged."),
                 true);
         darkPriority = choiceSetting("dark_priority", source("Swap priority"), source(
                 "Chooses between dark and your own Escape Pod or Phoenix when both are needed. Poison swaps take priority."),

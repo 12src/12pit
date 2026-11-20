@@ -33,9 +33,8 @@ public final class ChatMacroConfig extends FeatureConfig {
     public ChatMacroConfig() {
         super("chatmacro", source("Chat Macro"), ConfigCategory.MISC,
                 source("Sends chat messages with key bindings."), false);
-        blockInputs = booleanSetting("block_inputs", source("Block inputs"), source(
-                "Blocks movement, clicks, and key presses for one tick before sending a macro."),
-                true);
+        blockInputs = booleanSetting("block_inputs", source("Block inputs"),
+                source("Blocks input for one tick before sending a macro."), true);
         spawnKey = keybindSetting("spawn_key", source("Spawn macro key"), source(
                 "Sends /spawn once you are out of combat. Press again to cancel while waiting."),
                 Keyboard.KEY_NONE);

@@ -31,11 +31,10 @@ public final class FreeCameraConfig extends FeatureConfig {
     private final KeybindSetting toggleKey;
 
     public FreeCameraConfig() {
-        super("freecam", source("Free Camera"), ConfigCategory.RENDER, source(
-                "Move the camera with the movement keys, jump and sneak. Hold sprint to move faster."),
-                true, false);
+        super("freecam", source("Free Camera"), ConfigCategory.RENDER,
+                source("Lets you move the camera without moving your character."), true, false);
         speed = doubleSliderSetting("speed", source("Camera speed"),
-                source("Blocks the camera moves per tick."), 0.5, 0.1, 2.0, 0.05);
+                source("Blocks per tick. Hold sprint to move twice as fast."), 0.5, 0.1, 2.0, 0.05);
         toggleKey = keybindSetting("toggle_key", source("Toggle key"),
                 source("Toggles the free camera."), Keyboard.KEY_NONE);
     }

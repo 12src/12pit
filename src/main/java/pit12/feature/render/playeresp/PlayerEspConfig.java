@@ -50,9 +50,9 @@ public final class PlayerEspConfig extends FeatureConfig {
         super("playeresp", source("Player ESP"), ConfigCategory.RENDER,
                 source("Shows colored boxes around loaded players through blocks."));
         category("general", source("General"));
-        priority = choiceSetting("priority", source("Color priority"), source(
-                "Chooses which color to use when conflicting. Mixed averages their colors and opacity."),
-                0, new ChoiceSetting.Choice(0, source("Relations")),
+        priority = choiceSetting("priority", source("Color priority"),
+                source("Mixed blends both colors, including their opacity."), 0,
+                new ChoiceSetting.Choice(0, source("Relations")),
                 new ChoiceSetting.Choice(1, source("Equipment")),
                 new ChoiceSetting.Choice(2, source("Mixed")));
         section("distance_fade", source("Distance fade"));
