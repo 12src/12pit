@@ -43,6 +43,8 @@ import pit12.feature.client.webui.WebUiConfig;
 import pit12.feature.client.webui.WebUiFeature;
 import pit12.feature.combat.autoclicker.AutoClickerConfig;
 import pit12.feature.combat.autoclicker.AutoClickerFeature;
+import pit12.feature.combat.autouse.AutoUseConfig;
+import pit12.feature.combat.autouse.AutoUseFeature;
 import pit12.feature.combat.enhancedmlb.EnhancedMlbBinding;
 import pit12.feature.combat.enhancedmlb.EnhancedMlbConfig;
 import pit12.feature.combat.enhancedmlb.EnhancedMlbFeature;
@@ -239,6 +241,8 @@ public final class ClientBootstrap {
         // Category: Combat
         registerAutoClicker(minecraft, configs, input);
         registerAutoSprint(configs, (AutoSprintBinding) minecraft);
+        registerAutoUse(minecraft, configs, session, input, inputTicks,
+                (MinecraftActions) minecraft);
         registerEnhancedMlb(configs, (EnhancedMlbBinding) minecraft);
         registerEnhancedTelebow(minecraft, configs, (EnhancedTelebowBinding) minecraft, arrows,
                 prediction);
@@ -393,6 +397,14 @@ public final class ClientBootstrap {
         AutoSprintConfig config = new AutoSprintConfig();
         configs.register(config);
         components.add(new AutoSprintFeature(config, binding));
+    }
+
+    private void registerAutoUse(Minecraft minecraft, ConfigCatalog configs, ClientSession session,
+            InputBlocker input, InputTicks inputTicks, MinecraftActions actions) {
+        AutoUseConfig config = new AutoUseConfig();
+        configs.register(config);
+        components.add(new AutoUseFeature(minecraft, configs, config, session, input, inputTicks,
+                actions));
     }
 
     private void registerEnhancedMlb(ConfigCatalog configs, EnhancedMlbBinding binding) {
