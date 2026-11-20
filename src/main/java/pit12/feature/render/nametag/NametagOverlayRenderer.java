@@ -35,6 +35,7 @@ import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.WorldRenderer;
 import net.minecraft.client.renderer.culling.ClippingHelper;
 import net.minecraft.client.renderer.culling.ClippingHelperImpl;
+import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.entity.RendererLivingEntity;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
@@ -100,15 +101,21 @@ final class NametagOverlayRenderer {
             double distanceSquared = player.getDistanceSqToEntity(camera);
             float range = sneaking ? RendererLivingEntity.NAME_TAG_RANGE_SNEAK
                     : RendererLivingEntity.NAME_TAG_RANGE;
-            if (distanceSquared >= range * range
-                    || !((NametagVisibility) manager.getEntityRenderObject(player))
-                            .pit12$canRenderName(player)) {
+            if (distanceSquared >= range * range) {
+                continue;
+            }
+            Render<?> renderer = manager.getEntityRenderObject(player);
+            LunarNametagSource lunarSource =
+                    renderer instanceof LunarNametagSource ? (LunarNametagSource) renderer : null;
+            if (lunarSource == null
+                    && !((NametagVisibility) renderer).pit12$canRenderName(player)) {
                 continue;
             }
             double x = player.lastTickPosX + (player.posX - player.lastTickPosX) * partialTicks
                     - manager.viewerPosX;
-            double y = player.lastTickPosY + (player.posY - player.lastTickPosY) * partialTicks
-                    - manager.viewerPosY + player.height + 0.5D - (sneaking ? 0.25D : 0.0D);
+            double playerY = player.lastTickPosY
+                    + (player.posY - player.lastTickPosY) * partialTicks - manager.viewerPosY;
+            double y = playerY + player.height + 0.5D - (sneaking ? 0.25D : 0.0D);
             double z = player.lastTickPosZ + (player.posZ - player.lastTickPosZ) * partialTicks
                     - manager.viewerPosZ;
             double w = matrix[3] * x + matrix[7] * y + matrix[11] * z + matrix[15];
@@ -122,9 +129,21 @@ final class NametagOverlayRenderer {
                 text = new NametagText(null, null, font);
                 texts.put(playerId, text);
             }
-            text.updateName(player, suffix == null ? "" : suffix.apply(player), font);
-            text.updateScore(player, scoreboard,
-                    !sneaking && distanceSquared < 100.0D ? objective : null, font);
+            if (lunarSource != null) {
+                if (text.lunarName == null) {
+                    text.lunarName = new LunarNametagSource.Name();
+                }
+                String name =
+                        lunarSource.pit12$playerNametag(player, x, playerY, z, text.lunarName);
+                if (name == null) {
+                    continue;
+                }
+                text.setName(name, font);
+            } else {
+                text.updateName(player, suffix == null ? "" : suffix.apply(player), font);
+                text.updateScore(player, scoreboard,
+                        !sneaking && distanceSquared < 100.0D ? objective : null, font);
+            }
             text.scale = (float) Math.max(1.0D, vanillaScale / w);
             text.opacity = opacity;
             text.x = (float) ((1.0D

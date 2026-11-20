@@ -129,8 +129,7 @@ public final class MixinConfigPlugin implements IMixinConfigPlugin, IMixinErrorH
                 .equals("pit12.feature.render.nametag.mixin.VanillaRendererLivingEntityMixin")) {
             return !lunar;
         }
-        if (mixinClassName
-                .equals("pit12.feature.render.nametag.mixin.LunarEntityLivingBaseMixin")) {
+        if (mixinClassName.startsWith("pit12.feature.render.nametag.mixin.Lunar")) {
             return lunar;
         }
         if (mixinClassName.startsWith("pit12.feature.patch.fontcachefix.mixin.")) {

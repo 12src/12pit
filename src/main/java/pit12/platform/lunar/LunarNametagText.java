@@ -25,6 +25,7 @@ import java.lang.invoke.MethodType;
 public final class LunarNametagText {
     private static final Object EMPTY;
     private static final MethodHandle DESERIALIZE;
+    private static final MethodHandle SERIALIZE;
     private static final MethodHandle APPEND;
     static {
         try {
@@ -36,9 +37,15 @@ public final class LunarNametagText {
                     false, loader);
             MethodHandles.Lookup lookup = MethodHandles.publicLookup();
             EMPTY = component.getMethod("empty").invoke(null);
+            Object legacySection = serializer.getMethod("legacySection").invoke(null);
             DESERIALIZE = lookup.unreflect(serializer.getMethod("deserialize", String.class))
-                    .bindTo(serializer.getMethod("legacySection").invoke(null))
+                    .bindTo(legacySection)
                     .asType(MethodType.methodType(Object.class, String.class));
+            SERIALIZE = lookup
+                    .findVirtual(serializer, "serialize",
+                            MethodType.methodType(String.class, component))
+                    .bindTo(legacySection)
+                    .asType(MethodType.methodType(String.class, Object.class));
             APPEND = lookup
                     .findVirtual(component, "append", MethodType.methodType(component, component))
                     .asType(MethodType.methodType(Object.class, Object.class, Object.class));
@@ -48,6 +55,15 @@ public final class LunarNametagText {
     }
 
     private LunarNametagText() {}
+
+    @SuppressWarnings("PMD.AvoidCatchingGenericException")
+    public static String serialize(Object component) {
+        try {
+            return (String) SERIALIZE.invokeExact(component);
+        } catch (Throwable failure) {
+            throw new IllegalStateException("Could not format the Lunar nametag", failure);
+        }
+    }
 
     // MethodHandle.invokeExact declares Throwable.
     @SuppressWarnings("PMD.AvoidCatchingGenericException")

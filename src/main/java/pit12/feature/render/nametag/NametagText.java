@@ -25,6 +25,7 @@ import net.minecraft.scoreboard.ScoreObjective;
 import net.minecraft.scoreboard.ScorePlayerTeam;
 import net.minecraft.scoreboard.Scoreboard;
 import net.minecraft.scoreboard.Team;
+import net.minecraft.util.EnumChatFormatting;
 import pit12.shared.rendering.FontWidths;
 
 final class NametagText {
@@ -36,6 +37,7 @@ final class NametagText {
     int nameWidth;
     String score;
     int scoreWidth;
+    LunarNametagSource.Name lunarName;
     float x;
     float y;
     float scale;
@@ -111,7 +113,10 @@ final class NametagText {
         if (baseName == null || !Objects.equals(this.displayName, displayName)
                 || !Objects.equals(teamPrefix, prefix) || !Objects.equals(teamSuffix, suffixText)
                 || this.dynamicName || dynamicName) {
-            baseName = player.getDisplayName().getFormattedText();
+            // Patcher can still return the old component after the team changes.
+            baseName = dynamicName ? player.getDisplayName().getFormattedText()
+                    : EnumChatFormatting.RESET + ScorePlayerTeam.formatPlayerName(team, displayName)
+                            + EnumChatFormatting.RESET;
             this.displayName = displayName;
             teamPrefix = prefix;
             teamSuffix = suffixText;
@@ -120,7 +125,13 @@ final class NametagText {
         if (!Objects.equals(this.baseName, baseName) || !Objects.equals(nameSuffix, suffix)) {
             this.baseName = baseName;
             nameSuffix = suffix;
-            name = suffix.isEmpty() ? baseName : baseName + suffix;
+            setName(suffix.isEmpty() ? baseName : baseName + suffix, font);
+        }
+    }
+
+    void setName(String name, FontRenderer font) {
+        if (!name.equals(this.name)) {
+            this.name = name;
             nameWidth = FontWidths.measure(font, name);
         }
     }
