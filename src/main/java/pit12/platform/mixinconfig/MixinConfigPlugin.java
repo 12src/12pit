@@ -49,9 +49,9 @@ import pit12.platform.lunar.LunarSupport;
 public final class MixinConfigPlugin implements IMixinConfigPlugin, IMixinErrorHandler {
     private static final Logger LOGGER = LogManager.getLogger(MixinConfigPlugin.class);
     // Mixin creates a separate instance for error callbacks.
-    private static final Set<String> FAILED_MIXINS = new ConcurrentSkipListSet<>();
-    private static final AtomicInteger FAILURE_COUNT = new AtomicInteger();
+    private static final FailureLog RUNTIME_FAILURES = new FailureLog();
     private final BiFunction<String, MethodNode, String> handlerSignature;
+    private final FailureLog failures;
     private boolean lunar;
     private boolean optifine;
     private boolean patcher;
@@ -62,25 +62,21 @@ public final class MixinConfigPlugin implements IMixinConfigPlugin, IMixinErrorH
             ClassInfo.Method handler =
                     ClassInfo.forName(mixinClassName).findMethod(method, ClassInfo.INCLUDE_ALL);
             return handler.getName() + handler.getDesc();
-        });
+        }, RUNTIME_FAILURES);
     }
 
-    MixinConfigPlugin(BiFunction<String, MethodNode, String> handlerSignature) {
+    MixinConfigPlugin(BiFunction<String, MethodNode, String> handlerSignature,
+            FailureLog failures) {
         this.handlerSignature = handlerSignature;
+        this.failures = failures;
     }
 
     public static List<String> failedMixinNames() {
-        return new ArrayList<>(FAILED_MIXINS);
+        return RUNTIME_FAILURES.names();
     }
 
     public static int failedMixinCount() {
-        return FAILURE_COUNT.get();
-    }
-
-    private static void recordFailure(String mixinName) {
-        if (FAILED_MIXINS.add(mixinName)) {
-            FAILURE_COUNT.incrementAndGet();
-        }
+        return RUNTIME_FAILURES.count();
     }
 
     @Override
@@ -180,7 +176,7 @@ public final class MixinConfigPlugin implements IMixinConfigPlugin, IMixinErrorH
         }
         List<String> missing = missingInjections(targetClass, expectedCalls);
         if (!missing.isEmpty()) {
-            recordFailure(mixinInfo.getName());
+            failures.record(mixinInfo.getName());
             LOGGER.warn("Mixin {} has missing injections in {}: {}", mixinClassName,
                     targetClassName, String.join(", ", missing));
         }
@@ -226,7 +222,7 @@ public final class MixinConfigPlugin implements IMixinConfigPlugin, IMixinErrorH
     public ErrorAction onPrepareError(IMixinConfig config, Throwable failure, IMixinInfo mixin,
             ErrorAction action) {
         if (config.getPlugin() instanceof MixinConfigPlugin) {
-            recordFailure(mixin.getName());
+            failures.record(mixin.getName());
         }
         return action;
     }
@@ -235,8 +231,27 @@ public final class MixinConfigPlugin implements IMixinConfigPlugin, IMixinErrorH
     public ErrorAction onApplyError(String targetClassName, Throwable failure, IMixinInfo mixin,
             ErrorAction action) {
         if (mixin.getConfig().getPlugin() instanceof MixinConfigPlugin) {
-            recordFailure(mixin.getName());
+            failures.record(mixin.getName());
         }
         return action;
+    }
+
+    static final class FailureLog {
+        private final Set<String> names = new ConcurrentSkipListSet<>();
+        private final AtomicInteger count = new AtomicInteger();
+
+        List<String> names() {
+            return new ArrayList<>(names);
+        }
+
+        int count() {
+            return count.get();
+        }
+
+        private void record(String name) {
+            if (names.add(name)) {
+                count.incrementAndGet();
+            }
+        }
     }
 }

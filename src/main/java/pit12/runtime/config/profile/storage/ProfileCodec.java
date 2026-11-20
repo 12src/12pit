@@ -56,10 +56,16 @@ public final class ProfileCodec {
     }
 
     private final ProfileSchema schema;
+    private final LegacyProfileSettings legacySettings;
     private final Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
     public ProfileCodec(ProfileSchema schema) {
+        this(schema, LegacyProfileSettings.builtIn());
+    }
+
+    ProfileCodec(ProfileSchema schema, LegacyProfileSettings legacySettings) {
         this.schema = schema;
+        this.legacySettings = legacySettings;
     }
 
     public DecodeResult decode(Reader reader) {
@@ -107,7 +113,8 @@ public final class ProfileCodec {
                 JsonElement value =
                         featureObject == null ? null : featureObject.get(settingEntry.getKey());
                 if (value == null) {
-                    value = legacyValue(features, featureEntry.getKey(), settingEntry.getKey());
+                    value = legacySettings.find(features, featureEntry.getKey(),
+                            settingEntry.getKey());
                 }
                 if (value == null || value.isJsonNull()) {
                     continue;
@@ -200,59 +207,6 @@ public final class ProfileCodec {
         }
         root.add("features", features);
         return gson.toJson(root);
-    }
-
-    private static JsonElement legacyValue(JsonObject features, String featureId,
-            String settingId) {
-        String previousId;
-        switch (featureId) {
-            case "auto_denick":
-                previousId = "denick";
-                switch (settingId) {
-                    case "enabled":
-                        settingId = "automatic";
-                        break;
-                    case "success_only":
-                    case "monitor":
-                        break;
-                    default:
-                        return null;
-                }
-                break;
-            case "telebow_prediction":
-                switch (settingId) {
-                    case "prediction_margin_ms":
-                    case "teleport_extra_margin_ms":
-                    case "cooldown_detection":
-                    case "correct_cooldown":
-                        previousId = "telebow";
-                        break;
-                    default:
-                        return null;
-                }
-                break;
-            case "timer_tracking":
-                switch (settingId) {
-                    case "pin_hit_window_ms":
-                    case "venom_hit_window_ms":
-                    case "venom_reach_blocks":
-                    case "venom_hitbox_margin_blocks":
-                    case "jump_boost_sound_required":
-                    case "jump_boost_reset_on_low_jump":
-                    case "jump_boost_grace_ms":
-                        previousId = "debufftimers";
-                        break;
-                    default:
-                        return null;
-                }
-                break;
-            default:
-                return null;
-        }
-        JsonElement previous = features.get(previousId);
-        return previous != null && previous.isJsonObject()
-                ? previous.getAsJsonObject().get(settingId)
-                : null;
     }
 
     private static String requiredString(JsonObject object, String key) {

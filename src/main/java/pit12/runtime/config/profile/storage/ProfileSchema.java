@@ -27,7 +27,7 @@ import pit12.runtime.config.Setting;
 public final class ProfileSchema {
     private final Map<String, Map<String, Setting.StorageType>> features;
 
-    private ProfileSchema(Map<String, Map<String, Setting.StorageType>> features) {
+    ProfileSchema(Map<String, Map<String, Setting.StorageType>> features) {
         this.features = features;
     }
 
