@@ -211,22 +211,22 @@ public final class SwapFeature implements ClientLifecycle, ConfigChangeListener,
     }
 
     @Override
-    public boolean rightClick() {
+    public boolean rightClick(boolean itemUseFallback) {
         if (input.locked())
             return false;
         if (rightClickHeld)
             return true;
-        if (!config.enabled() || !controller.rightClickEnabled() || minecraft.currentScreen != null
-                || controller.inputBlocked() || minecraft.playerController.getIsHittingBlock())
+        MovingObjectPosition hit = minecraft.objectMouseOver;
+        boolean hitsEntity =
+                hit != null && hit.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY;
+        if (hitsEntity != itemUseFallback || !config.enabled() || !controller.rightClickEnabled()
+                || minecraft.currentScreen != null || controller.inputBlocked()
+                || minecraft.playerController.getIsHittingBlock())
             return false;
         ItemStack held = minecraft.thePlayer.getHeldItem();
         int target = SwapBinding.armorTarget(held);
         if (target == 0 || minecraft.thePlayer.inventory.armorInventory[target - 1] == null
                 || PitEnchantmentReader.contains(held, PitEnchantment.Trash_Panda))
-            return false;
-        MovingObjectPosition hit = minecraft.objectMouseOver;
-        // An entity interaction can succeed on the server even if the client thinks nothing happened.
-        if (hit != null && hit.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY)
             return false;
         controller.enqueueArmor(SwapBinding.create(1, held, 0));
         rightClickHeld = true;
