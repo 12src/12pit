@@ -44,7 +44,16 @@ public abstract class MinecraftMixin implements SwapHooksBinding {
 
     @Inject(method = "rightClickMouse", at = @At("HEAD"), cancellable = true)
     private void pit12$swapRightClick(CallbackInfo callback) {
-        if (pit12$swapHooks != null && pit12$swapHooks.rightClick())
+        if (pit12$swapHooks != null && pit12$swapHooks.rightClick(false))
+            callback.cancel();
+    }
+
+    // Entity clicks can be handled by the server, so let vanilla send them first.
+    @Inject(method = "rightClickMouse", at = @At(value = "INVOKE",
+            target = "Lnet/minecraft/client/multiplayer/PlayerControllerMP;sendUseItem(Lnet/minecraft/entity/player/EntityPlayer;Lnet/minecraft/world/World;Lnet/minecraft/item/ItemStack;)Z"),
+            cancellable = true)
+    private void pit12$swapBeforeItemUse(CallbackInfo callback) {
+        if (pit12$swapHooks != null && pit12$swapHooks.rightClick(true))
             callback.cancel();
     }
 }

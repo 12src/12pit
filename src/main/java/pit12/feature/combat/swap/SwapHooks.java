@@ -21,7 +21,7 @@ package pit12.feature.combat.swap;
 import net.minecraft.item.ItemStack;
 
 public interface SwapHooks {
-    boolean rightClick();
+    boolean rightClick(boolean itemUseFallback);
 
     void drawBinding(ItemStack stack, int x, int y);
 
