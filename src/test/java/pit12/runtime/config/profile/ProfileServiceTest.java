@@ -170,6 +170,31 @@ public final class ProfileServiceTest {
         assertEquals(4, (int) config.limit.get());
     }
 
+    @Test
+    public void importingSameNameReplacesActiveProfileAndRejectsConflictingUuid()
+            throws InterruptedException {
+        UUID replacementId = UUID.randomUUID();
+        String conflictingUuid = "{\"schemaVersion\":1,\"id\":\"" + secondId
+                + "\",\"name\":\"Other\",\"order\":0,\"features\":{}}";
+        assertEquals(Status.INVALID_VALUE,
+                profiles.importProfiles(Collections.singletonList(conflictingUuid)).status());
+        String replacement = "{\"schemaVersion\":1,\"id\":\"" + replacementId
+                + "\",\"name\":\"first\",\"order\":0," + "\"features\":{\"sample\":{\"limit\":7}}}";
+        assertTrue(profiles.importProfiles(Collections.singletonList(replacement)).succeeded());
+        assertEquals(replacementId, profiles.snapshot().activeProfileId());
+        assertEquals(7, (int) config.limit.get());
+        UUID trashed = store.trashed.poll(5, TimeUnit.SECONDS);
+        assertEquals(firstId, trashed);
+    }
+
+    @Test
+    public void protectsActiveProfileAndDeletesInactiveProfile() throws InterruptedException {
+        assertEquals(Status.ACTIVE_PROFILE_PROTECTED, profiles.delete(firstId).status());
+        assertTrue(profiles.delete(secondId).succeeded());
+        assertEquals(Collections.singletonMap(firstId, "First"), profileNames());
+        assertEquals(secondId, store.trashed.poll(5, TimeUnit.SECONDS));
+    }
+
     private StoredProfile savedProfile(UUID id, String name, int order, int limit) {
         ConfigSnapshot values = new ConfigSnapshot(
                 Collections.singletonMap(config.id(), Collections.singletonMap("limit", limit)));
@@ -210,6 +235,7 @@ public final class ProfileServiceTest {
     }
     private static final class Store implements ProfileStore {
         final BlockingQueue<StoredProfile> writes = new LinkedBlockingQueue<>();
+        final BlockingQueue<UUID> trashed = new LinkedBlockingQueue<>();
         final Semaphore writePermits = new Semaphore(0);
         LoadedProfiles loaded;
         volatile boolean holdWrites;
@@ -240,6 +266,8 @@ public final class ProfileServiceTest {
         public void writeState(UUID activeProfileId) {}
 
         @Override
-        public void moveToTrash(UUID profileId) {}
+        public void moveToTrash(UUID profileId) {
+            trashed.add(profileId);
+        }
     }
 }
