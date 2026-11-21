@@ -242,8 +242,8 @@ final class WebUiServer {
         if ("/".equals(path)) {
             path = "/index.html";
         }
-        if (!"/index.html".equals(path) && !path.startsWith("/assets/") || path.contains("..")
-                || path.contains("\\")) {
+        if (!"/index.html".equals(path) && !"/cosmetic.html".equals(path)
+                && !path.startsWith("/assets/") || path.contains("..") || path.contains("\\")) {
             sendJson(exchange, 404, object("error", "Not found"));
             return;
         }

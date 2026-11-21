@@ -18,7 +18,7 @@ along with 12pit. If not, see <https://www.gnu.org/licenses/>.
 -->
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue'
-import { ExternalLink } from '@lucide/vue'
+import { Brush, ExternalLink } from '@lucide/vue'
 import { t } from './languages'
 import FeaturesPage from './FeaturesPage.vue'
 import LanguageNotice from './LanguageNotice.vue'
@@ -209,6 +209,10 @@ function closeTransfer() {
           </span>
         </template>
       </nav>
+      <a class="editor-link startup-fade" href="./cosmetic.html">
+        <Brush :size="16" aria-hidden="true" />
+        {{ t('Pixel editor') }}
+      </a>
       <div class="community-links">
         <template v-if="links">
           <a

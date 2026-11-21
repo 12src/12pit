@@ -94,6 +94,9 @@ import pit12.feature.provider.timertracking.TimerTrackingFeature;
 import pit12.feature.provider.timertracking.api.TimerTracking;
 import pit12.feature.render.chams.ChamsConfig;
 import pit12.feature.render.chams.ChamsFeature;
+import pit12.feature.render.cosmetic.CosmeticBinding;
+import pit12.feature.render.cosmetic.CosmeticConfig;
+import pit12.feature.render.cosmetic.CosmeticFeature;
 import pit12.feature.render.eventlist.EventListConfig;
 import pit12.feature.render.eventlist.EventListFeature;
 import pit12.feature.render.focus.FocusConfig;
@@ -250,6 +253,7 @@ public final class ClientBootstrap {
         registerSmartBlock(minecraft, configs, session, (SmartBlockBinding) minecraft, inputTicks);
         // Category: Render
         registerChams(minecraft, configs);
+        registerCosmetic(minecraft, configs);
         registerEventList(configs, hudRegistry, commands);
         registerFocus(minecraft, configs, input, relations, playerNames);
         registerFreeCamera(minecraft, configs, input, (FreeCameraBinding) minecraft);
@@ -440,6 +444,13 @@ public final class ClientBootstrap {
         ChamsConfig config = new ChamsConfig();
         configs.register(config);
         components.add(new ChamsFeature(minecraft.getRenderManager(), config));
+    }
+
+    private void registerCosmetic(Minecraft minecraft, ConfigCatalog configs) {
+        CosmeticConfig config = new CosmeticConfig();
+        configs.register(config);
+        components
+                .add(new CosmeticFeature(minecraft, configs, config, (CosmeticBinding) minecraft));
     }
 
     private void registerEventList(ConfigCatalog configs, HudRegistry hudRegistry,
