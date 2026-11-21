@@ -5,8 +5,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc && vite build",
-    "format": "prettier --write src index.html vite.config.ts tsconfig.json package.json .prettierrc.json",
-    "format:check": "prettier --check src index.html vite.config.ts tsconfig.json package.json .prettierrc.json"
+    "format": "prettier --write src index.html cosmetic.html vite.config.ts tsconfig.json package.json .prettierrc.json",
+    "format:check": "prettier --check src index.html cosmetic.html vite.config.ts tsconfig.json package.json .prettierrc.json"
   },
   "dependencies": {
     "@lucide/vue": "1.70.0",

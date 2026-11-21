@@ -188,6 +188,29 @@ nav button.active {
   color: var(--text);
 }
 
+.editor-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 0 12px 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--muted);
+  font-size: 13px;
+  text-decoration: none;
+  transition:
+    color 0.18s ease,
+    background-color 0.18s ease;
+}
+
+.editor-link:hover,
+.editor-link:focus-visible {
+  color: var(--text);
+  background: var(--hover);
+}
+
 .community-links {
   display: flex;
   flex: none;

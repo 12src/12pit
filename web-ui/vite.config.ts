@@ -17,6 +17,7 @@
  * along with 12pit. If not, see <https://www.gnu.org/licenses/>.
  */
 import { relative, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { defineConfig, type Plugin } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { MagicString, parse } from 'vue/compiler-sfc'
@@ -137,11 +138,23 @@ function languageLocations(): Plugin {
 
 export default defineConfig(() => {
   const target = process.env.WEB_UI_TARGET ?? 'http://127.0.0.1:60916'
+  const directory = fileURLToPath(new URL('.', import.meta.url))
   return {
     plugins: [languageLocations(), vue()],
     base: './',
+    build: {
+      rollupOptions: {
+        input: {
+          main: resolve(directory, 'index.html'),
+          cosmetic: resolve(directory, 'cosmetic.html'),
+        },
+      },
+    },
     server: {
       host: '127.0.0.1',
+      fs: {
+        allow: [resolve(directory, '..')],
+      },
       proxy: {
         '/api': {
           target,
