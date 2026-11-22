@@ -227,7 +227,7 @@ export function useWebUiState() {
         failure = cause
       }
       apply = () => {
-        applyLanguage(texts)
+        applyLanguage(next.language, texts)
         languageProblem = ''
         if (failure) {
           reportError(failure)
