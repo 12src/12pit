@@ -111,6 +111,7 @@ final class TelebowRenderer {
                     bounds.minY - margin, bounds.minZ - margin, bounds.maxX + margin,
                     bounds.maxY + margin, bounds.maxZ + margin);
             mesh.nameVisible = false;
+            // FontRenderer makes alpha values below four fully opaque.
             if (names && trajectory.hasImpact && Math.round(alpha * 255) >= 4) {
                 if (mesh.nameWidth < 0 || mesh.unicode != unicode) {
                     mesh.nameWidth = FontWidths.measure(font, path.displayName);
@@ -315,12 +316,6 @@ final class TelebowRenderer {
     }
 
     private void drawLabel(String name, int width, FontRenderer font, float alpha) {
-        // FontRenderer makes alpha values below four fully opaque.
-        int textAlpha = Math.round(alpha * 255);
-        if (textAlpha < 4)
-            return;
-        GlStateManager.disableDepth();
-        GlStateManager.depthMask(false);
         GlStateManager.disableAlpha();
         textures.setEnabled(false);
         GlStateManager.color(0, 0, 0, alpha * 0.25F);
@@ -338,14 +333,8 @@ final class TelebowRenderer {
         textures.setEnabled(true);
         GlStateManager.enableAlpha();
         GlStateManager.alphaFunc(GL11.GL_GREATER, 0.001F);
-        int faintAlpha = Math.round(alpha * 32);
-        if (faintAlpha >= 4)
-            font.drawString(name, -width / 2, 0, faintAlpha << 24 | 0xFFFFFF);
-        GlStateManager.enableDepth();
-        GlStateManager.depthMask(true);
+        int textAlpha = Math.round(alpha * 255);
         font.drawString(name, -width / 2, 0, textAlpha << 24 | 0xFFFFFF);
-        GlStateManager.disableDepth();
-        GlStateManager.depthMask(false);
     }
 
     void remove(TelebowPath path) {
