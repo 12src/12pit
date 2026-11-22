@@ -26,19 +26,32 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import pit12.runtime.item.InventoryClicks;
 import pit12.runtime.session.ClientSessionBinding;
 import pit12.shared.lifecycle.ClientShutdownBinding;
 import pit12.shared.rendering.PlayerOpacity;
 
 @Mixin(Minecraft.class)
-public abstract class MinecraftMixin
-        implements ClientShutdownBinding, ClientSessionBinding, PlayerOpacity.Binding {
+public abstract class MinecraftMixin implements ClientShutdownBinding, ClientSessionBinding,
+        PlayerOpacity.Binding, InventoryClicks.Binding {
     @Unique
     private Runnable pit12$shutdown;
     @Unique
     private Runnable pit12$worldChangeListener;
     @Unique
     private PlayerOpacity pit12$playerOpacity;
+    @Unique
+    private InventoryClicks pit12$inventoryClicks;
+
+    @Override
+    public void pit12$bindInventoryClicks(InventoryClicks clicks) {
+        pit12$inventoryClicks = clicks;
+    }
+
+    @Override
+    public InventoryClicks pit12$inventoryClicks() {
+        return pit12$inventoryClicks;
+    }
 
     @Override
     public void pit12$bindPlayerOpacity(PlayerOpacity opacity) {

@@ -34,22 +34,20 @@ import java.util.function.BiConsumer;
 import java.util.function.BooleanSupplier;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
-import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.gui.inventory.GuiInventory;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
-import net.minecraft.network.play.client.C16PacketClientStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import pit12.runtime.input.InputBlocker;
 import pit12.runtime.input.InputTicks.Phase;
 import pit12.runtime.input.InputTicks.Timing;
+import pit12.runtime.item.InventoryClicks;
+import pit12.runtime.item.InventoryScreen;
 import pit12.runtime.item.PitEnchantmentReader;
 import pit12.runtime.languages.Languages;
 import pit12.runtime.session.ClientSession;
 import pit12.shared.chat.ChatFeedback.Tone;
 
-final class SwapController {
+final class SwapController implements InventoryClicks.Listener {
     private static final Logger LOGGER = LogManager.getLogger(SwapController.class);
     private final Minecraft minecraft;
     private final Languages language;
@@ -57,8 +55,7 @@ final class SwapController {
     private final SwapConfig config;
     private final BindingBook bindings;
     private final BiConsumer<Tone, String> report;
-    private final InputBlocker input;
-    private final Object inputOwner;
+    private final InventoryScreen screen;
     private final Deque<Request> queue = new ArrayDeque<>();
     private final Set<Object> accepted = new HashSet<>();
     private final Deque<Action> actions = new ArrayDeque<>();
@@ -74,47 +71,38 @@ final class SwapController {
     private long resumeAt;
     private long closeAt = -1;
     private boolean clicked;
-    private GuiInventory screen;
     private Request current;
     private int groupWorkspace;
     private boolean cancelling;
     private boolean restoreOnCancel;
     private boolean failed;
-    private boolean sendingClick;
     private boolean waitingToResume;
     private boolean clickRejected;
 
     SwapController(Minecraft minecraft, ClientSession session, SwapConfig config,
-            BindingBook bindings, BiConsumer<Tone, String> report, InputBlocker input,
-            Object inputOwner, Languages language) {
+            BindingBook bindings, BiConsumer<Tone, String> report, InventoryScreen screen,
+            Languages language) {
         this.language = language;
         this.minecraft = minecraft;
         this.session = session;
         this.config = config;
         this.bindings = bindings;
         this.report = report;
-        this.input = input;
-        this.inputOwner = inputOwner;
+        this.screen = screen;
     }
 
     boolean inputBlocked() {
-        return minecraft.thePlayer == null || minecraft.theWorld == null
-                || minecraft.thePlayer.isSpectator()
-                || minecraft.thePlayer.openContainer != minecraft.thePlayer.inventoryContainer
-                || minecraft.thePlayer.inventory.getItemStack() != null
-                || (minecraft.currentScreen != null && !owns(minecraft.currentScreen));
+        EntityPlayerSP currentPlayer = minecraft.thePlayer;
+        return currentPlayer == null || minecraft.theWorld == null || currentPlayer.isSpectator()
+                || !screen.canUse(currentPlayer);
     }
 
     boolean busy() {
         return options != null;
     }
 
-    boolean owns(GuiScreen candidate) {
-        return screen != null && screen == candidate;
-    }
-
     boolean hidden() {
-        return screen != null && !options.visible;
+        return screen.hasScreen() && !options.visible;
     }
 
     int unequipKey() {
@@ -168,7 +156,7 @@ final class SwapController {
             options = new SwapConfig.Options(config);
             player = minecraft.thePlayer;
             sessionRevision = session.revision();
-            input.lock(inputOwner);
+            screen.reserve(player);
         }
         queue.addLast(request);
         closeAt = -1;
@@ -206,7 +194,8 @@ final class SwapController {
             finish(false);
             return;
         }
-        if (!failed && (inputBlocked() || screen != null && minecraft.currentScreen != screen)) {
+        if (!failed && (inputBlocked()
+                || screen.hasScreen() && !screen.owns(minecraft.currentScreen))) {
             throw new IllegalStateException("Inventory changed");
         }
         if (cancelling) {
@@ -240,14 +229,11 @@ final class SwapController {
                 clickTiming.reset();
                 continue;
             }
-            if (screen == null) {
-                player.sendQueue.addToSendQueue(new C16PacketClientStatus(
-                        C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT));
-                screen = new GuiInventory(player);
-                minecraft.displayGuiScreen(screen);
+            if (!screen.hasScreen()) {
+                boolean opened = screen.open();
                 if (options == null || cancelling)
                     return;
-                if (!owns(minecraft.currentScreen) || inputBlocked()) {
+                if (!opened || player.isSpectator()) {
                     throw new IllegalStateException("Inventory did not open");
                 }
                 lastClickTick = tick;
@@ -277,13 +263,15 @@ final class SwapController {
         return tick - lastClickTick >= delay && clickTiming.ready(phase, randomClickTiming());
     }
 
-    void clickSent(int windowId, short actionNumber) {
-        if (!sendingClick || windowId != player.inventoryContainer.windowId)
+    @Override
+    public void clickSent(int windowId, short actionNumber) {
+        if (!screen.sendingClick(windowId))
             return;
         pendingClicks.add(actionNumber);
     }
 
-    void confirmClick(int windowId, short actionNumber, boolean accepted) {
+    @Override
+    public void confirmClick(int windowId, short actionNumber, boolean accepted) {
         if (options == null || player != minecraft.thePlayer
                 || windowId != player.inventoryContainer.windowId
                 || !pendingClicks.remove(actionNumber))
@@ -401,18 +389,17 @@ final class SwapController {
         return -1;
     }
 
-    private void click(int slot, int button, int mode) {
-        if (!owns(minecraft.currentScreen) || player.openContainer != player.inventoryContainer
-                || player.inventory.getItemStack() != null) {
-            throw new IllegalStateException("Inventory changed");
-        }
-        sendingClick = true;
-        try {
-            input.runAction(inputOwner, () -> minecraft.playerController
-                    .windowClick(player.inventoryContainer.windowId, slot, button, mode, player));
-        } finally {
-            sendingClick = false;
-        }
+    private void swapWithHotbar(int slot, int hotbar) {
+        screen.swapWithHotbar(slot, hotbar);
+        recordClick();
+    }
+
+    private void shiftClick(int slot) {
+        screen.shiftClick(slot);
+        recordClick();
+    }
+
+    private void recordClick() {
         current.started = true;
         clicked = true;
         lastClickTick = tick;
@@ -501,13 +488,13 @@ final class SwapController {
                     return;
                 clickTiming.reset();
                 if (action.stage == ActionStage.EQUIP_WITH_SHIFT_CLICK) {
-                    click(action.shiftedArmorSlot, 0, 1);
+                    shiftClick(action.shiftedArmorSlot);
                     if (!ItemStack.areItemStacksEqual(stack(action.binding.guiTarget()),
                             action.originalArmor)) {
                         throw new IllegalStateException("Armor could not be equipped");
                     }
                 } else
-                    action.swap(action.source, action.work);
+                    swapWithHotbar(action.source, action.work);
             }
             restoreOnCancel = false;
         }
@@ -517,37 +504,18 @@ final class SwapController {
     private void finishQueue() {
         if (closeAt < 0)
             closeAt = tick + options.closeDelay;
-        if (!failed && screen == null || tick >= closeAt)
+        if (!failed && !screen.hasScreen() || tick >= closeAt)
             finish(true);
     }
 
     void finish(boolean allowDelay) {
-        boolean closingInventory = owns(minecraft.currentScreen);
+        boolean closingInventory = screen.owns(minecraft.currentScreen);
         try {
-            if (closingInventory) {
-                try {
-                    if (session.revision() == sessionRevision && player == minecraft.thePlayer
-                            && minecraft.theWorld != null
-                            && player.openContainer == player.inventoryContainer) {
-                        player.closeScreen();
-                    } else {
-                        minecraft.displayGuiScreen(null);
-                    }
-                } finally {
-                    if (owns(minecraft.currentScreen)) {
-                        // A listener may have canceled closing. Drop our screen before restoring input.
-                        minecraft.currentScreen = null;
-                        if (minecraft.thePlayer != null && minecraft.theWorld != null)
-                            minecraft.setIngameFocus();
-                    }
-                }
-            }
+            screen.close(session.revision() == sessionRevision);
         } catch (RuntimeException failure) {
             LOGGER.warn("Could not close the inventory after swapping", failure);
             fail(language.translate("Inventory could not be closed"));
         } finally {
-            if (owns(minecraft.currentScreen))
-                minecraft.currentScreen = null;
             if (!allowDelay || !failed || closeAt <= tick) {
                 if (allowDelay && options != null && options.resumeInputNextTick
                         && (failed || closingInventory && minecraft.currentScreen == null)) {
@@ -561,12 +529,6 @@ final class SwapController {
     }
 
     private void reset() {
-        boolean active = options != null;
-        boolean resume =
-                active && session.revision() == sessionRevision && player == minecraft.thePlayer
-                        && minecraft.theWorld != null && minecraft.currentScreen == null
-                        && player.openContainer == player.inventoryContainer
-                        && player.inventory.getItemStack() == null;
         queue.clear();
         accepted.clear();
         actions.clear();
@@ -574,7 +536,6 @@ final class SwapController {
         pendingClicks.clear();
         options = null;
         player = null;
-        screen = null;
         current = null;
         clicked = false;
         clickTiming.reset();
@@ -582,11 +543,9 @@ final class SwapController {
         cancelling = false;
         restoreOnCancel = false;
         failed = false;
-        sendingClick = false;
         waitingToResume = false;
         clickRejected = false;
-        if (active)
-            input.unlock(inputOwner, resume);
+        screen.release(session.revision() == sessionRevision);
     }
 
     private static ItemStack copy(ItemStack stack) {
@@ -620,7 +579,7 @@ final class SwapController {
                 int target = armor == null ? -1 : firstEmptyInventorySlot();
                 if (target >= 0) {
                     message = swapMessage(unequipSlot, target);
-                    click(unequipSlot, 0, 1);
+                    shiftClick(unequipSlot);
                     if (stack(unequipSlot) == null) {
                         complete();
                         return;
@@ -636,7 +595,7 @@ final class SwapController {
                         || !binding.identity.matches(stack(source))) {
                     throw new IllegalStateException("Inventory changed");
                 }
-                click(source, 0, 1);
+                shiftClick(source);
                 verifyAndComplete();
                 return;
             }
@@ -645,7 +604,7 @@ final class SwapController {
                         || !ItemStack.areItemStacksEqual(stack(source), originalWorkspace)) {
                     throw new IllegalStateException("Transfer slot changed");
                 }
-                swap(binding.guiTarget(), work);
+                swapWithHotbar(binding.guiTarget(), work);
                 if (!binding.identity.matches(stack(binding.guiTarget()))) {
                     throw new IllegalStateException("Armor could not be equipped");
                 }
@@ -658,7 +617,7 @@ final class SwapController {
             if (stage == ActionStage.RESTORE_HOTBAR) {
                 if (!restorable())
                     throw new IllegalStateException("Transfer slot changed");
-                swap(source, work);
+                swapWithHotbar(source, work);
                 complete();
                 return;
             }
@@ -682,14 +641,14 @@ final class SwapController {
                 if (options.shiftClick) {
                     ItemStack armor = stack(binding.guiTarget());
                     if (armor == null) {
-                        click(source, 0, 1);
+                        shiftClick(source);
                         verifyAndComplete();
                         return;
                     }
                     shiftedArmorSlot = firstEmptyInventorySlot();
                     if (shiftedArmorSlot >= 0) {
                         originalArmor = copy(armor);
-                        click(binding.guiTarget(), 0, 1);
+                        shiftClick(binding.guiTarget());
                         if (stack(binding.guiTarget()) != null || !ItemStack
                                 .areItemStacksEqual(stack(shiftedArmorSlot), originalArmor)) {
                             throw new IllegalStateException(
@@ -700,14 +659,14 @@ final class SwapController {
                     }
                 }
                 if (source >= 36) {
-                    swap(binding.guiTarget(), source - 36);
+                    swapWithHotbar(binding.guiTarget(), source - 36);
                     verifyAndComplete();
                 } else {
                     if (groupWorkspace < 0)
                         groupWorkspace = workspace();
                     work = groupWorkspace;
                     originalWorkspace = copy(stack(36 + work));
-                    swap(source, work);
+                    swapWithHotbar(source, work);
                     expectedWorkspace = copy(stack(36 + work));
                     stage = ActionStage.EQUIP_FROM_HOTBAR;
                 }
@@ -720,14 +679,10 @@ final class SwapController {
                             Tone.WARNING.argument(WHITE, binding.name)));
                     done = true;
                 } else {
-                    swap(source, binding.target - 1);
+                    swapWithHotbar(source, binding.target - 1);
                     verifyAndComplete();
                 }
             }
-        }
-
-        private void swap(int slot, int hotbar) {
-            click(slot, hotbar, 2);
         }
 
         private boolean restorable() {

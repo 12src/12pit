@@ -20,10 +20,7 @@ package pit12.feature.combat.swap.mixin;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.network.NetHandlerPlayClient;
-import net.minecraft.network.Packet;
-import net.minecraft.network.play.client.C0EPacketClickWindow;
 import net.minecraft.network.play.server.S29PacketSoundEffect;
-import net.minecraft.network.play.server.S32PacketConfirmTransaction;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -36,32 +33,6 @@ import pit12.feature.combat.swap.SwapHooksBinding;
 public abstract class NetHandlerPlayClientMixin {
     @Shadow
     private Minecraft gameController;
-
-    @Inject(method = "addToSendQueue", at = @At("HEAD"))
-    private void pit12$beforeWindowClick(Packet<?> packet, CallbackInfo callback) {
-        if (!(packet instanceof C0EPacketClickWindow))
-            return;
-        if (!gameController.isCallingFromMinecraftThread()
-                || (Object) this != gameController.getNetHandler())
-            return;
-        SwapHooks hooks = ((SwapHooksBinding) gameController).pit12$swapHooks();
-        if (hooks != null) {
-            C0EPacketClickWindow click = (C0EPacketClickWindow) packet;
-            hooks.clickSent(click.getWindowId(), click.getActionNumber());
-        }
-    }
-
-    // Rejected clicks are handled by now, and we're on the client thread.
-    @Inject(method = "handleConfirmTransaction", at = @At("TAIL"))
-    private void pit12$afterInventoryConfirmation(S32PacketConfirmTransaction packet,
-            CallbackInfo callback) {
-        if ((Object) this != gameController.getNetHandler())
-            return;
-        SwapHooks hooks = ((SwapHooksBinding) gameController).pit12$swapHooks();
-        if (hooks != null)
-            hooks.confirmClick(packet.getWindowId(), packet.getActionNumber(),
-                    packet.func_148888_e());
-    }
 
     // We're on the client thread here. Muted sounds still reach TAIL!
     @Inject(method = "handleSoundEffect", at = @At("TAIL"))

@@ -22,6 +22,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.settings.GameSettings;
 import net.minecraft.client.settings.KeyBinding;
+import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -34,6 +35,7 @@ import pit12.runtime.config.ConfigChangeSet;
 import pit12.runtime.input.InputBlocker;
 import pit12.runtime.input.InputTicks;
 import pit12.runtime.input.InputTicks.Phase;
+import pit12.runtime.languages.Languages;
 import pit12.runtime.session.ClientSession;
 import pit12.shared.input.MinecraftActions;
 import pit12.shared.lifecycle.ClientLifecycle;
@@ -47,14 +49,17 @@ public final class AutoUseFeature
     private final InputBlocker input;
     private final InputTicks inputTicks;
     private final AutoUseController controller;
+    private final AutoUseInventory inventory;
+    private final Runnable sessionListener = this::onSessionChanged;
     private EntityPlayerSP player;
     private long sessionRevision;
     private boolean started;
     private boolean active;
+    private boolean listening;
 
     public AutoUseFeature(Minecraft minecraft, ConfigCatalog configs, AutoUseConfig config,
             ClientSession session, InputBlocker input, InputTicks inputTicks,
-            MinecraftActions actions) {
+            MinecraftActions actions, Languages language) {
         this.minecraft = minecraft;
         this.configs = configs;
         this.config = config;
@@ -62,6 +67,7 @@ public final class AutoUseFeature
         this.input = input;
         this.inputTicks = inputTicks;
         controller = new AutoUseController(config, actions);
+        inventory = new AutoUseInventory(minecraft, config, controller, input, language);
     }
 
     @Override
@@ -71,6 +77,7 @@ public final class AutoUseFeature
             return;
         started = true;
         configs.addListener(this);
+        session.addListener(sessionListener);
         updateActivation();
     }
 
@@ -81,7 +88,16 @@ public final class AutoUseFeature
             return;
         started = false;
         configs.removeListener(this);
+        session.removeListener(sessionListener);
         updateActivation();
+        inventory.updatePlayer(null, session.revision());
+    }
+
+    private void onSessionChanged() {
+        inventory.updatePlayer(
+                session.world() == null ? null : inventoryPlayer(minecraft.thePlayer),
+                session.revision());
+        updateListening();
     }
 
     @Override
@@ -92,31 +108,43 @@ public final class AutoUseFeature
 
     private void updateActivation() {
         boolean enabled = started && config.enabled();
-        if (active == enabled)
-            return;
+        if (active && !enabled) {
+            if (player != null && player == minecraft.thePlayer && player.isEntityAlive()
+                    && sessionRevision == session.revision() && !input.locked()) {
+                controller.stop(player.inventory, player.isUsingItem());
+            }
+            controller.reset();
+        } else if (!active && enabled) {
+            inventory.resumeTransfers();
+        }
         active = enabled;
+        updateListening();
+    }
+
+    private void updateListening() {
+        boolean enabled = started && (active || inventory.hasWork());
+        if (listening == enabled)
+            return;
+        listening = enabled;
         if (enabled) {
             inputTicks.addListener(this);
             MinecraftForge.EVENT_BUS.register(this);
         } else {
             MinecraftForge.EVENT_BUS.unregister(this);
             inputTicks.removeListener(this);
-            if (player != null && player == minecraft.thePlayer && player.isEntityAlive()
-                    && sessionRevision == session.revision() && !input.locked()) {
-                controller.stop(player.inventory, player.isUsingItem());
-            }
             player = null;
-            controller.reset();
         }
     }
 
     @Override
     public void onInputTick(Phase phase) {
-        if (!active)
+        if (!listening)
             return;
         if (phase == Phase.START) {
             EntityPlayerSP current = minecraft.thePlayer;
             long revision = session.revision();
+            inventory.updatePlayer(inventoryPlayer(current), revision);
+            inventory.tick();
             if (player != current || sessionRevision != revision
                     || (current != null && !current.isEntityAlive())) {
                 controller.reset();
@@ -124,9 +152,20 @@ public final class AutoUseFeature
                 sessionRevision = revision;
             }
             controller.tick();
+            updateListening();
+            return;
+        }
+        if (phase == Phase.GUI_INPUT || phase == Phase.GUI_UPDATE) {
+            inventory.advance(phase, active);
             return;
         }
         if (phase != Phase.BEFORE_ACTIONS && phase != Phase.AFTER_INPUT)
+            return;
+        if (phase == Phase.AFTER_INPUT) {
+            inventory.advance(phase, active);
+            updateListening();
+        }
+        if (!active)
             return;
         if (player == null || player != minecraft.thePlayer || minecraft.theWorld == null
                 || minecraft.currentScreen != null || !minecraft.inGameHasFocus || input.locked()
@@ -144,10 +183,24 @@ public final class AutoUseFeature
             return;
         }
         GameSettings settings = minecraft.gameSettings;
-        if (!Mouse.isButtonDown(0) && !Mouse.isButtonDown(1)
-                && !InputBlocker.held(settings.keyBindAttack.getKeyCode())
-                && !InputBlocker.held(settings.keyBindUseItem.getKeyCode()))
-            controller.tryUse(player.inventory, player.getHealth());
+        if (Mouse.isButtonDown(0) || Mouse.isButtonDown(1)
+                || InputBlocker.held(settings.keyBindAttack.getKeyCode())
+                || InputBlocker.held(settings.keyBindUseItem.getKeyCode()))
+            return;
+        controller.tryUse(player.inventory, player.getHealth(),
+                inventory.available() ? inventory : null);
+    }
+
+    @SubscribeEvent
+    public void onDraw(GuiScreenEvent.DrawScreenEvent.Pre event) {
+        if (inventory.hides(event.gui))
+            event.setCanceled(true);
+    }
+
+    private static EntityPlayerSP inventoryPlayer(EntityPlayerSP candidate) {
+        return candidate != null && candidate.isEntityAlive() && !candidate.isSpectator()
+                ? candidate
+                : null;
     }
 
     @SubscribeEvent(receiveCanceled = true)

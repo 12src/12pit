@@ -138,6 +138,7 @@ import pit12.runtime.input.InputBlockBinding;
 import pit12.runtime.input.InputBlocker;
 import pit12.runtime.input.InputTickBinding;
 import pit12.runtime.input.InputTicks;
+import pit12.runtime.item.InventoryClicks;
 import pit12.runtime.languages.Languages;
 import pit12.runtime.nick.NickTracker;
 import pit12.runtime.pit.PitContext;
@@ -189,6 +190,8 @@ public final class ClientBootstrap {
         components.add(input);
         InputTicks inputTicks = new InputTicks(client, (InputTickBinding) minecraft);
         components.add(inputTicks);
+        InventoryClicks inventoryClicks = new InventoryClicks((InventoryClicks.Binding) minecraft);
+        components.add(inventoryClicks);
         CommandRegistry commands =
                 new CommandRegistry(client, configs, ForgeCommandAdapter::register, language);
         components.add(commands);
@@ -219,7 +222,7 @@ public final class ClientBootstrap {
         // Category: Combat
         SwapBindings swapBindings = registerSwap(minecraft, client, configs, session, commands,
                 new File(minecraft.mcDataDir, "12pit/swap-bindings.json").toPath(),
-                (SwapHooksBinding) minecraft, input, inputTicks);
+                (SwapHooksBinding) minecraft, input, inputTicks, inventoryClicks);
         // Category: Client
         WebUiConfig webUiConfig =
                 registerWebUi(webUiConfigs, configs, profiles, relations, hudEditor, swapBindings,
@@ -312,11 +315,12 @@ public final class ClientBootstrap {
     // Category: Combat
     private SwapBindings registerSwap(Minecraft minecraft, ClientThread client,
             ConfigCatalog configs, ClientSession session, CommandRegistry commands, Path path,
-            SwapHooksBinding binding, InputBlocker input, InputTicks inputTicks) {
+            SwapHooksBinding binding, InputBlocker input, InputTicks inputTicks,
+            InventoryClicks inventoryClicks) {
         SwapConfig config = new SwapConfig();
         configs.register(config);
         SwapFeature swap = new SwapFeature(minecraft, client, configs, config, session, commands,
-                path, binding, input, inputTicks, language);
+                path, binding, input, inputTicks, inventoryClicks, language);
         components.add(swap);
         return swap.bindings();
     }
@@ -402,7 +406,7 @@ public final class ClientBootstrap {
         AutoUseConfig config = new AutoUseConfig();
         configs.register(config);
         components.add(new AutoUseFeature(minecraft, configs, config, session, input, inputTicks,
-                actions));
+                actions, language));
     }
 
     private void registerEnhancedMlb(ConfigCatalog configs, EnhancedMlbBinding binding) {
