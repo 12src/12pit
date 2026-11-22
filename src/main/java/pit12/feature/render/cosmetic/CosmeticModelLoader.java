@@ -44,9 +44,12 @@ public final class CosmeticModelLoader {
             }
             try (Reader reader = new InputStreamReader(stream, StandardCharsets.UTF_8)) {
                 JsonObject root = new JsonParser().parse(reader).getAsJsonObject();
+                if (root.has("kind") && "voxels".equals(root.get("kind").getAsString())) {
+                    return parseVoxels(root, path);
+                }
                 ResourceLocation texture =
                         new ResourceLocation("pit12", "textures/cosmetic/" + id + ".png");
-                return parse(root, texture);
+                return parseBoxes(root, texture);
             }
         } catch (IOException | RuntimeException failure) {
             LOGGER.warn("Failed to load cosmetic model {}", path, failure);
@@ -54,8 +57,35 @@ public final class CosmeticModelLoader {
         }
     }
 
-    private static CosmeticModel parse(JsonObject root, ResourceLocation texture) {
-        CosmeticModel.Builder builder = new CosmeticModel.Builder();
+    private static CosmeticModel parseVoxels(JsonObject root, String path) {
+        int resolution = root.get("resolution").getAsInt();
+        if (resolution < 4 || resolution > 64) {
+            throw new IllegalArgumentException(path + " has an unsupported resolution");
+        }
+        JsonArray paletteArray = root.getAsJsonArray("palette");
+        int[] palette = new int[paletteArray.size()];
+        for (int index = 0; index < palette.length; index++) {
+            palette[index] = color(paletteArray.get(index).getAsString());
+        }
+        VoxelCosmeticModel model = new VoxelCosmeticModel(resolution, palette);
+        for (JsonElement element : root.getAsJsonArray("voxels")) {
+            JsonArray voxel = element.getAsJsonArray();
+            int colorIndex = voxel.get(3).getAsInt();
+            if (colorIndex < 0 || colorIndex >= palette.length) {
+                continue;
+            }
+            model.put(voxel.get(0).getAsInt(), voxel.get(1).getAsInt(), voxel.get(2).getAsInt(),
+                    colorIndex);
+        }
+        return model;
+    }
+
+    private static int color(String text) {
+        return Integer.parseInt(text.startsWith("#") ? text.substring(1) : text, 16);
+    }
+
+    private static CosmeticModel parseBoxes(JsonObject root, ResourceLocation texture) {
+        BoxCosmeticModel.Builder builder = new BoxCosmeticModel.Builder();
         JsonArray textureSize = root.getAsJsonArray("textureSize");
         builder.textureSize(textureSize.get(0).getAsInt(), textureSize.get(1).getAsInt());
         for (JsonElement element : root.getAsJsonArray("parts")) {

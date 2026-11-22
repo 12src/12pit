@@ -172,47 +172,53 @@ body,
 .cosmetic-canvas {
   flex: 1;
   min-width: 0;
-  overflow: auto;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
+  overflow: hidden;
   border: 1px solid var(--line);
   border-radius: 10px;
   background: var(--side);
-  padding: 12px;
 }
 
 .cosmetic-canvas canvas {
   display: block;
-  image-rendering: pixelated;
+  width: 100%;
+  height: 100%;
   cursor: crosshair;
   touch-action: none;
 }
 
 .cosmetic-preview {
-  width: 380px;
+  width: 240px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 8px;
+  gap: 10px;
   border: 1px solid var(--line);
   border-radius: 10px;
   background: var(--side);
-  padding: 12px;
+  padding: 14px;
 }
 
-.cosmetic-preview canvas {
-  width: 100%;
-  max-width: 360px;
-  aspect-ratio: 1;
-  cursor: grab;
-  touch-action: none;
-}
-
-.cosmetic-preview p {
+.cosmetic-stats {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
   margin: 0;
   color: var(--faint);
   font-size: 12px;
-  text-align: center;
+  line-height: 1.5;
+}
+
+.cosmetic-slice {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.cosmetic-slice span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }

@@ -18,73 +18,8 @@
  */
 package pit12.feature.render.cosmetic;
 
-import java.util.ArrayList;
-import java.util.List;
-import net.minecraft.client.model.ModelBase;
-import net.minecraft.client.model.ModelRenderer;
-import net.minecraft.entity.Entity;
-import net.minecraft.util.ResourceLocation;
+public interface CosmeticModel {
+    void render();
 
-public final class CosmeticModel {
-    private final ResourceLocation texture;
-    private final ModelRenderer[] outer;
-    private final ModelRenderer[] inner;
-
-    private CosmeticModel(ResourceLocation texture, List<ModelRenderer> outer,
-            List<ModelRenderer> inner) {
-        this.texture = texture;
-        this.outer = outer.toArray(new ModelRenderer[0]);
-        this.inner = inner.toArray(new ModelRenderer[0]);
-    }
-
-    public ResourceLocation texture() {
-        return texture;
-    }
-
-    public void renderOuter(float scale) {
-        for (ModelRenderer part : outer) {
-            part.render(scale);
-        }
-    }
-
-    public void renderInner(float scale) {
-        for (ModelRenderer part : inner) {
-            part.render(scale);
-        }
-    }
-
-    public static final class Builder extends ModelBase {
-        private final List<ModelRenderer> outer = new ArrayList<>();
-        private final List<ModelRenderer> inner = new ArrayList<>();
-
-        public void textureSize(int width, int height) {
-            textureWidth = width;
-            textureHeight = height;
-        }
-
-        public void add(boolean innerPart, int u, int v, float[] origin, int[] size,
-                float[] rotationPoint, float[] rotation) {
-            ModelRenderer part = new ModelRenderer(this, u, v);
-            part.textureWidth = textureWidth;
-            part.textureHeight = textureHeight;
-            part.setRotationPoint(rotationPoint[0], rotationPoint[1], rotationPoint[2]);
-            part.rotateAngleX = rotation[0];
-            part.rotateAngleY = rotation[1];
-            part.rotateAngleZ = rotation[2];
-            part.addBox(origin[0], origin[1], origin[2], size[0], size[1], size[2]);
-            if (innerPart) {
-                inner.add(part);
-            } else {
-                outer.add(part);
-            }
-        }
-
-        public CosmeticModel build(ResourceLocation texture) {
-            return new CosmeticModel(texture, outer, inner);
-        }
-
-        @Override
-        public void render(Entity entity, float limbSwing, float limbSwingAmount, float ageInTicks,
-                float netHeadYaw, float headPitch, float scale) {}
-    }
+    void dispose();
 }

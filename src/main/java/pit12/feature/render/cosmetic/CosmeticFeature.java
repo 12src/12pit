@@ -30,6 +30,7 @@ public final class CosmeticFeature implements ClientLifecycle, ConfigChangeListe
     private final CosmeticConfig config;
     private final CosmeticBinding binding;
     private final CosmeticModelLoader loader;
+    private CosmeticModel model;
     private boolean started;
 
     public CosmeticFeature(Minecraft minecraft, ConfigCatalog configs, CosmeticConfig config,
@@ -59,6 +60,7 @@ public final class CosmeticFeature implements ClientLifecycle, ConfigChangeListe
         started = false;
         configs.removeListener(this);
         binding.pit12$bindCosmeticRenderer(null);
+        disposeModel();
     }
 
     @Override
@@ -69,8 +71,16 @@ public final class CosmeticFeature implements ClientLifecycle, ConfigChangeListe
     }
 
     private void apply() {
-        CosmeticModel model = loader.load(config.style());
+        disposeModel();
+        model = loader.load(config.style());
         binding.pit12$bindCosmeticRenderer(
                 model == null ? null : new CosmeticRenderer(minecraft, config, model));
+    }
+
+    private void disposeModel() {
+        if (model != null) {
+            model.dispose();
+            model = null;
+        }
     }
 }

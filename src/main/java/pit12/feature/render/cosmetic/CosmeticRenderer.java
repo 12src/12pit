@@ -29,9 +29,6 @@ import pit12.shared.rendering.RenderStateSnapshot;
 public final class CosmeticRenderer {
     private static final float RADIANS_TO_DEGREES = 57.29578F;
     private static final float HEAD_TOP = -8.0F;
-    private static final float INNER_RED = 0.95F;
-    private static final float INNER_GREEN = 0.55F;
-    private static final float INNER_BLUE = 0.62F;
     private final Minecraft minecraft;
     private final CosmeticConfig config;
     private final CosmeticModel model;
@@ -82,7 +79,6 @@ public final class CosmeticRenderer {
     }
 
     private void draw(float scale) {
-        int color = config.color();
         float size = config.size() / 100.0F;
         float top = HEAD_TOP * scale;
         state.capture();
@@ -90,12 +86,7 @@ public final class CosmeticRenderer {
             GlStateManager.translate(0.0F, top, 0.0F);
             GlStateManager.scale(size, size, size);
             GlStateManager.translate(0.0F, -top, 0.0F);
-            minecraft.getTextureManager().bindTexture(model.texture());
-            GlStateManager.color(((color >>> 16) & 255) / 255.0F, ((color >>> 8) & 255) / 255.0F,
-                    (color & 255) / 255.0F, 1.0F);
-            model.renderOuter(scale);
-            GlStateManager.color(INNER_RED, INNER_GREEN, INNER_BLUE, 1.0F);
-            model.renderInner(scale);
+            model.render();
         } finally {
             state.restore();
         }

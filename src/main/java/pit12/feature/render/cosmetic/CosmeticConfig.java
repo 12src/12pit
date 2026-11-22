@@ -31,7 +31,6 @@ public final class CosmeticConfig extends FeatureConfig {
     public static final int EVERYONE = 2;
     private static final String[] STYLES = {"plain", "tabby", "spots"};
     private final ChoiceSetting style;
-    private final IntegerSetting color;
     private final IntegerSetting size;
     private final ChoiceSetting target;
     private final IntegerSetting distance;
@@ -44,8 +43,6 @@ public final class CosmeticConfig extends FeatureConfig {
                 new ChoiceSetting.Choice(0, source("Plain")),
                 new ChoiceSetting.Choice(1, source("Tabby")),
                 new ChoiceSetting.Choice(2, source("Spots")));
-        color = colorSetting("color", source("Ear color"), source("Color of the cat ears."),
-                0x2B2B2B);
         size = integerSliderSetting("size", source("Size (%)"),
                 source("Scales the ears from the top of the head."), 100, 50, 200, 5);
         section("visibility", source("Visibility"));
@@ -60,10 +57,6 @@ public final class CosmeticConfig extends FeatureConfig {
 
     public String style() {
         return STYLES[style.get()];
-    }
-
-    public int color() {
-        return color.get();
     }
 
     public int size() {
