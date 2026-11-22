@@ -47,6 +47,9 @@ public final class CosmeticRenderer {
         ModelRenderer head = model.bipedHead;
         GlStateManager.pushMatrix();
         try {
+            if (model.isSneak) {
+                GlStateManager.translate(0.0F, 0.2F, 0.0F);
+            }
             GlStateManager.translate(head.rotationPointX * scale, head.rotationPointY * scale,
                     head.rotationPointZ * scale);
             rotate(head.rotateAngleZ, 0.0F, 0.0F, 1.0F);
