@@ -42,6 +42,7 @@ final class NametagText {
     float y;
     float scale;
     float opacity;
+    long lastQueuedPass;
     private String displayName;
     private String teamPrefix;
     private String teamSuffix;
