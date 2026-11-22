@@ -34,6 +34,7 @@ export interface Hit {
   nx: number
   ny: number
   nz: number
+  placeholder: boolean
 }
 
 export interface Mesh {
@@ -263,7 +264,33 @@ export class VoxelModel {
     }
   }
 
-  pick(origin: number[], direction: number[]): Hit | null {
+  pick(
+    origin: number[],
+    direction: number[],
+    floorCell: number | null,
+  ): Hit | null {
+    const hit = this.pickCell(origin, direction)
+    if (hit || floorCell === null) return hit
+    if (Math.abs(direction[1]) < 1e-6) return null
+    const plane = floorCell / this.resolution
+    const distance = (plane - origin[1]) / direction[1]
+    if (distance <= 0) return null
+    const x = (origin[0] + direction[0] * distance) * this.resolution
+    const z = (origin[2] + direction[2] * distance) * this.resolution
+    const half = this.resolution / 2
+    if (x < -half || x >= half || z < -half || z >= half) return null
+    return {
+      x: Math.floor(x),
+      y: floorCell - 1,
+      z: Math.floor(z),
+      nx: 0,
+      ny: -1,
+      nz: 0,
+      placeholder: true,
+    }
+  }
+
+  private pickCell(origin: number[], direction: number[]): Hit | null {
     const resolution = this.resolution
     const bounds = this.bounds()
     const originX = origin[0] * resolution
@@ -318,7 +345,7 @@ export class VoxelModel {
     let ny = 0
     let nz = 0
     for (let step = 0; step < 4096; step++) {
-      if (this.has(x, y, z)) return { x, y, z, nx, ny, nz }
+      if (this.has(x, y, z)) return { x, y, z, nx, ny, nz, placeholder: false }
       if (maxX < maxY && maxX < maxZ) {
         x += stepX
         distance = maxX

@@ -59,7 +59,7 @@ const palette = [
 const styleIndex = ref(0)
 const tool = ref<Tool>('paint')
 const color = ref(palette[0])
-const mirror = ref(true)
+const mirror = ref(false)
 const grid = ref(true)
 const sliceEnabled = ref(false)
 const slice = ref(-9)
@@ -114,13 +114,28 @@ function headLines(): number[] {
 
 const HEAD = new Float32Array(headLines())
 
+function floorLines(): Float32Array {
+  const resolution = model.value.resolution
+  const half = resolution / 2
+  const unit = 1 / resolution
+  const y = -0.5
+  const lines: number[] = []
+  for (let index = -half; index <= half; index++) {
+    lines.push(index * unit, y, -half * unit, index * unit, y, half * unit)
+    lines.push(-half * unit, y, index * unit, half * unit, y, index * unit)
+  }
+  return new Float32Array(lines)
+}
+
 function rebuild() {
   if (!viewport) return
   const current = model.value
   const mesh = current.mesh(sliceEnabled.value ? slice.value : null)
-  const lines = new Float32Array(mesh.lines.length + HEAD.length)
+  const floor = floorLines()
+  const lines = new Float32Array(mesh.lines.length + HEAD.length + floor.length)
   lines.set(mesh.lines)
   lines.set(HEAD, mesh.lines.length)
+  lines.set(floor, mesh.lines.length + HEAD.length)
   viewport.setMesh({ ...mesh, lines })
   faceCount.value = mesh.faces
   voxelCount.value = current.cells.size
@@ -193,10 +208,17 @@ function loadStyle(index: number) {
   viewport?.draw()
 }
 
+function floorCell() {
+  return -model.value.resolution / 2
+}
+
 function pick(event: PointerEvent) {
   if (!viewport) return null
   const ray = viewport.ray(event.clientX, event.clientY)
-  return { ray, hit: model.value.pick(ray.origin, ray.direction) }
+  return {
+    ray,
+    hit: model.value.pick(ray.origin, ray.direction, floorCell()),
+  }
 }
 
 function paintCell(x: number, y: number, z: number, index: number) {
@@ -211,6 +233,11 @@ function eraseCell(x: number, y: number, z: number) {
 
 function applyTool(hit: Hit) {
   const current = model.value
+  if (hit.placeholder) {
+    if (tool.value === 'erase' || tool.value === 'pick') return
+    paintCell(hit.x, hit.y, hit.z, current.indexOf(color.value))
+    return
+  }
   if (tool.value === 'pick') {
     const index = current.colorIndex(hit.x, hit.y, hit.z)
     if (index !== undefined) color.value = current.palette[index]

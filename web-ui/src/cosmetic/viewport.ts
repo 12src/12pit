@@ -213,7 +213,7 @@ export class Viewport {
   }
 
   zoom(factor: number) {
-    this.distance = Math.max(4, Math.min(400, this.distance * factor))
+    this.distance = Math.max(0.2, Math.min(400, this.distance * factor))
   }
 
   private basis() {
@@ -239,7 +239,7 @@ export class Viewport {
     gl.useProgram(this.program)
     const { eye } = this.basis()
     const view = lookAt(eye, this.center, [0, -1, 0])
-    const projection = perspective(FIELD_OF_VIEW, width / height, 0.1, 2000)
+    const projection = perspective(FIELD_OF_VIEW, width / height, 0.01, 2000)
     const mvp = multiply(projection, view)
     gl.uniformMatrix4fv(this.mvpLocation, false, mvp)
     gl.enableVertexAttribArray(this.positionLocation)
