@@ -54,6 +54,7 @@ final class NametagOverlayRenderer {
     private final WorldRenderState state;
     private final List<NametagText> visible = new ArrayList<>();
     private ClippingHelper clipping;
+    private long renderPass;
 
     NametagOverlayRenderer(TextureState textures) {
         this.textures = textures;
@@ -88,6 +89,7 @@ final class NametagOverlayRenderer {
         Scoreboard scoreboard = world.getScoreboard();
         ScoreObjective objective = scoreboard.getObjectiveInDisplaySlot(2);
         PlayerOpacity playerOpacity = (PlayerOpacity) minecraft;
+        renderPass++;
         for (int index = 0; index < world.playerEntities.size(); index++) {
             EntityPlayer player = world.playerEntities.get(index);
             if (player.isDead || player == minecraft.thePlayer || player == camera
@@ -128,6 +130,9 @@ final class NametagOverlayRenderer {
             if (text == null) {
                 text = new NametagText(null, null, font);
                 texts.put(playerId, text);
+            } else if (text.lastQueuedPass == renderPass) {
+                // The world player list can keep a duplicate after a chunk reload.
+                continue;
             }
             if (lunarSource != null) {
                 if (text.lunarName == null) {
@@ -163,6 +168,7 @@ final class NametagOverlayRenderer {
                     + ((text.score == null ? 0 : scoreOffset) + font.FONT_HEIGHT) * text.scale;
             if (text.x + halfWidth >= 0 && text.x - halfWidth <= width && bottom >= 0
                     && top - text.scale <= height) {
+                text.lastQueuedPass = renderPass;
                 visible.add(text);
             }
         }
