@@ -34,10 +34,12 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Supplier;
 import pit12.feature.client.relation.api.Relation;
 import pit12.feature.client.relation.api.RelationEntry;
 import pit12.feature.client.relation.api.RelationReadiness;
 import pit12.feature.client.relation.api.Relations;
+import pit12.feature.client.webui.api.CosmeticHandler;
 import pit12.feature.combat.swap.api.SwapBindings;
 import pit12.runtime.config.ConfigCatalog;
 import pit12.runtime.config.ConfigChangeListener;
@@ -67,6 +69,7 @@ final class WebUiApi {
     private final WebUiPreferences preferences;
     private final WebUiState state;
     private final SettingsTransfer transfer;
+    private final Supplier<CosmeticHandler> cosmeticHandler;
     private final ConfigChangeListener configListener;
     private final ConfigChangeListener settingsListener;
     private final Runnable languageListener;
@@ -77,7 +80,8 @@ final class WebUiApi {
 
     WebUiApi(ConfigCatalog catalog, ConfigCatalog settings, WebUiConfig config, Profiles profiles,
             Relations relations, SwapBindings swapBindings, Languages language,
-            WebUiPreferences preferences, WebUiEvents events) {
+            WebUiPreferences preferences, WebUiEvents events,
+            Supplier<CosmeticHandler> cosmeticHandler) {
         this.catalog = catalog;
         this.settings = settings;
         this.config = config;
@@ -86,6 +90,7 @@ final class WebUiApi {
         this.swapBindings = swapBindings;
         this.language = language;
         this.preferences = preferences;
+        this.cosmeticHandler = cosmeticHandler;
         configListener = changes -> {
             catalogCache = null;
             changes.forEach((featureId, settingId) -> events.changed("/api/settings/" + featureId));
@@ -175,6 +180,19 @@ final class WebUiApi {
                 throw new IllegalArgumentException("Choose one relation change");
             List<Object> results = changeRelations(request.body, adding ? "add" : "remove");
             return object("relations", state.relations(), "results", results);
+        });
+        routes.register("GET", "/api/cosmetic/models/{id}", 0, request -> {
+            CosmeticHandler handler = cosmeticHandler.get();
+            String model = handler == null ? null : handler.readModel(request.parameters.get("id"));
+            return object("model", model == null ? "" : model);
+        });
+        routes.register("PUT", "/api/cosmetic/models/{id}", 1024 * 1024, request -> {
+            CosmeticHandler handler = cosmeticHandler.get();
+            if (handler == null) {
+                throw new IllegalArgumentException("The cosmetic editor is not available");
+            }
+            handler.saveModel(request.parameters.get("id"), request.body.toString());
+            return object("saved", true);
         });
         routes.register("GET", "/api/languages/{locale}", 0,
                 request -> language.texts(request.parameters.get("locale")));

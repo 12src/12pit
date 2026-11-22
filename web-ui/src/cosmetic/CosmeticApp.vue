@@ -37,6 +37,7 @@ import {
   Pipette,
   Redo2,
   RotateCcw,
+  Save,
   Undo2,
   Upload,
 } from '@lucide/vue'
@@ -327,6 +328,43 @@ function changeResolution(value: number) {
   viewport?.draw()
 }
 
+async function saveToGame() {
+  const id = catalog[styleIndex.value].id
+  try {
+    const response = await fetch(`/api/cosmetic/models/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(model.value.toJson()),
+    })
+    if (!response.ok) throw new Error(String(response.status))
+    status.value = t('Saved to the game.')
+  } catch (error) {
+    status.value = t('Could not save: {0}', String(error))
+  }
+}
+
+async function loadFromGame(silent = false) {
+  const id = catalog[styleIndex.value].id
+  try {
+    const response = await fetch(`/api/cosmetic/models/${id}`)
+    if (!response.ok) throw new Error(String(response.status))
+    const data = (await response.json()) as { model?: string }
+    if (!data.model) {
+      if (!silent) status.value = t('Nothing saved yet.')
+      return
+    }
+    pushUndo()
+    model.value = VoxelModel.fromJson(JSON.parse(data.model))
+    resolution.value = model.value.resolution
+    status.value = t('Loaded from the game.')
+    rebuild()
+    resetCamera()
+    viewport?.draw()
+  } catch (error) {
+    if (!silent) status.value = t('Could not load: {0}', String(error))
+  }
+}
+
 function exportJson() {
   const data = JSON.stringify(model.value.toJson(), null, 2)
   const blob = new Blob([`${data}\n`], { type: 'application/json' })
@@ -400,6 +438,7 @@ onMounted(() => {
   rebuild()
   resetCamera()
   viewport.draw()
+  void loadFromGame(true)
   window.addEventListener('resize', onResize)
   window.addEventListener('keydown', onKeyDown)
 })
@@ -526,6 +565,14 @@ onBeforeUnmount(() => {
           <button type="button" @click="loadStyle(styleIndex)">
             <RotateCcw :size="16" aria-hidden="true" />
             {{ t('Reset') }}
+          </button>
+          <button type="button" @click="saveToGame">
+            <Save :size="16" aria-hidden="true" />
+            {{ t('Save to game') }}
+          </button>
+          <button type="button" @click="loadFromGame()">
+            <RotateCcw :size="16" aria-hidden="true" />
+            {{ t('Load from game') }}
           </button>
           <button type="button" @click="exportJson">
             <Download :size="16" aria-hidden="true" />

@@ -34,8 +34,21 @@ import org.apache.logging.log4j.Logger;
 public final class CosmeticModelLoader {
     private static final Logger LOGGER = LogManager.getLogger(CosmeticModelLoader.class);
     private static final String DIRECTORY = "/assets/pit12/cosmetic/";
+    private final CosmeticStorage storage;
+
+    public CosmeticModelLoader(CosmeticStorage storage) {
+        this.storage = storage;
+    }
 
     public CosmeticModel load(String id) {
+        String saved = storage.read(id);
+        if (saved != null) {
+            try {
+                return parse(saved, id);
+            } catch (RuntimeException failure) {
+                LOGGER.warn("Failed to load the saved cosmetic model {}", id, failure);
+            }
+        }
         String path = DIRECTORY + id + ".json";
         try (InputStream stream = CosmeticModelLoader.class.getResourceAsStream(path)) {
             if (stream == null) {
@@ -43,13 +56,7 @@ public final class CosmeticModelLoader {
                 return null;
             }
             try (Reader reader = new InputStreamReader(stream, StandardCharsets.UTF_8)) {
-                JsonObject root = new JsonParser().parse(reader).getAsJsonObject();
-                if (root.has("kind") && "voxels".equals(root.get("kind").getAsString())) {
-                    return parseVoxels(root, path);
-                }
-                ResourceLocation texture =
-                        new ResourceLocation("pit12", "textures/cosmetic/" + id + ".png");
-                return parseBoxes(root, texture);
+                return parse(reader, id);
             }
         } catch (IOException | RuntimeException failure) {
             LOGGER.warn("Failed to load cosmetic model {}", path, failure);
@@ -57,10 +64,29 @@ public final class CosmeticModelLoader {
         }
     }
 
-    private static CosmeticModel parseVoxels(JsonObject root, String path) {
+    public static void validate(String json) {
+        parse(json, "model");
+    }
+
+    private static CosmeticModel parse(Reader reader, String id) {
+        return parse(new JsonParser().parse(reader).getAsJsonObject(), id);
+    }
+
+    private static CosmeticModel parse(String text, String id) {
+        return parse(new JsonParser().parse(text).getAsJsonObject(), id);
+    }
+
+    private static CosmeticModel parse(JsonObject root, String id) {
+        if (root.has("kind") && "voxels".equals(root.get("kind").getAsString())) {
+            return parseVoxels(root, id);
+        }
+        return parseBoxes(root, new ResourceLocation("pit12", "textures/cosmetic/" + id + ".png"));
+    }
+
+    private static CosmeticModel parseVoxels(JsonObject root, String id) {
         int resolution = root.get("resolution").getAsInt();
         if (resolution < 4 || resolution > 64) {
-            throw new IllegalArgumentException(path + " has an unsupported resolution");
+            throw new IllegalArgumentException(id + " has an unsupported resolution");
         }
         JsonArray paletteArray = root.getAsJsonArray("palette");
         int[] palette = new int[paletteArray.size()];

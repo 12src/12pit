@@ -33,6 +33,7 @@ import org.apache.logging.log4j.Logger;
 import org.lwjgl.input.Keyboard;
 import pit12.feature.client.hudeditor.api.HudEditor;
 import pit12.feature.client.relation.api.Relations;
+import pit12.feature.client.webui.api.CosmeticHandler;
 import pit12.feature.combat.swap.api.SwapBindings;
 import pit12.runtime.command.CommandNode;
 import pit12.runtime.command.CommandRegistry;
@@ -55,6 +56,7 @@ public final class WebUiFeature implements ClientLifecycle, ConfigChangeListener
     private final WebUiEvents events;
     private final WebUiApi api;
     private final WebUiPreferences preferences;
+    private CosmeticHandler cosmeticHandler;
     private boolean started;
 
     public WebUiFeature(ConfigCatalog catalog, ConfigCatalog settings, Profiles profiles,
@@ -67,7 +69,7 @@ public final class WebUiFeature implements ClientLifecycle, ConfigChangeListener
         preferences = new WebUiPreferences(settings, config, language, path);
         events = new WebUiEvents();
         api = new WebUiApi(catalog, settings, config, profiles, relations, swapBindings, language,
-                preferences, events);
+                preferences, events, () -> cosmeticHandler);
         WebUiRoutes routes = new WebUiRoutes();
         api.register(routes);
         server = new WebUiServer(minecraft, routes, events);
@@ -75,6 +77,10 @@ public final class WebUiFeature implements ClientLifecycle, ConfigChangeListener
                 CommandNode.command("settings", source("Open the configuration interface"))
                         .aliases("config", "clickgui").executes((sender, args) -> open()).build(),
                 true);
+    }
+
+    public void setCosmeticHandler(CosmeticHandler handler) {
+        cosmeticHandler = handler;
     }
 
     @Override

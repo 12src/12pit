@@ -168,6 +168,8 @@ public final class ClientBootstrap {
     private final List<ClientLifecycle> startedComponents = new ArrayList<>();
     private final ClientThread client;
     private final Languages language;
+    private WebUiFeature webUiFeature;
+    private CosmeticFeature cosmeticFeature;
     private final ClientShutdownBinding shutdown;
     private boolean started;
 
@@ -253,7 +255,8 @@ public final class ClientBootstrap {
         registerSmartBlock(minecraft, configs, session, (SmartBlockBinding) minecraft, inputTicks);
         // Category: Render
         registerChams(minecraft, configs);
-        registerCosmetic(minecraft, configs);
+        registerCosmetic(minecraft, configs,
+                new File(minecraft.mcDataDir, "12pit/cosmetic").toPath());
         registerEventList(configs, hudRegistry, commands);
         registerFocus(minecraft, configs, input, relations, playerNames);
         registerFreeCamera(minecraft, configs, input, (FreeCameraBinding) minecraft);
@@ -287,6 +290,7 @@ public final class ClientBootstrap {
                     (ResourceLeakFixBinding) minecraft.getTextureMapBlocks());
         }
         registerScoreboardFix(configs, (ScoreboardFixBinding) minecraft);
+        webUiFeature.setCosmeticHandler(cosmeticFeature);
         // Platform integrations
         components.add(new MixinFailureWarning(minecraft, session, language));
         OneConfigSupport oneConfig = new OneConfigSupport(configs, hudRegistry);
@@ -335,6 +339,7 @@ public final class ClientBootstrap {
         configs.register(config);
         WebUiFeature webUi = new WebUiFeature(featureConfigs, configs, profiles, relations,
                 hudEditor, swapBindings, config, commands, language, path);
+        webUiFeature = webUi;
         hudEditor.setWebUiOpener(config.keybind()::get, webUi::open);
         components.add(webUi);
         return config;
@@ -446,11 +451,12 @@ public final class ClientBootstrap {
         components.add(new ChamsFeature(minecraft.getRenderManager(), config));
     }
 
-    private void registerCosmetic(Minecraft minecraft, ConfigCatalog configs) {
+    private void registerCosmetic(Minecraft minecraft, ConfigCatalog configs, Path directory) {
         CosmeticConfig config = new CosmeticConfig();
         configs.register(config);
-        components
-                .add(new CosmeticFeature(minecraft, configs, config, (CosmeticBinding) minecraft));
+        cosmeticFeature = new CosmeticFeature(minecraft, configs, config,
+                (CosmeticBinding) minecraft, directory);
+        components.add(cosmeticFeature);
     }
 
     private void registerEventList(ConfigCatalog configs, HudRegistry hudRegistry,

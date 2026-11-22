@@ -18,28 +18,33 @@
  */
 package pit12.feature.render.cosmetic;
 
+import java.nio.file.Path;
 import net.minecraft.client.Minecraft;
+import pit12.feature.client.webui.api.CosmeticHandler;
 import pit12.runtime.config.ConfigCatalog;
 import pit12.runtime.config.ConfigChangeListener;
 import pit12.runtime.config.ConfigChangeSet;
 import pit12.shared.lifecycle.ClientLifecycle;
 
-public final class CosmeticFeature implements ClientLifecycle, ConfigChangeListener {
+public final class CosmeticFeature
+        implements ClientLifecycle, ConfigChangeListener, CosmeticHandler {
     private final Minecraft minecraft;
     private final ConfigCatalog configs;
     private final CosmeticConfig config;
     private final CosmeticBinding binding;
+    private final CosmeticStorage storage;
     private final CosmeticModelLoader loader;
     private CosmeticModel model;
     private boolean started;
 
     public CosmeticFeature(Minecraft minecraft, ConfigCatalog configs, CosmeticConfig config,
-            CosmeticBinding binding) {
+            CosmeticBinding binding, Path directory) {
         this.minecraft = minecraft;
         this.configs = configs;
         this.config = config;
         this.binding = binding;
-        loader = new CosmeticModelLoader();
+        storage = new CosmeticStorage(directory);
+        loader = new CosmeticModelLoader(storage);
     }
 
     @Override
@@ -75,6 +80,20 @@ public final class CosmeticFeature implements ClientLifecycle, ConfigChangeListe
         model = loader.load(config.style());
         binding.pit12$bindCosmeticRenderer(
                 model == null ? null : new CosmeticRenderer(minecraft, config, model));
+    }
+
+    @Override
+    public String readModel(String id) {
+        return storage.read(id);
+    }
+
+    @Override
+    public void saveModel(String id, String json) {
+        CosmeticModelLoader.validate(json);
+        storage.write(id, json);
+        if (started && id.equals(config.style())) {
+            apply();
+        }
     }
 
     private void disposeModel() {
