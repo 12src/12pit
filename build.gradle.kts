@@ -88,12 +88,13 @@ loom {
     }
 }
 
+val releaseBuild = providers.gradleProperty("release").isPresent
 val buildConfigProperties =
     mapOf(
         "modId" to modId,
         "modName" to modName,
         "modVersion" to modVersion,
-        "releaseBuild" to providers.gradleProperty("release").isPresent,
+        "releaseBuild" to releaseBuild,
     )
 val generatedBuildConfigDirectory = layout.buildDirectory.dir("generated/sources/buildConfig/java/main")
 val generateBuildConfig =
@@ -128,6 +129,7 @@ val generateMixinConfigs =
 sourceSets.main {
     java.srcDir(generatedBuildConfigDirectory)
     resources.srcDir(generateMixinConfigs)
+    if (releaseBuild) resources.exclude("assets/pit12/languages/*.po")
     output.setResourcesDir(sourceSets.main.flatMap { it.java.classesDirectory })
 }
 
@@ -332,10 +334,32 @@ tasks.withType<JavaExec>().configureEach {
     notCompatibleWithConfigurationCache("Loom and IDE launch tasks use project state at execution time.")
 }
 
+val compactReleaseLanguages =
+    if (releaseBuild) {
+        val catalogs = fileTree("src/main/resources/assets/pit12/languages") { include("*.po") }
+        val output = layout.buildDirectory.dir("generated/resources/releaseLanguages")
+        tasks.register<Exec>("compactReleaseLanguages") {
+            inputs.file("scripts/languages.py")
+            inputs.files(catalogs)
+            outputs.files(output.zip(catalogs.elements) { directory, files -> files.map { directory.file(it.asFile.name) } })
+            commandLine(
+                if (SystemUtils.IS_OS_WINDOWS) "python" else "python3",
+                "scripts/languages.py",
+                "compact",
+                output.get().asFile,
+            )
+        }
+    } else {
+        null
+    }
+
 tasks.processResources {
     mustRunAfter(buildWebUi)
     from("web-ui/dist") { into("assets/pit12/web") }
     from(generateBuildInfo) { into("assets/pit12") }
+    if (compactReleaseLanguages != null) {
+        from(compactReleaseLanguages) { into("assets/pit12/languages") }
+    }
     val properties =
         mapOf(
             "version" to project.version,
