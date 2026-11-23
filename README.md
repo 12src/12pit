@@ -14,7 +14,7 @@ For help and discussion regarding development, please join our [Discord](https:/
 
 The build process requires at least JDK 21. The mod requires Java 8, which is what Minecraft 1.8.9 uses, and Gradle detects and installs it.
 
-Also required are Node.js and npm because they are needed for `assemble` and `runClient` tasks which compile the configuration interface. CI is built with Node.js 24.
+`assemble` and `runClient` use Node.js and npm to build the configuration interface. CI uses Node.js 26.
 
 ## Build Process
 
