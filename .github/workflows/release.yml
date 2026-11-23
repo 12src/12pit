@@ -65,6 +65,11 @@ jobs:
           cache: npm
           cache-dependency-path: web-ui/package-lock.json
 
+      - name: Set up Python 3.15
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.15'
+
       - name: Set up JDK 8
         uses: actions/setup-java@v6
         with:
@@ -82,6 +87,11 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
         with:
           cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY || 'MTJwaXQtZW5jcnlwdGlvbg==' }}
+
+      - name: Set up advancecomp and zip
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends advancecomp zip
 
       - name: Build
         run: |

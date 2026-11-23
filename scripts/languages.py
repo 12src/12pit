@@ -28,13 +28,15 @@ def write_changed(path, content):
     path.write_text(content, encoding="utf-8", newline="\n")
 
 
-def read_catalog(text, name):
+def read_catalog(text, name, entry_ranges=None):
+    lines = text.lstrip("\ufeff").splitlines()
     catalog = {}
     usages = set()
     fields, locations, flags = {}, [], []
     current = None
+    start = 0
 
-    def finish():
+    def finish(end):
         if not fields:
             return
         if "msgid" not in fields or "msgstr" not in fields:
@@ -55,11 +57,15 @@ def read_catalog(text, name):
         if target and "fuzzy" not in flags and Counter(PARAMETER.findall(source)) != Counter(PARAMETER.findall(target)):
             raise ValueError(f"{name}: {source!r}: translation parameters do not match the source")
         catalog[key] = {"translation": target, "flags": flags}
+        if entry_ranges is not None:
+            entry_ranges.append((source, start, end))
 
-    for number, line in enumerate(text.lstrip("\ufeff").splitlines() + [""], 1):
+    for number, line in enumerate(lines, 1):
         line = line.strip()
         if not line or ("msgstr" in fields and line.startswith(("#", "msgctxt", "msgid"))):
-            finish()
+            next_start = number - 1 if line else number
+            finish(next_start)
+            start = next_start
             fields, locations, flags = {}, [], []
             current = None
         if not line:
@@ -86,7 +92,27 @@ def read_catalog(text, name):
         if not PO_STRING.fullmatch(value):
             raise ValueError(f"{name}:{number}: invalid PO string")
         fields[current] += ast.literal_eval(value)
+    finish(len(lines))
     return catalog
+
+
+def compact_catalog(text, name):
+    entry_ranges = []
+    catalog = read_catalog(text, name, entry_ranges)
+    # A missing location can turn the remaining translation into a shared one.
+    translated_sources = {
+        source for (source, _), entry in catalog.items()
+        if entry["translation"] and entry["translation"] != source and "fuzzy" not in entry["flags"]
+    }
+    lines = text.splitlines(keepends=True)
+    kept = []
+    start = 0
+    for source, first, end in entry_ranges:
+        if source not in translated_sources:
+            kept.extend(lines[start:first])
+            start = end
+    kept.extend(lines[start:])
+    return "".join(kept)
 
 
 def write_catalog(path, catalog):
@@ -283,9 +309,11 @@ def status(entries):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Extract source text and download Crowdin translations")
+    parser = argparse.ArgumentParser(description="Manage translation files")
     commands = parser.add_subparsers(dest="command", required=True)
     commands.add_parser("extract", help="Generate build/generated/languages/12pit.pot for CI")
+    compact = commands.add_parser("compact", help="Write smaller PO files for a release")
+    compact.add_argument("output", type=Path, help="Output directory")
     add = commands.add_parser("add", help="Enable a Crowdin language, download its PO, and register it locally")
     add.add_argument("language", help="Language tag, for example nl-NL")
     add.add_argument("--name", required=True, help="Native name, for example Nederlands")
@@ -301,6 +329,13 @@ def main():
             catalog = source_catalog(found)
             write_catalog(ROOT / "build/generated/languages/12pit.pot", catalog)
             print(f"Extracted {len(found)} source texts, {len(catalog)} usages")
+            return 0
+        if args.command == "compact":
+            if args.output.resolve() == DIRECTORY.resolve():
+                raise ValueError("Choose an output directory outside the source catalogs")
+            for path in sorted(DIRECTORY.glob("*.po")):
+                text = path.read_text(encoding="utf-8")
+                write_changed(args.output / path.name, compact_catalog(text, path.name))
             return 0
         entries = read_languages()
         if args.command == "status":

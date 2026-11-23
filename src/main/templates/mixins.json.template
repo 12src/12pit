@@ -1,5 +1,4 @@
 {
-  "required": true,
   "minVersion": "0.7.11",
   "package": "${mixinPackage}",
   "plugin": "${basePackage}.platform.mixinconfig.MixinConfigPlugin",
