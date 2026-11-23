@@ -20,10 +20,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v7
 
       - name: Set up Python 3.15
-        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        uses: actions/setup-python@v7
         with:
           python-version: '3.15'
 
@@ -46,7 +46,7 @@ jobs:
 
       - name: Upload source text
         if: steps.revision.outputs.current == 'true'
-        uses: crowdin/github-action@d651c77756acbe11a31d77a6fb79d8a239e1e05a # v3.6.0
+        uses: crowdin/github-action@v3
         with:
           source: build/generated/languages/12pit.pot
           translation: src/main/resources/assets/pit12/languages/%locale%.po

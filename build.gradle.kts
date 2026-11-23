@@ -163,6 +163,8 @@ tasks.test {
     }
 }
 
+jacoco { toolVersion = providers.gradleProperty("jacocoVersion").get() }
+
 tasks.jacocoTestReport { reports { xml.required = true } }
 
 pmd { ruleSetFiles = files("config/pmd.xml") }
