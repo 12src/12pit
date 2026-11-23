@@ -88,6 +88,11 @@ jobs:
         with:
           cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY || 'MTJwaXQtZW5jcnlwdGlvbg==' }}
 
+      - name: Set up advancecomp and zip
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends advancecomp zip
+
       - name: Build
         run: |
           chmod +x gradlew

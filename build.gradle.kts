@@ -2,8 +2,12 @@ import com.github.spotbugs.snom.Confidence
 import com.github.spotbugs.snom.Effort
 import com.github.spotbugs.snom.SpotBugsTask
 import dev.architectury.pack200.java.Pack200Adapter
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption.REPLACE_EXISTING
+import javax.inject.Inject
 import net.fabricmc.loom.task.RemapJarTask
 import org.apache.commons.lang3.SystemUtils
+import org.gradle.process.ExecOperations
 
 plugins {
     java
@@ -341,7 +345,9 @@ val compactReleaseLanguages =
         tasks.register<Exec>("compactReleaseLanguages") {
             inputs.file("scripts/languages.py")
             inputs.files(catalogs)
-            outputs.files(output.zip(catalogs.elements) { directory, files -> files.map { directory.file(it.asFile.name) } })
+            outputs.files(
+                output.zip(catalogs.elements) { directory, files -> files.map { directory.file(it.asFile.name) } }
+            )
             commandLine(
                 if (SystemUtils.IS_OS_WINDOWS) "python" else "python3",
                 "scripts/languages.py",
@@ -374,6 +380,25 @@ tasks.processResources {
     filesMatching("mcmod.info") { expand(properties) }
 }
 
+abstract class OptimizeReleaseJar : DefaultTask() {
+    @get:InputFile abstract val inputJar: RegularFileProperty
+
+    @get:OutputFile abstract val outputJar: RegularFileProperty
+
+    @get:Inject protected abstract val execOperations: ExecOperations
+
+    @TaskAction
+    fun optimize() {
+        val output = outputJar.get().asFile
+        val candidate = temporaryDir.resolve(output.name)
+        inputJar.get().asFile.copyTo(candidate, overwrite = true)
+        execOperations.exec { commandLine("advzip", "--recompress", "--shrink-normal", candidate) }
+        execOperations.exec { commandLine("zip", "-qd", candidate, "*/") }
+        execOperations.exec { commandLine("advzip", "--test", candidate) }
+        Files.move(candidate.toPath(), output.toPath(), REPLACE_EXISTING)
+    }
+}
+
 val remapJar =
     tasks.named<RemapJarTask>("remapJar") {
         dependsOn(tasks.shadowJar)
@@ -382,6 +407,18 @@ val remapJar =
         archiveClassifier.set("")
         inputFile.set(tasks.shadowJar.get().archiveFile)
     }
+
+if (releaseBuild) {
+    val optimizeReleaseJar =
+        tasks.register<OptimizeReleaseJar>("optimizeReleaseJar") {
+            inputJar.set(remapJar.flatMap { it.archiveFile })
+            outputJar.set(layout.buildDirectory.file("libs/$modName.jar"))
+        }
+    remapJar.configure {
+        destinationDirectory.set(layout.buildDirectory.dir("tmp/remapJar"))
+        finalizedBy(optimizeReleaseJar)
+    }
+}
 
 tasks.jar { enabled = false }
 
