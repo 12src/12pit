@@ -388,7 +388,7 @@
   background: var(--accent);
   color: var(--accent-text);
   font-size: 12px;
-  font-weight: 650;
+  font-weight: 700;
   white-space: nowrap;
   transition:
     background-color 0.15s ease,

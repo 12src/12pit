@@ -36,10 +36,8 @@ const emit = defineEmits<{
 const dialog = ref<HTMLDialogElement | null>(null)
 const search = ref('')
 const draft = ref(String(props.option.value))
-const selectedChoice = computed(
-  () =>
-    props.option.choices!.find((choice) => choice.value === props.option.value)!
-      .name,
+const selectedChoice = computed(() =>
+  props.option.choices!.find((choice) => choice.value === props.option.value)!,
 )
 const choices = computed(() => {
   const query = search.value.trim().toLowerCase()
@@ -103,7 +101,10 @@ watch(
         aria-haspopup="dialog"
         @click="open()"
       >
-        <FormattedText :text="selectedChoice" />
+        <FormattedText
+          :text="selectedChoice.name"
+          :lang="selectedChoice.locale"
+        />
         <Languages :size="16" aria-hidden="true" />
       </button>
     </div>
@@ -160,7 +161,9 @@ watch(
             @click="draft = String(choice.value)"
           >
             <span>
-              <strong><FormattedText :text="choice.name" /></strong>
+              <strong :lang="choice.locale">
+                <FormattedText :text="choice.name" />
+              </strong>
               <small>{{ choice.displayName }}</small>
             </span>
             <Check

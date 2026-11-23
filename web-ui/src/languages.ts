@@ -44,7 +44,8 @@ export async function loadLanguage(language: string) {
   return catalog
 }
 
-export function applyLanguage(catalog: Catalog | null) {
+export function applyLanguage(language: string, catalog: Catalog | null) {
+  document.documentElement.lang = language
   texts.value = catalog
 }
 
