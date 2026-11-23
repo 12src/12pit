@@ -23,16 +23,22 @@ import pit12.runtime.languages.Languages;
 public final class ConfigGroup {
     private final String id;
     private final String originalDisplayName;
+    private final boolean translatable;
     private String displayName;
 
     public ConfigGroup(String id, String displayName) {
+        this(id, displayName, true);
+    }
+
+    ConfigGroup(String id, String displayName, boolean translatable) {
         this.id = ConfigNames.requireStableId(id, "config group id");
         originalDisplayName = displayName;
+        this.translatable = translatable;
         this.displayName = displayName;
     }
 
     void localize(Languages language) {
-        displayName = language.translate(originalDisplayName);
+        displayName = language.translate(originalDisplayName, translatable);
     }
 
     public String id() {

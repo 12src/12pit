@@ -146,8 +146,12 @@ public abstract class FeatureConfig {
     }
 
     protected final void category(String id, String displayName) {
+        category(id, displayName, true);
+    }
+
+    protected final void category(String id, String displayName, boolean translatable) {
         hasCategories = true;
-        currentCategory = new ConfigGroup(id, displayName);
+        currentCategory = new ConfigGroup(id, displayName, translatable);
         currentSection = null;
     }
 

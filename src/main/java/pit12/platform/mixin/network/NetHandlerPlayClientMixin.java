@@ -26,6 +26,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.network.Packet;
 import net.minecraft.network.play.client.C07PacketPlayerDigging;
 import net.minecraft.network.play.client.C0BPacketEntityAction;
+import net.minecraft.network.play.client.C0EPacketClickWindow;
 import net.minecraft.network.play.server.S04PacketEntityEquipment;
 import net.minecraft.network.play.server.S0EPacketSpawnObject;
 import net.minecraft.network.play.server.S13PacketDestroyEntities;
@@ -34,6 +35,7 @@ import net.minecraft.network.play.server.S19PacketEntityStatus;
 import net.minecraft.network.play.server.S1CPacketEntityMetadata;
 import net.minecraft.network.play.server.S22PacketMultiBlockChange;
 import net.minecraft.network.play.server.S23PacketBlockChange;
+import net.minecraft.network.play.server.S32PacketConfirmTransaction;
 import net.minecraft.network.play.server.S38PacketPlayerListItem;
 import net.minecraft.network.play.server.S3BPacketScoreboardObjective;
 import net.minecraft.network.play.server.S3CPacketUpdateScore;
@@ -47,6 +49,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import pit12.runtime.arrow.ArrowPacketBinding;
 import pit12.runtime.arrow.ArrowPacketObserver;
+import pit12.runtime.item.InventoryClicks;
 import pit12.runtime.player.PlayerEquipmentPacketBinding;
 import pit12.runtime.player.PlayerEquipmentPacketObserver;
 import pit12.runtime.player.TabPacketBinding;
@@ -59,6 +62,8 @@ public abstract class NetHandlerPlayClientMixin implements PlayerEquipmentPacket
         TabPacketBinding, SidebarPacketBinding, ArrowPacketBinding {
     @Shadow
     private WorldClient clientWorldController;
+    @Shadow
+    private Minecraft gameController;
     @Unique
     private ArrowPacketObserver pit12$arrowObserver;
     @Unique
@@ -91,6 +96,31 @@ public abstract class NetHandlerPlayClientMixin implements PlayerEquipmentPacket
     @Override
     public ArrowPacketObserver pit12$arrowObserver() {
         return pit12$arrowObserver;
+    }
+
+    @Inject(method = "addToSendQueue", at = @At("HEAD"))
+    private void pit12$beforeWindowClick(Packet<?> packet, CallbackInfo callback) {
+        if (!(packet instanceof C0EPacketClickWindow)
+                || !gameController.isCallingFromMinecraftThread()
+                || (Object) this != gameController.getNetHandler())
+            return;
+        InventoryClicks clicks = ((InventoryClicks.Binding) gameController).pit12$inventoryClicks();
+        if (clicks != null) {
+            C0EPacketClickWindow click = (C0EPacketClickWindow) packet;
+            clicks.sent(click.getWindowId(), click.getActionNumber());
+        }
+    }
+
+    // Vanilla has handed the confirmation to the client thread by this point.
+    @Inject(method = "handleConfirmTransaction", at = @At("TAIL"))
+    private void pit12$afterInventoryConfirmation(S32PacketConfirmTransaction packet,
+            CallbackInfo callback) {
+        if ((Object) this != gameController.getNetHandler())
+            return;
+        InventoryClicks clicks = ((InventoryClicks.Binding) gameController).pit12$inventoryClicks();
+        if (clicks != null)
+            clicks.confirmed(packet.getWindowId(), packet.getActionNumber(),
+                    packet.func_148888_e());
     }
 
     @Inject(method = "handleSpawnObject", at = @At("TAIL"))

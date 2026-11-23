@@ -18,20 +18,23 @@
  */
 package pit12.feature.combat.autouse;
 
+import java.util.Arrays;
 import net.minecraft.entity.player.InventoryPlayer;
-import net.minecraft.init.Items;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import pit12.feature.combat.autouse.AutoUseConfig.ItemSettings;
+import pit12.feature.combat.autouse.AutoUseConfig.UseItem;
 import pit12.shared.input.MinecraftActions;
 
 final class AutoUseController {
+    private static final UseItem[] ITEMS = UseItem.values();
     private final AutoUseConfig config;
     private final MinecraftActions actions;
-    private int cooldown;
+    private final long[] nextUseTick = new long[ITEMS.length];
+    private long tick;
     private int slotDelay;
     private int previousSlot = -1;
     private int selectedSlot;
-    private Item pendingItem;
+    private String pendingItemName;
     private boolean manualInputThisTick;
 
     AutoUseController(AutoUseConfig config, MinecraftActions actions) {
@@ -40,8 +43,7 @@ final class AutoUseController {
     }
 
     void tick() {
-        if (cooldown > 0)
-            cooldown--;
+        tick++;
         if (slotDelay > 0)
             slotDelay--;
         manualInputThisTick = false;
@@ -58,46 +60,95 @@ final class AutoUseController {
     }
 
     void cancelClick() {
-        if (pendingItem != null) {
+        if (pendingItemName != null) {
             slotDelay = 0;
-            pendingItem = null;
+            pendingItemName = null;
         }
     }
 
-    void tryUse(InventoryPlayer inventory, float health) {
-        if (cooldown > 0 || manualInputThisTick)
+    void tryUse(InventoryPlayer inventory, float health, PullOperation pull) {
+        if (manualInputThisTick)
             return;
         if (previousSlot >= 0) {
-            if (pendingItem != null && slotDelay == 0)
+            if (pendingItemName != null && slotDelay == 0)
                 useSelectedItem(inventory, health);
             return;
         }
-        boolean goldenHead = config.goldenHead.ready(health);
-        boolean soup = config.soup.ready(health);
-        boolean ragePotato = config.ragePotato.ready(health);
-        boolean fracturedSoul = config.fracturedSoul.ready(health);
-        if (!goldenHead && !soup && !ragePotato && !fracturedSoul)
+        int ready = 0;
+        for (UseItem item : ITEMS)
+            if (ready(item, health))
+                ready |= 1 << item.ordinal();
+        if (ready == 0)
             return;
         int heldSlot = inventory.currentItem;
-        if (matches(inventory.getCurrentItem(), goldenHead, soup, ragePotato, fracturedSoul)) {
-            click();
+        UseItem held = itemForName(displayName(inventory.getCurrentItem()));
+        if (includes(ready, held)) {
+            click(held);
             return;
         }
         int hotbarSize = InventoryPlayer.getHotbarSize();
         for (int slot = 0; slot < hotbarSize; slot++) {
-            ItemStack stack = inventory.getStackInSlot(slot);
-            if (slot == heldSlot || !matches(stack, goldenHead, soup, ragePotato, fracturedSoul))
+            if (slot == heldSlot)
+                continue;
+            String name = displayName(inventory.getStackInSlot(slot));
+            UseItem item = itemForName(name);
+            if (!includes(ready, item))
                 continue;
             previousSlot = heldSlot;
             selectedSlot = slot;
             inventory.currentItem = slot;
-            slotDelay = config.switchDelay.get();
+            slotDelay = config.items.get(item).switchDelay.get();
             if (slotDelay == 0)
-                click();
+                click(item);
             else
-                pendingItem = stack.getItem();
+                pendingItemName = name;
             return;
         }
+        if (pull != null) {
+            int inventoryReady = 0;
+            for (UseItem item : ITEMS)
+                if (includes(ready, item) && config.items.get(item).fromInventory.get())
+                    inventoryReady |= 1 << item.ordinal();
+            if (inventoryReady == 0)
+                return;
+            int targetSlot = transferSlot(inventory, hotbarSize);
+            if (targetSlot < 0)
+                return;
+            UseItem wanted = null;
+            int largest = 0;
+            int source = -1;
+            for (int slot = hotbarSize; slot < inventory.mainInventory.length; slot++) {
+                ItemStack stack = inventory.getStackInSlot(slot);
+                UseItem item = itemForName(displayName(stack));
+                if (wanted == null && includes(inventoryReady, item))
+                    wanted = item;
+                if (wanted != null && item == wanted && stack.stackSize > largest) {
+                    source = slot;
+                    largest = stack.stackSize;
+                }
+            }
+            if (source >= 0)
+                pull.move(source, targetSlot);
+        }
+    }
+
+    boolean readyFromInventory(ItemStack stack, float health) {
+        UseItem item = itemForName(displayName(stack));
+        return item != null && config.items.get(item).fromInventory.get() && ready(item, health);
+    }
+
+    private boolean ready(UseItem item, float health) {
+        return tick >= nextUseTick[item.ordinal()] && config.items.get(item).ready(health);
+    }
+
+    private int transferSlot(InventoryPlayer inventory, int hotbarSize) {
+        int heldSlot = inventory.currentItem;
+        for (int slot = 0; slot < hotbarSize; slot++)
+            if (slot != heldSlot && inventory.getStackInSlot(slot) == null)
+                return slot;
+        if (inventory.getCurrentItem() == null)
+            return heldSlot;
+        return config.replaceWhenFull.get() ? config.replacementSlot.get() - 1 : -1;
     }
 
     private void useSelectedItem(InventoryPlayer inventory, float health) {
@@ -105,26 +156,29 @@ final class AutoUseController {
             manualSlotChange();
             return;
         }
-        ItemStack held = inventory.getCurrentItem();
-        if (!matches(held, config.goldenHead.ready(health), config.soup.ready(health),
-                config.ragePotato.ready(health), config.fracturedSoul.ready(health))
-                || held.getItem() != pendingItem) {
+        String name = displayName(inventory.getCurrentItem());
+        if (!pendingItemName.equals(name)) {
             cancelClick();
             return;
         }
-        click();
+        UseItem item = itemForName(name);
+        if (config.items.get(item).ready(health))
+            click(item);
+        else
+            cancelClick();
     }
 
-    private void click() {
-        recordClick();
+    private void click(UseItem item) {
+        recordClick(item);
         actions.pit12$rightClick();
     }
 
-    private void recordClick() {
-        pendingItem = null;
-        cooldown = config.interval.get();
+    private void recordClick(UseItem item) {
+        pendingItemName = null;
+        ItemSettings timing = config.items.get(item);
+        nextUseTick[item.ordinal()] = tick + timing.interval.get();
         if (previousSlot >= 0)
-            slotDelay = config.returnDelay.get();
+            slotDelay = timing.returnDelay.get();
     }
 
     void beforeActions(InventoryPlayer inventory, boolean usingItem) {
@@ -132,9 +186,9 @@ final class AutoUseController {
             return;
         if (inventory.currentItem != selectedSlot) {
             manualSlotChange();
-        } else if (pendingItem != null) {
+        } else if (pendingItemName != null) {
             if (manualInputThisTick)
-                recordClick();
+                recordClick(itemForName(pendingItemName));
         } else if (slotDelay == 0 && !usingItem) {
             inventory.currentItem = previousSlot;
             previousSlot = -1;
@@ -148,21 +202,49 @@ final class AutoUseController {
     }
 
     void reset() {
-        cooldown = 0;
+        Arrays.fill(nextUseTick, 0);
+        tick = 0;
         slotDelay = 0;
         previousSlot = -1;
-        pendingItem = null;
+        pendingItemName = null;
         manualInputThisTick = false;
     }
 
-    private static boolean matches(ItemStack stack, boolean goldenHead, boolean soup,
-            boolean ragePotato, boolean fracturedSoul) {
-        if (stack == null || stack.stackSize <= 0)
-            return false;
-        Item item = stack.getItem();
-        return goldenHead && item == Items.skull
-                || soup && (item == Items.rabbit_stew || item == Items.mushroom_stew)
-                || ragePotato && item == Items.baked_potato
-                || fracturedSoul && item == Items.magma_cream;
+    private static boolean includes(int ready, UseItem item) {
+        return item != null && (ready & (1 << item.ordinal())) != 0;
+    }
+
+    private static String displayName(ItemStack stack) {
+        return stack != null && stack.stackSize > 0 && stack.hasDisplayName()
+                ? stack.getDisplayName()
+                : null;
+    }
+
+    private static UseItem itemForName(String name) {
+        if (name == null)
+            return null;
+        switch (name) {
+            case "§6Golden Head":
+                return UseItem.GOLDEN_HEAD;
+            case "§aTasty Soup":
+            case "§aAssist Soup":
+                return UseItem.SOUP;
+            case "§cRage Potato":
+                return UseItem.RAGE_POTATO;
+            case "§bFractured Soul":
+                return UseItem.FRACTURED_SOUL;
+            case "§6AAA-Rated Steak":
+                return UseItem.AAA_RATED_STEAK;
+            case "§aAura of Protection":
+                return UseItem.AURA_OF_PROTECTION;
+            case "§cFirst-Aid Egg":
+                return UseItem.FIRST_AID_EGG;
+            default:
+                return null;
+        }
+    }
+
+    interface PullOperation {
+        void move(int sourceSlot, int hotbarSlot);
     }
 }

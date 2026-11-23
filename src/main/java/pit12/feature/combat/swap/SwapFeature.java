@@ -27,7 +27,6 @@ import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
-import org.lwjgl.input.Mouse;
 import pit12.feature.combat.swap.api.SwapBindings;
 import pit12.runtime.command.CommandRegistry;
 import pit12.runtime.config.ConfigCatalog;
@@ -37,6 +36,8 @@ import pit12.runtime.input.InputBlocker;
 import pit12.runtime.input.InputHandler;
 import pit12.runtime.input.InputTicks;
 import pit12.runtime.input.InputTicks.Phase;
+import pit12.runtime.item.InventoryClicks;
+import pit12.runtime.item.InventoryScreen;
 import pit12.runtime.item.PitEnchantment;
 import pit12.runtime.item.PitEnchantmentReader;
 import pit12.runtime.languages.Languages;
@@ -61,16 +62,17 @@ public final class SwapFeature implements ClientLifecycle, ConfigChangeListener,
     private final SwapHooksBinding hookBinding;
     private final InputBlocker input;
     private final InputTicks inputTicks;
+    private final InventoryClicks inventoryClicks;
+    private final InventoryScreen inventoryScreen;
     private final Runnable sessionListener = this::worldChanged;
     private boolean started;
     private boolean listening;
     private boolean rightClickHeld;
-    private boolean mouseGrabbed;
 
     public SwapFeature(Minecraft minecraft, ClientThread client, ConfigCatalog configs,
             SwapConfig config, ClientSession session, CommandRegistry commands, Path path,
             SwapHooksBinding hookBinding, InputBlocker input, InputTicks inputTicks,
-            Languages language) {
+            InventoryClicks inventoryClicks, Languages language) {
         this.minecraft = minecraft;
         this.configs = configs;
         this.config = config;
@@ -79,10 +81,12 @@ public final class SwapFeature implements ClientLifecycle, ConfigChangeListener,
         this.hookBinding = hookBinding;
         this.input = input;
         this.inputTicks = inputTicks;
+        this.inventoryClicks = inventoryClicks;
+        inventoryScreen = new InventoryScreen(minecraft, input, this);
         bindings = new BindingBook(client, path,
                 message -> report(Tone.ERROR, language.translate(message)));
-        controller = new SwapController(minecraft, session, config, bindings, this::report, input,
-                this, language);
+        controller = new SwapController(minecraft, session, config, bindings, this::report,
+                inventoryScreen, language);
         automatic = new AutoSwapController(minecraft, config, controller, language);
         overlay = new SwapOverlay(minecraft, bindings);
         commands.register(
@@ -146,13 +150,15 @@ public final class SwapFeature implements ClientLifecycle, ConfigChangeListener,
             hookBinding.pit12$bindSwapHooks(this);
             input.addHandler(this);
             inputTicks.addListener(this);
+            inventoryClicks.addListener(controller);
         } else {
+            inventoryClicks.removeListener(controller);
             input.removeHandler(this);
             inputTicks.removeListener(this);
             hookBinding.pit12$bindSwapHooks(null);
             MinecraftForge.EVENT_BUS.unregister(this);
             automatic.clearSwapState();
-            updateMouseGrab();
+            inventoryScreen.updateMouseGrab(controller.hidden());
             overlay.clear();
             rightClickHeld = false;
         }
@@ -161,7 +167,7 @@ public final class SwapFeature implements ClientLifecycle, ConfigChangeListener,
     private void worldChanged() {
         controller.finish(false);
         automatic.reset();
-        updateMouseGrab();
+        inventoryScreen.updateMouseGrab(controller.hidden());
         overlay.clear();
         rightClickHeld = false;
         updateListening();
@@ -226,7 +232,7 @@ public final class SwapFeature implements ClientLifecycle, ConfigChangeListener,
     @Override
     public void onInputTick(Phase phase) {
         if (listening && controller.tick(phase)) {
-            updateMouseGrab();
+            inventoryScreen.updateMouseGrab(controller.hidden());
             updateListening();
         }
     }
@@ -249,34 +255,13 @@ public final class SwapFeature implements ClientLifecycle, ConfigChangeListener,
             if (config.highlight.get())
                 overlay.refresh();
         }
-        updateMouseGrab();
-    }
-
-    private void updateMouseGrab() {
-        boolean hidden = controller.hidden() && controller.owns(minecraft.currentScreen);
-        if (hidden) {
-            if (!Mouse.isGrabbed())
-                Mouse.setGrabbed(true);
-        } else if (mouseGrabbed && minecraft.currentScreen != null && Mouse.isGrabbed()) {
-            Mouse.setGrabbed(false);
-        }
-        mouseGrabbed = hidden;
+        inventoryScreen.updateMouseGrab(controller.hidden());
     }
 
     @SubscribeEvent
     public void onDraw(GuiScreenEvent.DrawScreenEvent.Pre event) {
-        if (controller.owns(event.gui) && controller.hidden())
+        if (inventoryScreen.owns(event.gui) && controller.hidden())
             event.setCanceled(true);
-    }
-
-    @Override
-    public void clickSent(int windowId, short actionNumber) {
-        controller.clickSent(windowId, actionNumber);
-    }
-
-    @Override
-    public void confirmClick(int windowId, short actionNumber, boolean accepted) {
-        controller.confirmClick(windowId, actionNumber, accepted);
     }
 
     private void report(Tone tone, String message) {
