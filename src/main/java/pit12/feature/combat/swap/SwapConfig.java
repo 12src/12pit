@@ -60,16 +60,6 @@ public final class SwapConfig extends FeatureConfig {
     final BooleanSetting restorePants;
     final ChoiceSetting pantsRestoreMode;
     final IntegerSetting pantsRestoreThreshold;
-    final BooleanSetting dark;
-    final ChoiceSetting darkTriggerMode;
-    final IntegerSetting darkThreshold;
-    final IntegerSetting darkRange;
-    final BooleanSetting restoreDark;
-    final IntegerSetting darkRestoreThreshold;
-    final BooleanSetting skipLowPod;
-    final BooleanSetting darkEnemiesOnly;
-    final BooleanSetting darkIgnoreFriends;
-    final ChoiceSetting darkPriority;
 
     public SwapConfig() {
         super("swap", source("Swap"), ConfigCategory.COMBAT,
@@ -157,38 +147,6 @@ public final class SwapConfig extends FeatureConfig {
                 source("Restore threshold"),
                 source("Health needed to restore leggings in Health mode. It must also exceed the equip threshold."),
                 6, 0, 20, 1);
-        section("dark", "Dark");
-        dark = booleanSetting("use_dark", source("Use dark"), source(
-                "Equips Somber leggings against players with low health wearing Escape Pod or Phoenix."),
-                false);
-        darkTriggerMode = choiceSetting("dark_trigger_mode", source("Trigger mode"),
-                source("Range and relation filters apply in both modes."), 0,
-                new ChoiceSetting.Choice(0, source("Last attacked target")),
-                new ChoiceSetting.Choice(1, source("Nearby players")));
-        darkThreshold = integerSliderSetting("dark_threshold", source("Target health threshold"),
-                source("Equips Somber leggings when a target's health is at or below this value. Uses health without absorption."),
-                10, 0, 20, 1);
-        darkRange = integerSliderSetting("dark_range", source("Target range (blocks)"),
-                source("Maximum straight-line distance to targets in both trigger modes."), 6, 1,
-                32, 1);
-        restoreDark = booleanSetting("restore_dark", source("Restore leggings"),
-                source("Restores the leggings worn before an automatic Somber swap."), true);
-        darkRestoreThreshold = integerSliderSetting("dark_restore_threshold",
-                source("Restore threshold"),
-                source("Health targets must recover to before your previous leggings can be restored. It must also exceed the equip threshold."),
-                10, 0, 20, 1);
-        skipLowPod = booleanSetting("dark_skip_low_pod",
-                source("Skip Escape Pod players below 2 hearts"),
-                source("Phoenix still qualifies below 2 hearts."), false);
-        darkEnemiesOnly = booleanSetting("dark_enemies_only", source("Enemies only"),
-                source("Only checks players in your enemy list."), false);
-        darkIgnoreFriends = booleanSetting("dark_ignore_friends", source("Ignore friends"), source(
-                "In Last attacked target mode, attacking a friend leaves the target unchanged."),
-                true);
-        darkPriority = choiceSetting("dark_priority", source("Swap priority"), source(
-                "Chooses between dark and your own Escape Pod or Phoenix when both are needed. Poison swaps take priority."),
-                0, new ChoiceSetting.Choice(0, source("Pod/Phoenix first")),
-                new ChoiceSetting.Choice(1, source("Dark first")));
     }
 
     static final class Options {

@@ -20,18 +20,14 @@ package pit12.feature.combat.swap;
 
 import java.nio.file.Path;
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.entity.player.AttackEntityEvent;
-import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.lwjgl.input.Mouse;
-import pit12.feature.client.relation.api.RelationLookup;
 import pit12.feature.combat.swap.api.SwapBindings;
 import pit12.runtime.command.CommandRegistry;
 import pit12.runtime.config.ConfigCatalog;
@@ -44,7 +40,6 @@ import pit12.runtime.input.InputTicks.Phase;
 import pit12.runtime.item.PitEnchantment;
 import pit12.runtime.item.PitEnchantmentReader;
 import pit12.runtime.languages.Languages;
-import pit12.runtime.player.PlayerEquipmentAccess;
 import pit12.runtime.session.ClientSession;
 import pit12.shared.chat.ChatFeedback;
 import pit12.shared.chat.ChatFeedback.Tone;
@@ -59,7 +54,6 @@ public final class SwapFeature implements ClientLifecycle, ConfigChangeListener,
     private final SwapConfig config;
     private final CommandRegistry commands;
     private final ClientSession session;
-    private final PlayerEquipmentAccess equipment;
     private final BindingBook bindings;
     private final SwapController controller;
     private final AutoSwapController automatic;
@@ -70,13 +64,11 @@ public final class SwapFeature implements ClientLifecycle, ConfigChangeListener,
     private final Runnable sessionListener = this::worldChanged;
     private boolean started;
     private boolean listening;
-    private boolean trackingEquipment;
     private boolean rightClickHeld;
     private boolean mouseGrabbed;
 
     public SwapFeature(Minecraft minecraft, ClientThread client, ConfigCatalog configs,
-            SwapConfig config, ClientSession session, PlayerEquipmentAccess equipment,
-            RelationLookup relations, CommandRegistry commands, Path path,
+            SwapConfig config, ClientSession session, CommandRegistry commands, Path path,
             SwapHooksBinding hookBinding, InputBlocker input, InputTicks inputTicks,
             Languages language) {
         this.minecraft = minecraft;
@@ -84,7 +76,6 @@ public final class SwapFeature implements ClientLifecycle, ConfigChangeListener,
         this.config = config;
         this.commands = commands;
         this.session = session;
-        this.equipment = equipment;
         this.hookBinding = hookBinding;
         this.input = input;
         this.inputTicks = inputTicks;
@@ -92,8 +83,7 @@ public final class SwapFeature implements ClientLifecycle, ConfigChangeListener,
                 message -> report(Tone.ERROR, language.translate(message)));
         controller = new SwapController(minecraft, session, config, bindings, this::report, input,
                 this, language);
-        DarkTargets darkTargets = new DarkTargets(minecraft, config, equipment, relations);
-        automatic = new AutoSwapController(minecraft, config, controller, darkTargets, language);
+        automatic = new AutoSwapController(minecraft, config, controller, language);
         overlay = new SwapOverlay(minecraft, bindings);
         commands.register(
                 new SwapCommand(minecraft, bindings, config, automatic, language).definition(),
@@ -144,20 +134,9 @@ public final class SwapFeature implements ClientLifecycle, ConfigChangeListener,
         if (changes.affects("swap", "highlight_bindings") && !config.highlight.get())
             overlay.clear();
         automatic.onConfigChanged(changes);
-        if (changes.affects("swap", "auto_swap") || changes.affects("swap", "use_dark"))
-            updateListening();
     }
 
     private void updateListening() {
-        boolean needsEquipment =
-                started && config.enabled() && config.autoSwap.get() && config.dark.get();
-        if (trackingEquipment != needsEquipment) {
-            trackingEquipment = needsEquipment;
-            if (trackingEquipment)
-                equipment.retain(this);
-            else
-                equipment.release(this);
-        }
         boolean enabled = started && (config.enabled() || controller.busy());
         if (enabled == listening)
             return;
@@ -271,17 +250,6 @@ public final class SwapFeature implements ClientLifecycle, ConfigChangeListener,
                 overlay.refresh();
         }
         updateMouseGrab();
-    }
-
-    @SubscribeEvent(priority = EventPriority.LOWEST)
-    public void onAttack(AttackEntityEvent event) {
-        // Config reads require the client thread, so filter integrated server events first.
-        if (event.entityPlayer != minecraft.thePlayer || !(event.target instanceof EntityPlayer))
-            return;
-        if (!config.enabled() || !config.autoSwap.get() || !config.dark.get())
-            return;
-        session.checkThread();
-        automatic.attack((EntityPlayer) event.target);
     }
 
     private void updateMouseGrab() {
