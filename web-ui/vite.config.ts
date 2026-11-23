@@ -138,7 +138,7 @@ function languageLocations(): Plugin {
 export default defineConfig(() => {
   const target = process.env.WEB_UI_TARGET ?? 'http://127.0.0.1:60916'
   return {
-    plugins: [languageLocations(), vue()],
+    plugins: [languageLocations(), vue({ features: { optionsAPI: false } })],
     base: './',
     server: {
       host: '127.0.0.1',

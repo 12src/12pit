@@ -396,6 +396,12 @@ tasks.shadowJar {
 
     exclude("LICENSE.txt")
     exclude("META-INF/*.DSA", "META-INF/*.RSA", "META-INF/*.SF")
+
+    exclude(
+        "org/spongepowered/tools/obfuscation/**",
+        "META-INF/services/javax.annotation.processing.Processor",
+        "META-INF/services/org.spongepowered.tools.obfuscation.service.IObfuscationService",
+    )
 }
 
 tasks.assemble { dependsOn(remapJar) }
