@@ -27,12 +27,9 @@ import com.sun.jna.WString;
 import com.sun.jna.ptr.IntByReference;
 import com.sun.jna.win32.StdCallLibrary;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import java.io.Closeable;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 
-final class WindowsPipeTransport implements Closeable {
+final class WindowsPipeTransport extends DiscordIpcTransport {
     private static final int GENERIC_READ = 0x80000000;
     private static final int GENERIC_WRITE = 0x40000000;
     private static final int OPEN_EXISTING = 3;
@@ -45,74 +42,6 @@ final class WindowsPipeTransport implements Closeable {
     private final Memory writeBuffer = new Memory(4096);
     private final IntByReference transferred = new IntByReference();
     private boolean closed;
-    final InputStream input = new InputStream() {
-        private final byte[] singleByte = new byte[1];
-
-        @Override
-        public int read() throws IOException {
-            return read(singleByte, 0, 1) < 0 ? -1 : singleByte[0] & 0xff;
-        }
-
-        @Override
-        // noinspection UnannotatedParameterOverridesNotNullParameter
-        public int read(byte[] bytes, int offset, int length) throws IOException {
-            if (length == 0) {
-                return 0;
-            }
-            synchronized (WindowsPipeTransport.this) {
-                while (true) {
-                    checkOpen();
-                    if (KERNEL32.ReadFile(handle, readBuffer,
-                            (int) Math.min(length, readBuffer.size()), transferred, null)) {
-                        int count = transferred.getValue();
-                        if (count == 0) {
-                            return -1;
-                        }
-                        readBuffer.read(0, bytes, offset, count);
-                        return count;
-                    }
-                    int error = Native.getLastError();
-                    if (error != ERROR_NO_DATA) {
-                        throw new IOException(
-                                "Failed to read Discord IPC pipe (Windows error " + error + ")");
-                    }
-                    awaitData();
-                }
-            }
-        }
-    };
-    final OutputStream output = new OutputStream() {
-        private final byte[] singleByte = new byte[1];
-
-        @Override
-        public void write(int value) throws IOException {
-            singleByte[0] = (byte) value;
-            write(singleByte, 0, 1);
-        }
-
-        @Override
-        // noinspection UnannotatedParameterOverridesNotNullParameter
-        public void write(byte[] bytes, int offset, int length) throws IOException {
-            synchronized (WindowsPipeTransport.this) {
-                while (length > 0) {
-                    checkOpen();
-                    int count = (int) Math.min(length, writeBuffer.size());
-                    writeBuffer.write(0, bytes, offset, count);
-                    if (!KERNEL32.WriteFile(handle, writeBuffer, count, transferred, null)) {
-                        throw new IOException("Failed to write Discord IPC pipe (Windows error "
-                                + Native.getLastError() + ")");
-                    }
-                    int written = transferred.getValue();
-                    if (written == 0) {
-                        awaitData();
-                    } else {
-                        offset += written;
-                        length -= written;
-                    }
-                }
-            }
-        }
-    };
 
     WindowsPipeTransport(String endpoint) throws IOException {
         handle = KERNEL32.CreateFileW(new WString(endpoint), GENERIC_READ | GENERIC_WRITE, 0, null,
@@ -131,11 +60,56 @@ final class WindowsPipeTransport implements Closeable {
         }
     }
 
+    @Override
+    synchronized int read(byte[] bytes, int offset, int length) throws IOException {
+        while (true) {
+            waitMillis(readDeadline, 1);
+            checkOpen();
+            if (KERNEL32.ReadFile(handle, readBuffer, (int) Math.min(length, readBuffer.size()),
+                    transferred, null)) {
+                int count = transferred.getValue();
+                if (count == 0) {
+                    return -1;
+                }
+                readBuffer.read(0, bytes, offset, count);
+                return count;
+            }
+            int error = Native.getLastError();
+            if (error != ERROR_NO_DATA) {
+                throw new IOException(
+                        "Failed to read Discord IPC pipe (Windows error " + error + ")");
+            }
+            awaitPipe(readDeadline);
+        }
+    }
+
+    @Override
+    synchronized void write(byte[] bytes, int offset, int length) throws IOException {
+        long deadline = writeDeadline();
+        while (length > 0) {
+            waitMillis(deadline, 1);
+            checkOpen();
+            int count = (int) Math.min(length, writeBuffer.size());
+            writeBuffer.write(0, bytes, offset, count);
+            if (!KERNEL32.WriteFile(handle, writeBuffer, count, transferred, null)) {
+                throw new IOException("Failed to write Discord IPC pipe (Windows error "
+                        + Native.getLastError() + ")");
+            }
+            int written = transferred.getValue();
+            if (written == 0) {
+                awaitPipe(deadline);
+            } else {
+                offset += written;
+                length -= written;
+            }
+        }
+    }
+
     @SuppressFBWarnings(value = "WA_NOT_IN_LOOP", matchType = EXACT,
             justification = "The read and write loops retry after each wakeup.")
-    private void awaitData() throws IOException {
+    private void awaitPipe(long deadline) throws IOException {
         try {
-            wait(100L);
+            wait(waitMillis(deadline, 100));
         } catch (InterruptedException interrupted) {
             Thread.currentThread().interrupt();
             throw new IOException("Interrupted while waiting for Discord IPC pipe", interrupted);
