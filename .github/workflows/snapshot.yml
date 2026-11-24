@@ -38,7 +38,7 @@ jobs:
 
           gh run download "${BUILD_RUN_ID}" \
             --repo "${GITHUB_REPOSITORY}" \
-            --name 12pit-linux \
+            --name 12pit \
             --dir build/libs
 
           commit_sha="$(git rev-parse HEAD)"
