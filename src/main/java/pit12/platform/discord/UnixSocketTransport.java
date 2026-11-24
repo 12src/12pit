@@ -26,103 +26,86 @@ import com.sun.jna.NativeLong;
 import com.sun.jna.Platform;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
-import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.TimeUnit;
 
-final class UnixSocketTransport implements Closeable {
+final class UnixSocketTransport extends DiscordIpcTransport {
     private static final boolean MAC = Platform.isMac();
     private static final int AF_UNIX = 1;
     private static final int EINTR = 4;
     private static final int EAGAIN = MAC ? 35 : 11;
     private static final short POLLOUT = 4;
     private static final int SOL_SOCKET = MAC ? 0xffff : 1;
-    // TODO: ARM64 support for launchers that bundle JNA 3.4.0 without ARM64 natives.
     private static final LibC LIBC = (LibC) Native.loadLibrary("c", LibC.class);
     // These buffers belong to the worker. Only close can run on the client thread.
     private final Memory buffer = new Memory(8192);
     private final Memory pollDescriptor = new Memory(8);
     private final int descriptor;
     private boolean closed;
-    final InputStream input = new InputStream() {
-        @Override
-        public int read() throws IOException {
-            byte[] value = new byte[1];
-            return read(value, 0, 1) < 0 ? -1 : value[0] & 0xff;
-        }
 
-        @Override
-        // noinspection UnannotatedParameterOverridesNotNullParameter
-        public int read(byte[] bytes, int offset, int length) throws IOException {
-            if (length == 0) {
-                return 0;
-            }
-            while (true) {
-                try {
-                    synchronized (UnixSocketTransport.this) {
-                        checkOpen();
-                        int count = (int) LIBC
-                                .recv(descriptor, buffer,
-                                        new NativeLong(Math.min(length, buffer.size())), 0)
-                                .longValue();
-                        if (count == 0) {
-                            return -1;
-                        }
-                        buffer.read(0, bytes, offset, count);
-                        return count;
-                    }
-                } catch (LastErrorException failure) {
-                    if (failure.getErrorCode() == EINTR) {
-                        continue;
-                    }
-                    if (failure.getErrorCode() != EAGAIN) {
-                        throw new IOException("Failed to read Discord IPC socket", failure);
-                    }
-                }
-                awaitReady((short) 1, 0);
-            }
-        }
-    };
-    final OutputStream output = new OutputStream() {
-        @Override
-        public void write(int value) throws IOException {
-            write(new byte[] {(byte) value}, 0, 1);
-        }
-
-        @Override
-        // noinspection UnannotatedParameterOverridesNotNullParameter
-        public void write(byte[] bytes, int offset, int length) throws IOException {
-            while (length > 0) {
-                int count = (int) Math.min(length, buffer.size());
-                buffer.write(0, bytes, offset, count);
-                try {
-                    synchronized (UnixSocketTransport.this) {
-                        checkOpen();
-                        // Suppress SIGPIPE so writing to a closed socket gives us a Java error.
-                        count = (int) LIBC
-                                .send(descriptor, buffer, new NativeLong(count), MAC ? 0 : 0x4000)
-                                .longValue();
-                    }
+    @Override
+    int read(byte[] bytes, int offset, int length) throws IOException {
+        while (true) {
+            waitMillis(readDeadline, 1);
+            try {
+                synchronized (this) {
+                    checkOpen();
+                    int count =
+                            (int) LIBC
+                                    .recv(descriptor, buffer,
+                                            new NativeLong(Math.min(length, buffer.size())), 0)
+                                    .longValue();
                     if (count == 0) {
-                        throw new IOException("Discord IPC socket wrote no data");
+                        return -1;
                     }
-                    offset += count;
-                    length -= count;
-                } catch (LastErrorException failure) {
-                    if (failure.getErrorCode() == EINTR) {
-                        continue;
-                    }
-                    if (failure.getErrorCode() != EAGAIN) {
-                        throw new IOException("Failed to write Discord IPC socket", failure);
-                    }
-                    awaitReady(POLLOUT, 2000);
+                    buffer.read(0, bytes, offset, count);
+                    return count;
+                }
+            } catch (LastErrorException failure) {
+                if (failure.getErrorCode() == EINTR) {
+                    continue;
+                }
+                if (failure.getErrorCode() != EAGAIN) {
+                    throw new IOException("Failed to read Discord IPC socket", failure);
                 }
             }
+            awaitReady((short) 1, readDeadline);
         }
-    };
+    }
+
+    @Override
+    void write(byte[] bytes, int offset, int length) throws IOException {
+        long deadline = writeDeadline();
+        while (length > 0) {
+            waitMillis(deadline, 1);
+            int count = (int) Math.min(length, buffer.size());
+            buffer.write(0, bytes, offset, count);
+            try {
+                synchronized (this) {
+                    checkOpen();
+                    // Suppress SIGPIPE so writing to a closed socket gives us a Java error.
+                    count = (int) LIBC
+                            .send(descriptor, buffer, new NativeLong(count), MAC ? 0 : 0x4000)
+                            .longValue();
+                }
+                if (count == 0) {
+                    throw new IOException("Discord IPC socket wrote no data");
+                }
+                offset += count;
+                length -= count;
+            } catch (LastErrorException failure) {
+                if (failure.getErrorCode() == EINTR) {
+                    continue;
+                }
+                if (failure.getErrorCode() != EAGAIN) {
+                    throw new IOException("Failed to write Discord IPC socket", failure);
+                }
+                awaitReady(POLLOUT, deadline);
+            }
+        }
+    }
 
     @SuppressWarnings({"PMD.AvoidCatchingGenericException",
             "PMD.AvoidInstanceofChecksInCatchClause"})
@@ -166,7 +149,7 @@ final class UnixSocketTransport implements Closeable {
                     throw new IOException("Failed to connect Discord IPC socket: " + endpoint,
                             failure);
                 }
-                awaitReady(POLLOUT, 2000);
+                awaitReady(POLLOUT, System.nanoTime() + TimeUnit.SECONDS.toNanos(2));
                 // A failed connection can also look writable. Check SO_ERROR to tell the difference.
                 IntByReference error = new IntByReference();
                 LIBC.getsockopt(descriptor, SOL_SOCKET, MAC ? 0x1007 : 4, error,
@@ -189,18 +172,13 @@ final class UnixSocketTransport implements Closeable {
         }
     }
 
-    private void awaitReady(short events, int timeout) throws IOException {
+    private void awaitReady(short events, long deadline) throws IOException {
         pollDescriptor.setShort(4, events);
-        long deadline = System.nanoTime() + timeout * 1000000L;
         while (true) {
             synchronized (this) {
                 checkOpen();
             }
-            int remaining = timeout == 0 ? 1000
-                    : (int) Math.min(1000, (deadline - System.nanoTime() + 999999) / 1000000);
-            if (remaining <= 0) {
-                throw new IOException("Discord IPC socket timed out");
-            }
+            int remaining = waitMillis(deadline, 1000);
             // poll can finish after close. recv and send check closed again before using the descriptor.
             try {
                 int ready = MAC ? LIBC.poll(pollDescriptor, 1, remaining)

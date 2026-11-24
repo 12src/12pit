@@ -24,33 +24,32 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.Closeable;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.lang.management.ManagementFactory;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pit12.feature.client.discordrpc.DiscordRpcConnection;
 
 public final class DiscordIpcConnection implements DiscordRpcConnection {
     private static final Logger LOGGER = LogManager.getLogger(DiscordIpcConnection.class);
-    private final Closeable transport;
+    private static final long HANDSHAKE_TIMEOUT = TimeUnit.SECONDS.toNanos(5);
+    private final DiscordIpcTransport transport;
     private final DataInputStream input;
     private final DataOutputStream output;
 
-    private DiscordIpcConnection(Closeable transport, InputStream input, OutputStream output) {
+    DiscordIpcConnection(DiscordIpcTransport transport) {
         this.transport = transport;
-        this.input = new DataInputStream(input);
-        this.output = new DataOutputStream(output);
+        input = new DataInputStream(new BufferedInputStream(transport.input));
+        output = new DataOutputStream(new BufferedOutputStream(transport.output));
     }
 
     /** Returns null if there's no local Discord IPC endpoint. */
@@ -58,10 +57,8 @@ public final class DiscordIpcConnection implements DiscordRpcConnection {
         if (System.getProperty("os.name").toLowerCase(Locale.ROOT).startsWith("windows")) {
             for (int index = 0; index < 10; index++) {
                 try {
-                    WindowsPipeTransport pipe =
-                            new WindowsPipeTransport("\\\\?\\pipe\\discord-ipc-" + index);
-                    return new DiscordIpcConnection(pipe, new BufferedInputStream(pipe.input),
-                            new BufferedOutputStream(pipe.output));
+                    String path = "\\\\?\\pipe\\discord-ipc-" + index;
+                    return new DiscordIpcConnection(new WindowsPipeTransport(path));
                 } catch (IOException unavailable) {
                     LOGGER.trace("Discord IPC endpoint {} is unavailable", index, unavailable);
                 }
@@ -86,10 +83,7 @@ public final class DiscordIpcConnection implements DiscordRpcConnection {
                         continue;
                     }
                     try {
-                        UnixSocketTransport socket = new UnixSocketTransport(endpoint);
-                        return new DiscordIpcConnection(socket,
-                                new BufferedInputStream(socket.input),
-                                new BufferedOutputStream(socket.output));
+                        return new DiscordIpcConnection(new UnixSocketTransport(endpoint));
                     } catch (IOException failure) {
                         LOGGER.trace("Discord IPC endpoint is unavailable: {}", endpoint, failure);
                     }
@@ -108,7 +102,13 @@ public final class DiscordIpcConnection implements DiscordRpcConnection {
         handshake.addProperty("v", 1);
         handshake.addProperty("client_id", applicationId);
         send(0, handshake.toString().getBytes(StandardCharsets.UTF_8));
-        JsonObject ready = receive();
+        JsonObject ready;
+        transport.readDeadline = System.nanoTime() + HANDSHAKE_TIMEOUT;
+        try {
+            ready = receive();
+        } finally {
+            transport.readDeadline = 0;
+        }
         if (!new JsonPrimitive("DISPATCH").equals(ready.get("cmd"))
                 || !new JsonPrimitive("READY").equals(ready.get("evt"))) {
             throw new IOException("Discord RPC handshake was rejected: " + ready);
@@ -136,6 +136,7 @@ public final class DiscordIpcConnection implements DiscordRpcConnection {
 
     private JsonObject receive() throws IOException {
         while (true) {
+            DiscordIpcTransport.waitMillis(transport.readDeadline, 1);
             int opcode = Integer.reverseBytes(input.readInt());
             int length = Integer.reverseBytes(input.readInt());
             // Discord's 64 KiB limit includes the 8-byte header.
