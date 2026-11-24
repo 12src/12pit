@@ -16,16 +16,8 @@ concurrency:
 
 jobs:
   build:
-    name: Build (${{ matrix.platform }})
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - platform: linux
-            os: ubuntu-26.04
-          - platform: windows
-            os: windows-2025
+    name: Build
+    runs-on: ubuntu-26.04
 
     steps:
       - name: Checkout
@@ -60,18 +52,13 @@ jobs:
           build-scan-terms-of-use-agree: yes
 
       - name: Build
-        if: runner.os != 'Windows'
         run: |
           chmod +x gradlew
           ./gradlew assemble --no-daemon --console=plain
-
-      - name: Build
-        if: runner.os == 'Windows'
-        run: .\gradlew.bat assemble --no-daemon --console=plain
 
       - name: Upload Artifact
         if: success()
         uses: actions/upload-artifact@v7
         with:
-          name: 12pit-${{ matrix.platform }}
+          name: 12pit
           path: build/libs/*.jar
